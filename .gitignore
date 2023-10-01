@@ -1,0 +1,15 @@
+# Visual studio files and folders
+.vs/
+**.sln
+**.vcxproj
+**.vcxproj.filters
+**.vcxproj.user
+
+# Binaries
+
+**/bin
+**/bin-int
+
+# Exceptions
+
+!vendor/premake/bin

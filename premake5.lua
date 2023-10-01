@@ -17,7 +17,5 @@ group "Dependencies"
 	include "vendor/premake"
 group ""
 	
-	
-group "Core"
-	include "TFG"
-group ""
+
+include "TFG"

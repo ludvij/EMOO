@@ -10,6 +10,10 @@ project "TFG"
 		"src/**.cpp", 
 	}
 
+	includedirs {
+		"src"
+	}
+
 	filter "system:windows"
 		systemversion "latest"
 

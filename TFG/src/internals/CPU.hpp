@@ -36,21 +36,18 @@ constexpr Byte S_N_FLAG = 0b10000000;
 * That means each clock cycle should take 1/1790000 seconds
 * We get that signal by dividing the master clock
 */
-constexpr u32 CPU_FREQUENCY = MASTER_CLOCK_SIGNAL / CLOCK_DIVISOR;
+constexpr u32 NTSC_CPU_FREQUENCY = NTSC_MASTER_CLOCK_SIGNAL / NTSC_CLOCK_DIVISOR;
+constexpr u32  PAL_CPU_FREQUENCY =  PAL_MASTER_CLOCK_SIGNAL /  PAL_CLOCK_DIVISOR;
 
 class CPU
 {
-	// Public members
-public:
-	// Public fields
-public:
-	// private members
-private:
-	// private fields
-private:
-	// Clock things
-	uint32_t m_cycles;
+public:  // Public functions
 	
+public:  // Public fields
+	
+private: // private functions
+	
+private: // private members
 
 	// Accumulator
 	Byte m_A;

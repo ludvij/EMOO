@@ -4,9 +4,9 @@
  * This file contains the definition of the 6502 CPU (ricoh RP2A03) 
 */
 
-
 #include "Core.hpp"
-#include "cstdint"
+
+#include <functional>
 
 namespace Emu {
 /*
@@ -42,12 +42,23 @@ constexpr u32  PAL_CPU_FREQUENCY =  PAL_MASTER_CLOCK_SIGNAL /  PAL_CLOCK_DIVISOR
 class CPU
 {
 public:  // Public functions
+	CPU();
 	
 public:  // Public fields
 	
 private: // private functions
-	
+	void fillJumpTable() const;
 private: // private members
+
+
+	struct Instruction
+	{
+		std::function<void(Byte)> addrMode;
+		std::function<Word(void)> opcode;
+		Byte cycles;
+	};
+
+	static Instruction s_jumpTable[256];
 
 	// Accumulator
 	Byte m_A;
@@ -59,7 +70,7 @@ private: // private members
 	Word m_PC;
 
 	// Stack Pointer
-	Byte m_S = S_1_FLAG;
+	Byte m_S;
 
 	// Status register
 	Byte m_P;

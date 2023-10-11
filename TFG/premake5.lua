@@ -10,6 +10,9 @@ project "TFG"
 		"src/**.cpp", 
 	}
 
+	pchheader "pch.hpp"
+	pchsource "src/pch.cpp"
+
 	includedirs {
 		"src"
 	}

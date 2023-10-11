@@ -14,6 +14,10 @@ project "TFG"
 		"src"
 	}
 
+	defines {
+		"NTSC_MODE"
+	}
+
 	filter "system:windows"
 		systemversion "latest"
 

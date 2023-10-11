@@ -1,5 +1,10 @@
 #pragma once
 
+/*
+ * This file contains the definition of the 6502 CPU (ricoh RP2A03) 
+*/
+
+
 #include "Core.hpp"
 #include "cstdint"
 
@@ -26,9 +31,12 @@ constexpr Byte S_1_FLAG = 0b00100000;
 constexpr Byte S_V_FLAG = 0b01000000;
 constexpr Byte S_N_FLAG = 0b10000000;
 
-// NES runs at 1.79 Mhz
-// That means each clock cycle should take 1/1790000 seconds
-constexpr u32 CPU_FREQUENCY = 1790000;
+/*
+* NES runs at 1.79 Mhz
+* That means each clock cycle should take 1/1790000 seconds
+* We get that signal by dividing the master clock
+*/
+constexpr u32 CPU_FREQUENCY = MASTER_CLOCK_SIGNAL / CLOCK_DIVISOR;
 
 class CPU
 {

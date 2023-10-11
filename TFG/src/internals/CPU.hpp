@@ -26,16 +26,23 @@ constexpr Byte S_1_FLAG = 0b00100000;
 constexpr Byte S_V_FLAG = 0b01000000;
 constexpr Byte S_N_FLAG = 0b10000000;
 
+// NES runs at 1.79 Mhz
+// That means each clock cycle should take 1/1790000 seconds
+constexpr u32 CPU_FREQUENCY = 1790000;
+
 class CPU
 {
+	// Public members
 public:
-
-
+	// Public fields
+public:
+	// private members
 private:
+	// private fields
 private:
 	// Clock things
 	uint32_t m_cycles;
-	uint32_t m_skipCycles;
+	
 
 	// Accumulator
 	Byte m_A;

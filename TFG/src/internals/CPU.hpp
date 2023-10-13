@@ -6,8 +6,6 @@
 
 #include "Core.hpp"
 
-#include <functional>
-
 namespace Emu {
 /*
 * Processor status (S) flags
@@ -53,8 +51,8 @@ private: // private members
 
 	struct Instruction
 	{
-		std::function<void(Byte)> addrMode;
-		std::function<Word(void)> opcode;
+		void (*addrMode)(Byte);
+		Word (*opcode)(void);
 		Byte cycles;
 	};
 

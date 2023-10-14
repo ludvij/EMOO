@@ -17,7 +17,7 @@ public:
 
 private:
 	// Bus components
-	CPU* m_cpu;
+	CPU* cpu;
 };
 
 }

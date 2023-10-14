@@ -46,7 +46,7 @@ class CPU
 public:  // Public functions
 	CPU();
 
-	void ConnectBus(Bus* bus) {m_bus = bus; }
+	void ConnectBus(Bus* bus) {bus = bus; }
 
 	void Step();
 	
@@ -100,11 +100,11 @@ private: // private functions
 
 private: // private members
 
-	Bus* m_bus = nullptr;
+	Bus* bus = nullptr;
 
-	u32 m_cycles = 0;
-	u32 m_oopsCycles = 0;
-	bool m_canOops = false;
+	u32 cycles = 0;
+	u32 oopsCycles = 0;
+	bool canOops = false;
 
 
 	/*
@@ -122,27 +122,28 @@ private: // private members
 		u8 cycles = 0;
 	};
 
-	Instruction m_jumpTable[256];
+	Instruction jumpTable[256];
 
 	// Accumulator
-	u8 m_A = 0;
+	u8 A = 0;
 
 	// Index registers
-	u8 m_X = 0;
-	u8 m_Y = 0;
+	u8 X = 0;
+	u8 Y = 0;
 
 	// Program counter
-	u16 m_PC = 0;
+	u16 PC = 0;
 
 	// Stack Pointer
-	u8 m_S = 0;
+	u8 S = 0;
 
 	// Status register
-	u8 m_P = 0;
+	u8 P = 0;
 
 	// some helpers
-	u8 m_opcode = 0;
-	u16 m_addr = 0;
+	u8 opcode = 0;
+	u16 addr = 0;
+	Instruction* currentInstr = nullptr;
 };
 
 }

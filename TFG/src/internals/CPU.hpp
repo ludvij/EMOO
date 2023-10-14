@@ -1,8 +1,8 @@
 #pragma once
 
 /*
- * This file contains the definition of the 6502 CPU (ricoh RP2A03) 
- */
+* This file contains the definition of the 6502 CPU (ricoh RP2A03) 
+*/
 
 
 #include "Core.hpp"
@@ -10,18 +10,18 @@
 
 namespace Emu {
 /*
- * Processor status (S) flags
- * 7654 3210
- * NV1B DIZC
- * ││││ │││└>  Carry flag
- * ││││ ││└─>  Zero flag
- * ││││ │└──>  Interrupt (IRQ) disable flag
- * ││││ └-──>  Decimal mode flag, not used in the NES
- * │││└─────>  Break flag (mostly unused)
- * ││└──────>  Unused flag (always set)
- * │└───────> oVerflow flag
- * └────────>  Negative flag
- */
+* Processor status (S) flags
+* 7654 3210
+* NV1B DIZC
+* ││││ │││└>  Carry flag
+* ││││ ││└─>  Zero flag
+* ││││ │└──>  Interrupt (IRQ) disable flag
+* ││││ └-──>  Decimal mode flag, not used in the NES
+* │││└─────>  Break flag (mostly unused)
+* ││└──────>  Unused flag (always set)
+* │└───────> oVerflow flag
+* └────────>  Negative flag
+*/
 constexpr u8 P_C_FLAG = 0b00000001;
 constexpr u8 P_Z_FLAG = 0b00000010;
 constexpr u8 P_I_FLAG = 0b00000100;
@@ -46,20 +46,18 @@ class CPU
 public:  // Public functions
 	CPU();
 
-	void ConnectBus(Bus* bus) {bus = bus; }
+	void ConnectBus(Bus* bus) {m_bus = bus; }
 
 	void Step();
+
 	
 public:  // Public fields
 	
 private: // private functions
-	void fillJumpTable();
 
 	u8 readByte();
 	u8 read(u16 addr) const;
 	void write(u16 addr, u8 val) const;
-
-	u8 fetch();
 
 
 	// addressing modes
@@ -78,29 +76,88 @@ private: // private functions
 	// not used
 	u16 addrACC(); // A
 
-	// official opcodes
-	void ADC(); void AND(); void ASL(); void BCC();
-	void BCS(); void BEQ(); void BIT(); void BMI();
-	void BNE(); void BPL(); void BRK(); void BVC();
-	void BVS(); void CLC(); void CLD(); void CLI();
-	void CLV(); void CMP(); void CPX(); void CPY();
-	void DEC(); void DEX(); void DEY(); void EOR();
-	void INC(); void INX(); void INY(); void JMP();
-	void JSR(); void LDA(); void LDX(); void LDY();
-	void LSR(); void NOP(); void ORA(); void PHA();
-	void PHP(); void PLA(); void PLP(); void ROL();
-	void ROR(); void RTI(); void RTS(); void SBC();
-	void SEC(); void SED(); void SEI(); void STA();
-	void STX(); void STY(); void TAX(); void TAY();
-	void TSX(); void TXA(); void TXS(); void TYA();
+	// official opcodes oredered as shown in the datasheet (alphabetical order)
+	void ADC(u16 addr); 
+	void AND(u16 addr); 
+	void ASL(u16 addr); 
+
+	void BCC(u16 addr);
+	void BCS(u16 addr); 
+	void BEQ(u16 addr); 
+	void BIT(u16 addr); 
+	void BMI(u16 addr);
+	void BNE(u16 addr); 
+	void BPL(u16 addr); 
+	void BRK(u16 addr); 
+	void BVC(u16 addr);
+	void BVS(u16 addr); 
+
+	void CLC(u16 addr); 
+	void CLD(u16 addr); 
+	void CLI(u16 addr);
+	void CLV(u16 addr); 
+	void CMP(u16 addr); 
+	void CPX(u16 addr); 
+	void CPY(u16 addr);
+
+	void DEC(u16 addr); 
+	void DEX(u16 addr); 
+	void DEY(u16 addr); 
+
+	void EOR(u16 addr);
+
+	void INC(u16 addr); 
+	void INX(u16 addr); 
+	void INY(u16 addr); 
+
+	void JMP(u16 addr);
+	void JSR(u16 addr); 
+
+	void LDA(u16 addr); 
+	void LDX(u16 addr); 
+	void LDY(u16 addr);
+	void LSR(u16 addr); 
+
+	void NOP(u16 addr); 
+
+	void ORA(u16 addr); 
+
+	void PHA(u16 addr);
+	void PHP(u16 addr); 
+	void PLA(u16 addr); 
+	void PLP(u16 addr); 
+
+	void ROL(u16 addr);
+	void ROR(u16 addr); 
+	void RTI(u16 addr); 
+	void RTS(u16 addr); 
+
+	void SBC(u16 addr);
+	void SEC(u16 addr); 
+	void SED(u16 addr); 
+	void SEI(u16 addr); 
+	void STA(u16 addr);
+	void STX(u16 addr); 
+	void STY(u16 addr); 
+
+	void TAX(u16 addr); 
+	void TAY(u16 addr);
+	void TSX(u16 addr); 
+	void TXA(u16 addr); 
+	void TXS(u16 addr); 
+	void TYA(u16 addr);
 
 	// current workaround for unofficial opcodes
-	void ___();
+	void ___(u16 addr);
+
+	// some helper functions
+	void setFlagIf(u8 flag, bool cond);
+	bool isImplied() const;
 
 
 private: // private members
 
-	Bus* bus = nullptr;
+	Bus* m_bus = nullptr;
 
 	u32 cycles = 0;
 	u32 oopsCycles = 0;
@@ -115,10 +172,13 @@ private: // private members
 	*	an exec that acts as the operation itself
 	*	and the number of cycles the operation will take
 	*/
+
+	typedef u16 (CPU::*addrMode)();
+	typedef void (CPU::*exec)(u16);
 	struct Instruction
 	{
-		u16 (CPU::*addrMode)(void) = nullptr;
-		void (CPU::*exec)(void) = nullptr;
+		addrMode addrMode = nullptr;
+		exec exec = nullptr;
 		u8 cycles = 0;
 	};
 
@@ -142,8 +202,7 @@ private: // private members
 
 	// some helpers
 	u8 opcode = 0;
-	u16 addr = 0;
-	Instruction* currentInstr = nullptr;
+	Instruction currentInstr = {};
 };
 
 }

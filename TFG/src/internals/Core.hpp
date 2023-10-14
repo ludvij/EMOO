@@ -18,9 +18,9 @@ namespace Emu
 * 
 * u32 will be used for the frequency of the clocks
 */
-using u8 = uint8_t;
+using u8  = uint8_t;
 using u16 = uint16_t;
-using u32  = uint32_t;
+using u32 = uint32_t;
 
 /*
 * NTSC color subcarrier frequency
@@ -42,5 +42,11 @@ constexpr u32  PAL_CLOCK_DIVISOR = 16;
 */
 constexpr u32 NTSC_MASTER_CLOCK_SIGNAL = NTSC_COLOR_SUBCARRIER_FREQ * 6;
 constexpr u32  PAL_MASTER_CLOCK_SIGNAL =  PAL_COLOR_SUBCARRIER_FREQ * 6;
+
+
+/*
+* ram sizes and stuff
+*/
+constexpr u16 RAM_SIZE = 0x0800;
 
 }

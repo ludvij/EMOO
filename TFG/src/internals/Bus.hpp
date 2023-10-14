@@ -17,7 +17,10 @@ public:
 
 private:
 	// Bus components
-	CPU* cpu;
+	CPU cpu;
+
+	//memory 2kb
+	u8 memory[RAM_SIZE] = {0};
 };
 
 }

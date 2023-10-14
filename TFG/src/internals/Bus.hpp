@@ -1,6 +1,9 @@
 #pragma once
 
 #include "Core.hpp"
+
+#include "CPU.hpp"
+
 namespace Emu
 {
 	
@@ -9,8 +12,12 @@ class Bus
 public:
 	Bus();
 
-	Byte Read(Word addr);
-	void Write(Word addr, Byte val);
+	u8 Read(u16 addr);
+	void Write(u16 addr, u8 val);
+
+private:
+	// Bus components
+	CPU* m_cpu;
 };
 
 }

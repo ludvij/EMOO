@@ -2,32 +2,34 @@
 
 /*
  * This file contains the definition of the 6502 CPU (ricoh RP2A03) 
-*/
+ */
+
 
 #include "Core.hpp"
 
+
 namespace Emu {
 /*
-* Processor status (S) flags
-* 7654 3210
-* NV1B DIZC
-* ││││ │││└>  Carry flag
-* ││││ ││└─>  Zero flag
-* ││││ │└──>  Interrupt (IRQ) disable flag
-* ││││ └-──>  Decimal mode flag
-* │││└─────>  Break flag (mostly unused)
-* ││└──────>  Unused flag (always set)
-* │└───────> oVerflow flag
-* └────────>  Negative flag
-*/
-constexpr Byte S_C_FLAG = 0b00000001;
-constexpr Byte S_Z_FLAG = 0b00000010;
-constexpr Byte S_I_FLAG = 0b00000100;
-constexpr Byte S_D_FLAG = 0b00001000;
-constexpr Byte S_B_FLAG = 0b00010000;
-constexpr Byte S_1_FLAG = 0b00100000;
-constexpr Byte S_V_FLAG = 0b01000000;
-constexpr Byte S_N_FLAG = 0b10000000;
+ * Processor status (S) flags
+ * 7654 3210
+ * NV1B DIZC
+ * ││││ │││└>  Carry flag
+ * ││││ ││└─>  Zero flag
+ * ││││ │└──>  Interrupt (IRQ) disable flag
+ * ││││ └-──>  Decimal mode flag, not used in the NES
+ * │││└─────>  Break flag (mostly unused)
+ * ││└──────>  Unused flag (always set)
+ * │└───────> oVerflow flag
+ * └────────>  Negative flag
+ */
+constexpr u8 P_C_FLAG = 0b00000001;
+constexpr u8 P_Z_FLAG = 0b00000010;
+constexpr u8 P_I_FLAG = 0b00000100;
+constexpr u8 P_D_FLAG = 0b00001000;
+constexpr u8 P_B_FLAG = 0b00010000;
+constexpr u8 P_1_FLAG = 0b00100000;
+constexpr u8 P_V_FLAG = 0b01000000;
+constexpr u8 P_N_FLAG = 0b10000000;
 
 /*
 * NES runs at 1.79 Mhz
@@ -51,70 +53,96 @@ public:  // Public functions
 public:  // Public fields
 	
 private: // private functions
-	void fillJumpTable() const;
+	void fillJumpTable();
 
-	Byte readByte();
-	Byte read(Word addr) const;
-	void write(Word addr, Byte val) const;
+	u8 readByte();
+	u8 read(u16 addr) const;
+	void write(u16 addr, u8 val) const;
 
-	Word addrZPI();  // d
-	Word addrZPIX(); // d,x address mode
-	Word addrZPIY(); // d,y address mode
-	Word addrABS();  // a
-	Word addrABSX(); // a,x address mode
-	Word addrABSY(); // a,y address mode
-	Word addrIND();  // (a)
-	Word addrINDX(); // (d,x) address mode
-	Word addrINDY(); // (d),y address mode
+	u8 fetch();
 
-	Word addrIMP(); //
-	Word addrACC(); // A
-	Word addrIMM(); // #v
-	Word addrREL(); // label
+
+	// addressing modes
+	u16 addrIMP(); //
+	u16 addrIMM(); // #v
+	u16 addrZPI(); // d
+	u16 addrZPX(); // d,x address mode
+	u16 addrZPY(); // d,y address mode
+	u16 addrABS(); // a
+	u16 addrABX(); // a,x address mode
+	u16 addrABY(); // a,y address mode
+	u16 addrIND(); // (a)
+	u16 addrINX(); // (d,x) address mode
+	u16 addrINY(); // (d),y address mode
+	u16 addrREL(); // label
+	// not used
+	u16 addrACC(); // A
+
+	// official opcodes
+	void ADC(); void AND(); void ASL(); void BCC();
+	void BCS(); void BEQ(); void BIT(); void BMI();
+	void BNE(); void BPL(); void BRK(); void BVC();
+	void BVS(); void CLC(); void CLD(); void CLI();
+	void CLV(); void CMP(); void CPX(); void CPY();
+	void DEC(); void DEX(); void DEY(); void EOR();
+	void INC(); void INX(); void INY(); void JMP();
+	void JSR(); void LDA(); void LDX(); void LDY();
+	void LSR(); void NOP(); void ORA(); void PHA();
+	void PHP(); void PLA(); void PLP(); void ROL();
+	void ROR(); void RTI(); void RTS(); void SBC();
+	void SEC(); void SED(); void SEI(); void STA();
+	void STX(); void STY(); void TAX(); void TAY();
+	void TSX(); void TXA(); void TXS(); void TYA();
+
+	// current workaround for unofficial opcodes
+	void ___();
+
 
 private: // private members
 
 	Bus* m_bus = nullptr;
 
 	u32 m_cycles = 0;
-	u32 m_oopsAddr = 0;
-	u32 m_oopsOp = 0;
+	u32 m_oopsCycles = 0;
+	bool m_canOops = false;
+
 
 	/*
 	* This struct and array will act as the jump table in order to compile and store all the
-	* opcode instructions in the system.
+	* exec instructions in the system.
 	* Each element contains the following:
 	*	an addrMode that acts as the addressing mode used in the instruction
-	*	an opcode that acts as the operation itself
+	*	an exec that acts as the operation itself
 	*	and the number of cycles the operation will take
 	*/
 	struct Instruction
 	{
-		Word (*addrMode)(void) = nullptr;
-		void (*opcode  )(Word) = nullptr;
-		Byte cycles = 0;
+		u16 (CPU::*addrMode)(void) = nullptr;
+		void (CPU::*exec)(void) = nullptr;
+		u8 cycles = 0;
 	};
 
-	static Instruction s_jumpTable[256];
+	Instruction m_jumpTable[256];
 
 	// Accumulator
-	Byte m_A = 0;
+	u8 m_A = 0;
 
 	// Index registers
-	Byte m_X = 0;
-	Byte m_Y = 0;
+	u8 m_X = 0;
+	u8 m_Y = 0;
 
 	// Program counter
-	Word m_PC = 0;
+	u16 m_PC = 0;
 
 	// Stack Pointer
-	Byte m_S = 0;
+	u8 m_S = 0;
 
 	// Status register
-	Byte m_P = 0;
+	u8 m_P = 0;
 
 	// some helpers
-
+	u8 m_opcode = 0;
+	u16 m_addr = 0;
 };
 
 }

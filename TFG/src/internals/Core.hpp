@@ -14,12 +14,12 @@ namespace Emu
 * since using uint8_t or unsigned char each time I want
 * to use any internal it's going to be cumbersome.
 * 
-* I'll use Word basically for the PC and not much more.
+* I'll use u16 basically for the PC and not much more.
 * 
 * u32 will be used for the frequency of the clocks
 */
-using Byte = uint8_t;
-using Word = uint16_t;
+using u8 = uint8_t;
+using u16 = uint16_t;
 using u32  = uint32_t;
 
 /*

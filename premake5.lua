@@ -15,12 +15,12 @@ outputDir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 group "Dependencies"
 	include "vendor/premake"
-	include "tests/vendor/googletest1140/googletest"
-	include "tests/vendor/googletest1140/googlemock"
+	include "test/vendor/googletest/googletest"
+	include "test/vendor/googletest/googlemock"
 group ""
 
 group "Test"
-	include "tests"
+	include "test"
 group ""
 
 

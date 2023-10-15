@@ -13,8 +13,8 @@ project "Tests"
 
 	includedirs {
 		"src",
-		"vendor/googlemock/include",
-		"vendor/googletest/include"
+		"vendor/googletest/googlemock/include",
+		"vendor/googletest/googletest/include"
 	}
 
 	links {

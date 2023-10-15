@@ -1,0 +1,3 @@
+[submodule "test/googletest/vendor"]
+	path = test/googletest/vendor
+	url = https://github.com/ludvij/googletest

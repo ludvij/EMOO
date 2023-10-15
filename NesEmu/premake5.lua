@@ -20,6 +20,17 @@ project "NesEmu"
 	filter "system:windows"
 		systemversion "latest"
 
+	filter "configurations:Test"
+		defines {
+			"NES_EMU_TEST"
+		}
+		runtime "debug"
+		symbols "On"
+
+		links {
+			"vendor/googletest/googletest"
+		}
+
 	filter "configurations:Debug"
 		defines { 
 			"DEBUG" 

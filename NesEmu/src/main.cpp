@@ -1,3 +1,6 @@
+#ifndef NES_EMU_TEST
+#define NES_EMU_TEST
+
 #include "pch.hpp"
 
 #include "internals/Bus.hpp"
@@ -10,3 +13,5 @@ int main()
 
 	return 0;
 }
+
+#endif

@@ -1,6 +1,6 @@
 workspace "TFG"
 	architecture "x86_64"
-	startproject "TFG"
+	startproject "NesEmu"
 
 	configurations { 
 		"Debug", 
@@ -15,7 +15,13 @@ outputDir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 group "Dependencies"
 	include "vendor/premake"
+	include "tests/vendor/googletest1140/googletest"
+	include "tests/vendor/googletest1140/googlemock"
 group ""
-	
 
-include "TFG"
+group "Test"
+	include "tests"
+group ""
+
+
+include "NesEmu"

@@ -1,5 +1,5 @@
 project "NesEmu"
-	kind "ConsoleApp"
+	kind "StaticLib"
 	language "C++"
 	cppdialect "c++20"
 	targetdir ("%{wks.location}/bin/" .. outputDir .. "/%{prj.name}")
@@ -26,7 +26,7 @@ project "NesEmu"
 		}
 		runtime "debug"
 		symbols "On"
-	
+
 	filter "configurations:Release"
 		defines { 
 			"NDEBUG" 

@@ -5,6 +5,7 @@
 
 // algos
 #include <algorithm>
+#include <functional>
 
 // io
 #include <iostream>

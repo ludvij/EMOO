@@ -15,12 +15,18 @@ public:
 	u8 Read(u16 addr);
 	void Write(u16 addr, u8 val);
 
-private:
+	void Step();
+
+
+
+protected:
 	// Bus components
-	CPU cpu;
+	CPU m_cpu;
+
+	u32 m_masterClock = 0;
 
 	//memory 2kb
-	u8 memory[RAM_SIZE] = {0};
+	u8 m_memory[RAM_SIZE] = {0};
 };
 
 }

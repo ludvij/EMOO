@@ -14,12 +14,14 @@ project "Tests"
 	includedirs {
 		"src",
 		"vendor/googletest/googlemock/include",
-		"vendor/googletest/googletest/include"
+		"vendor/googletest/googletest/include",
+		"../NesEmu/src"
 	}
 
 	links {
 		"googletest",
-		"googlemock"
+		"googlemock",
+		"NesEmu"
 	}
 
 	filter "system:windows"

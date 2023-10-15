@@ -7,5 +7,6 @@ int main()
 	std::cout << "TFG WIP" << std::endl;
 
 	Emu::Bus bus;
+
 	return 0;
 }

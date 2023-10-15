@@ -1,6 +1,6 @@
 workspace "TFG"
 	architecture "x86_64"
-	startproject "NesEmu"
+	startproject "test"
 
 	configurations { 
 		"Debug", 

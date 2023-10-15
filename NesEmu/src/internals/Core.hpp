@@ -7,6 +7,8 @@
 * It will also contain macros for logs and platform specific copde in case it's needed
 */
 
+
+
 namespace Emu
 {
 /*
@@ -14,7 +16,7 @@ namespace Emu
 * since using uint8_t or unsigned char each time I want
 * to use any internal it's going to be cumbersome.
 * 
-* I'll use u16 basically for the PC and not much more.
+* I'll use u16 basically for the m_PC and not much more.
 * 
 * u32 will be used for the frequency of the clocks
 */
@@ -42,6 +44,13 @@ constexpr u32  PAL_CLOCK_DIVISOR = 16;
 */
 constexpr u32 NTSC_MASTER_CLOCK_SIGNAL = NTSC_COLOR_SUBCARRIER_FREQ * 6;
 constexpr u32  PAL_MASTER_CLOCK_SIGNAL =  PAL_COLOR_SUBCARRIER_FREQ * 6;
+
+
+/*
+* Read and write callback for device communication
+*/
+using ReadCallback  = std::function<u8(u16)>;
+using WriteCallback = std::function<void(u16, u8)>;
 
 
 /*

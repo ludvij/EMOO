@@ -8,9 +8,10 @@
 
 #define CHECK_BIT(val, bit) (((val) >> (bit)) & 1)
 
-#define CHECK_FLAG(flag) ((P & (flag)) > 0)
+#define CHECK_FLAG(flag) ((m_P & (flag)) > 0)
 
-namespace Emu {
+namespace Emu 
+{
 
 
 CPU::CPU()
@@ -21,55 +22,55 @@ CPU::CPU()
 		&CPU::___, 
 		0
 	};
-	std::fill_n(jumpTable, 256, invalid);
+	std::fill_n(m_jumpTable, 256, invalid);
 	// ADC
-	jumpTable[0x69] = {&CPU::addrIMM, &CPU::ADC, 2};
-	jumpTable[0x65] = {&CPU::addrZPI, &CPU::ADC, 3};
-	jumpTable[0x75] = {&CPU::addrZPX, &CPU::ADC, 4};
-	jumpTable[0x6D] = {&CPU::addrABS, &CPU::ADC, 4};
-	jumpTable[0x7D] = {&CPU::addrABX, &CPU::ADC, 4};
-	jumpTable[0x79] = {&CPU::addrABY, &CPU::ADC, 4};
-	jumpTable[0x61] = {&CPU::addrINX, &CPU::ADC, 6};
-	jumpTable[0x71] = {&CPU::addrINY, &CPU::ADC, 5};
+	m_jumpTable[0x69] = {&CPU::addrIMM, &CPU::ADC, 2};
+	m_jumpTable[0x65] = {&CPU::addrZPI, &CPU::ADC, 3};
+	m_jumpTable[0x75] = {&CPU::addrZPX, &CPU::ADC, 4};
+	m_jumpTable[0x6D] = {&CPU::addrABS, &CPU::ADC, 4};
+	m_jumpTable[0x7D] = {&CPU::addrABX, &CPU::ADC, 4};
+	m_jumpTable[0x79] = {&CPU::addrABY, &CPU::ADC, 4};
+	m_jumpTable[0x61] = {&CPU::addrINX, &CPU::ADC, 6};
+	m_jumpTable[0x71] = {&CPU::addrINY, &CPU::ADC, 5};
 	// AND
-	jumpTable[0x29] = {&CPU::addrIMM, &CPU::AND, 2};
-	jumpTable[0x25] = {&CPU::addrZPI, &CPU::AND, 3};
-	jumpTable[0x35] = {&CPU::addrZPX, &CPU::AND, 4};
-	jumpTable[0x2D] = {&CPU::addrABS, &CPU::AND, 4};
-	jumpTable[0x3D] = {&CPU::addrABX, &CPU::AND, 4};
-	jumpTable[0x39] = {&CPU::addrABY, &CPU::AND, 4};
-	jumpTable[0x21] = {&CPU::addrINX, &CPU::AND, 6};
-	jumpTable[0x31] = {&CPU::addrINY, &CPU::AND, 5};
+	m_jumpTable[0x29] = {&CPU::addrIMM, &CPU::AND, 2};
+	m_jumpTable[0x25] = {&CPU::addrZPI, &CPU::AND, 3};
+	m_jumpTable[0x35] = {&CPU::addrZPX, &CPU::AND, 4};
+	m_jumpTable[0x2D] = {&CPU::addrABS, &CPU::AND, 4};
+	m_jumpTable[0x3D] = {&CPU::addrABX, &CPU::AND, 4};
+	m_jumpTable[0x39] = {&CPU::addrABY, &CPU::AND, 4};
+	m_jumpTable[0x21] = {&CPU::addrINX, &CPU::AND, 6};
+	m_jumpTable[0x31] = {&CPU::addrINY, &CPU::AND, 5};
 	// ASL
-	jumpTable[0x0A] = {&CPU::addrACC, &CPU::ASL, 2};
-	jumpTable[0x06] = {&CPU::addrZPI, &CPU::ASL, 5};
-	jumpTable[0x16] = {&CPU::addrZPX, &CPU::ASL, 6};
-	jumpTable[0x0E] = {&CPU::addrABS, &CPU::ASL, 6};
-	jumpTable[0x1A] = {&CPU::addrABX, &CPU::ASL, 7};
+	m_jumpTable[0x0A] = {&CPU::addrACC, &CPU::ASL, 2};
+	m_jumpTable[0x06] = {&CPU::addrZPI, &CPU::ASL, 5};
+	m_jumpTable[0x16] = {&CPU::addrZPX, &CPU::ASL, 6};
+	m_jumpTable[0x0E] = {&CPU::addrABS, &CPU::ASL, 6};
+	m_jumpTable[0x1A] = {&CPU::addrABX, &CPU::ASL, 7};
 
 }
 
 void CPU::Step()
 {
-	if (cycles == 0)
+	if (m_cycles == 0)
 	{
-		opcode = readByte();
+		m_opcode = readByte();
 
-		currentInstr = jumpTable[opcode];
+		m_currentInstr = m_jumpTable[m_opcode];
 
-		cycles = currentInstr.cycles;
-		u16 addr = (this->*currentInstr.addrMode)();
-		(this->*currentInstr.exec)(addr);
+		m_cycles = m_currentInstr.cycles;
+		u16 addr = (this->*m_currentInstr.addrMode)();
+		(this->*m_currentInstr.exec)(addr);
 
-		if (canOops)
+		if (m_canOops)
 		{
-			cycles += oopsCycles;
+			m_cycles += m_oopsCycles;
 		}
-		oopsCycles = 0;
-		canOops = false;
+		m_oopsCycles = 0;
+		m_canOops = false;
 	}
 
-	cycles--;
+	m_cycles--;
 }
 
 
@@ -80,8 +81,8 @@ u8 CPU::read(u16 addr) const
 
 u8 CPU::readByte()
 {
-	u8 value = m_bus->Read(PC);
-	PC++;
+	u8 value = m_bus->Read(m_PC);
+	m_PC++;
 	return value;
 }
 
@@ -98,7 +99,7 @@ u16 CPU::addrIMP()
 
 u16 CPU::addrIMM()
 {
-	u16 addr = PC++;
+	u16 addr = m_PC++;
 	return addr;
 }
 
@@ -112,7 +113,7 @@ u16 CPU::addrZPI()
 
 u16 CPU::addrZPX()
 {
-	u16 addr = (readByte() + X);
+	u16 addr = (readByte() + m_X);
 	addr &= 0x00FF;
 	
 	return addr;
@@ -120,7 +121,7 @@ u16 CPU::addrZPX()
 
 u16 CPU::addrZPY()
 {
-	u16 addr = (readByte() + Y);
+	u16 addr = (readByte() + m_Y);
 	addr &= 0x00FF;
 
 	return addr;
@@ -142,10 +143,10 @@ u16 CPU::addrABX()
 	u16 hi = readByte();
 
 	u16 addr = MAKE_WORD(hi, lo);
-	addr += X;
+	addr += m_X;
 
 	if ((addr & 0xFF00) != (hi << 8))
-		oopsCycles++;
+		m_oopsCycles++;
 	
 	return addr;
 }
@@ -156,11 +157,11 @@ u16 CPU::addrABY()
 	u16 hi = readByte();
 
 	u16 addr = MAKE_WORD(hi, lo);
-	addr += Y;
+	addr += m_Y;
 
 	if ((addr & 0xFF00) != (hi << 8))
 	{
-		oopsCycles++;
+		m_oopsCycles++;
 	}
 
 	return addr;
@@ -190,7 +191,7 @@ u16 CPU::addrIND()
 
 u16 CPU::addrINX()
 {
-	u16 base = readByte() + X;
+	u16 base = readByte() + m_X;
 
 	u16 lo = read((base & 0x00FF));
 	u16 hi = read(((base + 1) & 0x00FF));
@@ -210,11 +211,11 @@ u16 CPU::addrINY()
 	u16 hi = read((base + 1) % 256);
 
 	u16 addr = MAKE_WORD(hi, lo);
-	addr += Y;
+	addr += m_Y;
 
 	if ((addr & 0xFF00) != (hi << 8))
 	{
-		oopsCycles++;
+		m_oopsCycles++;
 	}
 	
 	return addr;
@@ -229,7 +230,7 @@ u16 CPU::addrREL()
 		offset |= 0xff00;
 	}
 
-	u16 addr = PC + offset;
+	u16 addr = m_PC + offset;
 
 	return addr;
 }
@@ -242,14 +243,14 @@ u16 CPU::addrACC()
 
 /*
 * Instruction Add with carry
-* A = A + M + C
+* m_A = m_A + M + C
 * flags: C, V, N, Z
 */
 void CPU::ADC(u16 addr)
 {
 	// hack to get overflow
 	u16 m = read(addr);
-	u16 a16 = A;
+	u16 a16 = m_A;
 	u16 temp = m + a16;
 	if (CHECK_FLAG(P_C_FLAG)) 
 	{
@@ -262,35 +263,35 @@ void CPU::ADC(u16 addr)
 	setFlagIf(P_V_FLAG, (~(a16 ^ m) & (a16 ^ temp)) & 0x0080);
 	setFlagIf(P_N_FLAG, temp & 0x80);
 
-	A = temp & 0x00FF;
-	canOops = true;
+	m_A = temp & 0x00FF;
+	m_canOops = true;
 }
 /*
 * Instruction AND
-* A = A & M
+* m_A = m_A & M
 * Flags: Z, N
 */
 void CPU::AND(u16 addr)
 {
 	u8 m = read(addr);
-	A = A & m;
-	setFlagIf(P_Z_FLAG, A == 0);
-	setFlagIf(P_N_FLAG, CHECK_BIT(A, 7));
+	m_A = m_A & m;
+	setFlagIf(P_Z_FLAG, m_A == 0);
+	setFlagIf(P_N_FLAG, CHECK_BIT(m_A, 7));
 
-	canOops = true;
+	m_canOops = true;
 }
 
 
 /*
  * Instruction Arithemtic Shift Left
- * A = A * 2 | M = M * 2
+ * m_A = m_A * 2 | M = M * 2
  * Flags: Z, N, C
  */
 void CPU::ASL(u16 addr)
 {
 	u8 m;
 	if (isImplied())
-		m = A;
+		m = m_A;
 	else
 		m = read(addr);
 
@@ -301,7 +302,7 @@ void CPU::ASL(u16 addr)
 	setFlagIf(P_N_FLAG, m & 0x80);
 	if (isImplied()) 
 	{
-		A = m;
+		m_A = m;
 	}
 	else 
 	{
@@ -320,17 +321,17 @@ void CPU::setFlagIf(u8 flag, bool cond)
 {
 	if (cond) 
 	{
-		P |= (flag); 
+		m_P |= (flag); 
 	}
 	else 
 	{
-		P &= ~(flag);
+		m_P &= ~(flag);
 	}
 }
 
 bool CPU::isImplied() const
 {
-	return currentInstr.addrMode == &CPU::addrIMP || currentInstr.addrMode == &CPU::addrACC;
+	return m_currentInstr.addrMode == &CPU::addrIMP || m_currentInstr.addrMode == &CPU::addrACC;
 }
 }
 

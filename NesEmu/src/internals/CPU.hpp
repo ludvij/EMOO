@@ -8,9 +8,11 @@
 #include "Core.hpp"
 
 
-namespace Emu {
+
+namespace Emu 
+{
 /*
-* Processor status (S) flags
+* Processor status (m_S) flags
 * 7654 3210
 * NV1B DIZC
 * ││││ │││└>  Carry flag
@@ -50,6 +52,12 @@ public:  // Public functions
 
 	void Step();
 
+	u8 A() { return m_A; }
+	u8 X() { return m_X; }
+	u8 Y() { return m_Y; }
+	u8 S() { return m_S; }
+	u16 PC() { return m_PC; }
+	u8 P() { return m_P; }
 	
 public:  // Public fields
 	
@@ -74,7 +82,7 @@ private: // private functions
 	u16 addrINY(); // (d),y address mode
 	u16 addrREL(); // label
 	// not used
-	u16 addrACC(); // A
+	u16 addrACC(); // m_A
 
 	// official opcodes oredered as shown in the datasheet (alphabetical order)
 	void ADC(u16 addr); 
@@ -148,7 +156,7 @@ private: // private functions
 	void TYA(u16 addr);
 
 	// current workaround for unofficial opcodes
-	void ___(u16 addr);
+	[[noreturn]] void ___(u16 addr);
 
 	// some helper functions
 	void setFlagIf(u8 flag, bool cond);
@@ -156,12 +164,11 @@ private: // private functions
 
 
 private: // private members
-
 	Bus* m_bus = nullptr;
 
-	u32 cycles = 0;
-	u32 oopsCycles = 0;
-	bool canOops = false;
+	u32 m_cycles = 0;
+	u32 m_oopsCycles = 0;
+	bool m_canOops = false;
 
 
 	/*
@@ -170,7 +177,7 @@ private: // private members
 	* Each element contains the following:
 	*	an addrMode that acts as the addressing mode used in the instruction
 	*	an exec that acts as the operation itself
-	*	and the number of cycles the operation will take
+	*	and the number of m_cycles the operation will take
 	*/
 
 	typedef u16 (CPU::*addrMode)();
@@ -182,27 +189,27 @@ private: // private members
 		u8 cycles = 0;
 	};
 
-	Instruction jumpTable[256];
+	Instruction m_jumpTable[256];
 
 	// Accumulator
-	u8 A = 0;
+	u8 m_A = 0;
 
 	// Index registers
-	u8 X = 0;
-	u8 Y = 0;
+	u8 m_X = 0;
+	u8 m_Y = 0;
 
 	// Program counter
-	u16 PC = 0;
+	u16 m_PC = 0;
 
 	// Stack Pointer
-	u8 S = 0;
+	u8 m_S = 0;
 
 	// Status register
-	u8 P = 0;
+	u8 m_P = 0;
 
 	// some helpers
-	u8 opcode = 0;
-	Instruction currentInstr = {};
+	u8 m_opcode = 0;
+	Instruction m_currentInstr = {};
 };
 
 }

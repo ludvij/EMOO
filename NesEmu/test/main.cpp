@@ -1,9 +1,6 @@
 #include "pch.hpp"
 #ifdef NES_EMU_TEST
 
-
-#include <iostream>
-
 #include <gtest/gtest.h>
 
 

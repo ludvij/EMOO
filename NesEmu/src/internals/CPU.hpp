@@ -88,7 +88,33 @@ private: // private functions
 	u16 addrREL(); // label
 	u16 addrACC(); // m_A
 
-	// official opcodes oredered as shown in the datasheet (alphabetical order)
+	/*
+	* official opcodes oredered as shown in the datasheet (alphabetical order)
+	* By functionality
+	* ┌-----------------------┬-----┬-----┬-----┬-----┬-----┬-----┬-----------┐
+	* | Load/store            | LDA | LDX | LDY | STA | STX | STY |           |
+	* ├-----------------------┼-----┼-----┼-----┼-----┼-----┴-----┴-----------┤
+	* | Register transfer     | TAX | TAY | TXA | TYA |                       |
+	* ├-----------------------┼-----┼-----┼-----┼-----┼-----┬-----┬-----------┤
+	* | Stack operations      | TSX | TXS | PHA | PHP | PLA | PLP |           |
+	* ├-----------------------┼-----┼-----┼-----┼-----┼-----┴-----┴-----------┤
+	* | Logical               | AND | EOR | ORA | BIT |                       |
+	* ├-----------------------┼-----┼-----┼-----┼-----┼-----┬-----------------┤
+	* | Arithmetic            | ADC | SBC | CMP | CPX | CPY |                 |
+	* ├-----------------------┼-----┼-----┼-----┼-----┼-----┼-----┬-----------┤
+	* | Increment & decrement | INC | INX | INY | DEC | DEX | DEY |           |
+	* ├-----------------------┼-----┼-----┼-----┼-----┼-----┴-----┴-----------┤
+	* | Shift                 | ASL | RSL | ROL | ROR |                       |
+	* ├-----------------------┼-----┼-----┼-----┼-----┴-----------------------┤
+	* | Jump & calls          | JPM | JSR | RTS |                             |
+	* ├-----------------------┼-----┼-----┼-----┼-----┬-----┬-----┬-----┬-----┤
+	* | Branches              | BCC | BCS | BEQ | BMI | BNE | BPL | BVC | BVS |
+	* ├-----------------------┼-----┼-----┼-----┼-----┼-----┼-----┼-----┼-----┤
+	* | Status flag changes   | CLC | CLD | CLI | CLV | SEC | SED | SEI |     |
+	* ├-----------------------┼-----┼-----┼-----┼-----┴-----┴-----┴-----┴-----┤
+	* | system functions      | BRK | NOP | RTI |                             |
+	* └-----------------------┴-----┴-----┴-----┴-----------------------------┘
+	*/
 	void ADC(u16 addr); 
 	void AND(u16 addr); 
 	void ASL(u16 addr); 
@@ -217,6 +243,9 @@ private: // private members
 	// some helpers
 	u8 m_opcode = 0;
 	Instruction m_currentInstr = {};
+	// some operations do not save the result, I'll be saving them for
+	// utility reasons
+	u8 m_discard = 0;
 };
 
 }

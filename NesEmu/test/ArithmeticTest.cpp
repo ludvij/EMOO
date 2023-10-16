@@ -3,7 +3,7 @@
 
 #include <gtest/gtest.h>
 
-class TestFixture : public testing::Test
+class TestArithmetic : public testing::Test
 {
 protected:
 	Emu::CPU cpu;
@@ -29,7 +29,7 @@ protected:
 };
 
 
-TEST_F(TestFixture, ADC_IMM_N)
+TEST_F(TestArithmetic, ADC_IMM_N)
 {
 	mem[0] = 0x69;
 	mem[1] = 0x80;
@@ -41,7 +41,7 @@ TEST_F(TestFixture, ADC_IMM_N)
 	ASSERT_TRUE(cpu.P() & Emu::P_N_FLAG);
 }
 
-TEST_F(TestFixture, ADC_ZPI_C)
+TEST_F(TestArithmetic, ADC_ZPI_C)
 {
 	mem[0] = 0x65;
 	mem[1] = 2;
@@ -54,7 +54,7 @@ TEST_F(TestFixture, ADC_ZPI_C)
 	ASSERT_TRUE(cpu.P() & Emu::P_C_FLAG);
 }
 
-TEST_F(TestFixture, ADC_ZPX_Z)
+TEST_F(TestArithmetic, ADC_ZPX_Z)
 {
 	mem[0] = 0x75;
 	mem[1] = 1;
@@ -68,7 +68,7 @@ TEST_F(TestFixture, ADC_ZPX_Z)
 	ASSERT_TRUE(cpu.P() & Emu::P_Z_FLAG);
 }
 
-TEST_F(TestFixture, ADC_ABS_C)
+TEST_F(TestArithmetic, ADC_ABS_C)
 {
 	mem[0] = 0x6D;
 	mem[1] = 3;
@@ -84,7 +84,7 @@ TEST_F(TestFixture, ADC_ABS_C)
 	ASSERT_FALSE(cpu.P() & Emu::P_C_FLAG);
 }
 
-TEST_F(TestFixture, ADC_ABX_OOPS)
+TEST_F(TestArithmetic, ADC_ABX_OOPS)
 {
 	mem[0] = 0x7D;
 	mem[1] = 0xff;
@@ -102,7 +102,7 @@ TEST_F(TestFixture, ADC_ABX_OOPS)
 	ASSERT_EQ(cpu.GetCycles(), 4);
 }
 
-TEST_F(TestFixture, ADC_ABY_OOPS)
+TEST_F(TestArithmetic, ADC_ABY_OOPS)
 {
 	mem[0] = 0x79;
 	mem[1] = 0xff;

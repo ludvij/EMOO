@@ -22,7 +22,7 @@ project "NesEmu"
 		systemversion "latest"
 	
 	
--- Uncomment to enable tests
+-- Uncomment to disable tests
 	links {
 		"googletest"
 	}

@@ -53,12 +53,32 @@ CPU::CPU()
 	m_jumpTable[0xB0] = {&CPU::addrREL, &CPU::BCS, 2};
 	// BEQ
 	m_jumpTable[0xF0] = {&CPU::addrREL, &CPU::BEQ, 2};
+	// BIT
+	m_jumpTable[0x24] = {&CPU::addrZPI, &CPU::BIT, 3};
+	m_jumpTable[0x2C] = {&CPU::addrABS, &CPU::BIT, 4};
+	// BMI
+	m_jumpTable[0x30] = {&CPU::addrREL, &CPU::BMI, 2};
+	// BNE
+	m_jumpTable[0xD0] = {&CPU::addrREL, &CPU::BNE, 2};
+	// BPL
+	m_jumpTable[0x10] = {&CPU::addrREL, &CPU::BPL, 2};
+	// BRK
+	//m_jumpTable[0x00] = {&CPU::addrIMP, &CPU::BRK, 7};
+	// BVC
+	m_jumpTable[0x50] = {&CPU::addrREL, &CPU::BVC, 2};
+	// BVS
+	m_jumpTable[0x70] = {&CPU::addrREL, &CPU::BVS, 2};
 
 	Reset();
 }
 
 void CPU::Step()
 {
+	// resetting temps
+	m_oopsCycles = 0;
+	m_canOops = false;
+	m_discard = 0;
+
 	if (m_cycles == 0)
 	{
 		m_opcode = readByte();
@@ -74,8 +94,7 @@ void CPU::Step()
 		{
 			m_cycles += m_oopsCycles;
 		}
-		m_oopsCycles = 0;
-		m_canOops = false;
+		
 	}
 
 	m_cycles--;
@@ -100,7 +119,7 @@ void CPU::Reset()
 	// reset utility varibles
 	m_canOops = false;
 	m_oopsCycles = 0;
-
+	m_discard = 0;
 	m_cycles = 8;
 }
 
@@ -390,6 +409,68 @@ void CPU::BCS(u16 addr)
 void CPU::BEQ(u16 addr)
 {
 	branchIfCond(addr, CHECK_FLAG(P_Z_FLAG));
+}
+
+/*
+ * Instruction Bit Test
+ * A = A & M
+ * Flags: N = M7, V = M6
+ */
+void CPU::BIT(u16 addr)
+{
+	u8 m = readMemory(addr);
+
+	m_discard = m_A & m;
+
+	setFlagIf(P_Z_FLAG, m_discard == 0);
+	setFlagIf(P_V_FLAG, m & 0x40);
+	setFlagIf(P_N_FLAG, m & 0x80);
+}
+
+/*
+ * Instruction Branch if minus
+ * if N == 1 --> PC = addr
+ */
+void CPU::BMI(u16 addr)
+{
+	branchIfCond(addr, CHECK_FLAG(P_N_FLAG));
+}
+
+/*
+ * Instruction Branch if not equals
+ * if Z == 0 --> PC = addr
+ */
+void CPU::BNE(u16 addr)
+{
+	branchIfCond(addr, CHECK_FLAG(P_Z_FLAG) == 0);
+}
+
+/*
+ * Instruction Branch if positive
+ * if N == 0 --> PC = addr
+ */
+void CPU::BPL(u16 addr)
+{
+	branchIfCond(addr, CHECK_FLAG(P_N_FLAG) == 0);
+
+}
+
+/*
+ * Instruction Branch if overflow clear
+ * if V == 0 --> PC = addr
+ */
+void CPU::BVC(u16 addr)
+{
+	branchIfCond(addr, CHECK_FLAG(P_V_FLAG) == 0);
+}
+
+/*
+ * Instruction Branch if overflow set
+ * if V == 1 --> PC = addr
+ */
+void CPU::BVS(u16 addr)
+{
+	branchIfCond(addr, CHECK_FLAG(P_V_FLAG));
 }
 
 [[noreturn]]

@@ -1,5 +1,5 @@
 project "NesEmu"
-	kind "StaticLib"
+	kind "ConsoleApp"
 	language "C++"
 	cppdialect "c++20"
 	targetdir ("%{wks.location}/bin/" .. outputDir .. "/%{prj.name}")
@@ -7,7 +7,8 @@ project "NesEmu"
 
 	files { 
 		"src/**.hpp", 
-		"src/**.cpp", 
+		"src/**.cpp",
+		"test/**.cpp"
 	}
 
 	pchheader "pch.hpp"
@@ -19,17 +20,21 @@ project "NesEmu"
 
 	filter "system:windows"
 		systemversion "latest"
+	
+	
+-- Uncomment to enable tests
+	links {
+		"googletest"
+	}
 
-	filter "configurations:Test"
-		defines {
-			"NES_EMU_TEST"
-		}
-		runtime "debug"
-		symbols "On"
+	includedirs {
+		"vendor/googletest/googletest/include"
+	}
 
-		links {
-			"vendor/googletest/googletest"
-		}
+	defines {
+		"NES_EMU_TEST"
+	}
+	
 
 	filter "configurations:Debug"
 		defines { 
@@ -44,5 +49,3 @@ project "NesEmu"
 		}
 		runtime "release"
 		optimize "On"
-
-		

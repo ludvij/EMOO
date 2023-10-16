@@ -1,7 +1,7 @@
-#ifndef NES_EMU_TEST
-#define NES_EMU_TEST
-
 #include "pch.hpp"
+
+#ifndef NES_EMU_TEST
+
 
 #include "internals/Bus.hpp"
 

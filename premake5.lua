@@ -1,10 +1,11 @@
 workspace "TFG"
 	architecture "x86_64"
-	startproject "test"
+	startproject "NesEmu"
 
 	configurations { 
 		"Debug", 
-		"Release" 
+		"Release",
+		"Test"
 	}
 
 	flags {

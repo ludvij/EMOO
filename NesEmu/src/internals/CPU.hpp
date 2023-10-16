@@ -33,13 +33,6 @@ constexpr u8 P_1_FLAG = 0b00100000;
 constexpr u8 P_V_FLAG = 0b01000000;
 constexpr u8 P_N_FLAG = 0b10000000;
 
-/*
-* NES runs at 1.79 Mhz
-* That means each clock cycle should take 1/1790000 seconds
-* We get that signal by dividing the master clock
-*/
-constexpr u32 NTSC_CPU_FREQUENCY = NTSC_MASTER_CLOCK_SIGNAL / NTSC_CLOCK_DIVISOR;
-constexpr u32  PAL_CPU_FREQUENCY =  PAL_MASTER_CLOCK_SIGNAL /  PAL_CLOCK_DIVISOR;
 
 class Bus;
 
@@ -52,19 +45,31 @@ public:  // Public functions
 
 	void Step();
 
+	void Reset();
+
 	u8 A() { return m_A; }
 	u8 X() { return m_X; }
 	u8 Y() { return m_Y; }
 	u8 S() { return m_S; }
 	u16 PC() { return m_PC; }
 	u8 P() { return m_P; }
+
+	void SetA(u8 A) { m_A = A; }
+	void SetX(u8 X) { m_X = X; }
+	void SetY(u8 Y) { m_Y = Y; }
+	void SetS(u8 S) { m_S = S; }
+	void SetPC(u8 PC) { m_PC = PC; }
+	void SetP(u8 P) { m_P = P; }
+
+	u32 GetCycles() { return m_cycles; }
 	
 public:  // Public fields
 	
 private: // private functions
-
+	// reads a byte from PC and incrementes PC afterwards
 	u8 readByte();
-	u8 read(u16 addr) const;
+
+	u8 readMemory(u16 addr) const;
 	void write(u16 addr, u8 val) const;
 
 
@@ -81,7 +86,6 @@ private: // private functions
 	u16 addrINX(); // (d,x) address mode
 	u16 addrINY(); // (d),y address mode
 	u16 addrREL(); // label
-	// not used
 	u16 addrACC(); // m_A
 
 	// official opcodes oredered as shown in the datasheet (alphabetical order)
@@ -156,11 +160,14 @@ private: // private functions
 	void TYA(u16 addr);
 
 	// current workaround for unofficial opcodes
-	[[noreturn]] void ___(u16 addr);
+	[[noreturn]] 
+	void ___(u16 addr);
 
 	// some helper functions
 	void setFlagIf(u8 flag, bool cond);
 	bool isImplied() const;
+
+	void branchIfCond(u16 addr, bool cond);
 
 
 private: // private members

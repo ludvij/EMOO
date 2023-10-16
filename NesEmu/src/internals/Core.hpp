@@ -12,7 +12,7 @@
 namespace Emu
 {
 /*
-* Some type definitions to make the code easier to read
+* Some type definitions to make the code easier to readMemory
 * since using uint8_t or unsigned char each time I want
 * to use any internal it's going to be cumbersome.
 * 
@@ -20,6 +20,7 @@ namespace Emu
 * 
 * u32 will be used for the frequency of the clocks
 */
+using s8  = int8_t;
 using u8  = uint8_t;
 using u16 = uint16_t;
 using u32 = uint32_t;

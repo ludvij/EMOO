@@ -17,9 +17,11 @@ public:
 
 	void Step();
 
+	CPU GetCpu() { return m_cpu; }
 
+	u8* GetMemory() { return m_memory; }
 
-protected:
+private:
 	// Bus components
 	CPU m_cpu;
 

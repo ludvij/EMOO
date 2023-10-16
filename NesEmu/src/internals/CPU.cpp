@@ -8,7 +8,7 @@
 
 #define CHECK_BIT(val, bit) (((val) >> (bit)) & 1)
 
-#define CHECK_FLAG(flag) ((m_P & (flag)) > 0)
+#define CHECK_FLAG(flag) ((m_P & (flag)) ? 1 : 0)
 
 namespace Emu 
 {
@@ -47,7 +47,14 @@ CPU::CPU()
 	m_jumpTable[0x16] = {&CPU::addrZPX, &CPU::ASL, 6};
 	m_jumpTable[0x0E] = {&CPU::addrABS, &CPU::ASL, 6};
 	m_jumpTable[0x1A] = {&CPU::addrABX, &CPU::ASL, 7};
+	// BCC
+	m_jumpTable[0x90] = {&CPU::addrREL, &CPU::BCC, 2};
+	// BCS
+	m_jumpTable[0xB0] = {&CPU::addrREL, &CPU::BCS, 2};
+	// BEQ
+	m_jumpTable[0xF0] = {&CPU::addrREL, &CPU::BEQ, 2};
 
+	Reset();
 }
 
 void CPU::Step()
@@ -60,6 +67,7 @@ void CPU::Step()
 
 		m_cycles = m_currentInstr.cycles;
 		u16 addr = (this->*m_currentInstr.addrMode)();
+		// execute instruction
 		(this->*m_currentInstr.exec)(addr);
 
 		if (m_canOops)
@@ -73,15 +81,38 @@ void CPU::Step()
 	m_cycles--;
 }
 
+void CPU::Reset()
+{
+	m_A = 0;
+	m_X = 0;
+	m_Y = 0;
+	m_S = 0xFD;
+	m_P = 0x34;
 
-u8 CPU::read(u16 addr) const
+	// TODO: NOT YET
+	// 6502 reads memory at $FFFC
+	//u16 addr = 0xFFFC;
+	//u16 lo = readMemory(addr);
+	//u16 hi = readMemory(addr + 1);
+
+	//m_PC = MAKE_WORD(hi, lo);
+
+	// reset utility varibles
+	m_canOops = false;
+	m_oopsCycles = 0;
+
+	m_cycles = 8;
+}
+
+
+u8 CPU::readMemory(u16 addr) const
 {
 	return m_bus->Read(addr);
 }
 
 u8 CPU::readByte()
 {
-	u8 value = m_bus->Read(m_PC);
+	u8 value = readMemory(m_PC);
 	m_PC++;
 	return value;
 }
@@ -179,11 +210,11 @@ u16 CPU::addrIND()
 	// hardware bug
 	if (lo == 0x00FF) 
 	{
-		addr = MAKE_WORD(read(notyet & 0x00FF), read(notyet));
+		addr = MAKE_WORD(readMemory(notyet & 0x00FF), readMemory(notyet));
 	}
 	else
 	{
-		addr = MAKE_WORD(read(notyet + 1), read(notyet));
+		addr = MAKE_WORD(readMemory(notyet + 1), readMemory(notyet));
 	}
 
 	return addr;
@@ -193,8 +224,8 @@ u16 CPU::addrINX()
 {
 	u16 base = readByte() + m_X;
 
-	u16 lo = read((base & 0x00FF));
-	u16 hi = read(((base + 1) & 0x00FF));
+	u16 lo = readMemory((base & 0x00FF));
+	u16 hi = readMemory(((base + 1) & 0x00FF));
 
 
 	u16 addr = MAKE_WORD(hi, lo);
@@ -207,8 +238,8 @@ u16 CPU::addrINY()
 {
 	u16 base = readByte();
 
-	u16 lo = read(base % 256);
-	u16 hi = read((base + 1) % 256);
+	u16 lo = readMemory(base % 256);
+	u16 hi = readMemory((base + 1) % 256);
 
 	u16 addr = MAKE_WORD(hi, lo);
 	addr += m_Y;
@@ -221,10 +252,14 @@ u16 CPU::addrINY()
 	return addr;
 }
 
-// we need an 8-bit signed offset relative to pc
 u16 CPU::addrREL()
 {
 	u16 offset = readByte();
+
+	// this contraption here is to emulate wrap around
+	// could also be done by casting to s8, but I have grown attached
+	// to the machine that killed Shinzo Abe as represented here
+	// if bit 7 is set it will twos complement it to the negatives, but being u16
 
 	if (offset & 0x80) {
 		offset |= 0xff00;
@@ -245,11 +280,28 @@ u16 CPU::addrACC()
 * Instruction Add with carry
 * m_A = m_A + M + C
 * flags: C, V, N, Z
+* The overflow thing explained with a truth table
+* the overflow will be set when a and m share the same sign but r is different
+* A^R will be true when a and r have different symbol
+* ~(A^M) will be true when a and m have the same symbol
+* anding the two condition will get the result we want
+* ┌---------------------------------------┐
+* | A M R | V | A^R |~(A^M) | A^R &~(A^M) |
+* ├-------┼---┼-----┼-------┼-------------┤
+* | 0 0 0 | 0 |  0  |   1   |      0      |
+* | 0 0 1 | 1 |  1  |   1   |      1      |
+* | 0 1 0 | 0 |  0  |   0   |      0      |
+* | 0 1 1 | 0 |  1  |   0   |      0      |
+* | 1 0 0 | 0 |  1  |   0   |      0      |
+* | 1 0 1 | 0 |  0  |   0   |      0      |
+* | 1 1 0 | 1 |  1  |   1   |      1      |
+* | 1 1 1 | 0 |  0  |   1   |      0      |
+* └-------┴---┴-----┴-------┴-------------┘
 */
 void CPU::ADC(u16 addr)
 {
 	// hack to get overflow
-	u16 m = read(addr);
+	u16 m = readMemory(addr);
 	u16 a16 = m_A;
 	u16 temp = m + a16;
 	if (CHECK_FLAG(P_C_FLAG)) 
@@ -273,12 +325,13 @@ void CPU::ADC(u16 addr)
 */
 void CPU::AND(u16 addr)
 {
-	u8 m = read(addr);
+	u8 m = readMemory(addr);
 	m_A = m_A & m;
 	setFlagIf(P_Z_FLAG, m_A == 0);
 	setFlagIf(P_N_FLAG, CHECK_BIT(m_A, 7));
 
 	m_canOops = true;
+	
 }
 
 
@@ -291,9 +344,13 @@ void CPU::ASL(u16 addr)
 {
 	u8 m;
 	if (isImplied())
+	{
 		m = m_A;
+	}
 	else
-		m = read(addr);
+	{
+		m = readMemory(addr);
+	}
 
 	setFlagIf(P_C_FLAG, m & 0x80);
 	m <<= 1;
@@ -308,6 +365,31 @@ void CPU::ASL(u16 addr)
 	{
 		write(addr, m);
 	}
+}
+
+/*
+ * Instruction Branch if carry clear
+ * if C == 0 --> PC = addr
+ */
+void CPU::BCC(u16 addr)
+{
+	branchIfCond(addr, !CHECK_FLAG(P_C_FLAG));
+}
+/*
+ * Instruction Branch if carry set
+ * if C == 1 --> PC = addr
+ */
+void CPU::BCS(u16 addr)
+{
+	branchIfCond(addr, CHECK_FLAG(P_C_FLAG));
+}
+/*
+ * Instruction Branch if equal
+ * if Z == 1 --> PC = addr
+ */
+void CPU::BEQ(u16 addr)
+{
+	branchIfCond(addr, CHECK_FLAG(P_Z_FLAG));
 }
 
 [[noreturn]]
@@ -332,6 +414,24 @@ void CPU::setFlagIf(u8 flag, bool cond)
 bool CPU::isImplied() const
 {
 	return m_currentInstr.addrMode == &CPU::addrIMP || m_currentInstr.addrMode == &CPU::addrACC;
+}
+
+void CPU::branchIfCond(u16 addr, bool cond)
+{
+	// flag is clear
+	if (cond)
+	{
+		m_cycles++;
+
+		u8 page = (m_PC & 0xff00);
+		
+		m_PC = addr;
+		// extra cycle for page change
+		if (page != (m_PC & 0xff00))
+		{
+			m_cycles++;
+		}
+	}
 }
 }
 

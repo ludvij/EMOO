@@ -6,6 +6,7 @@
 // algos
 #include <algorithm>
 #include <functional>
+#include <bit>
 
 // io
 #include <iostream>

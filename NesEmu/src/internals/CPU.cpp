@@ -44,8 +44,8 @@ CPU::CPU()
 	// ASL
 	m_jumpTable[0x0A] = {&CPU::addrACC, &CPU::ASL, 2};
 	m_jumpTable[0x06] = {&CPU::addrZPI, &CPU::ASL, 5};
-	m_jumpTable[0x16] = {&CPU::addrZPX, &CPU::ASL, 6};
 	m_jumpTable[0x0E] = {&CPU::addrABS, &CPU::ASL, 6};
+	m_jumpTable[0x16] = {&CPU::addrZPX, &CPU::ASL, 6};
 	m_jumpTable[0x1A] = {&CPU::addrABX, &CPU::ASL, 7};
 	// BCC
 	m_jumpTable[0x90] = {&CPU::addrREL, &CPU::BCC, 2};
@@ -96,6 +96,11 @@ CPU::CPU()
 	//LDX
 	//LDY
 	//LSR
+	m_jumpTable[0x4A] = {&CPU::addrACC, &CPU::LSR, 2};
+	m_jumpTable[0x46] = {&CPU::addrZPI, &CPU::LSR, 5};
+	m_jumpTable[0x4E] = {&CPU::addrABS, &CPU::LSR, 6};
+	m_jumpTable[0x56] = {&CPU::addrZPX, &CPU::LSR, 6};
+	m_jumpTable[0x5A] = {&CPU::addrABX, &CPU::LSR, 7};
 	//NOP
 	//ORA
 	m_jumpTable[0x01] = {&CPU::addrINX, &CPU::ORA, 6};
@@ -106,6 +111,37 @@ CPU::CPU()
 	m_jumpTable[0x15] = {&CPU::addrZPX, &CPU::ORA, 4};
 	m_jumpTable[0x19] = {&CPU::addrABY, &CPU::ORA, 4};
 	m_jumpTable[0x1D] = {&CPU::addrABX, &CPU::ORA, 4};
+	//PHA
+	//PHP
+	//PLA
+	//PLP
+	//ROL
+	m_jumpTable[0x2A] = {&CPU::addrACC, &CPU::ROL, 2};
+	m_jumpTable[0x26] = {&CPU::addrZPI, &CPU::ROL, 5};
+	m_jumpTable[0x2E] = {&CPU::addrABS, &CPU::ROL, 6};
+	m_jumpTable[0x36] = {&CPU::addrZPX, &CPU::ROL, 6};
+	m_jumpTable[0x3A] = {&CPU::addrABX, &CPU::ROL, 7};
+	//ROR
+	m_jumpTable[0x6A] = {&CPU::addrACC, &CPU::ROR, 2};
+	m_jumpTable[0x66] = {&CPU::addrZPI, &CPU::ROR, 5};
+	m_jumpTable[0x6E] = {&CPU::addrABS, &CPU::ROR, 6};
+	m_jumpTable[0x76] = {&CPU::addrZPX, &CPU::ROR, 6};
+	m_jumpTable[0x7A] = {&CPU::addrABX, &CPU::ROR, 7};
+	//RTI
+	//RTS
+	//SBC
+	//SEC
+	//SED
+	//SEI
+	//STA
+	//STX
+	//STY
+	//TAX
+	//TAY
+	//TSX
+	//TSA
+	//TXS
+	//TYA
 
 	Reset();
 }
@@ -175,7 +211,7 @@ u8 CPU::readByte()
 }
 
 
-void CPU::write(u16 addr, u8 val) const
+void CPU::writeMemory(u16 addr, u8 val) const
 {
 	m_bus->Write(addr, val);
 }
@@ -415,13 +451,14 @@ void CPU::ASL(u16 addr)
 	m &= 0x00FF;
 	setFlagIf(P_Z_FLAG, m == 0);
 	setFlagIf(P_N_FLAG, m & 0x80);
+
 	if (isImplied()) 
 	{
 		m_A = m;
 	}
 	else 
 	{
-		write(addr, m);
+		writeMemory(addr, m);
 	}
 }
 
@@ -530,6 +567,39 @@ void CPU::EOR(u16 addr)
 }
 
 /*
+ * Instruction Logical Shift Right
+ * A = A/2 | M = M/2
+ * flags: C, Z, N
+ */
+void CPU::LSR(u16 addr)
+{
+	u8 m;
+	if (isImplied())
+	{
+		m = m_A;
+	}
+	else
+	{
+		m = readMemory(addr);
+	}
+
+	setFlagIf(P_C_FLAG, m & 1);
+	m >>= 1;
+	m &= 0x00FF;
+	setFlagIf(P_Z_FLAG, m == 0);
+	setFlagIf(P_N_FLAG, m & 0x80);
+
+	if (isImplied())
+	{
+		m_A = m;
+	}
+	else
+	{
+		writeMemory(addr, m);
+	}
+}
+
+/*
  * Instruction Inclusive or
  * m_A = m_A | M
  * Flags: Z, N
@@ -544,6 +614,94 @@ void CPU::ORA(u16 addr)
 	setFlagIf(P_N_FLAG, m_A & 0x80);
 
 	m_canOops = true;
+}
+
+
+/*
+ * Instruction Rotate Left
+ * move each byte A|M one place to the left
+ * bit 0 is filled with carry
+ * carry is filled with bit 7
+ * flags: C, Z, N
+ */
+void CPU::ROL(u16 addr)
+{
+	u16 m;
+	if (isImplied())
+	{
+		m = m_A;
+	}
+	else
+	{
+		m = readMemory(addr);
+	}
+	// we are in 16 bit realm so if we have
+	// 0000 0000 1011 10001
+	// and we rotate left we should end with
+	// 0000 0001 0111 00010
+	// anything above bit 7 will be cut in 8 bits
+	// but in 16 we can store it to check flags
+	m <<= 1;
+	if (CHECK_FLAG(P_C_FLAG))
+	{
+		m |= 1;
+	}
+
+	setFlagIf(P_C_FLAG, m > 0xff);
+	m &= 0x00FF;
+	setFlagIf(P_N_FLAG, m & 0x80);
+	setFlagIf(P_Z_FLAG, m == 0);
+
+	if (isImplied())
+	{
+		m_A = m;
+	}
+	else
+	{
+		writeMemory(addr, m);
+	}
+}
+
+/*
+ * Instruction Rotate Right
+ * move each byte A|M one place to the right
+ * bit 7 is filled with carry
+ * carry is filled with bit 0
+ * flags: C, Z, N
+ */
+void CPU::ROR(u16 addr)
+{
+	u16 m;
+	if (isImplied())
+	{
+		m = m_A;
+	}
+	else
+	{
+		m = readMemory(addr);
+	}
+
+	// we set bit 8 in case of carry so we can 
+	// store it after shifting
+	if (CHECK_FLAG(P_C_FLAG))
+	{
+		m |= 0x100;
+	}
+	setFlagIf(P_C_FLAG, m & 1);
+	m >>= 1;
+
+	m &= 0x00FF;
+	setFlagIf(P_N_FLAG, m & 0x80);
+	setFlagIf(P_Z_FLAG, m == 0);
+
+	if (isImplied())
+	{
+		m_A = m;
+	}
+	else
+	{
+		writeMemory(addr, m);
+	}
 }
 
 [[noreturn]]

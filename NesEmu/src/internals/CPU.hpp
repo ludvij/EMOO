@@ -70,7 +70,7 @@ private: // private functions
 	u8 readByte();
 
 	u8 readMemory(u16 addr) const;
-	void write(u16 addr, u8 val) const;
+	void writeMemory(u16 addr, u8 val) const;
 
 
 	// addressing modes

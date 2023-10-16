@@ -68,6 +68,44 @@ CPU::CPU()
 	m_jumpTable[0x50] = {&CPU::addrREL, &CPU::BVC, 2};
 	// BVS
 	m_jumpTable[0x70] = {&CPU::addrREL, &CPU::BVS, 2};
+	//CLC
+	//CLD
+	//CLI
+	//CLV
+	//CMP
+	//CPX
+	//CPY
+	//DEC
+	//DEX
+	//DEY
+	//EOR
+	m_jumpTable[0x41] = {&CPU::addrINX, &CPU::EOR, 6};
+	m_jumpTable[0x45] = {&CPU::addrZPI, &CPU::EOR, 3};
+	m_jumpTable[0x49] = {&CPU::addrIMM, &CPU::EOR, 2};
+	m_jumpTable[0x4D] = {&CPU::addrABS, &CPU::EOR, 4};
+	m_jumpTable[0x51] = {&CPU::addrINY, &CPU::EOR, 5};
+	m_jumpTable[0x55] = {&CPU::addrZPX, &CPU::EOR, 4};
+	m_jumpTable[0x59] = {&CPU::addrABY, &CPU::EOR, 4};
+	m_jumpTable[0x5D] = {&CPU::addrABX, &CPU::EOR, 4};
+	//INC
+	//INX
+	//INY
+	//JMP
+	//JSR
+	//LDA
+	//LDX
+	//LDY
+	//LSR
+	//NOP
+	//ORA
+	m_jumpTable[0x01] = {&CPU::addrINX, &CPU::ORA, 6};
+	m_jumpTable[0x05] = {&CPU::addrZPI, &CPU::ORA, 3};
+	m_jumpTable[0x09] = {&CPU::addrIMM, &CPU::ORA, 2};
+	m_jumpTable[0x0D] = {&CPU::addrABS, &CPU::ORA, 4};
+	m_jumpTable[0x11] = {&CPU::addrINY, &CPU::ORA, 5};
+	m_jumpTable[0x15] = {&CPU::addrZPX, &CPU::ORA, 4};
+	m_jumpTable[0x19] = {&CPU::addrABY, &CPU::ORA, 4};
+	m_jumpTable[0x1D] = {&CPU::addrABX, &CPU::ORA, 4};
 
 	Reset();
 }
@@ -296,27 +334,27 @@ u16 CPU::addrACC()
 }
 
 /*
-* Instruction Add with carry
-* m_A = m_A + M + C
-* flags: C, V, N, Z
-* The overflow thing explained with a truth table
-* the overflow will be set when a and m share the same sign but r is different
-* A^R will be true when a and r have different symbol
-* ~(A^M) will be true when a and m have the same symbol
-* anding the two condition will get the result we want
-* ┌---------------------------------------┐
-* | A M R | V | A^R |~(A^M) | A^R &~(A^M) |
-* ├-------┼---┼-----┼-------┼-------------┤
-* | 0 0 0 | 0 |  0  |   1   |      0      |
-* | 0 0 1 | 1 |  1  |   1   |      1      |
-* | 0 1 0 | 0 |  0  |   0   |      0      |
-* | 0 1 1 | 0 |  1  |   0   |      0      |
-* | 1 0 0 | 0 |  1  |   0   |      0      |
-* | 1 0 1 | 0 |  0  |   0   |      0      |
-* | 1 1 0 | 1 |  1  |   1   |      1      |
-* | 1 1 1 | 0 |  0  |   1   |      0      |
-* └-------┴---┴-----┴-------┴-------------┘
-*/
+ * Instruction Add with carry
+ * m_A = m_A + M + C
+ * flags: C, V, N, Z
+ * The overflow thing explained with a truth table
+ * the overflow will be set when a and m share the same sign but r is different
+ * A^R will be true when a and r have different symbol
+ * ~(A^M) will be true when a and m have the same symbol
+ * anding the two condition will get the result we want
+ * ┌---------------------------------------┐
+ * | A M R | V | A^R |~(A^M) | A^R &~(A^M) |
+ * ├-------┼---┼-----┼-------┼-------------┤
+ * | 0 0 0 | 0 |  0  |   1   |      0      |
+ * | 0 0 1 | 1 |  1  |   1   |      1      |
+ * | 0 1 0 | 0 |  0  |   0   |      0      |
+ * | 0 1 1 | 0 |  1  |   0   |      0      |
+ * | 1 0 0 | 0 |  1  |   0   |      0      |
+ * | 1 0 1 | 0 |  0  |   0   |      0      |
+ * | 1 1 0 | 1 |  1  |   1   |      1      |
+ * | 1 1 1 | 0 |  0  |   1   |      0      |
+ * └-------┴---┴-----┴-------┴-------------┘
+ */
 void CPU::ADC(u16 addr)
 {
 	// hack to get overflow
@@ -337,11 +375,12 @@ void CPU::ADC(u16 addr)
 	m_A = temp & 0x00FF;
 	m_canOops = true;
 }
+
 /*
-* Instruction AND
-* m_A = m_A & M
-* Flags: Z, N
-*/
+ * Instruction AND
+ * m_A = m_A & M
+ * Flags: Z, N
+ */
 void CPU::AND(u16 addr)
 {
 	u8 m = readMemory(addr);
@@ -471,6 +510,40 @@ void CPU::BVC(u16 addr)
 void CPU::BVS(u16 addr)
 {
 	branchIfCond(addr, CHECK_FLAG(P_V_FLAG));
+}
+
+/*
+ * Instruction Exclusive or
+ * m_A = m_A ^ M
+ * Flags: Z, N
+ */
+void CPU::EOR(u16 addr)
+{
+	u8 m = readMemory(addr);
+
+	m_A ^= m;
+
+	setFlagIf(P_Z_FLAG, m_A == 0);
+	setFlagIf(P_N_FLAG, m_A & 0x80);
+
+	m_canOops = true;
+}
+
+/*
+ * Instruction Inclusive or
+ * m_A = m_A | M
+ * Flags: Z, N
+ */
+void CPU::ORA(u16 addr)
+{
+	u8 m = readMemory(addr);
+
+	m_A |= m;
+
+	setFlagIf(P_Z_FLAG, m_A == 0);
+	setFlagIf(P_N_FLAG, m_A & 0x80);
+
+	m_canOops = true;
 }
 
 [[noreturn]]

@@ -37,14 +37,59 @@ TEST_F(TestLogic, AND)
 	clearCycles();
 
 	ASSERT_EQ(cpu.A(), 0);
+	ASSERT_TRUE(cpu.P() & Emu::P_Z_FLAG);
 
 	mem[2] = 0x29;
-	mem[3] = 12;
-	cpu.SetA(12);
+	mem[3] = 0x80 + 0x40;
+	cpu.SetA(0x80);
 
 	clearCycles(2);
 
-	ASSERT_EQ(cpu.A(), 12);
+	ASSERT_EQ(cpu.A(), 0x80);
+	ASSERT_TRUE(cpu.P() & Emu::P_N_FLAG);
+	ASSERT_FALSE(cpu.P() & Emu::P_Z_FLAG);
+}
+
+TEST_F(TestLogic, EOR)
+{
+	mem[0] = 0x49;
+	mem[1] = 0x80;
+	cpu.SetA(0);
+	clearCycles();
+
+	ASSERT_EQ(cpu.A(), 0x80);
+	ASSERT_TRUE(cpu.P() & Emu::P_N_FLAG);
+
+	mem[2] = 0x49;
+	mem[3] = 0x80;
+
+	clearCycles(2);
+
+	ASSERT_EQ(cpu.A(), 0);
+	ASSERT_TRUE(cpu.P() & Emu::P_Z_FLAG);
+	ASSERT_FALSE(cpu.P() & Emu::P_N_FLAG);
+
+}
+
+TEST_F(TestLogic, ORA)
+{
+	mem[0] = 0x09;
+	mem[1] = 0x80;
+	cpu.SetA(0x01);
+	clearCycles();
+
+	ASSERT_EQ(cpu.A(), 0x81);
+	ASSERT_TRUE(cpu.P() & Emu::P_N_FLAG);
+
+	mem[2] = 0x09;
+	mem[3] = 0;
+
+	cpu.SetA(0);
+	clearCycles(2);
+
+	ASSERT_EQ(cpu.A(), 0);
+	ASSERT_TRUE(cpu.P() & Emu::P_Z_FLAG);
+	ASSERT_FALSE(cpu.P() & Emu::P_N_FLAG);
 }
 
 TEST_F(TestLogic, BIT)

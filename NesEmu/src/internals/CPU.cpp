@@ -18,6 +18,7 @@ CPU::CPU()
 {
 	// filling the jump table
 	Instruction invalid = {
+		"___",
 		&CPU::addrIMM, 
 		&CPU::___, 
 		0

@@ -6,6 +6,7 @@
 
 
 #include "Core.hpp"
+#include <string_view>
 
 
 
@@ -218,6 +219,7 @@ private: // private members
 	typedef void (CPU::*exec)(u16);
 	struct Instruction
 	{
+		std::string_view name;
 		addrMode addrMode = nullptr;
 		exec exec = nullptr;
 		u8 cycles = 0;

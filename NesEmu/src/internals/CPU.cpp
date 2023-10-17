@@ -137,11 +137,17 @@ CPU::CPU()
 	//STX
 	//STY
 	//TAX
+	m_jumpTable[0xAA] = {&CPU::addrIMP, &CPU::TAX, 2};
 	//TAY
+	m_jumpTable[0xA8] = {&CPU::addrIMP, &CPU::TAY, 2};
 	//TSX
-	//TSA
+	m_jumpTable[0xBA] = {&CPU::addrIMP, &CPU::TSX, 2};
+	//TXA
+	m_jumpTable[0x8A] = {&CPU::addrIMP, &CPU::TXA, 2};
 	//TXS
+	m_jumpTable[0x9A] = {&CPU::addrIMP, &CPU::TXS, 2};
 	//TYA
+	m_jumpTable[0x98] = {&CPU::addrIMP, &CPU::TYA, 2};
 
 	Reset();
 }
@@ -703,6 +709,65 @@ void CPU::ROR(u16 addr)
 		writeMemory(addr, m);
 	}
 }
+/*
+ * Instruction Transfer Accumulator to X
+ * X = A
+ * flags: Z, N
+ */
+void CPU::TAX(u16 addr)
+{
+	transferRegTo(m_A, m_X);
+}
+
+/*
+ * Instruction Transfer Accumulator to Y
+ * Y = A
+ * flags: Z, N
+ */
+void CPU::TAY(u16 addr)
+{
+	transferRegTo(m_A, m_Y);
+}
+
+/*
+ * Instruction Transfer Stack pointer to X
+ * X = S
+ * flags: Z, N
+ */
+void CPU::TSX(u16 addr)
+{
+	transferRegTo(m_S, m_X);
+}
+
+/*
+ * Instruction Transfer X to Accumulator
+ * A = X
+ * flags: Z, N
+ */
+void CPU::TXA(u16 addr)
+{
+	transferRegTo(m_X, m_A);
+}
+
+/*
+ * Instruction Transfer X to Stack pointer
+ * S = X
+ * flags: Z, N
+ */
+void CPU::TXS(u16 addr) 
+{
+	transferRegTo(m_X, m_S);
+}
+
+/*
+ * Instruction Transfer Y to Accumulator
+ * A = Y
+ * flags: Z, N
+ */
+void CPU::TYA(u16 addr) 
+{ 
+	transferRegTo(m_Y, m_A);
+}
 
 [[noreturn]]
 void CPU::___(u16 addr) 
@@ -744,6 +809,13 @@ void CPU::branchIfCond(u16 addr, bool cond)
 			m_cycles++;
 		}
 	}
+}
+
+void CPU::transferRegTo(u8 from, u8& to)
+{
+	to = from;
+	setFlagIf(P_Z_FLAG, to == 0);
+	setFlagIf(P_N_FLAG, to & 0x80);
 }
 }
 

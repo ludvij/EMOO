@@ -194,6 +194,7 @@ private: // private functions
 	bool isImplied() const;
 
 	void branchIfCond(u16 addr, bool cond);
+	void transferRegTo(u8 from, u8& to);
 
 
 private: // private members

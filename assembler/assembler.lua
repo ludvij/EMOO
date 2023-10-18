@@ -288,7 +288,8 @@ function GetAddressing(text)
 	elseif text:match '^%*[-+]%d?%d$' then
 		res['addr'] = 'rel'
 		res['out'] = tonumber(text:match '([+-]%d+)')
-
+	elseif text:match '^[Aa]$' then
+		res['addr'] = 'acc'
 	elseif text:match '^$%x+$' then
 		local num = tonumber(text:match '(%x+)', 16)
 		if num < 256 then
@@ -440,65 +441,57 @@ function GetAddressing(text)
 	elseif text:match '^#%%[01]+$' then
 		res['addr'] = 'imm'
 		res['out'] = tonumber(text:match '([01]+)', 2)
-
-	elseif text:match '^[Aa]$' then
-		res['addr'] = 'acc'
 	end
-
 	return res
-end
-
-function AssembleLine(line)
-	if line == '' or line == nil then
-		return nil
-	end
-	local assembly = {}
-	if line:find '%a%a%a' then
-
-		local instr = string.upper(line:match '^%s*(%a%a%a)')
-		local addr  = line:match '^%s*%a%a%a%s+(.+)%s*$'
-		local addrType = GetAddressing(addr)
-		local an = addrType['addr']
-		local out = addrType['out']
-		-- check if instruction
-		if instr:match('%a%a%a') then
-			if Instructions[instr] ~= nil and Instructions[instr][an] ~= nil then
-				table.insert(assembly, Instructions[instr][an])
-				-- do nothing
-				if an == 'imp' or an == 'acc' then
-				-- 8-bit instructions
-				elseif an == 'imm' or an == 'zpi' or an == 'zpx' or an == 'zpy' or an == 'rel' or an == 'iny' or an == 'inx' then
-					table.insert(assembly, out)
-				-- 16-bit instructions
-				elseif (an == 'abs' or an == 'abx' or an == 'aby' or an == 'ind' ) and type(out) == 'table' then
-					table.insert(assembly, out[1])
-					table.insert(assembly, out[2])
-				end
-			else
-				error('Invalid operation')
-			end
-		end
-	else
-		if line:match '^%s*$%x+$%s*$' then
-			table.insert(assembly, tonumber(line:match '(%x+)', 16))
-		elseif line:match '^%s*%d+%s*$' then
-			table.insert(assembly, tonumber(line:match '(%d+)'))
-		elseif line:match '^%s*%%[01]+%s*$' then
-			table.insert(assembly, tonumber(line:match '([01]+)', 2))
-		end
-	end
-	return assembly
 end
 
 function Assemble(code)
 	local assembly = {}
 	for line in code:gmatch '([^\n]+)' do
-		local res = AssembleLine(line)
-		if res ~= nil then
-			for _, i in ipairs(res) do
-				table.insert(assembly, i)
+		if line == '' or line == nil then
+			-- I hate it herr
+			goto continue
+		end
+		if line:find '%a%a%a' then
+
+			local instr = string.upper(line:match '^%s*(%a%a%a)')
+			local addr  = line:match '^%s*%a%a%a%s+(.+)%s*$'
+			local addrType = GetAddressing(addr)
+			local an = addrType['addr']
+			local out = addrType['out']
+			-- check if instruction
+			if instr:match('%a%a%a') then
+				if Instructions[instr] ~= nil and Instructions[instr][an] ~= nil then
+					table.insert(assembly, Instructions[instr][an])
+					-- do nothing
+					if an == 'imp' or an == 'acc' then
+					-- 8-bit instructions
+					elseif an == 'imm' or an == 'zpi' or an == 'zpx' or an == 'zpy' or an == 'rel' or an == 'iny' or an == 'inx' then
+						table.insert(assembly, out)
+					-- 16-bit instructions
+					elseif (an == 'abs' or an == 'abx' or an == 'aby' or an == 'ind' ) and type(out) == 'table' then
+						table.insert(assembly, out[1])
+						table.insert(assembly, out[2])
+					end
+				else
+					error('Invalid operation')
+				end
+			end
+		else
+			if line:match '^%s*$%x+$%s*$' then
+				table.insert(assembly, tonumber(line:match '(%x+)', 16))
+			elseif line:match '^%s*%d+%s*$' then
+				table.insert(assembly, tonumber(line:match '(%d+)'))
+			elseif line:match '^%s*%%[01]+%s*$' then
+				table.insert(assembly, tonumber(line:match '([01]+)', 2))
 			end
 		end
+	    ::continue::
 	end
 	return assembly
 end
+
+
+Assemble([[
+	LDA 34
+]])

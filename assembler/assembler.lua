@@ -43,12 +43,15 @@ Instructions = {
 	},
 	BCC = {
 		rel = 0x90,
+		zpi = 0x90,
 	},
 	BCS = {
 		rel = 0xb0,
+		zpi = 0xb0,
 	}, 
 	BEQ = {
 		rel = 0xf0,
+		zpi = 0xf0,
 	},
 	BIT = {
 		zpi = 0x24,
@@ -56,24 +59,30 @@ Instructions = {
 	},
 	BMI = {
 		rel = 0x30,
+		zpi = 0x30,
 	},
 	BNE = {
 		rel = 0xd0,
+		zpi = 0xd0,
 	},
 	BPL = {
 		rel = 0x10,
+		zpi = 0x10,
 	},
 	BRK = {
 		imp = 0x00,
 	},
 	BVC = {
 		rel = 0x50,
+		zpi = 0x50,
 	},
 	BVS = {
 		rel = 0x70,
+		zpi = 0x70,
 	},
 	CLC = {
 		imp = 0x18,
+		zpi = 0x18,
 	},
 	CLD = {
 		imp = 0xd8,
@@ -146,14 +155,14 @@ Instructions = {
 		abs = 0x20,
 	},
 	LDA = {
-		inx = 0xa1,
-		zpi = 0xa5,
 		imm = 0xa9,
-		abs = 0xad,
-		iny = 0xb1,
+		zpi = 0xa5,
 		zpx = 0xb5,
-		aby = 0xb9,
+		abs = 0xad,
 		abx = 0xbd,
+		aby = 0xb9,
+		inx = 0xa1,
+		iny = 0xb1,
 	},
 	LDX = {
 		imm = 0xa2,
@@ -280,218 +289,224 @@ Instructions = {
 }
 
 function GetAddressing(text)
-	local res ={}
-
+	local res = {}
 	if text == nil then
-		res['addr'] = 'abs'
+		res['addr'] = 'imp'
 
-	elseif text:match '^%*[-+]%d?%d$' then
-		res['addr'] = 'rel'
-		res['out'] = tonumber(text:match '([+-]%d+)')
 	elseif text:match '^[Aa]$' then
 		res['addr'] = 'acc'
+
 	elseif text:match '^$%x+$' then
 		local num = tonumber(text:match '(%x+)', 16)
 		if num < 256 then
 			res['addr'] = 'zpi'
-			res['out'] = num
+			res['lo'] = num
 		else
 			res['addr'] = 'abs'
-			res['out'] = {}
-			res['out'][1] = num & 0x00ff
-			res['out'][2] = (num & 0xff00) >> 8
+			res['lo'] = num & 0x00ff
+			res['hi'] = (num & 0xff00) >> 8
 		end
 	elseif text:match '^%d+$' then
 		local num = tonumber(text:match '(%d+)')
 		if num < 256 then
 			res['addr'] = 'zpi'
-			res['out'] = num
+			res['lo'] = num
 		else
 			res['addr'] = 'abs'
-			res['out'] = {}
-			res['out'][1] = num & 0x00ff
-			res['out'][2] = (num & 0xff00) >> 8
+			res['lo'] = num & 0x00ff
+			res['hi'] = (num & 0xff00) >> 8
 		end
 	elseif text:match '^%%[01]+$' then
 		local num = tonumber(text:match '([01]+)', 2)
 		if num < 256 then
 			res['addr'] = 'zpi'
-			res['out'] = num
+			res['lo'] = num
 		else
 			res['addr'] = 'abs'
-			res['out'] = {}
-			res['out'][1] = num & 0x00ff
-			res['out'][2] = (num & 0xff00) >> 8
+			res['lo'] = num & 0x00ff
+			res['hi'] = (num & 0xff00) >> 8
 		end
 
-	elseif text:match '^$%x+,%s*,%s*x$' then
+	elseif text:match '^$%x+%s*,%s*x$' then
 		local num = tonumber(text:match '(%x+)', 16)
 		if num < 256 then
 			res['addr'] = 'zpx'
-			res['out'] = num
+			res['lo'] = num
 		else
 			res['addr'] = 'abx'
-			res['out'] = {}
-			res['out'][1] = num & 0x00ff
-			res['out'][2] = (num & 0xff00) >> 8
+			res['lo'] = num & 0x00ff
+			res['hi'] = (num & 0xff00) >> 8
 		end
 	elseif text:match '^%d+%s*,%s*x$' then
 		local num = tonumber(text:match '(%d+)')
 		if num < 256 then
 			res['addr'] = 'zpx'
-			res['out'] = num
+			res['lo'] = num
 		else
 			res['addr'] = 'abx'
-			res['out'] = {}
-			res['out'][1] = num & 0x00ff
-			res['out'][2] = (num & 0xff00) >> 8
+			res['lo'] = num & 0x00ff
+			res['hi'] = (num & 0xff00) >> 8
 		end
 	elseif text:match '^%%[01]+%s*,%s*x$' then
 		local num = tonumber(text:match '([01]+)', 2)
 		if num < 256 then
 			res['addr'] = 'zpx'
-			res['out'] = num
+			res['lo'] = num
 		else
 			res['addr'] = 'abx'
-			res['out'] = {}
-			res['out'][1] = num & 0x00ff
-			res['out'][2] = (num & 0xff00) >> 8
+			res['lo'] = num & 0x00ff
+			res['hi'] = (num & 0xff00) >> 8
 		end
 
 	elseif text:match '^$%x+,%s*,%s*y$' then
 		local num = tonumber(text:match '(%x+)', 16)
 		if num < 256 then
 			res['addr'] = 'zpy'
-			res['out'] = num
+			res['lo'] = num
 		else
 			res['addr'] = 'aby'
-			res['out'] = {}
-			res['out'][1] = num & 0x00ff
-			res['out'][2] = (num & 0xff00) >> 8
+			res['lo'] = num & 0x00ff
+			res['hi'] = (num & 0xff00) >> 8
 		end
 	elseif text:match '^%d+%s*,%s*y$' then
 		local num = tonumber(text:match '(%d+)')
 		if num < 256 then
 			res['addr'] = 'zpy'
-			res['out'] = num
+			res['lo'] = num
 		else
 			res['addr'] = 'aby'
-			res['out'] = {}
-			res['out'][1] = num & 0x00ff
-			res['out'][2] = (num & 0xff00) >> 8
+			res['lo'] = num & 0x00ff
+			res['hi'] = (num & 0xff00) >> 8
 		end
 	elseif text:match '^%%[01]+%s*,%s*y$' then
 		local num = tonumber(text:match '([01]+)', 2)
 		if num < 256 then
 			res['addr'] = 'zpy'
-			res['out'] = num
+			res['lo'] = num
 		else
 			res['addr'] = 'aby'
-			res['out'] = {}
-			res['out'][1] = num & 0x00ff
-			res['out'][2] = (num & 0xff00) >> 8
+			res['lo'] = num & 0x00ff
+			res['hi'] = (num & 0xff00) >> 8
 		end
 
 	elseif text:match '^%(%s*$%x+%s*,%s*x%s*%)$' then
 		res['addr'] = 'inx'
-		res['out'] = tonumber(text:match '(%x+)', 16)
+		res['lo'] = tonumber(text:match '(%x+)', 16)
 	elseif text:match '^%(%s*%d+%s*,%s*x%s*%)$' then
 		res['addr'] = 'inx'
-		res['out'] = tonumber(text:match '(%d+)')
+		res['lo'] = tonumber(text:match '(%d+)')
 	elseif text:match '^%(%s*%%[01]+%s*,%s*x%s*%)$' then
 		res['addr'] = 'inx'
-		res['out'] = tonumber(text:match '([01]+)', 2)
+		res['lo'] = tonumber(text:match '([01]+)', 2)
 
 	elseif text:match '^%(%s*$%x+%s*%)%s*,%s*y$' then
 		res['addr'] = 'iny'
-		res['out'] = tonumber(text:match '(%x+)', 16)
+		res['lo'] = tonumber(text:match '(%x+)', 16)
 	elseif text:match '^%(%s*%d+%s*%)%s*,%s*y$' then
 		res['addr'] = 'iny'
-		res['out'] = tonumber(text:match '(%d+)')
+		res['lo'] = tonumber(text:match '(%d+)')
 	elseif text:match '^%(%s*%%[01]%s*%)%s*,%s*y$' then
 		res['addr'] = 'iny'
-		res['out'] = tonumber(text:match '([01]+)', 2)
+		res['lo'] = tonumber(text:match '([01]+)', 2)
 
 	elseif text:match '^%(%s*$%x+%s*%)$' then
 		local num = tonumber(text:match '(%x+)', 16)
 		res['addr'] = 'ind'
-		res['out'] = {}
-		res['out'][1] = num & 0x00ff
-		res['out'][2] = (num & 0xff00) >> 8
+		res['lo'] = num & 0x00ff
+		res['hi'] = (num & 0xff00) >> 8
 	elseif text:match '^%(%s*%d+%s*%)$' then
 		local num = tonumber(text:match '(%d+)')
 		res['addr'] = 'ind'
-		res['out'] = {}
-		res['out'][1] = num & 0x00ff
-		res['out'][2] = (num & 0xff00) >> 8
+		res['lo'] = num & 0x00ff
+		res['hi'] = (num & 0xff00) >> 8
 	elseif text:match '^%(%s*%%[01]+%s*%)$' then
 		local num = tonumber(text:match '([01]+)', 2)
 		res['addr'] = 'ind'
-		res['out'] = {}
-		res['out'][1] = num & 0x00ff
-		res['out'][2] = (num & 0xff00) >> 8
+		res['lo'] = num & 0x00ff
+		res['hi'] = (num & 0xff00) >> 8
 
 
 	elseif text:match '^#$%x+$' then
 		res['addr'] = 'imm'
-		res['out'] = tonumber(text:match '(%x+)', 16)
+		res['lo'] = tonumber(text:match '(%x+)', 16)
 	elseif text:match '^#%d+$' then
 		res['addr'] = 'imm'
-		res['out'] = tonumber(text:match '(%d+)')
+		res['lo'] = tonumber(text:match '(%d+)')
 	elseif text:match '^#%%[01]+$' then
 		res['addr'] = 'imm'
-		res['out'] = tonumber(text:match '([01]+)', 2)
+		res['lo'] = tonumber(text:match '([01]+)', 2)
+
+	elseif text:match '^%w+$' then
+		res['addr'] = 'rel'
+		res['lo'] = text:match '%w+'
 	end
 	return res
 end
 
+
 function Assemble(code)
 	local assembly = {}
-	for line in code:gmatch '([^\n]+)' do
+	local labels = {}
+	-- populate labels
+	local counter = 0
+	for part in code:gmatch '%s*([^\n\t ]+)%s*' do
+		local label = part:match '^:(%w+)$'
+		if label ~= nil then
+			if labels[label] ~= nil then
+				error('Label: ' .. label .. ' is already in use')
+			end
+			labels[label] = counter
+		else
+			counter = counter + 1
+		end
+	end
+	-- the rest of the thing
+	for line in code:gmatch '%s*([^\n]+)' do
 		if line == '' or line == nil then
-			-- I hate it herr
+			-- I hate it here
 			goto continue
 		end
-		if line:find '%a%a%a' then
-
+		-- check if instruction
+		if line:find '^%a%a%a' then
 			local instr = string.upper(line:match '^%s*(%a%a%a)')
 			local addr  = line:match '^%s*%a%a%a%s+(.+)%s*$'
 			local addrType = GetAddressing(addr)
 			local an = addrType['addr']
-			local out = addrType['out']
-			-- check if instruction
-			if instr:match('%a%a%a') then
-				if Instructions[instr] ~= nil and Instructions[instr][an] ~= nil then
-					table.insert(assembly, Instructions[instr][an])
-					-- do nothing
-					if an == 'imp' or an == 'acc' then
-					-- 8-bit instructions
-					elseif an == 'imm' or an == 'zpi' or an == 'zpx' or an == 'zpy' or an == 'rel' or an == 'iny' or an == 'inx' then
-						table.insert(assembly, out)
-					-- 16-bit instructions
-					elseif (an == 'abs' or an == 'abx' or an == 'aby' or an == 'ind' ) and type(out) == 'table' then
-						table.insert(assembly, out[1])
-						table.insert(assembly, out[2])
-					end
+			local lo = addrType['lo']
+			local hi = addrType['hi']
+			-- check if instruction is valid
+			if Instructions[instr] == nil then
+				error('The instruction ' .. instr .. ' does not exist')
+			end
+			-- check if addressing mode is valid
+			if Instructions[instr][an] == nil then
+				error(an .. ' is and invalid addressing mode for ' .. instr)
+			end
+
+			table.insert(assembly, Instructions[instr][an])
+			-- 1 byte instructions
+			-- label things
+			if an == 'rel' then
+				if type(lo) == "string" then
+					table.insert(assembly, labels[lo])
 				else
-					error('Invalid operation')
+					table.insert(assembly, lo)
 				end
+			else
+				-- 1 byte instructions
+				if lo ~= nil then table.insert(assembly, lo) end
+				-- 2 byte instructions
+				if hi ~= nil then table.insert(assembly, hi) end
 			end
-		else
-			if line:match '^%s*$%x+$%s*$' then
-				table.insert(assembly, tonumber(line:match '(%x+)', 16))
-			elseif line:match '^%s*%d+%s*$' then
-				table.insert(assembly, tonumber(line:match '(%d+)'))
-			elseif line:match '^%s*%%[01]+%s*$' then
-				table.insert(assembly, tonumber(line:match '([01]+)', 2))
-			end
+		-- label			
+		elseif line:match '^%s*$%x+%s*$' then
+			table.insert(assembly, tonumber(line:match '(%x+)', 16))
+		elseif line:match '^%s*%d+%s*$' then
+			table.insert(assembly, tonumber(line:match '(%d+)'))
+		elseif line:match '^%s*%%[01]+%s*$' then
+			table.insert(assembly, tonumber(line:match '([01]+)', 2))
 		end
 	    ::continue::
 	end
 	return assembly
 end
-
-
-print(table.concat(Assemble([[
-	LDA 34
-]]), '\n'))

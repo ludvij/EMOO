@@ -492,6 +492,6 @@ function Assemble(code)
 end
 
 
-Assemble([[
+print(table.concat(Assemble([[
 	LDA 34
-]])
+]]), '\n'))

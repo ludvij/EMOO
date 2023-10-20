@@ -8,7 +8,8 @@ project "NesEmu"
 	files { 
 		"src/**.hpp", 
 		"src/**.cpp",
-		"test/**.cpp"
+		"test/**.cpp",
+		"test/**.hpp"
 	}
 
 	pchheader "pch.hpp"

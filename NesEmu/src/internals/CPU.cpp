@@ -80,22 +80,40 @@ CPU::CPU()
 	//DEX
 	//DEY
 	//EOR
-	m_jumpTable[0x41] = {"EOR", &CPU::addrINX, &CPU::EOR, 6};
-	m_jumpTable[0x45] = {"EOR", &CPU::addrZPI, &CPU::EOR, 3};
 	m_jumpTable[0x49] = {"EOR", &CPU::addrIMM, &CPU::EOR, 2};
-	m_jumpTable[0x4D] = {"EOR", &CPU::addrABS, &CPU::EOR, 4};
-	m_jumpTable[0x51] = {"EOR", &CPU::addrINY, &CPU::EOR, 5};
+	m_jumpTable[0x45] = {"EOR", &CPU::addrZPI, &CPU::EOR, 3};
 	m_jumpTable[0x55] = {"EOR", &CPU::addrZPX, &CPU::EOR, 4};
-	m_jumpTable[0x59] = {"EOR", &CPU::addrABY, &CPU::EOR, 4};
+	m_jumpTable[0x4D] = {"EOR", &CPU::addrABS, &CPU::EOR, 4};
 	m_jumpTable[0x5D] = {"EOR", &CPU::addrABX, &CPU::EOR, 4};
+	m_jumpTable[0x59] = {"EOR", &CPU::addrABY, &CPU::EOR, 4};
+	m_jumpTable[0x41] = {"EOR", &CPU::addrINX, &CPU::EOR, 6};
+	m_jumpTable[0x51] = {"EOR", &CPU::addrINY, &CPU::EOR, 5};
 	//INC
 	//INX
 	//INY
 	//JMP
 	//JSR
 	//LDA
+	m_jumpTable[0xA9] = {"LDA", &CPU::addrIMM, &CPU::LDA, 2};
+	m_jumpTable[0xA5] = {"LDA", &CPU::addrZPI, &CPU::LDA, 3};
+	m_jumpTable[0xB5] = {"LDA", &CPU::addrZPX, &CPU::LDA, 4};
+	m_jumpTable[0xAD] = {"LDA", &CPU::addrABS, &CPU::LDA, 4};
+	m_jumpTable[0xBD] = {"LDA", &CPU::addrABX, &CPU::LDA, 4};
+	m_jumpTable[0xB9] = {"LDA", &CPU::addrABY, &CPU::LDA, 4};
+	m_jumpTable[0xA1] = {"LDA", &CPU::addrINX, &CPU::LDA, 6};
+	m_jumpTable[0xB1] = {"LDA", &CPU::addrINY, &CPU::LDA, 5};
 	//LDX
+	m_jumpTable[0xA2] = {"LDX", &CPU::addrIMM, &CPU::LDX, 2};
+	m_jumpTable[0xA6] = {"LDX", &CPU::addrZPI, &CPU::LDX, 3};
+	m_jumpTable[0xB6] = {"LDX", &CPU::addrZPY, &CPU::LDX, 4};
+	m_jumpTable[0xAE] = {"LDX", &CPU::addrABS, &CPU::LDX, 4};
+	m_jumpTable[0xBE] = {"LDX", &CPU::addrABY, &CPU::LDX, 4};
 	//LDY
+	m_jumpTable[0xA0] = {"LDY", &CPU::addrIMM, &CPU::LDY, 2};
+	m_jumpTable[0xA4] = {"LDY", &CPU::addrZPI, &CPU::LDY, 3};
+	m_jumpTable[0xB4] = {"LDY", &CPU::addrZPX, &CPU::LDY, 4};
+	m_jumpTable[0xAC] = {"LDY", &CPU::addrABS, &CPU::LDY, 4};
+	m_jumpTable[0xBC] = {"LDY", &CPU::addrABX, &CPU::LDY, 4};
 	//LSR
 	m_jumpTable[0x4A] = {"LSR", &CPU::addrACC, &CPU::LSR, 2};
 	m_jumpTable[0x46] = {"LSR", &CPU::addrZPI, &CPU::LSR, 5};
@@ -104,14 +122,14 @@ CPU::CPU()
 	m_jumpTable[0x5A] = {"LSR", &CPU::addrABX, &CPU::LSR, 7};
 	//NOP
 	//ORA
-	m_jumpTable[0x01] = {"ORA", &CPU::addrINX, &CPU::ORA, 6};
-	m_jumpTable[0x05] = {"ORA", &CPU::addrZPI, &CPU::ORA, 3};
 	m_jumpTable[0x09] = {"ORA", &CPU::addrIMM, &CPU::ORA, 2};
-	m_jumpTable[0x0D] = {"ORA", &CPU::addrABS, &CPU::ORA, 4};
-	m_jumpTable[0x11] = {"ORA", &CPU::addrINY, &CPU::ORA, 5};
+	m_jumpTable[0x05] = {"ORA", &CPU::addrZPI, &CPU::ORA, 3};
 	m_jumpTable[0x15] = {"ORA", &CPU::addrZPX, &CPU::ORA, 4};
-	m_jumpTable[0x19] = {"ORA", &CPU::addrABY, &CPU::ORA, 4};
+	m_jumpTable[0x0D] = {"ORA", &CPU::addrABS, &CPU::ORA, 4};
 	m_jumpTable[0x1D] = {"ORA", &CPU::addrABX, &CPU::ORA, 4};
+	m_jumpTable[0x19] = {"ORA", &CPU::addrABY, &CPU::ORA, 4};
+	m_jumpTable[0x01] = {"ORA", &CPU::addrINX, &CPU::ORA, 6};
+	m_jumpTable[0x11] = {"ORA", &CPU::addrINY, &CPU::ORA, 5};
 	//PHA
 	m_jumpTable[0x48] = {"PHA", &CPU::addrIMP, &CPU::PHA, 3};
 	//PHP
@@ -123,14 +141,14 @@ CPU::CPU()
 	//ROL
 	m_jumpTable[0x2A] = {"ROL", &CPU::addrACC, &CPU::ROL, 2};
 	m_jumpTable[0x26] = {"ROL", &CPU::addrZPI, &CPU::ROL, 5};
-	m_jumpTable[0x2E] = {"ROL", &CPU::addrABS, &CPU::ROL, 6};
 	m_jumpTable[0x36] = {"ROL", &CPU::addrZPX, &CPU::ROL, 6};
+	m_jumpTable[0x2E] = {"ROL", &CPU::addrABS, &CPU::ROL, 6};
 	m_jumpTable[0x3A] = {"ROL", &CPU::addrABX, &CPU::ROL, 7};
 	//ROR
 	m_jumpTable[0x6A] = {"ROR", &CPU::addrACC, &CPU::ROR, 2};
 	m_jumpTable[0x66] = {"ROR", &CPU::addrZPI, &CPU::ROR, 5};
-	m_jumpTable[0x6E] = {"ROR", &CPU::addrABS, &CPU::ROR, 6};
 	m_jumpTable[0x76] = {"ROR", &CPU::addrZPX, &CPU::ROR, 6};
+	m_jumpTable[0x6E] = {"ROR", &CPU::addrABS, &CPU::ROR, 6};
 	m_jumpTable[0x7A] = {"ROR", &CPU::addrABX, &CPU::ROR, 7};
 	//RTI
 	//RTS
@@ -139,8 +157,21 @@ CPU::CPU()
 	//SED
 	//SEI
 	//STA
+	m_jumpTable[0x85] = {"STA", &CPU::addrZPI, &CPU::STA, 3};
+	m_jumpTable[0x95] = {"STA", &CPU::addrZPX, &CPU::STA, 4};
+	m_jumpTable[0x8D] = {"STA", &CPU::addrABS, &CPU::STA, 4};
+	m_jumpTable[0x9D] = {"STA", &CPU::addrABX, &CPU::STA, 4};
+	m_jumpTable[0x89] = {"STA", &CPU::addrABY, &CPU::STA, 5};
+	m_jumpTable[0x81] = {"STA", &CPU::addrINX, &CPU::STA, 6};
+	m_jumpTable[0x91] = {"STA", &CPU::addrINY, &CPU::STA, 6};
 	//STX
+	m_jumpTable[0x86] = {"STX", &CPU::addrZPI, &CPU::STX, 3};
+	m_jumpTable[0x96] = {"STX", &CPU::addrZPY, &CPU::STX, 4};
+	m_jumpTable[0x8E] = {"STX", &CPU::addrABS, &CPU::STX, 4};
 	//STY
+	m_jumpTable[0x84] = {"STY", &CPU::addrZPI, &CPU::STY, 3};
+	m_jumpTable[0x94] = {"STY", &CPU::addrZPX, &CPU::STY, 4};
+	m_jumpTable[0x8C] = {"STY", &CPU::addrABS, &CPU::STY, 4};
 	//TAX
 	m_jumpTable[0xAA] = {"TAX", &CPU::addrIMP, &CPU::TAX, 2};
 	//TAY
@@ -578,6 +609,48 @@ void CPU::EOR(u16 addr)
 }
 
 /*
+ * Instruction Load Accumulator
+ * A = M
+ * flags: Z, N
+ */
+void CPU::LDA(u16 addr)
+{
+	u8 m = readMemory(addr);
+
+	transferRegTo(m, m_A);
+
+	m_canOops = true;
+}
+
+/*
+ * Instruction Load X
+ * X = M
+ * flags: Z, N
+ */
+void CPU::LDX(u16 addr)
+{
+	u8 m = readMemory(addr);
+
+	transferRegTo(m, m_X);
+
+	m_canOops = true;
+}
+
+/*
+ * Instruction Load Y
+ * X = M
+ * flags: Z, N
+ */
+void CPU::LDY(u16 addr)
+{
+	u8 m = readMemory(addr);
+
+	transferRegTo(m, m_Y);
+
+	m_canOops = true;
+}
+
+/*
  * Instruction Logical Shift Right
  * A = A/2 | M = M/2
  * flags: C, Z, N
@@ -707,11 +780,11 @@ void CPU::ROL(u16 addr)
 
 	if (isImplied())
 	{
-		m_A = m;
+		m_A = static_cast<u8>(m);
 	}
 	else
 	{
-		writeMemory(addr, m);
+		writeMemory(addr, static_cast<u8>(m));
 	}
 }
 
@@ -749,13 +822,41 @@ void CPU::ROR(u16 addr)
 
 	if (isImplied())
 	{
-		m_A = m;
+		m_A = static_cast<u8>(m);
 	}
 	else
 	{
-		writeMemory(addr, m);
+		writeMemory(addr, static_cast<u8>(m));
 	}
 }
+/*
+ * Instruction Store Accumulator
+ * M = A
+ */
+void CPU::STA(u16 addr)
+{
+	writeMemory(addr, m_A);
+}
+
+/*
+ * Instruction Store Accumulator
+ * M = X
+ */
+void CPU::STX(u16 addr)
+{
+	writeMemory(addr, m_X);
+}
+
+/*
+ * Instruction Store Accumulator
+ * M = Y
+ */
+void CPU::STY(u16 addr)
+{
+	writeMemory(addr, m_Y);
+
+}
+
 /*
  * Instruction Transfer Accumulator to X
  * X = A
@@ -847,7 +948,7 @@ void CPU::branchIfCond(u16 addr, bool cond)
 	{
 		m_cycles++;
 
-		u8 page = (m_PC & 0xff00);
+		u8 page = static_cast<u8>(m_PC & 0xff00);
 		
 		m_PC = addr;
 		// extra cycle for page change

@@ -250,7 +250,7 @@ private:
 			number = num;
 		}
 		// either abx, zpx, aby or zpy
-		else if (auto [whole, mode, num, type] = ctre::match<"^([$%]?)([^(]),([xy])$">(text); whole)
+		else if (auto [whole, mode, num, type] = ctre::match<"^([$%]?)([^(]+),([xy])$">(text); whole)
 		{
 			encoding = mode;
 			number = num;

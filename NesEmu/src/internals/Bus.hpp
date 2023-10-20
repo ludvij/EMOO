@@ -17,7 +17,7 @@ public:
 
 	void Step();
 
-	CPU GetCpu() { return m_cpu; }
+	CPU& GetCpu() { return m_cpu; }
 
 	u8* GetMemory() { return m_memory; }
 

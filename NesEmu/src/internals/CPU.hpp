@@ -196,6 +196,8 @@ private: // private functions
 
 	void branchIfCond(u16 addr, bool cond);
 	void transferRegTo(u8 from, u8& to);
+	void stackPush(u8 val);
+	u8 stackPop();
 
 
 private: // private members
@@ -239,6 +241,9 @@ private: // private members
 
 	// Stack Pointer
 	u8 m_S = 0;
+	u16 m_stackVectorEnd  = 0x01FF;
+	u16 m_stackVectorBase = 0x0100;
+
 
 	// Status register
 	u8 m_P = 0;

@@ -3,6 +3,10 @@
 // int typedefs
 #include <cstdint>
 
+// containers
+#include <vector>
+#include <array>
+
 // algos
 #include <algorithm>
 #include <functional>
@@ -16,4 +20,7 @@
 #include <exception>
 
 // Core
-#include "internals/Core.hpp"
+#include "NesEmu.hpp"
+
+// utils
+#include "utils/ToyAssembler.hpp"

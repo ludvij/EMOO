@@ -15,7 +15,8 @@ project "NesEmu"
 	pchsource "src/pch.cpp"
 
 	includedirs {
-		"src"
+		"src",
+		"vendor/include"
 	}
 
 	filter "system:windows"
@@ -24,7 +25,8 @@ project "NesEmu"
 	
 -- Uncomment to disable tests
 	links {
-		"googletest"
+		"googletest",
+		"vendor/lib/lua546/lua5.4.6.lib"
 	}
 
 	includedirs {

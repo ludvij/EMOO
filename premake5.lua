@@ -4,8 +4,7 @@ workspace "TFG"
 
 	configurations { 
 		"Debug", 
-		"Release",
-		"Test"
+		"Release"
 	}
 
 	flags {

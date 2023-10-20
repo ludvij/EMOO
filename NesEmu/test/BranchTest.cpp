@@ -3,7 +3,6 @@
 
 #include <gtest/gtest.h>
 
-
 class TestBranch : public testing::Test
 {
 protected:
@@ -20,6 +19,7 @@ protected:
 		clearCycles(8);
 	}
 
+
 	void clearCycles(int x = 1)
 	{
 		for (int i = 0; i < x; ++i)
@@ -31,11 +31,12 @@ protected:
 
 TEST_F(TestBranch, GENERAL_BRANCH_PAGECROSS)
 {
-	mem[0] = 0x90;
-	mem[1] = -13;
+	A6502::ToyAssembler::Get().Assemble(
+	R"(
+			bcc -13
+		)", mem);
 
 	clearCycles();
-
 	// pc is 2, and the offset is
 	// -13 so offset + pc = -11
 	// pc is u16 so it wraps to $0000 - 11 = $fff5
@@ -46,8 +47,10 @@ TEST_F(TestBranch, GENERAL_BRANCH_PAGECROSS)
 
 TEST_F(TestBranch, BCC_BRANCH)
 {
-	mem[0] = 0x90;
-	mem[1] = 2;
+	A6502::ToyAssembler::Get().Assemble(
+	R"(
+			bcc 2
+		)", mem);
 
 	clearCycles();
 
@@ -59,8 +62,10 @@ TEST_F(TestBranch, BCC_BRANCH)
 TEST_F(TestBranch, BCC_NOBRANCH)
 {
 	cpu.SetP(Emu::P_C_FLAG);
-	mem[0] = 0x90;
-	mem[1] = 2;
+	A6502::ToyAssembler::Get().Assemble(
+	R"(
+			bcc 2
+		)", mem);
 
 	clearCycles();
 
@@ -72,8 +77,10 @@ TEST_F(TestBranch, BCC_NOBRANCH)
 TEST_F(TestBranch, BCS_BRANCH)
 {
 	cpu.SetP(Emu::P_C_FLAG);
-	mem[0] = 0xB0;
-	mem[1] = 2;
+	A6502::ToyAssembler::Get().Assemble(
+	R"(
+			bcs 2
+		)", mem);
 
 	clearCycles();
 
@@ -84,8 +91,10 @@ TEST_F(TestBranch, BCS_BRANCH)
 
 TEST_F(TestBranch, BCS_NOBRANCH)
 {
-	mem[0] = 0xB0;
-	mem[1] = 2;
+	A6502::ToyAssembler::Get().Assemble(
+	R"(
+			bcs 2
+		)", mem);
 
 	clearCycles();
 
@@ -97,8 +106,10 @@ TEST_F(TestBranch, BCS_NOBRANCH)
 TEST_F(TestBranch, BEQ_BRANCH)
 {
 	cpu.SetP(Emu::P_Z_FLAG);
-	mem[0] = 0xF0;
-	mem[1] = 2;
+	A6502::ToyAssembler::Get().Assemble(
+	R"(
+			beq 2
+		)", mem);
 
 	clearCycles();
 
@@ -109,8 +120,10 @@ TEST_F(TestBranch, BEQ_BRANCH)
 
 TEST_F(TestBranch, BEQ_NOBRANCH)
 {
-	mem[0] = 0xF0;
-	mem[1] = 2;
+	A6502::ToyAssembler::Get().Assemble(
+	R"(
+			beq 2
+		)", mem);
 
 	clearCycles();
 
@@ -122,8 +135,10 @@ TEST_F(TestBranch, BEQ_NOBRANCH)
 TEST_F(TestBranch, BMI_BRANCH)
 {
 	cpu.SetP(Emu::P_N_FLAG);
-	mem[0] = 0x30;
-	mem[1] = 2;
+	A6502::ToyAssembler::Get().Assemble(
+	R"(
+			bmi 2
+		)", mem);
 
 	clearCycles();
 
@@ -134,8 +149,10 @@ TEST_F(TestBranch, BMI_BRANCH)
 
 TEST_F(TestBranch, BMI_NOBRANCH)
 {
-	mem[0] = 0x30;
-	mem[1] = 2;
+	A6502::ToyAssembler::Get().Assemble(
+	R"(
+			bmi 2
+		)", mem);
 
 	clearCycles();
 
@@ -146,8 +163,10 @@ TEST_F(TestBranch, BMI_NOBRANCH)
 
 TEST_F(TestBranch, BNE_BRANCH)
 {
-	mem[0] = 0xD0;
-	mem[1] = 2;
+	A6502::ToyAssembler::Get().Assemble(
+	R"(
+			bne 2
+		)", mem);
 
 	clearCycles();
 
@@ -159,8 +178,10 @@ TEST_F(TestBranch, BNE_BRANCH)
 TEST_F(TestBranch, BNE_NOBRANCH)
 {
 	cpu.SetP(Emu::P_Z_FLAG);
-	mem[0] = 0xD0;
-	mem[1] = 2;
+	A6502::ToyAssembler::Get().Assemble(
+	R"(
+			bne 2
+		)", mem);
 
 	clearCycles();
 
@@ -171,8 +192,10 @@ TEST_F(TestBranch, BNE_NOBRANCH)
 
 TEST_F(TestBranch, BPL_BRANCH)
 {
-	mem[0] = 0x10;
-	mem[1] = 2;
+	A6502::ToyAssembler::Get().Assemble(
+	R"(
+			bpl 2
+		)", mem);
 
 	clearCycles();
 
@@ -184,9 +207,10 @@ TEST_F(TestBranch, BPL_BRANCH)
 TEST_F(TestBranch, BPL_NOBRANCH)
 {
 	cpu.SetP(Emu::P_N_FLAG);
-	mem[0] = 0x10;
-	mem[1] = 2;
-
+	A6502::ToyAssembler::Get().Assemble(
+	R"(
+			bpl 2
+		)", mem);
 	clearCycles();
 
 	// no branching
@@ -196,8 +220,10 @@ TEST_F(TestBranch, BPL_NOBRANCH)
 
 TEST_F(TestBranch, BVC_BRANCH)
 {
-	mem[0] = 0x50;
-	mem[1] = 2;
+	A6502::ToyAssembler::Get().Assemble(
+	R"(
+			bvc 2
+		)", mem);
 
 	clearCycles();
 
@@ -209,8 +235,10 @@ TEST_F(TestBranch, BVC_BRANCH)
 TEST_F(TestBranch, BVC_NOBRANCH)
 {
 	cpu.SetP(Emu::P_V_FLAG);
-	mem[0] = 0x50;
-	mem[1] = 2;
+	A6502::ToyAssembler::Get().Assemble(
+	R"(
+			bvc 2
+		)", mem);
 
 	clearCycles();
 
@@ -222,8 +250,10 @@ TEST_F(TestBranch, BVC_NOBRANCH)
 TEST_F(TestBranch, BVS_BRANCH)
 {
 	cpu.SetP(Emu::P_V_FLAG);
-	mem[0] = 0x70;
-	mem[1] = 2;
+	A6502::ToyAssembler::Get().Assemble(
+	R"(
+			bvs 2
+		)", mem);
 
 	clearCycles();
 
@@ -234,8 +264,10 @@ TEST_F(TestBranch, BVS_BRANCH)
 
 TEST_F(TestBranch, BVS_NOBRANCH)
 {
-	mem[0] = 0x70;
-	mem[1] = 2;
+	A6502::ToyAssembler::Get().Assemble(
+	R"(
+			bvs 2
+		)", mem);
 
 	clearCycles();
 

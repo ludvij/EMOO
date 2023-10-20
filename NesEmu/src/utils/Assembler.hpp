@@ -1,0 +1,441 @@
+﻿#pragma once
+
+#include <string_view>
+#include <unordered_map>
+#include <ranges>
+#include <cstdint>
+#include <ctre/ctre.hpp>
+
+
+#define ASSE_LOG_INFO(x) std::cout << "[Assembler INFO] " << x
+#define ASSE_LOG_ERROR(x) std::cerr << "[Assembler ERROR] " << x
+
+using InstrData = std::unordered_map<std::string_view,std::unordered_map<std::string_view,uint8_t>>;
+
+namespace A6502
+{
+// usage of c++20
+template<class T>
+concept MemoryAccessor = requires(T bus)
+{
+	{bus.Read(std::declval<uint16_t>())} -> std::same_as<uint8_t>;
+	{bus.Write(std::declval<uint16_t>(),std::declval<uint8_t>())} -> std::same_as<void>;
+};
+
+template<MemoryAccessor Bus>
+class Assembler
+{
+public:
+	explicit Assembler(Bus& bus, bool show=false) : m_bus(bus), m_show(show)
+	{
+		
+	}
+
+	void Assemble(std::string_view code)
+	{
+		// populate labels
+		//TODO: bug, check for 3 byte instructions
+		int counter = 0;
+		for (auto [whole, part] : ctre::range<R"(\s*+(#\s*\S+|\(\s*\S+\s*\)|\(*\s*\S+\s*,\s*\S+\s*\)|[^\t\n ]+)\s*+)">(code))
+		{
+			std::string_view lbl = part.view();
+			std::cout << counter << " --> " << lbl << std::endl;
+			if (lbl[0] == ':')
+			{
+				if (m_labels.contains(lbl))
+				{
+					ASSE_LOG_ERROR("Label [" << lbl <<"] is already in use\n");
+					ASSE_LOG_INFO("Fatal error, can not continue\n");
+
+					return;
+
+				}
+				m_labels[lbl.substr(1)] = counter;
+
+				if (m_show)
+				{
+					ASSE_LOG_INFO("Label ["<< lbl <<"] is set to " << counter << "\n");
+				}
+			}
+			else
+			{
+				counter++;
+				
+			}
+		}
+		for (auto [whole, line] : ctre::range<"\\h*+([^\n]+)">(code))
+		{
+			// split into instruction and addressing
+			if (auto [whole, _instr, _addr] = ctre::match<"^([a-zA-Z]{3})\\h+(.+?)\\h*$">(line); whole)
+			{	
+				std::string instr = upper(_instr);
+
+				auto [name, lo, hi] = getAddressing(_addr);
+				// c++20
+				if (!s_instrData.contains(upper(instr)))
+				{
+					ASSE_LOG_ERROR("Instruction " << instr << " does not exists\n");
+					ASSE_LOG_INFO("Fatal error, can not continue\n");
+
+					return;
+				}
+				auto instrData = s_instrData[instr];
+				if (!name)
+				{
+					ASSE_LOG_INFO("Fatal error, can not continue\n");
+					return;
+				}
+				if (!instrData.contains(*name))
+				{
+					ASSE_LOG_ERROR(*name << " is not a valid addressing mode for " << instr << "\n");
+					ASSE_LOG_INFO("Fatal error, can not continue\n");
+
+					return;
+				}
+				m_assembly.push_back(instrData[*name]);
+				// 3 bytes
+				if (hi && lo)
+				{
+					m_assembly.push_back(*lo);
+					m_assembly.push_back(*hi);
+				}
+				// 2 byte
+				else if (lo && !hi)
+				{
+					m_assembly.push_back(*lo);
+				}
+				// do nothing for 1 byte
+
+				if (m_show)
+				{
+					ASSE_LOG_INFO("Assembled [" << instr << ", " << *name << "] (" << line <<") to:\n\t");
+					if (hi && lo)
+					{
+						ASSE_LOG_INFO(static_cast<int>(m_assembly[m_assembly.size() - 1 - 2]) << ", "
+								   << static_cast<int>(m_assembly[m_assembly.size() - 1 - 1]) << ", "
+								   << static_cast<int>(m_assembly[m_assembly.size() - 1 - 0]) << "\n");
+					}
+					else if (lo && !hi)
+					{
+						ASSE_LOG_INFO(static_cast<int>(m_assembly[m_assembly.size() - 1 - 1]) << ", "
+								   << static_cast<int>(m_assembly[m_assembly.size() - 1 - 0]) << "\n");
+					}
+					else
+					{
+						ASSE_LOG_INFO(static_cast<int>(m_assembly[m_assembly.size() - 1 - 0]) << "\n");
+					}
+				}
+			}
+			// single value hex
+			else if (auto [whole, val] = ctre::match<"\\$([0-9a-zA-Z]+)">(line); whole)
+			{
+				m_assembly.push_back(static_cast<uint8_t>(std::stoi(val.str(), nullptr, 16)));
+			}
+			// single value bin
+			else if (auto [whole, val] =ctre::match<"%([01]+)">(line); whole)
+			{
+				m_assembly.push_back(static_cast<uint8_t>(std::stoi(val.str(), nullptr, 2)));
+			}
+			// single value dec
+			else if (auto [whole, val] = ctre::match<"(-\\d+)">(line); whole)
+			{
+				m_assembly.push_back(static_cast<uint8_t>(std::stoi(val.str(), nullptr, 10)));
+			}
+		}
+	}
+
+private:
+
+	constexpr std::string upper(const std::string_view& sv) noexcept
+	{
+		auto _upper = [](unsigned char c) -> unsigned char { return std::toupper(c); };
+		std::string s(sv);
+		std::transform(s.begin(), s.end(), s.begin(), _upper);
+		return s;
+	}
+
+	constexpr auto getAddressing(const std::string_view& text) noexcept
+	{
+		struct addr 
+		{
+			std::optional<std::string> name = std::nullopt;
+			std::optional<uint8_t> lo = std::nullopt;
+			std::optional<uint8_t> hi = std::nullopt;
+		} a;
+		uint16_t temp = -1;
+		// imp
+		if (text.empty())
+		{
+			a.name = "imp";
+		}
+		// acc
+		else if (ctre::match<"^[aA]$">(text))
+		{
+			a.name = "acc";
+		}
+		// either abx, zpx, aby or zpy
+		else if (auto [whole, mode, num, type] = ctre::match<"^([$%]?)(\\H+)\\h*,\\h*([xy])$">(text); whole)
+		{
+			if (mode == "$")
+			{
+				temp = std::stoi(num.str(), nullptr, 16);
+			}
+			else if (mode == "%")
+			{
+				temp = std::stoi(num.str(), nullptr, 2);
+			}
+			else if (isnumber(num))
+			{
+				temp = std::stoi(num.str(), nullptr, 10);
+			}
+			else 
+			{
+				ASSE_LOG_ERROR("Unrecognized number\n");
+				return a;
+			}
+			if (temp > 255)
+			{
+				a.name = "ab";
+				*a.name += type;
+				a.lo = temp & 0x00ff;
+				a.hi = (temp & 0xff00) >> 8;
+			}
+			else
+			{
+				a.name = "zp";
+				*a.name += type;
+
+				a.lo = temp & 0x00ff;
+			}
+		}
+		// inx
+		else if (auto [whole, mode, num] = ctre::match<"^\\(\\h*([$%]?)(\\H+)\\h*,\\h*x\\h*\\)$">(text); whole)
+		{
+			if (mode == "$")
+			{
+				temp = std::stoi(num.str(), nullptr, 16);
+			}
+			else if (mode == "%")
+			{
+				temp = std::stoi(num.str(), nullptr, 2);
+			}
+			else if (isnumber(num))
+			{
+				temp = std::stoi(num.str(), nullptr, 10);
+			}
+			else 
+			{
+				ASSE_LOG_ERROR("Unrecognized number\n");
+				return a;
+			}
+			if (temp > 255)
+			{
+				ASSE_LOG_ERROR("Inx addressing mode does not support more than 8 bits\n");
+				return a;
+			}
+			a.name = "inx";
+			a.lo = temp & 0x00ff;
+		}
+		// iny
+		else if (auto [whole, mode, num] = ctre::match<"^\\(\\h*([$%]?)(\\H+)\\h*\\)\\h*,\\h*y$">(text); whole)
+		{
+			if (mode == "$")
+			{
+				temp = std::stoi(num.str(), nullptr, 16);
+			}
+			else if (mode == "%")
+			{
+				temp = std::stoi(num.str(), nullptr, 2);
+			}
+			else if (isnumber(num))
+			{
+				temp = std::stoi(num.str(), nullptr, 10);
+			}
+			else
+			{
+				ASSE_LOG_ERROR("Unrecognized number\n");
+				return a;
+			}
+			if (temp > 255)
+			{
+				ASSE_LOG_ERROR("Iny addressing mode does not support more than 8 bits\n");
+				return a;
+			}
+			a.name = "iny";
+			a.lo = temp & 0x00ff;
+		}
+		// ind
+		else if (auto [whole, mode, num] = ctre::match<"^\\(\\h*([$%]?)(\\H+)\\h*\\)$">(text); whole)
+		{
+			if (mode == "$")
+			{
+				temp = std::stoi(num.str(), nullptr, 16);
+			}
+			else if (mode == "%")
+			{
+				temp = std::stoi(num.str(), nullptr, 2);
+			}
+			else if (isnumber(num))
+			{
+				temp = std::stoi(num.str(), nullptr, 10);
+			}
+			else 
+			{
+				ASSE_LOG_ERROR("Unrecognized number: " << num <<"\n");
+				return a;
+			}
+
+			a.name = "ind";
+			a.lo = temp & 0x00ff;
+			a.hi = (temp & 0xff00) >> 8;
+		}
+		// imm
+		else if (auto [whole, mode, num] = ctre::match<"^#\\h*([$%]?)(\\H+)$">(text); whole)
+		{
+			if (mode == "$")
+			{
+				temp = std::stoi(num.str(), nullptr, 16);
+			}
+			else if (mode == "%")
+			{
+				temp = std::stoi(num.str(), nullptr, 2);
+			}
+			else if (isnumber(num))
+			{
+				temp = std::stoi(num.str(), nullptr, 10);
+			}
+			else 
+			{
+				ASSE_LOG_ERROR("Unrecognized number: " << num <<"\n");
+				return a;
+			}
+
+			a.name = "imm";
+			a.lo = temp & 0x00ff;
+			a.hi = (temp & 0xff00) >> 8;
+		}
+		// labels
+		else if (auto [whole, label] = ctre::match<"^([a-zA-Z].+)$">(text); whole)
+		{
+			if (!m_labels.contains(label))
+			{
+				ASSE_LOG_ERROR("Label ["<< label.view() <<"] was not found\n");
+				return a;
+			}
+			a.name = "rel";
+			a.lo = m_labels[label];
+		}
+		// abs or zpi
+		else if (auto [whole, mode, _, num] = ctre::match<"^([$%]?)([#(]?)(\\H+)$">(text); whole)
+		{
+			if (mode == "$")
+			{
+				temp = std::stoi(num.str(), nullptr, 16);
+			}
+			else if (mode == "%")
+			{
+				temp = std::stoi(num.str(), nullptr, 2);
+			}
+			else if (isnumber(num))
+			{
+				temp = std::stoi(num.str(), nullptr, 10);
+			}
+			else 
+			{
+				ASSE_LOG_ERROR("Unrecognized number: " << num <<"\n");
+				return a;
+			}
+			if (temp > 255)
+			{
+				a.name = "abs";
+				a.lo = temp & 0x00ff;
+				a.hi = (temp & 0xff00) >> 8;
+			}
+			else
+			{
+				a.name = "zpi";
+				a.lo = temp & 0x00ff;
+			}
+		}
+		else
+		{
+			ASSE_LOG_ERROR("Unrecognized addressing mode\n");
+			return a;
+		}
+		return a;
+	}
+
+	constexpr bool isnumber(std::string_view s) noexcept
+	{
+		return std::ranges::count_if(s, [](unsigned char c) -> unsigned char { return !std::isdigit(c);}) == 0;
+	}
+
+private:
+
+	std::vector<uint8_t> m_assembly;
+	std::unordered_map<std::string_view, uint8_t> m_labels;
+	
+	Bus& m_bus;
+	bool m_show = false;
+	// C++17 my saviour
+	static inline InstrData s_instrData = {
+		{"ADC",{{"imm",0x69},{"zpi",0x65},{"zpx",0x75},{"abs",0x6d},{"abx",0x7d},{"aby",0x79},{"inx",0x61},{"iny",0x71}}},
+		{"AND",{{"imm",0x29},{"zpi",0x25},{"zpx",0x35},{"abs",0x2d},{"abx",0x3d},{"aby",0x39},{"inx",0x21},{"iny",0x31}}},
+		{"ASL",{{"acc",0x0a},{"zpi",0x06},{"zpx",0x16},{"abs",0x0e},{"abx",0x1e}}},
+		{"BCC",{{"rel",0x90},{"zpi",0x90}}},
+		{"BCS",{{"rel",0xb0},{"zpi",0xb0}}},
+		{"BEQ",{{"rel",0xf0},{"zpi",0xf0}}},
+		{"BIT",{{"zpi",0x24},{"abs",0x2c}}},
+		{"BMI",{{"rel",0x30},{"zpi",0x30}}},
+		{"BNE",{{"rel",0xd0},{"zpi",0xd0}}},
+		{"BPL",{{"rel",0x10},{"zpi",0x10}}},
+		{"BRK",{{"imp",0x00}}},
+		{"BVC",{{"rel",0x50},{"zpi",0x50}}},
+		{"BVS",{{"rel",0x70},{"zpi",0x70}}},
+		{"CLC",{{"imp",0x18},{"zpi",0x18}}},
+		{"CLD",{{"imp",0xd8}}},
+		{"CLI",{{"imp",0x58}}},
+		{"CLV",{{"imp",0xb8}}},
+		{"CMP",{{"imm",0xc9},{"zpi",0xc5},{"zpx",0xd5},{"abs",0xcd},{"abx",0xdd},{"aby",0xd9},{"inx",0xc1},{"iny",0xd1}}},
+		{"CPX",{{"imm",0xe0},{"zpi",0xe4},{"abs",0xec}}},
+		{"CPY",{{"imm",0xc0},{"zpi",0xc4},{"abs",0xcc}}},
+		{"DEC",{{"zpi",0xc6},{"zpx",0xd6},{"abs",0xce},{"abx",0xde}}},
+		{"DEX",{{"imp",0xca}}},
+		{"DEY",{{"imp",0x88}}},
+		{"EOR",{{"imm",0x49},{"zpi",0x45},{"zpx",0x55},{"abs",0x4d},{"abx",0x5d},{"aby",0x59},{"inx",0x41},{"iny",0x51}}},
+		{"INC",{{"zpi",0xe6},{"zpx",0xf6},{"abs",0xee},{"abx",0xfe}}},
+		{"INX",{{"imp",0xe8}}},
+		{"INY",{{"imp",0xc8}}},
+		{"JMP",{{"abs",0x4c},{"ind",0x6c}}},
+		{"JSR",{{"abs",0x20}}},
+		{"LDA",{{"imm",0xa9},{"zpi",0xa5},{"zpx",0xb5},{"abs",0xad},{"abx",0xbd},{"aby",0xb9},{"inx",0xa1},{"iny",0xb1}}},
+		{"LDX",{{"imm",0xa2},{"zpi",0xa6},{"zpy",0xb6},{"abs",0xae},{"aby",0xbe}}},
+		{"LDY",{{"imm",0xa0},{"zpi",0xa4},{"zpx",0xb4},{"abs",0xac},{"abx",0xbc}}},
+		{"LSR",{{"acc",0x4a},{"zpi",0x46},{"zpx",0x56},{"abs",0x4e},{"abx",0x5e}}},
+		{"NOP",{{"imp",0xea}}},
+		{"ORA",{{"imm",0x09},{"zpi",0x05},{"zpx",0x15},{"abs",0x0d},{"abx",0x1d},{"aby",0x19},{"inx",0x01},{"iny",0x11}}},
+		{"PHA",{{"imp",0x48}}},
+		{"PHP",{{"imp",0x08}}},
+		{"PLA",{{"imp",0x68}}},
+		{"PLP",{{"imp",0x28}}},
+		{"ROL",{{"acc",0x2a},{"zpi",0x26},{"zpx",0x36},{"abs",0x2e},{"abx",0x3e}}},
+		{"ROR",{{"acc",0x6a},{"zpi",0x66},{"zpx",0x76},{"abs",0x6e},{"abx",0x7e}}},
+		{"RTI",{{"imp",0x40}}},
+		{"RTS",{{"imp",0x60}}},
+		{"SBC",{{"imm",0xe9},{"zpi",0xe5},{"zpx",0xf5},{"abs",0xed},{"abx",0xfd},{"aby",0xf9},{"inx",0xe1},{"iny",0xf1}}},
+		{"SEC",{{"imp",0x38}}},
+		{"SED",{{"imp",0xf8}}},
+		{"SEI",{{"imp",0x78}}},
+		{"STA",{{"inx",0x81},{"zpi",0x85},{"abs",0x8d},{"iny",0x91},{"zpx",0x95},{"aby",0x99},{"abx",0x9d}}},
+		{"STX",{{"zpi",0x86},{"zpy",0x96},{"abs",0x8e}}},
+		{"STY",{{"zpi",0x84},{"zpx",0x94},{"abs",0x8c}}},
+		{"TAX",{{"imp",0xaa}}},
+		{"TAY",{{"imp",0xa8}}},
+		{"TSX",{{"imp",0xba}}},
+		{"TXA",{{"imp",0x8a}}},
+		{"TXS",{{"imp",0x9a}}},
+		{"TYA",{{"imp",0x98}}}
+	};
+
+};
+}

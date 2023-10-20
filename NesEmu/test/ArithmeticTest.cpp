@@ -1,7 +1,8 @@
 #include "pch.hpp"
-#include "internals/Bus.hpp"
 
 #include <gtest/gtest.h>
+
+#include "utils/Assembler.hpp"
 
 class TestArithmetic : public testing::Test
 {
@@ -31,6 +32,18 @@ protected:
 
 TEST_F(TestArithmetic, ADC_IMM_N)
 {
+	auto a = A6502::Assembler(bus, true);
+	a.Assemble(R"(
+	:test
+		adc #$1212
+		lda (23,x)
+		jmp (2200)
+		lda 23
+		bcc test
+		bcc res
+		adc #%011100
+	:res
+	)");
 	mem[0] = 0x69;
 	mem[1] = 0x80;
 	cpu.SetA(10);

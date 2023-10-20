@@ -113,9 +113,13 @@ CPU::CPU()
 	m_jumpTable[0x19] = {"ORA", &CPU::addrABY, &CPU::ORA, 4};
 	m_jumpTable[0x1D] = {"ORA", &CPU::addrABX, &CPU::ORA, 4};
 	//PHA
+	m_jumpTable[0x48] = {"PHA", &CPU::addrIMP, &CPU::PHA, 3};
 	//PHP
+	m_jumpTable[0x08] = {"PHP", &CPU::addrIMP, &CPU::PHP, 3};
 	//PLA
+	m_jumpTable[0x68] = {"PLA", &CPU::addrIMP, &CPU::PLA, 4};
 	//PLP
+	m_jumpTable[0x28] = {"PLP", &CPU::addrIMP, &CPU::PLP, 4};
 	//ROL
 	m_jumpTable[0x2A] = {"ROL", &CPU::addrACC, &CPU::ROL, 2};
 	m_jumpTable[0x26] = {"ROL", &CPU::addrZPI, &CPU::ROL, 5};
@@ -623,6 +627,48 @@ void CPU::ORA(u16 addr)
 	m_canOops = true;
 }
 
+/*
+ * Instruction Push Accumulator
+ * Pushes accumulator to the stack
+ *
+ * The stack is hardcoded in page $01 ($0100-$01FF)
+ *
+ * Important, The 6502 uses a reverse stack
+ */
+void CPU::PHA(u16 addr)
+{
+	stackPush(m_A);
+}
+
+/*
+ * Instruction Push Processor status
+ * Pushes accumulator to the stack
+ */
+void CPU::PHP(u16 addr)
+{
+	stackPush(m_P);
+}
+
+/*
+ * Instruction Pull Accumulator
+ * Pulls accumulator from the stack
+ * Uses flag N, Z for some reason
+ */
+void CPU::PLA(u16 addr)
+{
+	m_A = stackPop();
+	setFlagIf(P_N_FLAG, m_A & 0x80);
+	setFlagIf(P_Z_FLAG, m_A == 0);
+}
+/*
+ * Instruction Pull Processor Status
+ * Pulls Processor status from the stack
+ */
+void CPU::PLP(u16 addr)
+{
+	m_P = stackPop();
+}
+
 
 /*
  * Instruction Rotate Left
@@ -818,5 +864,31 @@ void CPU::transferRegTo(u8 from, u8& to)
 	setFlagIf(P_Z_FLAG, to == 0);
 	setFlagIf(P_N_FLAG, to & 0x80);
 }
+
+void CPU::stackPush(u8 val)
+{
+	writeMemory(m_stackVectorBase + m_S, val);
+	if (m_S == 0)
+	{
+		m_S = 0xFF;
+	}
+	else
+	{
+		m_S--;
+	}
+}
+u8 CPU::stackPop()
+{
+	if (m_S == 0xFF)
+	{
+		m_S = 0;
+	}
+	else
+	{
+		m_S++;
+	}
+	return readMemory(m_stackVectorBase + m_S);
+}
+
 }
 

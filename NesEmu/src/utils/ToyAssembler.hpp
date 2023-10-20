@@ -1,3 +1,15 @@
+#pragma once
+#include <lua546/lua.hpp>
+
+#include <algorithm>
+#include <iostream>
+#include <vector>
+
+namespace A6502
+{
+
+// I yearn for c++23 #embed
+#define ASSEMBLER_SOURCE R"(
 
 --[[
 	Author: Luis Vijande
@@ -7,285 +19,71 @@
 	in hex using $numbers
 	in bin using %numbers
 	in decimal using numbers
+	
+	also supports use of labels
 
 	All 54 official instructions should work
 	It evaluates line by line
 	If you write a number by itself it will add it to the assembly as the number 
 ]]--
 
-Instructions = {
-	ADC = {
-		inx = 0x61,
-		zpi = 0x65,
-		imm = 0x69,
-		abs = 0x6d,
-		iny = 0x71,
-		zpx = 0x75,
-		aby = 0x79,
-		abx = 0x7d,
-	},
-	AND = {
-		inx = 0x21,
-		zpi = 0x25,
-		imm = 0x29,
-		abs = 0x2d,
-		iny = 0x31,
-		zpx = 0x35,
-		aby = 0x39,
-		abx = 0x3d,
-	},
-	ASL = {
-		zpi = 0x06,
-		acc = 0x0a,
-		abs = 0x0e,
-		zpx = 0x16,
-		abx = 0x1e,
-	},
-	BCC = {
-		rel = 0x90,
-		zpi = 0x90,
-	},
-	BCS = {
-		rel = 0xb0,
-		zpi = 0xb0,
-	}, 
-	BEQ = {
-		rel = 0xf0,
-		zpi = 0xf0,
-	},
-	BIT = {
-		zpi = 0x24,
-		abs = 0x2c,
-	},
-	BMI = {
-		rel = 0x30,
-		zpi = 0x30,
-	},
-	BNE = {
-		rel = 0xd0,
-		zpi = 0xd0,
-	},
-	BPL = {
-		rel = 0x10,
-		zpi = 0x10,
-	},
-	BRK = {
-		imp = 0x00,
-	},
-	BVC = {
-		rel = 0x50,
-		zpi = 0x50,
-	},
-	BVS = {
-		rel = 0x70,
-		zpi = 0x70,
-	},
-	CLC = {
-		imp = 0x18,
-		zpi = 0x18,
-	},
-	CLD = {
-		imp = 0xd8,
-	},
-	CLI = {
-		imp = 0x58,
-	},
-	CLV = {
-		imp = 0xb8
-	},
-	CMP = {
-		inx = 0xc1,
-		zpi = 0xc5,
-		imm = 0xc9,
-		abs = 0xcd,
-		iny = 0xd1,
-		zpx = 0xd5,
-		aby = 0xd9,
-		abx = 0xdd,
-	},
-	CPX = {
-		imm = 0xe0,
-		zpi = 0xe4,
-		abs = 0xec,
-	},
-	CPY = {
-		imm = 0xc0,
-		zpi = 0xc4,
-		abs = 0xcc,
-	},
-	DEC = {
-		zpi = 0xc6,
-		zpx = 0xd6,
-		abs = 0xce,
-		abx = 0xde,
-	},
-	DEX = {
-		imp = 0xca,
-	},
-	DEY = {
-		imp = 0x88,
-	},
-	EOR = {
-		inx = 0x41,
-		zpi = 0x45,
-		imm = 0x49,
-		abs = 0x4d,
-		iny = 0x51,
-		zpx = 0x55,
-		aby = 0x59,
-		abx = 0x5d,
-	},
-	INC = {
-		zpi = 0xe6,
-		zpx = 0xf6,
-		abs = 0xee,
-		abx = 0xfe,
-	},
-	INX = {
-		imp = 0xe8,
-	},
-	INY = {
-		imp = 0xc8,
-	},
-	JMP = {
-		abs = 0x4c,
-		ind = 0x6c,
-	},
-	JSR = {
-		abs = 0x20,
-	},
-	LDA = {
-		imm = 0xa9,
-		zpi = 0xa5,
-		zpx = 0xb5,
-		abs = 0xad,
-		abx = 0xbd,
-		aby = 0xb9,
-		inx = 0xa1,
-		iny = 0xb1,
-	},
-	LDX = {
-		imm = 0xa2,
-		zpi = 0xa6,
-		zpy = 0xb6,
-		abs = 0xae,
-		aby = 0xbe,
-	},
-	LDY = {
-		imm = 0xa0,
-		zpi = 0xa4,
-		zpx = 0xb4,
-		abs = 0xac,
-		abx = 0xbc,
-	},
-	LSR = {
-		acc = 0x4a,
-		zpi = 0x46,
-		zpx = 0x56,
-		abs = 0x4e,
-		abx = 0x5e,
-	},
-	NOP = {
-		imp = 0xea,
-	},
-	ORA = {
-		inx = 0x01,
-		zpi = 0x05,
-		imm = 0x09,
-		abs = 0x0d,
-		iny = 0x11,
-		zpx = 0x15,
-		aby = 0x19,
-		abx = 0x1d,
-	},
-	PHA = {
-		imp = 0x48,
-	},
-	PHP = {
-		imp = 0x08,
-	},
-	PLA = {
-		imp = 0x68,
-	},
-	PLP = {
-		imp = 0x28,
-	},
-	ROL = {
-		acc = 0x2a,
-		zpi = 0x26,
-		zpx = 0x36,
-		abs = 0x2e,
-		abx = 0x3e,
-	},
-	ROR = {
-		acc = 0x6a,
-		zpi = 0x66,
-		zpx = 0x76,
-		abs = 0x6e,
-		abx = 0x7e,
-	},
-	RTI = {
-		imp = 0x40,
-	},
-	RTS = {
-		imp = 0x60,
-	},
-	SBC = {
-		inx = 0xe1,
-		zpi = 0xe5,
-		imm = 0xe9,
-		abs = 0xed,
-		iny = 0xf1,
-		zpx = 0xf5,
-		aby = 0xf9,
-		abx = 0xfd,
-	},
-	SEC = {
-		imp = 0x38,
-	},
-	SED = {
-		imp = 0xf8,
-	},
-	SEI = {
-		imp = 0x78,
-	},
-	STA = {
-		inx = 0x81,
-		zpi = 0x85,
-		abs = 0x8d,
-		iny = 0x91,
-		zpx = 0x95,
-		aby = 0x99,
-		abx = 0x9d,
-	},
-	STX = {
-		zpi = 0x86,
-		zpy = 0x96,
-		abs = 0x8e,
-	},
-	STY = {
-		zpi = 0x84,
-		zpx = 0x94,
-		abs = 0x8c,
-	},
-	TAX = {
-		imp = 0xaa,
-	},
-	TAY = {
-		imp = 0xa8,
-	},
-	TSX = {
-		imp = 0xba,
-	},
-	TXA = {
-		imp = 0x8a,
-	},
-	TXS = {
-		imp = 0x9a,
-	},
-	TYA = {
-		imp = 0x98,
-	},
+Instructions = { 
+	ADC = { imm = 0x69, zpi = 0x65, zpx = 0x75, abs = 0x6d, abx = 0x7d, aby = 0x79, inx = 0x61, iny = 0x71, },
+	AND = { imm = 0x29, zpi = 0x25, zpx = 0x35, abs = 0x2d, abx = 0x3d, aby = 0x39, inx = 0x21, iny = 0x31, },
+	ASL = { acc = 0x0a, zpi = 0x06, zpx = 0x16, abs = 0x0e, abx = 0x1e, },
+	BCC = { rel = 0x90, zpi = 0x90, },
+	BCS = { rel = 0xb0, zpi = 0xb0, }, 
+	BEQ = { rel = 0xf0, zpi = 0xf0, },
+	BIT = { zpi = 0x24, abs = 0x2c, },
+	BMI = { rel = 0x30, zpi = 0x30, },
+	BNE = { rel = 0xd0, zpi = 0xd0, },
+	BPL = { rel = 0x10, zpi = 0x10, },
+	BRK = { imp = 0x00, },
+	BVC = { rel = 0x50, zpi = 0x50, },
+	BVS = { rel = 0x70, zpi = 0x70, },
+	CLC = { imp = 0x18, zpi = 0x18, },
+	CLD = { imp = 0xd8, },
+	CLI = { imp = 0x58, },
+	CLV = { imp = 0xb8, },
+	CMP = { imm = 0xc9, zpi = 0xc5, zpx = 0xd5, abs = 0xcd, abx = 0xdd, aby = 0xd9, inx = 0xc1, iny = 0xd1, },
+	CPX = { imm = 0xe0, zpi = 0xe4, abs = 0xec, },
+	CPY = { imm = 0xc0, zpi = 0xc4, abs = 0xcc, },
+	DEC = { zpi = 0xc6, zpx = 0xd6, abs = 0xce, abx = 0xde, },
+	DEX = { imp = 0xca, },
+	DEY = { imp = 0x88, },
+	EOR = { imm = 0x49, zpi = 0x45, zpx = 0x55, abs = 0x4d, abx = 0x5d, aby = 0x59, inx = 0x41, iny = 0x51, },
+	INC = { zpi = 0xe6, zpx = 0xf6, abs = 0xee, abx = 0xfe, },
+	INX = { imp = 0xe8, },
+	INY = { imp = 0xc8, },
+	JMP = { abs = 0x4c, ind = 0x6c, },
+	JSR = { abs = 0x20, },
+	LDA = { imm = 0xa9, zpi = 0xa5, zpx = 0xb5, abs = 0xad, abx = 0xbd, aby = 0xb9, inx = 0xa1, iny = 0xb1, },
+	LDX = { imm = 0xa2, zpi = 0xa6, zpy = 0xb6, abs = 0xae, aby = 0xbe, },
+	LDY = { imm = 0xa0, zpi = 0xa4, zpx = 0xb4, abs = 0xac, abx = 0xbc, },
+	LSR = { acc = 0x4a, zpi = 0x46, zpx = 0x56, abs = 0x4e, abx = 0x5e, },
+	NOP = { imp = 0xea, },
+	ORA = { imm = 0x09, zpi = 0x05, zpx = 0x15, abs = 0x0d, abx = 0x1d, aby = 0x19, inx = 0x01, iny = 0x11, },
+	PHA = { imp = 0x48, },
+	PHP = { imp = 0x08, },
+	PLA = { imp = 0x68, },
+	PLP = { imp = 0x28, },
+	ROL = { acc = 0x2a, zpi = 0x26, zpx = 0x36, abs = 0x2e, abx = 0x3e, },
+	ROR = { acc = 0x6a, zpi = 0x66, zpx = 0x76, abs = 0x6e, abx = 0x7e, },
+	RTI = { imp = 0x40, },
+	RTS = { imp = 0x60, },
+	SBC = { imm = 0xe9, zpi = 0xe5, zpx = 0xf5, abs = 0xed, abx = 0xfd, aby = 0xf9, inx = 0xe1, iny = 0xf1, },
+	SEC = { imp = 0x38, },
+	SED = { imp = 0xf8, },
+	SEI = { imp = 0x78, },
+	STA = { inx = 0x81, zpi = 0x85, abs = 0x8d, iny = 0x91, zpx = 0x95, aby = 0x99, abx = 0x9d, },
+	STX = { zpi = 0x86, zpy = 0x96, abs = 0x8e, },
+	STY = { zpi = 0x84, zpx = 0x94, abs = 0x8c, },
+	TAX = { imp = 0xaa, },
+	TAY = { imp = 0xa8, },
+	TSX = { imp = 0xba, },
+	TXA = { imp = 0x8a, },
+	TXS = { imp = 0x9a, },
+	TYA = { imp = 0x98, },
 }
 
 function GetAddressing(text)
@@ -295,6 +93,9 @@ function GetAddressing(text)
 
 	elseif text:match '^[Aa]$' then
 		res['addr'] = 'acc'
+	elseif text:match '^%-%s*%d+$' then
+		res['addr'] = 'rel'
+		res['lo'] = tonumber(text:match '(%-%d+)')
 
 	elseif text:match '^$%x+$' then
 		local num = tonumber(text:match '(%x+)', 16)
@@ -510,3 +311,88 @@ function Assemble(code)
 	end
 	return assembly
 end
+)"
+
+class ToyAssembler
+{
+public:
+	~ToyAssembler() 
+	{
+		lua_close(L);
+	}
+
+	static ToyAssembler& Get() 
+	{
+		static ToyAssembler s_instance;
+		return s_instance;
+	}
+
+	template<typename T>
+	void Assemble(const std::string& codeToAssemble, T* mem, size_t size=0x800, size_t start=0) 
+	{
+		//std::cout << "[ToyAssembler] Assembling:\n" << codeToAssemble << "\n";
+		std::vector<T> assembly;
+		lua_getglobal(L, "Assemble");
+		if (lua_isfunction(L, -1))
+		{
+			lua_pushstring(L, codeToAssemble.c_str());
+			if (checkState(lua_pcall(L, 1, 1, 0)))
+			{
+				// -1 => table
+				// -1 => nil, -2 => table
+				lua_pushvalue(L, -1);
+				lua_pushnil(L);
+				while(lua_next(L, -2))
+				{
+					// -1 => value, -2 => key, -3 => table
+
+					uint8_t value = lua_tointeger(L, -1);
+					assembly.push_back(value);
+
+					lua_pop(L, 1);
+				}
+
+				lua_pop(L, 1);
+			}
+			
+		}
+		auto minsize = std::min(assembly.size(), size - start);
+		for (size_t i = 0; i < minsize; ++i)
+		{
+			mem[start + i] = assembly[i];
+		}
+		// cleanup
+		lua_settop(L, 0);
+	}
+
+
+	ToyAssembler(const ToyAssembler&)            = delete;
+	ToyAssembler& operator=(const ToyAssembler&) = delete;
+
+private:
+	ToyAssembler() {
+		// create lua state
+		L = luaL_newstate();
+		luaL_openlibs(L);
+		// load assembler source
+		checkState(luaL_dostring(L, ASSEMBLER_SOURCE));
+	}
+
+	bool checkState(int r)
+	{
+		if (r != LUA_OK) 
+		{
+			auto errormsg = lua_tostring(L, -1);
+			std::cout << errormsg << std::endl;
+			lua_pop(L, 1);
+			return false;
+		}
+		return true;
+	}
+
+private:
+	lua_State* L;
+};
+
+}
+

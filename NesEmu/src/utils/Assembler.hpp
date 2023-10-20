@@ -33,36 +33,6 @@ public:
 
 	void Assemble(std::string_view code)
 	{
-		// populate labels
-		//TODO: bug, check for 3 byte instructions
-		int counter = 0;
-		for (auto [whole, part] : ctre::range<R"(\s*+(#\s*\S+|\(\s*\S+\s*\)|\(*\s*\S+\s*,\s*\S+\s*\)|[^\t\n ]+)\s*+)">(code))
-		{
-			std::string_view lbl = part.view();
-			std::cout << counter << " --> " << lbl << std::endl;
-			if (lbl[0] == ':')
-			{
-				if (m_labels.contains(lbl))
-				{
-					ASSE_LOG_ERROR("Label [" << lbl <<"] is already in use\n");
-					ASSE_LOG_INFO("Fatal error, can not continue\n");
-
-					return;
-
-				}
-				m_labels[lbl.substr(1)] = counter;
-
-				if (m_show)
-				{
-					ASSE_LOG_INFO("Label ["<< lbl <<"] is set to " << counter << "\n");
-				}
-			}
-			else
-			{
-				counter++;
-				
-			}
-		}
 		for (auto [whole, line] : ctre::range<"\\h*+([^\n]+)">(code))
 		{
 			// split into instruction and addressing
@@ -79,7 +49,7 @@ public:
 
 					return;
 				}
-				auto instrData = s_instrData[instr];
+				auto& instrData = s_instrData[instr];
 				if (!name)
 				{
 					ASSE_LOG_INFO("Fatal error, can not continue\n");
@@ -105,26 +75,6 @@ public:
 					m_assembly.push_back(*lo);
 				}
 				// do nothing for 1 byte
-
-				if (m_show)
-				{
-					ASSE_LOG_INFO("Assembled [" << instr << ", " << *name << "] (" << line <<") to:\n\t");
-					if (hi && lo)
-					{
-						ASSE_LOG_INFO(static_cast<int>(m_assembly[m_assembly.size() - 1 - 2]) << ", "
-								   << static_cast<int>(m_assembly[m_assembly.size() - 1 - 1]) << ", "
-								   << static_cast<int>(m_assembly[m_assembly.size() - 1 - 0]) << "\n");
-					}
-					else if (lo && !hi)
-					{
-						ASSE_LOG_INFO(static_cast<int>(m_assembly[m_assembly.size() - 1 - 1]) << ", "
-								   << static_cast<int>(m_assembly[m_assembly.size() - 1 - 0]) << "\n");
-					}
-					else
-					{
-						ASSE_LOG_INFO(static_cast<int>(m_assembly[m_assembly.size() - 1 - 0]) << "\n");
-					}
-				}
 			}
 			// single value hex
 			else if (auto [whole, val] = ctre::match<"\\$([0-9a-zA-Z]+)">(line); whole)
@@ -141,10 +91,47 @@ public:
 			{
 				m_assembly.push_back(static_cast<uint8_t>(std::stoi(val.str(), nullptr, 10)));
 			}
+			else if (auto [whole, label] = ctre::match<":([A-Za-z]\\S*)">(line); whole)
+			{
+				m_labelPos[label] = m_assembly.size();
+			}
+		}
+		for (auto [whole, line] : ctre::range<"\\h*+:(\\S+)\\h*+\n">(code))
+		{
+			if (m_labelPos.contains(line))
+			{
+				uint8_t lblPos = m_labelPos[line];
+				auto& vec = m_labels[line];
+				for (const auto pos : vec)
+				{
+					m_assembly[pos] = lblPos;
+				}
+			}
+			else
+			{
+				ASSE_LOG_ERROR("label [" << line << "] not found\n");
+				ASSE_LOG_INFO("Fatal error, can not continue\n");
+
+				return;
+			}
+		}
+
+		if (m_show)
+		{
+			showAssembly(code);
 		}
 	}
 
 private:
+
+	constexpr void showAssembly(std::string_view code) noexcept
+	{
+		ASSE_LOG_INFO("Assembled: \n" << code);
+		for (const auto& val : m_assembly)	
+		{
+			std::cout << (int)val << "\n";
+		}
+	}
 
 	constexpr std::string upper(const std::string_view& sv) noexcept
 	{
@@ -317,13 +304,9 @@ private:
 		// labels
 		else if (auto [whole, label] = ctre::match<"^([a-zA-Z].+)$">(text); whole)
 		{
-			if (!m_labels.contains(label))
-			{
-				ASSE_LOG_ERROR("Label ["<< label.view() <<"] was not found\n");
-				return a;
-			}
+			m_labels[label].push_back(m_assembly.size() + 1);
 			a.name = "rel";
-			a.lo = m_labels[label];
+			a.lo = 0;
 		}
 		// abs or zpi
 		else if (auto [whole, mode, _, num] = ctre::match<"^([$%]?)([#(]?)(\\H+)$">(text); whole)
@@ -373,7 +356,8 @@ private:
 private:
 
 	std::vector<uint8_t> m_assembly;
-	std::unordered_map<std::string_view, uint8_t> m_labels;
+	std::unordered_map<std::string_view, std::vector<uint8_t>> m_labels;
+	std::unordered_map<std::string_view, uint8_t> m_labelPos;
 	
 	Bus& m_bus;
 	bool m_show = false;

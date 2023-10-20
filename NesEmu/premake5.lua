@@ -24,14 +24,7 @@ project "NesEmu"
 	
 	
 -- Uncomment to disable tests
-	links {
-		"googletest",
-		"vendor/lib/lua546/lua5.4.6.lib"
-	}
 
-	includedirs {
-		"vendor/googletest/googletest/include"
-	}
 
 	defines {
 		"NES_EMU_TEST"
@@ -44,10 +37,16 @@ project "NesEmu"
 		}
 		runtime "debug"
 		symbols "On"
+		links {
+			"vendor/lib/debug/googletest.lib"
+		}
 
 	filter "configurations:Release"
 		defines { 
 			"NDEBUG" 
+		}
+		links {
+			"vendor/lib/release/googletest.lib"
 		}
 		runtime "release"
 		optimize "On"

@@ -1,114 +1,94 @@
 ﻿#include "pch.hpp"
 
-#include <gtest/gtest.h>
+#include "TestConfig.hpp"
 
 
-class TestRegTransfer : public testing::Test
+class TestRegTransfer : public TestFixture
 {
-protected:
-	Emu::CPU cpu;
-	Emu::Bus bus;
-	Emu::u8* mem = nullptr;
 
-	void SetUp() override
-	{
-		cpu = bus.GetCpu();
-		mem = bus.GetMemory();
-		cpu.SetP(0);
-		// clear reset cycles
-		clearCycles(8);
-	}
-
-	void clearCycles(int x = 1)
-	{
-		for (int i = 0; i < x; ++i)
-		{
-			cpu.Step();
-		}
-	}
 };
 
 
 TEST_F(TestRegTransfer, TAX)
 {
-	A6502::ToyAssembler::Get().Assemble(R"(
+	asse.Assemble(R"(
 		tax
 		tax
-	)", mem);
+	)");
 
-	cpu.SetA(0x80);
+	bus.GetCpu().SetA(0x80);
 
 	clearCycles(2);
 
-	ASSERT_EQ(cpu.X(), 0x80);          
-	ASSERT_TRUE(cpu.P() & Emu::P_N_FLAG); 
+	ASSERT_EQ(bus.GetCpu().X(), 0x80);          
+	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_N_FLAG); 
                                           
-	cpu.SetA(0);                      
+	bus.GetCpu().SetA(0);                      
                                           
 	clearCycles(2);                       
-	ASSERT_EQ(cpu.X(), 0);             
-	ASSERT_TRUE(cpu.P() & Emu::P_Z_FLAG); 
+	ASSERT_EQ(bus.GetCpu().X(), 0);             
+	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_Z_FLAG); 
 }
 
 TEST_F(TestRegTransfer, TAY)
 {
-	A6502::ToyAssembler::Get().Assemble(R"(
+	asse.Assemble(R"(
 		tay
 		tay
-	)", mem);
+	)");
 
-	cpu.SetA(0x80);
+	bus.GetCpu().SetA(0x80);
 
 	clearCycles(2);
 
-	ASSERT_EQ(cpu.Y(), 0x80);          
-	ASSERT_TRUE(cpu.P() & Emu::P_N_FLAG); 
+	ASSERT_EQ(bus.GetCpu().Y(), 0x80);          
+	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_N_FLAG); 
                                           
-	cpu.SetA(0);                      
+	bus.GetCpu().SetA(0);                      
                                           
 	clearCycles(2);                       
-	ASSERT_EQ(cpu.Y(), 0);             
-	ASSERT_TRUE(cpu.P() & Emu::P_Z_FLAG); 
+	ASSERT_EQ(bus.GetCpu().Y(), 0);             
+	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_Z_FLAG); 
 }
 
 TEST_F(TestRegTransfer, TXA)
 {
-	A6502::ToyAssembler::Get().Assemble(R"(
+	asse.Assemble(R"(
 		txa
 		txa
-	)", mem);
+	)");
 
-	cpu.SetX(0x80);
+	bus.GetCpu().SetX(0x80);
 
 	clearCycles(2);
 
-	ASSERT_EQ(cpu.A(), 0x80);          
-	ASSERT_TRUE(cpu.P() & Emu::P_N_FLAG); 
+	ASSERT_EQ(bus.GetCpu().A(), 0x80);          
+	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_N_FLAG); 
                                           
-	cpu.SetX(0);                      
+	bus.GetCpu().SetX(0);                      
                                           
 	clearCycles(2);                       
-	ASSERT_EQ(cpu.A(), 0);             
-	ASSERT_TRUE(cpu.P() & Emu::P_Z_FLAG); 
+	ASSERT_EQ(bus.GetCpu().A(), 0);             
+	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_Z_FLAG); 
 }
 
 TEST_F(TestRegTransfer, TYA)
 {
-	A6502::ToyAssembler::Get().Assemble(R"(
+	asse.Assemble(R"(
 		tya
 		tya
-	)", mem);
+	)");
 
-	cpu.SetY(0x80);
+	bus.GetCpu().SetY(0x80);
 
 	clearCycles(2);
 
-	ASSERT_EQ(cpu.A(), 0x80);          
-	ASSERT_TRUE(cpu.P() & Emu::P_N_FLAG); 
+	ASSERT_EQ(bus.GetCpu().A(), 0x80);          
+	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_N_FLAG); 
                                           
-	cpu.SetY(0);                      
+	bus.GetCpu().SetY(0);                      
                                           
 	clearCycles(2);                       
-	ASSERT_EQ(cpu.A(), 0);             
-	ASSERT_TRUE(cpu.P() & Emu::P_Z_FLAG); 
+	ASSERT_EQ(bus.GetCpu().A(), 0);             
+	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_Z_FLAG); 
 }

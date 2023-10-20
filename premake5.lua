@@ -15,8 +15,6 @@ outputDir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 group "Dependencies"
 	include "vendor/premake"
-	include "NesEmu/vendor/googletest/googletest"
-	-- include "NesEmu/vendor/googletest/googlemock"
 group ""
 
 

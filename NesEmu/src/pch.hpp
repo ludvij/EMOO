@@ -23,4 +23,3 @@
 #include "NesEmu.hpp"
 
 // utils
-#include "utils/ToyAssembler.hpp"

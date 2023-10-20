@@ -1,3 +1,0 @@
-[submodule "NesEmu/vendor/googletest"]
-	path = NesEmu/vendor/googletest
-	url = https://github.com/ludvij/googletest

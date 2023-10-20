@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <ranges>
 #include <cstdint>
+#include <numeric>
 #include <ctre/ctre.hpp>
 
 
@@ -26,23 +27,68 @@ template<MemoryAccessor Bus>
 class Assembler
 {
 public:
-	explicit Assembler(Bus& bus, bool show=false) : m_bus(bus), m_show(show)
+	
+	void Link(Bus* bus)
 	{
-		
+		m_bus = bus;
+	}
+
+	void Clean()
+	{
+		m_assembly.clear();
+		m_labelPos.clear();
+		m_labels.clear();
+		m_bus = nullptr;
 	}
 
 	void Assemble(std::string_view code)
 	{
-		for (auto [whole, line] : ctre::range<"\\h*+([^\n]+)">(code))
+		auto lines = splittrim(std::string(code), "\n");
+		for (const auto line : lines)
 		{
+			bool goahead = false;
 			// split into instruction and addressing
-			if (auto [whole, _instr, _addr] = ctre::match<"^([a-zA-Z]{3})\\h+(.+?)\\h*$">(line); whole)
-			{	
-				std::string instr = upper(_instr);
-
-				auto [name, lo, hi] = getAddressing(_addr);
+			auto parts = splittrim(line, " ");
+			if (parts.size() == 1)
+			{
+				auto val = parts[0];
+				auto noprefix = val.substr(1);
+				if (val[0] == '$')
+				{
+					m_assembly.push_back(std::stoi(noprefix, nullptr, 16));
+				}
+				// single value bin
+				else if (val[0] == '%')
+				{
+					m_assembly.push_back(std::stoi(noprefix, nullptr, 2));
+				}
+				// labels
+				else if (val[0] == ':')
+				{
+					m_labelPos[noprefix] = m_assembly.size();
+				}
+				// single value dec
+				else if (std::isdigit(val[0]) || val[0] == '-' || val[0] == '+')
+				{
+					m_assembly.push_back(std::stoi(val, nullptr, 10));
+				}
+				else
+				{
+					goahead = true;
+				}
+			}
+			if (goahead || parts.size() > 1)
+			{
+				auto instr = upper(parts[0]);
+				std::string addr = "";
+				for (int i = 1; i < parts.size(); ++i)
+				{
+					addr += parts[i];
+				}
+				auto [name, lo, hi] = getAddressing(addr);
+				
 				// c++20
-				if (!s_instrData.contains(upper(instr)))
+				if (!s_instrData.contains(instr))
 				{
 					ASSE_LOG_ERROR("Instruction " << instr << " does not exists\n");
 					ASSE_LOG_INFO("Fatal error, can not continue\n");
@@ -76,32 +122,18 @@ public:
 				}
 				// do nothing for 1 byte
 			}
-			// single value hex
-			else if (auto [whole, val] = ctre::match<"\\$([0-9a-zA-Z]+)">(line); whole)
-			{
-				m_assembly.push_back(static_cast<uint8_t>(std::stoi(val.str(), nullptr, 16)));
-			}
-			// single value bin
-			else if (auto [whole, val] =ctre::match<"%([01]+)">(line); whole)
-			{
-				m_assembly.push_back(static_cast<uint8_t>(std::stoi(val.str(), nullptr, 2)));
-			}
-			// single value dec
-			else if (auto [whole, val] = ctre::match<"(-\\d+)">(line); whole)
-			{
-				m_assembly.push_back(static_cast<uint8_t>(std::stoi(val.str(), nullptr, 10)));
-			}
-			else if (auto [whole, label] = ctre::match<":([A-Za-z]\\S*)">(line); whole)
-			{
-				m_labelPos[label] = m_assembly.size();
-			}
 		}
-		for (auto [whole, line] : ctre::range<"\\h*+:(\\S+)\\h*+\n">(code))
+		for (const auto line : lines)
 		{
-			if (m_labelPos.contains(line))
+			if (line[0] != ':')
 			{
-				uint8_t lblPos = m_labelPos[line];
-				auto& vec = m_labels[line];
+				continue;
+			}
+			std::string lbl = line.substr(1);
+			if (m_labelPos.contains(lbl))
+			{
+				uint8_t lblPos = m_labelPos[lbl];
+				auto& vec = m_labels[lbl];
 				for (const auto pos : vec)
 				{
 					m_assembly[pos] = lblPos;
@@ -109,28 +141,58 @@ public:
 			}
 			else
 			{
-				ASSE_LOG_ERROR("label [" << line << "] not found\n");
+				ASSE_LOG_ERROR("label [" << lbl << "] not found\n");
 				ASSE_LOG_INFO("Fatal error, can not continue\n");
 
 				return;
 			}
 		}
 
-		if (m_show)
+		// load assembly in MemoryAccessor
+		for (size_t i = 0; i < m_assembly.size(); ++i)
 		{
-			showAssembly(code);
+			m_bus->Write(i, m_assembly[i]);
 		}
 	}
 
 private:
 
-	constexpr void showAssembly(std::string_view code) noexcept
+	constexpr std::vector<std::string> splittrim(std::string s, std::string_view delim) noexcept
 	{
-		ASSE_LOG_INFO("Assembled: \n" << code);
-		for (const auto& val : m_assembly)	
+		std::vector<std::string> res;
+		auto nospace = [](unsigned char c) -> unsigned char { return !std::isspace(c); };
+
+		size_t pos = 0;
+		while ((pos = s.find(delim)) != std::string::npos)
 		{
-			std::cout << (int)val << "\n";
+			std::string token = s.substr(0, pos);
+			token.erase(
+				std::ranges::find_if(token | std::views::reverse, nospace).base(),
+				token.end()
+			);
+			token.erase(
+				token.begin(),
+				std::ranges::find_if(token, nospace)
+			);
+			s.erase(0, pos + delim.length());
+
+			if (token.empty()) continue;
+			res.push_back(token);
 		}
+		std::string token = s.substr(0, token.size());
+		token.erase(
+			std::ranges::find_if(token | std::views::reverse, nospace).base(),
+			token.end()
+		);
+		token.erase(
+			token.begin(),
+			std::ranges::find_if(token, nospace)
+		);
+		s.erase(0, pos + delim.length());
+
+		if (token.empty()) return res;
+		res.push_back(token);
+		return res;
 	}
 
 	constexpr std::string upper(const std::string_view& sv) noexcept
@@ -161,7 +223,7 @@ private:
 			a.name = "acc";
 		}
 		// either abx, zpx, aby or zpy
-		else if (auto [whole, mode, num, type] = ctre::match<"^([$%]?)(\\H+)\\h*,\\h*([xy])$">(text); whole)
+		else if (auto [whole, mode, num, type] = ctre::match<"^([$%]?)(.+),([xy])$">(text); whole)
 		{
 			if (mode == "$")
 			{
@@ -196,7 +258,7 @@ private:
 			}
 		}
 		// inx
-		else if (auto [whole, mode, num] = ctre::match<"^\\(\\h*([$%]?)(\\H+)\\h*,\\h*x\\h*\\)$">(text); whole)
+		else if (auto [whole, mode, num] = ctre::match<"^\\(([$%]?)(.+),x\\)$">(text); whole)
 		{
 			if (mode == "$")
 			{
@@ -224,7 +286,7 @@ private:
 			a.lo = temp & 0x00ff;
 		}
 		// iny
-		else if (auto [whole, mode, num] = ctre::match<"^\\(\\h*([$%]?)(\\H+)\\h*\\)\\h*,\\h*y$">(text); whole)
+		else if (auto [whole, mode, num] = ctre::match<"^\\(([$%]?)(.+)\\),y$">(text); whole)
 		{
 			if (mode == "$")
 			{
@@ -252,7 +314,7 @@ private:
 			a.lo = temp & 0x00ff;
 		}
 		// ind
-		else if (auto [whole, mode, num] = ctre::match<"^\\(\\h*([$%]?)(\\H+)\\h*\\)$">(text); whole)
+		else if (auto [whole, mode, num] = ctre::match<"^\\(([$%]?)(.+)\\)$">(text); whole)
 		{
 			if (mode == "$")
 			{
@@ -277,7 +339,7 @@ private:
 			a.hi = (temp & 0xff00) >> 8;
 		}
 		// imm
-		else if (auto [whole, mode, num] = ctre::match<"^#\\h*([$%]?)(\\H+)$">(text); whole)
+		else if (auto [whole, mode, num] = ctre::match<"^#([$%]?)(.+)$">(text); whole)
 		{
 			if (mode == "$")
 			{
@@ -304,12 +366,18 @@ private:
 		// labels
 		else if (auto [whole, label] = ctre::match<"^([a-zA-Z].+)$">(text); whole)
 		{
-			m_labels[label].push_back(m_assembly.size() + 1);
+			m_labels[label.str()].push_back(m_assembly.size() + 1);
 			a.name = "rel";
 			a.lo = 0;
 		}
+		// rel if negative special case
+		else if (auto [whole, num] = ctre::match<"^(-\\d+)$">(text); whole)
+		{
+			a.name = "rel";
+			a.lo = std::stoi(num.str(), nullptr, 10);
+		}
 		// abs or zpi
-		else if (auto [whole, mode, _, num] = ctre::match<"^([$%]?)([#(]?)(\\H+)$">(text); whole)
+		else if (auto [whole, mode, num] = ctre::match<"^([$%]?)(.+)$">(text); whole)
 		{
 			if (mode == "$")
 			{
@@ -350,17 +418,20 @@ private:
 
 	constexpr bool isnumber(std::string_view s) noexcept
 	{
-		return std::ranges::count_if(s, [](unsigned char c) -> unsigned char { return !std::isdigit(c);}) == 0;
+		auto isinvalid = [](unsigned char c)
+		{
+			return !(std::isdigit(c) || c == '-' || c == '+');
+		};
+		return std::ranges::count_if(s, isinvalid) == 0;
 	}
 
 private:
 
 	std::vector<uint8_t> m_assembly;
-	std::unordered_map<std::string_view, std::vector<uint8_t>> m_labels;
-	std::unordered_map<std::string_view, uint8_t> m_labelPos;
+	std::unordered_map<std::string, std::vector<uint8_t>> m_labels;
+	std::unordered_map<std::string, uint8_t> m_labelPos;
 	
-	Bus& m_bus;
-	bool m_show = false;
+	Bus* m_bus = nullptr;
 	// C++17 my saviour
 	static inline InstrData s_instrData = {
 		{"ADC",{{"imm",0x69},{"zpi",0x65},{"zpx",0x75},{"abs",0x6d},{"abx",0x7d},{"aby",0x79},{"inx",0x61},{"iny",0x71}}},

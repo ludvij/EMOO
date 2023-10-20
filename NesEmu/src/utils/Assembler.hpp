@@ -92,7 +92,7 @@ public:
 					goahead = true;
 				}
 			}
-			if (goahead || parts.size() > 1)
+			if (parts[0][0] != ';' && (goahead || parts.size() > 1))
 			{
 				AddressingMode addressing;
 				std::string instr = upper(parts[0]);
@@ -154,6 +154,11 @@ public:
 					m_assembly.push_back(*lo);
 				}
 				// do nothing for 1 byte
+			}
+			// comments
+			else
+			{
+				continue;
 			}
 		}
 		for (const auto line : lines)
@@ -226,26 +231,18 @@ private:
 			nbytes = 2;
 		}
 		// 16 bit explicit hex for abs abx aby
-		else if (auto [whole, imm, num, reg, type] = ctre::match<"^(#)?\\$([A-Fa-f0-9]{3,4})(,([xy]))?$">(text); whole)
+		else if (auto [whole, num, reg, type] = ctre::match<"^\\$([A-Fa-f0-9]{3,4})(,([xy]))?$">(text); whole)
 		{
 			temp = std::stoi(num.str(), nullptr, 16);
-			if (imm && !reg)
-			{
-				a.name = "imm";
-			}
-			else if (reg && !imm)
+
+			if (reg)
 			{
 				a.name = "ab";
 				*a.name += type;
 			}
-			else if (!reg && !imm)
+			else
 			{
 				a.name = "abs";
-			}
-			else 
-			{
-				ASSE_LOG_ERROR("Unrecognized addressig mode\n");
-				error = true;
 			}
 
 			nbytes = 2;
@@ -253,7 +250,7 @@ private:
 			number = num;
 		}
 		// either abx, zpx, aby or zpy
-		else if (auto [whole, mode, num, type] = ctre::match<"^([$%]?)(.+),([xy])$">(text); whole)
+		else if (auto [whole, mode, num, type] = ctre::match<"^([$%]?)([^(]),([xy])$">(text); whole)
 		{
 			encoding = mode;
 			number = num;
@@ -301,7 +298,7 @@ private:
 			encoding = mode;
 			number = num;
 			a.name = "imm";
-			nbytes = 2;
+			nbytes = 1;
 		}
 		// labels
 		else if (auto [whole, label] = ctre::match<"^([a-zA-Z].+)$">(text); whole)

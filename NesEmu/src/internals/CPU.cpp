@@ -342,8 +342,8 @@ u16 CPU::addrINY()
 {
 	u16 base = readByte();
 
-	u16 lo = readMemory(base % 256);
-	u16 hi = readMemory((base + 1) % 256);
+	u16 lo = readMemory(base & 0x00ff);
+	u16 hi = readMemory((base + 1) & 0x00ff);
 
 	u16 addr = MAKE_WORD(hi, lo);
 	addr += m_Y;

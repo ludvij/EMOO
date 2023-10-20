@@ -4,17 +4,32 @@
 #include <unordered_map>
 #include <ranges>
 #include <cstdint>
-#include <numeric>
 #include <ctre/ctre.hpp>
 
+#if defined(DEBUG)
+	#define ASSE_LOG_INFO(x) std::cout << "[Assembler INFO] " << __FILE__ << "," << __LINE__ << " " << x
+	#define ASSE_LOG_ERROR(x) std::cerr << "[Assembler ERROR] " << __FILE__ << "," << __LINE__ << " " << x
+#else 
+	#define ASSE_LOG_INFO(x) std::cout << "[Assembler INFO] " << x
+	#define ASSE_LOG_ERROR(x) std::cerr << "[Assembler ERROR] " << x
+#endif
 
-#define ASSE_LOG_INFO(x) std::cout << "[Assembler INFO] " << x
-#define ASSE_LOG_ERROR(x) std::cerr << "[Assembler ERROR] " << x
+
+#define DIRECT_ACCESS "DIRECT_ACCESS"
 
 using InstrData = std::unordered_map<std::string_view,std::unordered_map<std::string_view,uint8_t>>;
 
 namespace A6502
 {
+
+struct AddressingMode
+{
+	std::optional<std::string> name;
+	std::optional<uint8_t> lo;
+	std::optional<uint8_t> hi;
+};
+
+
 // usage of c++20
 template<class T>
 concept MemoryAccessor = requires(T bus)
@@ -65,10 +80,10 @@ public:
 				// labels
 				else if (val[0] == ':')
 				{
-					m_labelPos[noprefix] = m_assembly.size();
+					m_labelPos[noprefix] = static_cast<uint8_t>(m_assembly.size());
 				}
 				// single value dec
-				else if (std::isdigit(val[0]) || val[0] == '-' || val[0] == '+')
+				else if (std::isdigit(val[0]) || (val[0] == '-' && std::isdigit(val[1])) )
 				{
 					m_assembly.push_back(std::stoi(val, nullptr, 10));
 				}
@@ -79,14 +94,32 @@ public:
 			}
 			if (goahead || parts.size() > 1)
 			{
-				auto instr = upper(parts[0]);
+				AddressingMode addressing;
+				std::string instr = upper(parts[0]);
 				std::string addr = "";
 				for (int i = 1; i < parts.size(); ++i)
 				{
 					addr += parts[i];
 				}
-				auto [name, lo, hi] = getAddressing(addr);
+				// direct memory access
+				std::optional<AddressingMode> dAccess;
+				if (instr[0] == '&') 
+				{
+					dAccess = getAddressing(instr);
+				}
+				addressing = getAddressing(addr);
 				
+				auto [name, lo, hi] = addressing;
+				if (dAccess && name)
+				{
+					m_bus->Write(*(*dAccess).hi << 8 | *(*dAccess).lo, *lo);
+					continue;
+				}
+				else if (dAccess && !name)
+				{
+					ASSE_LOG_ERROR("No value provided for direct memory addresing\n");
+				}
+
 				// c++20
 				if (!s_instrData.contains(instr))
 				{
@@ -151,18 +184,195 @@ public:
 		// load assembly in MemoryAccessor
 		for (size_t i = 0; i < m_assembly.size(); ++i)
 		{
-			m_bus->Write(i, m_assembly[i]);
+			m_bus->Write(static_cast<uint16_t>(i), m_assembly[i]);
 		}
 	}
 
 private:
+
+	constexpr std::string upper(const std::string& sv) noexcept
+	{
+		auto _upper = [](unsigned char c) -> unsigned char { return std::toupper(c); };
+		std::string s(sv);
+		std::transform(s.begin(), s.end(), s.begin(), _upper);
+		return s;
+	}
+
+	constexpr AddressingMode getAddressing(const std::string& text) noexcept
+	{
+		AddressingMode a;
+		std::optional<uint16_t> temp = std::nullopt;
+		int nbytes = 0;
+		std::string_view encoding = "";
+		std::string number;
+		bool error = false;
+		// imp
+		if (text.empty())
+		{
+			a.name = "imp";
+		}
+		// acc
+		else if (ctre::match<"^[aA]$">(text))
+		{
+			a.name = "acc";
+			
+		}
+		// direct memory access
+		else if (auto [whole, mode, num] = ctre::match<"^&([$%]?)(.+)$">(text); whole)
+		{
+			a.name = DIRECT_ACCESS;
+			encoding = mode;
+			number = num;
+			nbytes = 2;
+		}
+		// 16 bit explicit hex for abs abx aby
+		else if (auto [whole, imm, num, reg, type] = ctre::match<"^(#)?\\$([A-Fa-f0-9]{3,4})(,([xy]))?$">(text); whole)
+		{
+			temp = std::stoi(num.str(), nullptr, 16);
+			if (imm && !reg)
+			{
+				a.name = "imm";
+			}
+			else if (reg && !imm)
+			{
+				a.name = "ab";
+				*a.name += type;
+			}
+			else if (!reg && !imm)
+			{
+				a.name = "abs";
+			}
+			else 
+			{
+				ASSE_LOG_ERROR("Unrecognized addressig mode\n");
+				error = true;
+			}
+
+			nbytes = 2;
+			encoding = "$";
+			number = num;
+		}
+		// either abx, zpx, aby or zpy
+		else if (auto [whole, mode, num, type] = ctre::match<"^([$%]?)(.+),([xy])$">(text); whole)
+		{
+			encoding = mode;
+			number = num;
+			if (temp > 255)
+			{
+				a.name = "ab";
+				*a.name += type;
+				nbytes = 2;
+			}
+			else
+			{
+				a.name = "zp";
+				*a.name += type;
+
+				nbytes = 1;
+			}
+		}
+		// inx
+		else if (auto [whole, mode, num] = ctre::match<"^\\(([$%]?)(.+),x\\)$">(text); whole)
+		{
+			encoding = mode;
+			number = num;
+			a.name = "inx";
+			nbytes = 1;
+		}
+		// iny
+		else if (auto [whole, mode, num] = ctre::match<"^\\(([$%]?)(.+)\\),y$">(text); whole)
+		{
+			encoding = mode;
+			number = num;
+			a.name = "iny";
+			nbytes = 1;
+		}
+		// ind
+		else if (auto [whole, mode, num] = ctre::match<"^\\(([$%]?)(.+)\\)$">(text); whole)
+		{
+			encoding = mode;
+			number = num;
+			a.name = "ind";
+			nbytes = 2;
+		}
+		// imm
+		else if (auto [whole, mode, num] = ctre::match<"^#([$%]?)(.+)$">(text); whole)
+		{
+			encoding = mode;
+			number = num;
+			a.name = "imm";
+			nbytes = 2;
+		}
+		// labels
+		else if (auto [whole, label] = ctre::match<"^([a-zA-Z].+)$">(text); whole)
+		{
+			m_labels[label.str()].push_back(static_cast<uint8_t>(m_assembly.size() + 1));
+			a.name = "rel";
+			a.lo = 0;
+		}
+		// rel if negative special case
+		else if (auto [whole, num] = ctre::match<"^(-\\d+)$">(text); whole)
+		{
+			a.name = "rel";
+			number = num;
+			encoding = "";
+			nbytes = 1;
+		}
+		// abs or zpi
+		else if (auto [whole, mode, num] = ctre::match<"^([$%]?)(.+)$">(text); whole)
+		{
+			encoding = mode;
+			number = num;
+			if (temp > 255)
+			{
+				a.name = "abs";
+				nbytes = 2;
+			}
+			else
+			{
+				a.name = "zpi";
+				nbytes = 1;
+
+			}
+		}
+		else
+		{
+			ASSE_LOG_ERROR("Unrecognized addressing mode\n");
+			error = true;
+		}
+
+		if (!error && nbytes > 0)
+		{
+			temp = decode(number, encoding);
+			if (!temp)
+			{
+				error = true;
+			}
+			else 
+			{
+				a.lo = *temp & 0x00ff;
+			}
+		}
+		if (!error && nbytes == 2)
+		{
+			a.hi = (*temp & 0xff00) >> 8;
+		}
+
+		if (error)
+		{
+			a.name = std::nullopt;
+			a.lo = std::nullopt;
+			a.hi = std::nullopt;
+		}
+		return a;
+	}
 
 	constexpr std::vector<std::string> splittrim(std::string s, std::string_view delim) noexcept
 	{
 		std::vector<std::string> res;
 		auto nospace = [](unsigned char c) -> unsigned char { return !std::isspace(c); };
 
-		size_t pos = 0;
+		size_t pos;
 		while ((pos = s.find(delim)) != std::string::npos)
 		{
 			std::string token = s.substr(0, pos);
@@ -179,248 +389,81 @@ private:
 			if (token.empty()) continue;
 			res.push_back(token);
 		}
-		std::string token = s.substr(0, token.size());
-		token.erase(
-			std::ranges::find_if(token | std::views::reverse, nospace).base(),
-			token.end()
+		s.erase(
+			std::ranges::find_if(s | std::views::reverse, nospace).base(),
+			s.end()
 		);
-		token.erase(
-			token.begin(),
-			std::ranges::find_if(token, nospace)
+		s.erase(
+			s.begin(),
+			std::ranges::find_if(s, nospace)
 		);
 		s.erase(0, pos + delim.length());
 
-		if (token.empty()) return res;
-		res.push_back(token);
+		if (s.empty()) return res;
+		res.push_back(s);
 		return res;
 	}
 
-	constexpr std::string upper(const std::string_view& sv) noexcept
-	{
-		auto _upper = [](unsigned char c) -> unsigned char { return std::toupper(c); };
-		std::string s(sv);
-		std::transform(s.begin(), s.end(), s.begin(), _upper);
-		return s;
-	}
-
-	constexpr auto getAddressing(const std::string_view& text) noexcept
-	{
-		struct addr 
+	constexpr std::optional<uint16_t> decode(const std::string& num, std::string_view encoding)
+	{	
+		if (encoding == "$" && ishexadecimal(num))
 		{
-			std::optional<std::string> name = std::nullopt;
-			std::optional<uint8_t> lo = std::nullopt;
-			std::optional<uint8_t> hi = std::nullopt;
-		} a;
-		uint16_t temp = -1;
-		// imp
-		if (text.empty())
-		{
-			a.name = "imp";
+			return std::stoi(num, nullptr, 16);
 		}
-		// acc
-		else if (ctre::match<"^[aA]$">(text))
+		else if (encoding == "%" && isbinary(num))
 		{
-			a.name = "acc";
+			return std::stoi(num, nullptr, 2);
 		}
-		// either abx, zpx, aby or zpy
-		else if (auto [whole, mode, num, type] = ctre::match<"^([$%]?)(.+),([xy])$">(text); whole)
+		else if (isdecimal(num))
 		{
-			if (mode == "$")
-			{
-				temp = std::stoi(num.str(), nullptr, 16);
-			}
-			else if (mode == "%")
-			{
-				temp = std::stoi(num.str(), nullptr, 2);
-			}
-			else if (isnumber(num))
-			{
-				temp = std::stoi(num.str(), nullptr, 10);
-			}
-			else 
-			{
-				ASSE_LOG_ERROR("Unrecognized number\n");
-				return a;
-			}
-			if (temp > 255)
-			{
-				a.name = "ab";
-				*a.name += type;
-				a.lo = temp & 0x00ff;
-				a.hi = (temp & 0xff00) >> 8;
-			}
-			else
-			{
-				a.name = "zp";
-				*a.name += type;
-
-				a.lo = temp & 0x00ff;
-			}
-		}
-		// inx
-		else if (auto [whole, mode, num] = ctre::match<"^\\(([$%]?)(.+),x\\)$">(text); whole)
-		{
-			if (mode == "$")
-			{
-				temp = std::stoi(num.str(), nullptr, 16);
-			}
-			else if (mode == "%")
-			{
-				temp = std::stoi(num.str(), nullptr, 2);
-			}
-			else if (isnumber(num))
-			{
-				temp = std::stoi(num.str(), nullptr, 10);
-			}
-			else 
-			{
-				ASSE_LOG_ERROR("Unrecognized number\n");
-				return a;
-			}
-			if (temp > 255)
-			{
-				ASSE_LOG_ERROR("Inx addressing mode does not support more than 8 bits\n");
-				return a;
-			}
-			a.name = "inx";
-			a.lo = temp & 0x00ff;
-		}
-		// iny
-		else if (auto [whole, mode, num] = ctre::match<"^\\(([$%]?)(.+)\\),y$">(text); whole)
-		{
-			if (mode == "$")
-			{
-				temp = std::stoi(num.str(), nullptr, 16);
-			}
-			else if (mode == "%")
-			{
-				temp = std::stoi(num.str(), nullptr, 2);
-			}
-			else if (isnumber(num))
-			{
-				temp = std::stoi(num.str(), nullptr, 10);
-			}
-			else
-			{
-				ASSE_LOG_ERROR("Unrecognized number\n");
-				return a;
-			}
-			if (temp > 255)
-			{
-				ASSE_LOG_ERROR("Iny addressing mode does not support more than 8 bits\n");
-				return a;
-			}
-			a.name = "iny";
-			a.lo = temp & 0x00ff;
-		}
-		// ind
-		else if (auto [whole, mode, num] = ctre::match<"^\\(([$%]?)(.+)\\)$">(text); whole)
-		{
-			if (mode == "$")
-			{
-				temp = std::stoi(num.str(), nullptr, 16);
-			}
-			else if (mode == "%")
-			{
-				temp = std::stoi(num.str(), nullptr, 2);
-			}
-			else if (isnumber(num))
-			{
-				temp = std::stoi(num.str(), nullptr, 10);
-			}
-			else 
-			{
-				ASSE_LOG_ERROR("Unrecognized number: " << num <<"\n");
-				return a;
-			}
-
-			a.name = "ind";
-			a.lo = temp & 0x00ff;
-			a.hi = (temp & 0xff00) >> 8;
-		}
-		// imm
-		else if (auto [whole, mode, num] = ctre::match<"^#([$%]?)(.+)$">(text); whole)
-		{
-			if (mode == "$")
-			{
-				temp = std::stoi(num.str(), nullptr, 16);
-			}
-			else if (mode == "%")
-			{
-				temp = std::stoi(num.str(), nullptr, 2);
-			}
-			else if (isnumber(num))
-			{
-				temp = std::stoi(num.str(), nullptr, 10);
-			}
-			else 
-			{
-				ASSE_LOG_ERROR("Unrecognized number: " << num <<"\n");
-				return a;
-			}
-
-			a.name = "imm";
-			a.lo = temp & 0x00ff;
-			a.hi = (temp & 0xff00) >> 8;
-		}
-		// labels
-		else if (auto [whole, label] = ctre::match<"^([a-zA-Z].+)$">(text); whole)
-		{
-			m_labels[label.str()].push_back(m_assembly.size() + 1);
-			a.name = "rel";
-			a.lo = 0;
-		}
-		// rel if negative special case
-		else if (auto [whole, num] = ctre::match<"^(-\\d+)$">(text); whole)
-		{
-			a.name = "rel";
-			a.lo = std::stoi(num.str(), nullptr, 10);
-		}
-		// abs or zpi
-		else if (auto [whole, mode, num] = ctre::match<"^([$%]?)(.+)$">(text); whole)
-		{
-			if (mode == "$")
-			{
-				temp = std::stoi(num.str(), nullptr, 16);
-			}
-			else if (mode == "%")
-			{
-				temp = std::stoi(num.str(), nullptr, 2);
-			}
-			else if (isnumber(num))
-			{
-				temp = std::stoi(num.str(), nullptr, 10);
-			}
-			else 
-			{
-				ASSE_LOG_ERROR("Unrecognized number: " << num <<"\n");
-				return a;
-			}
-			if (temp > 255)
-			{
-				a.name = "abs";
-				a.lo = temp & 0x00ff;
-				a.hi = (temp & 0xff00) >> 8;
-			}
-			else
-			{
-				a.name = "zpi";
-				a.lo = temp & 0x00ff;
-			}
+			return std::stoi(num, nullptr, 10);
 		}
 		else
 		{
-			ASSE_LOG_ERROR("Unrecognized addressing mode\n");
-			return a;
+			ASSE_LOG_ERROR(num << " is not a number\n");
+			return std::nullopt;
 		}
-		return a;
+
 	}
 
-	constexpr bool isnumber(std::string_view s) noexcept
+	constexpr bool isdecimal(std::string_view s) noexcept
 	{
 		auto isinvalid = [](unsigned char c)
 		{
-			return !(std::isdigit(c) || c == '-' || c == '+');
+			return !(
+				std::isdigit(c) ||
+				c == '-'
+			);
+		};
+		return std::ranges::count_if(s, isinvalid) == 0;
+	}
+
+	constexpr bool ishexadecimal(std::string_view s) noexcept
+	{
+		auto isinvalid = [](unsigned char c)
+		{
+			c = std::toupper(c);
+			return !(
+				std::isdigit(c) || 
+				c == 'A' ||
+				c == 'B' ||
+				c == 'C' ||
+				c == 'D' ||
+				c == 'E' ||
+				c == 'F'
+			);
+		};
+		return std::ranges::count_if(s, isinvalid) == 0;
+	}
+
+	constexpr bool isbinary(std::string_view s) noexcept
+	{
+		auto isinvalid = [](unsigned char c)
+		{
+			return !(
+				c == '0' ||
+				c == '1'
+			);
 		};
 		return std::ranges::count_if(s, isinvalid) == 0;
 	}

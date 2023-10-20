@@ -53,10 +53,10 @@ TEST_F(TestArithmetic, ADC_ZPX_Z)
 
 TEST_F(TestArithmetic, ADC_ABS_C)
 {
-	bus.Write(0, 0x6D);
-	bus.Write(1, 3);
-	bus.Write(2, 0);
-	bus.Write(3, 13);
+	asse.Assemble(R"(
+		adc $0003
+		13
+	)");
 
 	bus.GetCpu().SetP(Emu::P_C_FLAG);
 	bus.GetCpu().SetA(12);
@@ -69,6 +69,10 @@ TEST_F(TestArithmetic, ADC_ABS_C)
 
 TEST_F(TestArithmetic, ADC_ABX_OOPS)
 {
+	asse.Assemble(R"(
+		adc $00ff, x
+		&$0100 13
+	)");
 	bus.Write(0, 0x7D);
 	bus.Write(1, 0xff);
 	bus.Write(2, 0x00);
@@ -87,10 +91,10 @@ TEST_F(TestArithmetic, ADC_ABX_OOPS)
 
 TEST_F(TestArithmetic, ADC_ABY_OOPS)
 {
-	bus.Write(0, 0x79);
-	bus.Write(1, 0xff);
-	bus.Write(2, 0x00);
-	bus.Write(0x0100, 13);
+	asse.Assemble(R"(
+		adc $00ff, y
+		&$0100 13
+	)");
 
 	bus.GetCpu().SetP(Emu::P_C_FLAG);
 	bus.GetCpu().SetA(12);

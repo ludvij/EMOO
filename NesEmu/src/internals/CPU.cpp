@@ -4,26 +4,22 @@
 
 #include "Bus.hpp"
 
-#define MAKE_WORD(hi, lo) (((hi) << 8) | (lo))
-
-#define CHECK_BIT(val, bit) (((val) >> (bit)) & 1)
-
-#define CHECK_FLAG(flag) ((m_P & (flag)) ? 1 : 0)
 
 namespace Emu 
 {
 
+constexpr auto MAKE_WORD = [](const u16 hi, const u16 lo) -> u16 { return static_cast<u16>((hi << 8)) | lo; };
 
 CPU::CPU()
 {
 	// filling the jump table
-	Instruction invalid = {
+	constexpr Instruction invalid = {
 		"___",
 		&CPU::addrIMM, 
 		&CPU::___, 
 		0
 	};
-	std::fill_n(m_jumpTable, 256, invalid);
+	std::ranges::fill(m_jumpTable, invalid);
 	// ADC
 	m_jumpTable[0x69] = {"ADC", &CPU::addrIMM, &CPU::ADC, 2};
 	m_jumpTable[0x65] = {"ADC", &CPU::addrZPI, &CPU::ADC, 3};
@@ -240,20 +236,20 @@ void CPU::Reset()
 }
 
 
-u8 CPU::readMemory(u16 addr) const
+u8 CPU::readMemory(const u16 addr) const
 {
 	return m_bus->Read(addr);
 }
 
 u8 CPU::readByte()
 {
-	u8 value = readMemory(m_PC);
+	const u8 value = readMemory(m_PC);
 	m_PC++;
 	return value;
 }
 
 
-void CPU::writeMemory(u16 addr, u8 val) const
+void CPU::writeMemory(const u16 addr, const u8 val) const
 {
 	m_bus->Write(addr, val);
 }
@@ -265,7 +261,7 @@ u16 CPU::addrIMP()
 
 u16 CPU::addrIMM()
 {
-	u16 addr = m_PC++;
+	const u16 addr = m_PC++;
 	return addr;
 }
 
@@ -296,17 +292,17 @@ u16 CPU::addrZPY()
 
 u16 CPU::addrABS()
 {
-	u16 lo = readByte();
-	u16 hi = readByte();
-	u16 addr = MAKE_WORD(hi, lo);
+	const u8 lo = readByte();
+	const u8 hi = readByte();
+	const u16 addr = MAKE_WORD(hi, lo);
 
 	return addr;
 }
 
 u16 CPU::addrABX()
 {
-	u16 lo = readByte();
-	u16 hi = readByte();
+	const u16 lo = readByte();
+	const u16 hi = readByte();
 
 	u16 addr = MAKE_WORD(hi, lo);
 	addr += m_X;
@@ -319,8 +315,8 @@ u16 CPU::addrABX()
 
 u16 CPU::addrABY()
 {
-	u16 lo = readByte();
-	u16 hi = readByte();
+	const u16 lo = readByte();
+	const u16 hi = readByte();
 
 	u16 addr = MAKE_WORD(hi, lo);
 	addr += m_Y;
@@ -335,10 +331,10 @@ u16 CPU::addrABY()
 
 u16 CPU::addrIND()
 {
-	u16 lo = readByte();
-	u16 hi = readByte();
+	const u16 lo = readByte();
+	const u16 hi = readByte();
 
-	u16 notyet = MAKE_WORD(hi, lo);
+	const u16 notyet = MAKE_WORD(hi, lo);
 
 	u16 addr;
 
@@ -357,13 +353,13 @@ u16 CPU::addrIND()
 
 u16 CPU::addrINX()
 {
-	u16 base = readByte() + m_X;
+	const u16 base = readByte() + m_X;
 
-	u16 lo = readMemory((base & 0x00FF));
-	u16 hi = readMemory(((base + 1) & 0x00FF));
+	const u16 lo = readMemory((base & 0x00FF));
+	const u16 hi = readMemory(((base + 1) & 0x00FF));
 
 
-	u16 addr = MAKE_WORD(hi, lo);
+	const u16 addr = MAKE_WORD(hi, lo);
 
 	return addr;
 
@@ -371,13 +367,12 @@ u16 CPU::addrINX()
 
 u16 CPU::addrINY()
 {
-	u16 base = readByte();
+	const u16 base = readByte();
 
-	u16 lo = readMemory(base & 0x00ff);
-	u16 hi = readMemory((base + 1) & 0x00ff);
+	const u16 lo = readMemory(base & 0x00ff);
+	const u16 hi = readMemory((base + 1) & 0x00ff);
 
-	u16 addr = MAKE_WORD(hi, lo);
-	addr += m_Y;
+	const u16 addr = MAKE_WORD(hi, lo) + m_Y;
 
 	if ((addr & 0xFF00) != (hi << 8))
 	{
@@ -400,7 +395,7 @@ u16 CPU::addrREL()
 		offset |= 0xff00;
 	}
 
-	u16 addr = m_PC + offset;
+	const u16 addr = m_PC + offset;
 
 	return addr;
 }
@@ -433,13 +428,13 @@ u16 CPU::addrACC()
  * | 1 1 1 | 0 |  0  |   1   |      0      |
  * └-------┴---┴-----┴-------┴-------------┘
  */
-void CPU::ADC(u16 addr)
+void CPU::ADC(const u16 addr)
 {
 	// hack to get overflow
-	u16 m = readMemory(addr);
-	u16 a16 = m_A;
+	const u16 m = readMemory(addr);
+	const u16 a16 = m_A;
 	u16 temp = m + a16;
-	if (CHECK_FLAG(P_C_FLAG)) 
+	if (checkFlag(P_C_FLAG)) 
 	{
 		temp += 1;
 	}
@@ -459,15 +454,14 @@ void CPU::ADC(u16 addr)
  * m_A = m_A & M
  * Flags: Z, N
  */
-void CPU::AND(u16 addr)
+void CPU::AND(const u16 addr)
 {
-	u8 m = readMemory(addr);
-	m_A = m_A & m;
+	const u8 m = readMemory(addr);
+	m_A &= m;
 	setFlagIf(P_Z_FLAG, m_A == 0);
-	setFlagIf(P_N_FLAG, CHECK_BIT(m_A, 7));
+	setFlagIf(P_N_FLAG, m_A & 0x80);
 
 	m_canOops = true;
-	
 }
 
 
@@ -476,7 +470,7 @@ void CPU::AND(u16 addr)
  * m_A = m_A * 2 | M = M * 2
  * Flags: Z, N, C
  */
-void CPU::ASL(u16 addr)
+void CPU::ASL(const u16 addr)
 {
 	u8 m;
 	if (isImplied())
@@ -508,25 +502,25 @@ void CPU::ASL(u16 addr)
  * Instruction Branch if carry clear
  * if C == 0 --> PC = addr
  */
-void CPU::BCC(u16 addr)
+void CPU::BCC(const u16 addr)
 {
-	branchIfCond(addr, !CHECK_FLAG(P_C_FLAG));
+	branchIfCond(addr, !checkFlag(P_C_FLAG));
 }
 /*
  * Instruction Branch if carry set
  * if C == 1 --> PC = addr
  */
-void CPU::BCS(u16 addr)
+void CPU::BCS(const u16 addr)
 {
-	branchIfCond(addr, CHECK_FLAG(P_C_FLAG));
+	branchIfCond(addr, checkFlag(P_C_FLAG));
 }
 /*
  * Instruction Branch if equal
  * if Z == 1 --> PC = addr
  */
-void CPU::BEQ(u16 addr)
+void CPU::BEQ(const u16 addr)
 {
-	branchIfCond(addr, CHECK_FLAG(P_Z_FLAG));
+	branchIfCond(addr, checkFlag(P_Z_FLAG));
 }
 
 /*
@@ -534,9 +528,9 @@ void CPU::BEQ(u16 addr)
  * A = A & M
  * Flags: N = M7, V = M6
  */
-void CPU::BIT(u16 addr)
+void CPU::BIT(const u16 addr)
 {
-	u8 m = readMemory(addr);
+	const u8 m = readMemory(addr);
 
 	m_discard = m_A & m;
 
@@ -549,27 +543,27 @@ void CPU::BIT(u16 addr)
  * Instruction Branch if minus
  * if N == 1 --> PC = addr
  */
-void CPU::BMI(u16 addr)
+void CPU::BMI(const u16 addr)
 {
-	branchIfCond(addr, CHECK_FLAG(P_N_FLAG));
+	branchIfCond(addr, checkFlag(P_N_FLAG));
 }
 
 /*
  * Instruction Branch if not equals
  * if Z == 0 --> PC = addr
  */
-void CPU::BNE(u16 addr)
+void CPU::BNE(const u16 addr)
 {
-	branchIfCond(addr, CHECK_FLAG(P_Z_FLAG) == 0);
+	branchIfCond(addr, !checkFlag(P_Z_FLAG));
 }
 
 /*
  * Instruction Branch if positive
  * if N == 0 --> PC = addr
  */
-void CPU::BPL(u16 addr)
+void CPU::BPL(const u16 addr)
 {
-	branchIfCond(addr, CHECK_FLAG(P_N_FLAG) == 0);
+	branchIfCond(addr, !checkFlag(P_N_FLAG));
 
 }
 
@@ -577,18 +571,22 @@ void CPU::BPL(u16 addr)
  * Instruction Branch if overflow clear
  * if V == 0 --> PC = addr
  */
-void CPU::BVC(u16 addr)
+void CPU::BVC(const u16 addr)
 {
-	branchIfCond(addr, CHECK_FLAG(P_V_FLAG) == 0);
+	branchIfCond(addr, !checkFlag(P_V_FLAG));
 }
 
 /*
  * Instruction Branch if overflow set
  * if V == 1 --> PC = addr
  */
-void CPU::BVS(u16 addr)
+void CPU::BVS(const u16 addr)
 {
-	branchIfCond(addr, CHECK_FLAG(P_V_FLAG));
+	branchIfCond(addr, checkFlag(P_V_FLAG));
+}
+
+void CPU::CLC(const u16 addr)
+{
 }
 
 /*
@@ -596,9 +594,9 @@ void CPU::BVS(u16 addr)
  * m_A = m_A ^ M
  * Flags: Z, N
  */
-void CPU::EOR(u16 addr)
+void CPU::EOR(const u16 addr)
 {
-	u8 m = readMemory(addr);
+	const u8 m = readMemory(addr);
 
 	m_A ^= m;
 
@@ -613,9 +611,9 @@ void CPU::EOR(u16 addr)
  * A = M
  * flags: Z, N
  */
-void CPU::LDA(u16 addr)
+void CPU::LDA(const u16 addr)
 {
-	u8 m = readMemory(addr);
+	const u8 m = readMemory(addr);
 
 	transferRegTo(m, m_A);
 
@@ -627,9 +625,9 @@ void CPU::LDA(u16 addr)
  * X = M
  * flags: Z, N
  */
-void CPU::LDX(u16 addr)
+void CPU::LDX(const u16 addr)
 {
-	u8 m = readMemory(addr);
+	const u8 m = readMemory(addr);
 
 	transferRegTo(m, m_X);
 
@@ -641,9 +639,9 @@ void CPU::LDX(u16 addr)
  * X = M
  * flags: Z, N
  */
-void CPU::LDY(u16 addr)
+void CPU::LDY(const u16 addr)
 {
-	u8 m = readMemory(addr);
+	const u8 m = readMemory(addr);
 
 	transferRegTo(m, m_Y);
 
@@ -655,7 +653,7 @@ void CPU::LDY(u16 addr)
  * A = A/2 | M = M/2
  * flags: C, Z, N
  */
-void CPU::LSR(u16 addr)
+void CPU::LSR(const u16 addr)
 {
 	u8 m;
 	if (isImplied())
@@ -688,9 +686,9 @@ void CPU::LSR(u16 addr)
  * m_A = m_A | M
  * Flags: Z, N
  */
-void CPU::ORA(u16 addr)
+void CPU::ORA(const u16 addr)
 {
-	u8 m = readMemory(addr);
+	const u8 m = readMemory(addr);
 
 	m_A |= m;
 
@@ -708,7 +706,7 @@ void CPU::ORA(u16 addr)
  *
  * Important, The 6502 uses a reverse stack
  */
-void CPU::PHA(u16 addr)
+void CPU::PHA(const u16 addr)
 {
 	stackPush(m_A);
 }
@@ -717,7 +715,7 @@ void CPU::PHA(u16 addr)
  * Instruction Push Processor status
  * Pushes accumulator to the stack
  */
-void CPU::PHP(u16 addr)
+void CPU::PHP(const u16 addr)
 {
 	stackPush(m_P);
 }
@@ -727,7 +725,7 @@ void CPU::PHP(u16 addr)
  * Pulls accumulator from the stack
  * Uses flag N, Z for some reason
  */
-void CPU::PLA(u16 addr)
+void CPU::PLA(const u16 addr)
 {
 	m_A = stackPop();
 	setFlagIf(P_N_FLAG, m_A & 0x80);
@@ -737,7 +735,7 @@ void CPU::PLA(u16 addr)
  * Instruction Pull Processor Status
  * Pulls Processor status from the stack
  */
-void CPU::PLP(u16 addr)
+void CPU::PLP(const u16 addr)
 {
 	m_P = stackPop();
 }
@@ -750,7 +748,7 @@ void CPU::PLP(u16 addr)
  * carry is filled with bit 7
  * flags: C, Z, N
  */
-void CPU::ROL(u16 addr)
+void CPU::ROL(const u16 addr)
 {
 	u16 m;
 	if (isImplied())
@@ -768,7 +766,7 @@ void CPU::ROL(u16 addr)
 	// anything above bit 7 will be cut in 8 bits
 	// but in 16 we can store it to check flags
 	m <<= 1;
-	if (CHECK_FLAG(P_C_FLAG))
+	if (checkFlag(P_C_FLAG))
 	{
 		m |= 1;
 	}
@@ -795,7 +793,7 @@ void CPU::ROL(u16 addr)
  * carry is filled with bit 0
  * flags: C, Z, N
  */
-void CPU::ROR(u16 addr)
+void CPU::ROR(const u16 addr)
 {
 	u16 m;
 	if (isImplied())
@@ -809,7 +807,7 @@ void CPU::ROR(u16 addr)
 
 	// we set bit 8 in case of carry so we can 
 	// store it after shifting
-	if (CHECK_FLAG(P_C_FLAG))
+	if (checkFlag(P_C_FLAG))
 	{
 		m |= 0x100;
 	}
@@ -833,7 +831,7 @@ void CPU::ROR(u16 addr)
  * Instruction Store Accumulator
  * M = A
  */
-void CPU::STA(u16 addr)
+void CPU::STA(const u16 addr)
 {
 	writeMemory(addr, m_A);
 }
@@ -842,7 +840,7 @@ void CPU::STA(u16 addr)
  * Instruction Store Accumulator
  * M = X
  */
-void CPU::STX(u16 addr)
+void CPU::STX(const u16 addr)
 {
 	writeMemory(addr, m_X);
 }
@@ -851,7 +849,7 @@ void CPU::STX(u16 addr)
  * Instruction Store Accumulator
  * M = Y
  */
-void CPU::STY(u16 addr)
+void CPU::STY(const u16 addr)
 {
 	writeMemory(addr, m_Y);
 
@@ -862,7 +860,7 @@ void CPU::STY(u16 addr)
  * X = A
  * flags: Z, N
  */
-void CPU::TAX(u16 addr)
+void CPU::TAX(const u16 addr)
 {
 	transferRegTo(m_A, m_X);
 }
@@ -872,7 +870,7 @@ void CPU::TAX(u16 addr)
  * Y = A
  * flags: Z, N
  */
-void CPU::TAY(u16 addr)
+void CPU::TAY(const u16 addr)
 {
 	transferRegTo(m_A, m_Y);
 }
@@ -882,7 +880,7 @@ void CPU::TAY(u16 addr)
  * X = S
  * flags: Z, N
  */
-void CPU::TSX(u16 addr)
+void CPU::TSX(const u16 addr)
 {
 	transferRegTo(m_S, m_X);
 }
@@ -892,7 +890,7 @@ void CPU::TSX(u16 addr)
  * A = X
  * flags: Z, N
  */
-void CPU::TXA(u16 addr)
+void CPU::TXA(const u16 addr)
 {
 	transferRegTo(m_X, m_A);
 }
@@ -902,7 +900,7 @@ void CPU::TXA(u16 addr)
  * S = X
  * flags: Z, N
  */
-void CPU::TXS(u16 addr) 
+void CPU::TXS(const u16 addr) 
 {
 	transferRegTo(m_X, m_S);
 }
@@ -912,19 +910,19 @@ void CPU::TXS(u16 addr)
  * A = Y
  * flags: Z, N
  */
-void CPU::TYA(u16 addr) 
+void CPU::TYA(const u16 addr) 
 { 
 	transferRegTo(m_Y, m_A);
 }
 
 [[noreturn]]
-void CPU::___(u16 addr) 
+void CPU::___(const u16 addr) 
 {
 	// commit sudoku
 	throw std::exception("Illegal instruction");
 }
 
-void CPU::setFlagIf(u8 flag, bool cond)
+void CPU::setFlagIf(u8 flag, bool cond) noexcept
 {
 	if (cond) 
 	{
@@ -936,19 +934,24 @@ void CPU::setFlagIf(u8 flag, bool cond)
 	}
 }
 
-bool CPU::isImplied() const
+bool CPU::checkFlag(u8 flag) const noexcept
+{
+	return m_P & flag ? true : false;
+}
+
+bool CPU::isImplied() const noexcept
 {
 	return m_currentInstr.addrMode == &CPU::addrIMP || m_currentInstr.addrMode == &CPU::addrACC;
 }
 
-void CPU::branchIfCond(u16 addr, bool cond)
+void CPU::branchIfCond(const u16 addr, bool cond) noexcept
 {
 	// flag is clear
 	if (cond)
 	{
 		m_cycles++;
 
-		u8 page = static_cast<u8>(m_PC & 0xff00);
+		const u8 page = static_cast<u8>(m_PC & 0xff00);
 		
 		m_PC = addr;
 		// extra cycle for page change
@@ -959,16 +962,16 @@ void CPU::branchIfCond(u16 addr, bool cond)
 	}
 }
 
-void CPU::transferRegTo(u8 from, u8& to)
+void CPU::transferRegTo(const u8 from, u8& to) noexcept
 {
 	to = from;
 	setFlagIf(P_Z_FLAG, to == 0);
 	setFlagIf(P_N_FLAG, to & 0x80);
 }
 
-void CPU::stackPush(u8 val)
+void CPU::stackPush(const u8 val) noexcept
 {
-	writeMemory(m_stackVectorBase + m_S, val);
+	writeMemory(m_stackVector + m_S, val);
 	if (m_S == 0)
 	{
 		m_S = 0xFF;
@@ -978,7 +981,7 @@ void CPU::stackPush(u8 val)
 		m_S--;
 	}
 }
-u8 CPU::stackPop()
+u8 CPU::stackPop() noexcept
 {
 	if (m_S == 0xFF)
 	{
@@ -988,7 +991,7 @@ u8 CPU::stackPop()
 	{
 		m_S++;
 	}
-	return readMemory(m_stackVectorBase + m_S);
+	return readMemory(m_stackVector + m_S);
 }
 
 }

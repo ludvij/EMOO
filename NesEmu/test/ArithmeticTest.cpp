@@ -111,7 +111,6 @@ TEST_F(TestArithmetic, ADC_INX)
 {
 	asse.Assemble(R"(
 		adc (10, x)
-		; reads the address pointed by arg + x anr arg + x + 1
 		&2 23
 		&12 2
 		&13 0
@@ -147,9 +146,6 @@ TEST_F(TestArithmetic, ADC_INY_OOPS)
 {
 	asse.Assemble(R"(
 		adc (10), y
-		; will the address pointed by $10 and $11
-		; then it will add y to that address
-		; then it will read to that
 		&10 $ff
 		&11 0
 		&$0101 23

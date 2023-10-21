@@ -8,7 +8,8 @@ workspace "TFG"
 	}
 
 	flags {
-		"MultiProcessorCompile"
+		"MultiProcessorCompile",
+		"FatalWarnings"
 	}
 
 outputDir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"

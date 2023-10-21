@@ -42,30 +42,28 @@ class CPU
 public:  // Public functions
 	CPU();
 
-	void ConnectBus(Bus* bus) {m_bus = bus; }
+	void ConnectBus(Bus* bus) noexcept {m_bus = bus; }
 
 	void Step();
 
 	void Reset();
 
-	u8 A() { return m_A; }
-	u8 X() { return m_X; }
-	u8 Y() { return m_Y; }
-	u8 S() { return m_S; }
-	u16 PC() { return m_PC; }
-	u8 P() { return m_P; }
+	u8 A()   const noexcept { return m_A;  }
+	u8 X()   const noexcept { return m_X;  }
+	u8 Y()   const noexcept { return m_Y;  }
+	u8 S()   const noexcept { return m_S;  }
+	u16 PC() const noexcept { return m_PC; }
+	u8 P()   const noexcept { return m_P;  }
 
-	void SetA(u8 A) { m_A = A; }
-	void SetX(u8 X) { m_X = X; }
-	void SetY(u8 Y) { m_Y = Y; }
-	void SetS(u8 S) { m_S = S; }
-	void SetPC(u8 PC) { m_PC = PC; }
-	void SetP(u8 P) { m_P = P; }
+	void SetA(const u8 A)   noexcept { m_A = A;   }
+	void SetX(const u8 X)   noexcept { m_X = X;   }
+	void SetY(const u8 Y)   noexcept { m_Y = Y;   }
+	void SetS(const u8 S)   noexcept { m_S = S;   }
+	void SetP(const u8 P)   noexcept { m_P = P;   }
+	void SetPC(const u8 PC) noexcept { m_PC = PC; }
 
-	u32 GetCycles() { return m_cycles; }
-	
-public:  // Public fields
-	
+	u32 GetCycles() const noexcept { return m_cycles; }
+
 private: // private functions
 	// reads a byte from PC and incrementes PC afterwards
 	u8 readByte();
@@ -191,13 +189,14 @@ private: // private functions
 	void ___(u16 addr);
 
 	// some helper functions
-	void setFlagIf(u8 flag, bool cond);
-	bool isImplied() const;
+	void setFlagIf(u8 flag, bool cond) noexcept;
+	bool checkFlag(u8 flag) const noexcept;
+	bool isImplied() const noexcept;
 
-	void branchIfCond(u16 addr, bool cond);
-	void transferRegTo(u8 from, u8& to);
-	void stackPush(u8 val);
-	u8 stackPop();
+	void branchIfCond(u16 addr, bool cond) noexcept;
+	void transferRegTo(u8 from, u8& to) noexcept;
+	void stackPush(u8 val) noexcept;
+	u8 stackPop() noexcept;
 
 
 private: // private members
@@ -216,7 +215,6 @@ private: // private members
 	*	an exec that acts as the operation itself
 	*	and the number of m_cycles the operation will take
 	*/
-
 	typedef u16 (CPU::*addrMode)();
 	typedef void (CPU::*exec)(u16);
 	struct Instruction
@@ -227,7 +225,7 @@ private: // private members
 		u8 cycles = 0;
 	};
 
-	Instruction m_jumpTable[256];
+	std::array<Instruction, 256> m_jumpTable;
 
 	// Accumulator
 	u8 m_A = 0;
@@ -241,8 +239,7 @@ private: // private members
 
 	// Stack Pointer
 	u8 m_S = 0;
-	u16 m_stackVectorEnd  = 0x01FF;
-	u16 m_stackVectorBase = 0x0100;
+	u16 m_stackVector = 0x0100;
 
 
 	// Status register
@@ -257,3 +254,4 @@ private: // private members
 };
 
 }
+

@@ -15,12 +15,12 @@
 #endif
 
 
-#define DIRECT_ACCESS "DIRECT_ACCESS"
 
 using InstrData = std::unordered_map<std::string_view,std::unordered_map<std::string_view,uint8_t>>;
 
 namespace A6502
 {
+constexpr std::string_view DIRECT_ACCESS{"DIRECT_ACCESS"};
 
 struct AddressingMode
 {
@@ -56,109 +56,21 @@ public:
 		m_bus = nullptr;
 	}
 
-	void Assemble(std::string_view code)
+	void Assemble(const std::string& code)
 	{
-		auto lines = splittrim(std::string(code), "\n");
+		const auto lines = splittrim(code, "\n");
 		for (const auto line : lines)
 		{
 			bool goahead = false;
 			// split into instruction and addressing
-			auto parts = splittrim(line, " ");
+			const auto parts = splittrim(line, " ");
 			if (parts.size() == 1)
 			{
-				auto val = parts[0];
-				auto noprefix = val.substr(1);
-				if (val[0] == '$')
-				{
-					m_assembly.push_back(std::stoi(noprefix, nullptr, 16));
-				}
-				// single value bin
-				else if (val[0] == '%')
-				{
-					m_assembly.push_back(std::stoi(noprefix, nullptr, 2));
-				}
-				// labels
-				else if (val[0] == ':')
-				{
-					m_labelPos[noprefix] = static_cast<uint8_t>(m_assembly.size());
-				}
-				// single value dec
-				else if (std::isdigit(val[0]) || (val[0] == '-' && std::isdigit(val[1])) )
-				{
-					m_assembly.push_back(std::stoi(val, nullptr, 10));
-				}
-				else
-				{
-					goahead = true;
-				}
+				goahead = handleSingleValue(parts[0]);
 			}
 			if (parts[0][0] != ';' && (goahead || parts.size() > 1))
 			{
-				AddressingMode addressing;
-				std::string instr = upper(parts[0]);
-				std::string addr = "";
-				for (int i = 1; i < parts.size(); ++i)
-				{
-					addr += parts[i];
-				}
-				// direct memory access
-				std::optional<AddressingMode> dAccess;
-				if (instr[0] == '&') 
-				{
-					dAccess = getAddressing(instr);
-				}
-				addressing = getAddressing(addr);
-				
-				auto [name, lo, hi] = addressing;
-				if (dAccess && name)
-				{
-					m_bus->Write(*(*dAccess).hi << 8 | *(*dAccess).lo, *lo);
-					continue;
-				}
-				else if (dAccess && !name)
-				{
-					ASSE_LOG_ERROR("No value provided for direct memory addresing\n");
-				}
-
-				// c++20
-				if (!s_instrData.contains(instr))
-				{
-					ASSE_LOG_ERROR("Instruction " << instr << " does not exists\n");
-					ASSE_LOG_INFO("Fatal error, can not continue\n");
-
-					return;
-				}
-				auto& instrData = s_instrData[instr];
-				if (!name)
-				{
-					ASSE_LOG_INFO("Fatal error, can not continue\n");
-					return;
-				}
-				if (!instrData.contains(*name))
-				{
-					ASSE_LOG_ERROR(*name << " is not a valid addressing mode for " << instr << "\n");
-					ASSE_LOG_INFO("Fatal error, can not continue\n");
-
-					return;
-				}
-				m_assembly.push_back(instrData[*name]);
-				// 3 bytes
-				if (hi && lo)
-				{
-					m_assembly.push_back(*lo);
-					m_assembly.push_back(*hi);
-				}
-				// 2 byte
-				else if (lo && !hi)
-				{
-					m_assembly.push_back(*lo);
-				}
-				// do nothing for 1 byte
-			}
-			// comments
-			else
-			{
-				continue;
+				handleMultipleValue(parts);
 			}
 		}
 		for (const auto line : lines)
@@ -167,11 +79,11 @@ public:
 			{
 				continue;
 			}
-			std::string lbl = line.substr(1);
+			const std::string lbl = line.substr(1);
 			if (m_labelPos.contains(lbl))
 			{
-				uint8_t lblPos = m_labelPos[lbl];
-				auto& vec = m_labels[lbl];
+				const uint8_t lblPos = m_labelPos[lbl];
+				const auto& vec = m_labels[lbl];
 				for (const auto pos : vec)
 				{
 					m_assembly[pos] = lblPos;
@@ -185,25 +97,135 @@ public:
 				return;
 			}
 		}
+		store();
+	}
 
-		// load assembly in MemoryAccessor
+private:
+
+	void store()
+	{
 		for (size_t i = 0; i < m_assembly.size(); ++i)
 		{
 			m_bus->Write(static_cast<uint16_t>(i), m_assembly[i]);
 		}
 	}
-
-private:
-
-	constexpr std::string upper(const std::string& sv) noexcept
+	// returns true in case of direct memory access
+	// or in case of implid instruction
+	bool handleSingleValue(const std::string& val)
 	{
-		auto _upper = [](unsigned char c) -> unsigned char { return std::toupper(c); };
-		std::string s(sv);
-		std::transform(s.begin(), s.end(), s.begin(), _upper);
+		bool goahead = false;
+		// can note be a string_view since stoi does not work with it
+		const std::string noprefix = val.substr(1);
+		const char prefix = val[0];
+		if (prefix == '$')
+		{
+			m_assembly.push_back(std::stoi(noprefix, nullptr, 16));
+		}
+		// single value bin
+		else if (prefix == '%')
+		{
+			m_assembly.push_back(std::stoi(noprefix, nullptr, 2));
+		}
+		// labels
+		else if (prefix == ':')
+		{
+			m_labelPos[noprefix] = static_cast<uint8_t>(m_assembly.size());
+		}
+		// single value dec
+		else if (isdecimal(val) || (prefix == '-' && std::isdigit(val[1])) )
+		{
+			m_assembly.push_back(std::stoi(val, nullptr, 10));
+		}
+		// comments
+		else if (prefix == ';')
+		{
+			//nothing happens
+		}
+		else if (val[0] == '&')
+		{
+			goahead = true;
+		}
+		else
+		{
+			goahead = true;
+		}
+		return goahead;
+	}
+
+	void handleMultipleValue(const std::vector<std::string>& parts)
+	{
+		AddressingMode addressing;
+		const std::string instr = upper(parts[0]);
+		// can't += string view
+		std::string addr = "";
+		for (int i = 1; i < parts.size(); ++i)
+		{
+			addr += parts[i];
+		}
+		// direct memory access
+		std::optional<AddressingMode> dAccess;
+		if (instr[0] == '&') 
+		{
+			dAccess = getAddressing(instr);
+		}
+		addressing = getAddressing(addr);
+		
+		const auto [name, lo, hi] = addressing;
+		if (dAccess && name)
+		{
+			m_bus->Write(*(*dAccess).hi << 8 | *(*dAccess).lo, *lo);
+			return;
+		}
+		else if (dAccess && !name)
+		{
+			ASSE_LOG_ERROR("No value provided for direct memory addresing\n");
+			ASSE_LOG_INFO("Fatal error, can not continue\n");
+			return;
+		}
+
+		// c++20
+		if (!s_instrData.contains(instr))
+		{
+			ASSE_LOG_ERROR("Instruction " << instr << " does not exists\n");
+			ASSE_LOG_INFO("Fatal error, can not continue\n");
+
+			return;
+		}
+		auto& instrData = s_instrData[instr];
+		if (!name)
+		{
+			ASSE_LOG_INFO("Fatal error, can not continue\n");
+			return;
+		}
+		if (!instrData.contains(*name))
+		{
+			ASSE_LOG_ERROR(*name << " is not a valid addressing mode for " << instr << "\n");
+			ASSE_LOG_INFO("Fatal error, can not continue\n");
+			return;
+		}
+		m_assembly.push_back(instrData[*name]);
+		// 3 bytes
+		if (hi && lo)
+		{
+			m_assembly.push_back(*lo);
+			m_assembly.push_back(*hi);
+		}
+		// 2 byte
+		else if (lo && !hi)
+		{
+			m_assembly.push_back(*lo);
+		}
+		// do nothing for 1 byte
+	}
+
+	std::string upper(std::string s) const noexcept
+	{
+		const auto isupper = [](unsigned char c) -> unsigned char { return std::toupper(c); };
+		std::transform(s.begin(), s.end(), s.begin(), isupper);
 		return s;
 	}
 
-	constexpr AddressingMode getAddressing(const std::string& text) noexcept
+	AddressingMode getAddressing(const std::string& text) 
 	{
 		AddressingMode a;
 		std::optional<uint16_t> temp = std::nullopt;
@@ -364,36 +386,24 @@ private:
 		return a;
 	}
 
-	constexpr std::vector<std::string> splittrim(std::string s, std::string_view delim) noexcept
+	std::vector<std::string> splittrim(std::string s, const std::string_view& delim) const noexcept
 	{
 		std::vector<std::string> res;
-		auto nospace = [](unsigned char c) -> unsigned char { return !std::isspace(c); };
+		const auto nospace = [](unsigned char c) -> unsigned char { return !std::isspace(c); };
 
 		size_t pos;
 		while ((pos = s.find(delim)) != std::string::npos)
 		{
 			std::string token = s.substr(0, pos);
-			token.erase(
-				std::ranges::find_if(token | std::views::reverse, nospace).base(),
-				token.end()
-			);
-			token.erase(
-				token.begin(),
-				std::ranges::find_if(token, nospace)
-			);
+			token.erase(std::ranges::find_if(token | std::views::reverse, nospace).base(), token.end());
+			token.erase(token.begin(), std::ranges::find_if(token, nospace));
 			s.erase(0, pos + delim.length());
 
 			if (token.empty()) continue;
 			res.push_back(token);
 		}
-		s.erase(
-			std::ranges::find_if(s | std::views::reverse, nospace).base(),
-			s.end()
-		);
-		s.erase(
-			s.begin(),
-			std::ranges::find_if(s, nospace)
-		);
+		s.erase(std::ranges::find_if(s | std::views::reverse, nospace).base(), s.end());
+		s.erase(s.begin(), std::ranges::find_if(s, nospace));
 		s.erase(0, pos + delim.length());
 
 		if (s.empty()) return res;
@@ -401,31 +411,31 @@ private:
 		return res;
 	}
 
-	constexpr std::optional<uint16_t> decode(const std::string& num, std::string_view encoding)
+	std::optional<uint16_t> decode(const std::string& num, const std::string_view& encoding) const
 	{	
+		std::optional<uint16_t> temp = std::nullopt;
 		if (encoding == "$" && ishexadecimal(num))
 		{
-			return std::stoi(num, nullptr, 16);
+			temp = std::stoi(num, nullptr, 16);
 		}
 		else if (encoding == "%" && isbinary(num))
 		{
-			return std::stoi(num, nullptr, 2);
+			temp = std::stoi(num, nullptr, 2);
 		}
 		else if (isdecimal(num))
 		{
-			return std::stoi(num, nullptr, 10);
+			temp = std::stoi(num, nullptr, 10);
 		}
 		else
 		{
 			ASSE_LOG_ERROR(num << " is not a number\n");
-			return std::nullopt;
 		}
-
+		return temp;
 	}
 
-	constexpr bool isdecimal(std::string_view s) noexcept
+	bool isdecimal(const std::string_view& s) const noexcept
 	{
-		auto isinvalid = [](unsigned char c)
+		const auto isinvalid = [](unsigned char c) -> unsigned char
 		{
 			return !(
 				std::isdigit(c) ||
@@ -435,9 +445,9 @@ private:
 		return std::ranges::count_if(s, isinvalid) == 0;
 	}
 
-	constexpr bool ishexadecimal(std::string_view s) noexcept
+	bool ishexadecimal(const std::string_view& s) const noexcept
 	{
-		auto isinvalid = [](unsigned char c)
+		const auto isinvalid = [](unsigned char c) -> unsigned char
 		{
 			c = std::toupper(c);
 			return !(
@@ -453,9 +463,9 @@ private:
 		return std::ranges::count_if(s, isinvalid) == 0;
 	}
 
-	constexpr bool isbinary(std::string_view s) noexcept
+	bool isbinary(const std::string_view& s) const noexcept
 	{
-		auto isinvalid = [](unsigned char c)
+		const auto isinvalid = [](unsigned char c)
 		{
 			return !(
 				c == '0' ||

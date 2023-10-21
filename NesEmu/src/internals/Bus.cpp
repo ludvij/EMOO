@@ -8,11 +8,11 @@ Bus::Bus()
 	m_cpu.ConnectBus(this);
 }
 
-u8 Bus::Read(u16 addr)
+u8 Bus::Read(u16 addr) const 
 {
 	if (addr < 0x2000) // Ram and ram mirrors
 	{
-		return m_memory[addr & 0x7ff];
+		return m_mem[addr & 0x07ff];
 	}
 	if (addr < 0x4000) // PPU registers and mirrors
 	{
@@ -34,7 +34,7 @@ void Bus::Write(u16 addr, u8 val)
 {
 	if (addr < 0x2000) // Ram and ram mirrors
 	{
-		m_memory[addr & 0x7ff] = val;
+		m_mem[addr & 0x07ff] = val;
 	}
 	else if (addr < 0x4000) // PPU registers and mirrors
 	{

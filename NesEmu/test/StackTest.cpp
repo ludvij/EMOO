@@ -42,14 +42,12 @@ TEST_F(TestStack, TXS)
 	clearCycles(2);
 
 	ASSERT_EQ(bus.GetCpu().S(), 0x80);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_N_FLAG);
 
 	bus.GetCpu().SetX(0);
 
 	clearCycles(2);
 
 	ASSERT_EQ(bus.GetCpu().S(), 0x00);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_Z_FLAG);
 }
 
 TEST_F(TestStack, STACK_PUSH)

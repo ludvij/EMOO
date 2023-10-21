@@ -1,9 +1,11 @@
 ﻿#pragma once
 
 #include <string_view>
+#include <optional>
 #include <unordered_map>
 #include <ranges>
 #include <cstdint>
+
 #include <ctre/ctre.hpp>
 
 #if defined(DEBUG)
@@ -68,7 +70,7 @@ public:
 			{
 				goahead = handleSingleValue(parts[0]);
 			}
-			if (parts[0][0] != ';' && (goahead || parts.size() > 1))
+			if (goahead || parts.size() > 1)
 			{
 				handleMultipleValue(parts);
 			}
@@ -108,6 +110,11 @@ private:
 		{
 			m_bus->Write(static_cast<uint16_t>(i), m_assembly[i]);
 		}
+
+		for (auto [addr, val] : m_directAccess)
+		{
+			m_bus->Write(addr, val);
+		}
 	}
 	// returns true in case of direct memory access
 	// or in case of implid instruction
@@ -131,20 +138,17 @@ private:
 		{
 			m_labelPos[noprefix] = static_cast<uint8_t>(m_assembly.size());
 		}
-		// single value dec
-		else if (isdecimal(val) || (prefix == '-' && std::isdigit(val[1])) )
-		{
-			m_assembly.push_back(std::stoi(val, nullptr, 10));
-		}
-		// comments
-		else if (prefix == ';')
-		{
-			//nothing happens
-		}
-		else if (val[0] == '&')
+		// direct access
+		else if (prefix == '&')
 		{
 			goahead = true;
 		}
+		// single value dec
+		else if (isdecimal(val))
+		{
+			m_assembly.push_back(std::stoi(val, nullptr, 10));
+		}
+		// instruction
 		else
 		{
 			goahead = true;
@@ -168,12 +172,11 @@ private:
 		{
 			dAccess = getAddressing(instr);
 		}
-		addressing = getAddressing(addr);
+		const auto [name, lo, hi] = getAddressing(addr);
 		
-		const auto [name, lo, hi] = addressing;
 		if (dAccess && name)
 		{
-			m_bus->Write(*(*dAccess).hi << 8 | *(*dAccess).lo, *lo);
+			m_directAccess[*(*dAccess).hi << 8 | *(*dAccess).lo] = *lo;
 			return;
 		}
 		else if (dAccess && !name)
@@ -191,7 +194,7 @@ private:
 
 			return;
 		}
-		auto& instrData = s_instrData[instr];
+		const auto& instrData = s_instrData[instr];
 		if (!name)
 		{
 			ASSE_LOG_INFO("Fatal error, can not continue\n");
@@ -203,7 +206,7 @@ private:
 			ASSE_LOG_INFO("Fatal error, can not continue\n");
 			return;
 		}
-		m_assembly.push_back(instrData[*name]);
+		m_assembly.push_back(instrData.at(*name));
 		// 3 bytes
 		if (hi && lo)
 		{
@@ -480,6 +483,7 @@ private:
 	std::vector<uint8_t> m_assembly;
 	std::unordered_map<std::string, std::vector<uint8_t>> m_labels;
 	std::unordered_map<std::string, uint8_t> m_labelPos;
+	std::unordered_map<uint16_t, uint8_t> m_directAccess;
 	
 	Bus* m_bus = nullptr;
 	// C++17 my saviour

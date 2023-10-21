@@ -66,15 +66,25 @@ CPU::CPU()
 	// BVS
 	m_jumpTable[0x70] = {"BVS", &CPU::addrREL, &CPU::BVS, 2};
 	//CLC
+	m_jumpTable[0x18] = {"CLC", &CPU::addrIMP, &CPU::CLC, 2};
 	//CLD
+	m_jumpTable[0xD8] = {"CLD", &CPU::addrIMP, &CPU::CLD, 2};
 	//CLI
+	m_jumpTable[0x58] = {"CLI", &CPU::addrIMP, &CPU::CLI, 2};
 	//CLV
+	m_jumpTable[0xB8] = {"CLV", &CPU::addrIMP, &CPU::CLV, 2};
 	//CMP
 	//CPX
 	//CPY
 	//DEC
+	m_jumpTable[0xC6] = {"DEC", &CPU::addrZPI, &CPU::DEC, 5};
+	m_jumpTable[0xD6] = {"DEC", &CPU::addrZPX, &CPU::DEC, 6};
+	m_jumpTable[0xCE] = {"DEC", &CPU::addrABS, &CPU::DEC, 6};
+	m_jumpTable[0xDE] = {"DEC", &CPU::addrABX, &CPU::DEC, 7};
 	//DEX
+	m_jumpTable[0xCA] = {"DEX", &CPU::addrIMP, &CPU::DEX, 2};
 	//DEY
+	m_jumpTable[0x88] = {"DEY", &CPU::addrIMP, &CPU::DEY, 2};
 	//EOR
 	m_jumpTable[0x49] = {"EOR", &CPU::addrIMM, &CPU::EOR, 2};
 	m_jumpTable[0x45] = {"EOR", &CPU::addrZPI, &CPU::EOR, 3};
@@ -85,8 +95,14 @@ CPU::CPU()
 	m_jumpTable[0x41] = {"EOR", &CPU::addrINX, &CPU::EOR, 6};
 	m_jumpTable[0x51] = {"EOR", &CPU::addrINY, &CPU::EOR, 5};
 	//INC
+	m_jumpTable[0xE6] = {"INC", &CPU::addrZPI, &CPU::INC, 5};
+	m_jumpTable[0xF6] = {"INC", &CPU::addrZPX, &CPU::INC, 6};
+	m_jumpTable[0xEE] = {"INC", &CPU::addrABS, &CPU::INC, 6};
+	m_jumpTable[0xFE] = {"INC", &CPU::addrABX, &CPU::INC, 7};
 	//INX
+	m_jumpTable[0xE8] = {"INX", &CPU::addrIMP, &CPU::INX, 2};
 	//INY
+	m_jumpTable[0xC8] = {"INY", &CPU::addrIMP, &CPU::INY, 2};
 	//JMP
 	//JSR
 	//LDA
@@ -150,8 +166,11 @@ CPU::CPU()
 	//RTS
 	//SBC
 	//SEC
+	m_jumpTable[0x38] = {"SEC", &CPU::addrIMP, &CPU::SEC, 2};
 	//SED
+	m_jumpTable[0xF8] = {"SED", &CPU::addrIMP, &CPU::SED, 2};
 	//SEI
+	m_jumpTable[0x78] = {"SEI", &CPU::addrIMP, &CPU::SEI, 2};
 	//STA
 	m_jumpTable[0x85] = {"STA", &CPU::addrZPI, &CPU::STA, 3};
 	m_jumpTable[0x95] = {"STA", &CPU::addrZPX, &CPU::STA, 4};
@@ -584,9 +603,79 @@ void CPU::BVS(const u16 addr)
 {
 	branchIfCond(addr, checkFlag(P_V_FLAG));
 }
-
+/*
+ * Instruction Clear Carry Flag
+ */
 void CPU::CLC(const u16 addr)
 {
+	m_P &= ~P_C_FLAG;
+}
+
+/*
+ * Instruction Clear Decimal Mode
+ */
+void CPU::CLD(const u16 addr)
+{
+	m_P &= ~P_D_FLAG;
+}
+
+/*
+ * Instruction Clear Interrupt Disable
+ */
+void CPU::CLI(const u16 addr)
+{
+	m_P &= ~P_I_FLAG;
+}
+
+/*
+ * Instruction Clear Overflow Flag
+ */
+void CPU::CLV(const u16 addr)
+{
+	m_P &= ~P_V_FLAG;
+}
+
+/*
+ * Instruction Decrement Memory
+ * M = M - 1
+ * flags: N, Z
+ */
+void CPU::DEC(const u16 addr)
+{
+	u8 m = readMemory(addr);
+
+	m = (m - 1) & 0x00ff;
+
+	setFlagIf(P_N_FLAG, m & 0x80);
+	setFlagIf(P_Z_FLAG, m == 0);
+
+	writeMemory(addr, m);
+}
+
+/*
+ * Instruction Decrement X Register
+ * X = X - 1
+ * flags: N, Z
+ */
+void CPU::DEX(const u16 addr)
+{
+	m_X = (m_X - 1) & 0x00ff;
+
+	setFlagIf(P_N_FLAG, m_X & 0x80);
+	setFlagIf(P_Z_FLAG, m_X == 0);
+}
+
+/*
+ * Instruction Decrement Y Register
+ * Y = Y - 1
+ * flags: N, Z
+ */
+void CPU::DEY(const u16 addr)
+{
+	m_Y = (m_Y - 1) & 0x00ff;
+
+	setFlagIf(P_N_FLAG, m_Y & 0x80);
+	setFlagIf(P_Z_FLAG, m_Y == 0);
 }
 
 /*
@@ -604,6 +693,49 @@ void CPU::EOR(const u16 addr)
 	setFlagIf(P_N_FLAG, m_A & 0x80);
 
 	m_canOops = true;
+}
+
+/*
+ * Instruction Increment Memory
+ * M = M + 1 (wrpas if m = 0xff)
+ * flags: Z, N
+ */
+void CPU::INC(const u16 addr)
+{
+	u8 m = readMemory(addr);
+
+	m = (m + 1) & 0x00ff;
+
+	setFlagIf(P_N_FLAG, m & 0x80);
+	setFlagIf(P_Z_FLAG, m == 0);
+
+	writeMemory(addr, m);
+}
+
+/*
+ * Instruction Increment X Register
+ * X = X + 1 (wrpas if X = 0xff)
+ * flags: Z, N
+ */
+void CPU::INX(const u16 addr)
+{
+	m_X = (m_X + 1) & 0x00ff;
+
+	setFlagIf(P_N_FLAG, m_X & 0x80);
+	setFlagIf(P_Z_FLAG, m_X == 0);
+}
+
+/*
+ * Instruction Increment Y Register
+ * Y = Y + 1 (wraps if Y = 0xff)
+ * flags: Z, N
+ */
+void CPU::INY(const u16 addr)
+{
+	m_Y = (m_Y + 1) & 0x00ff;
+
+	setFlagIf(P_N_FLAG, m_Y & 0x80);
+	setFlagIf(P_Z_FLAG, m_Y == 0);
 }
 
 /*
@@ -827,6 +959,31 @@ void CPU::ROR(const u16 addr)
 		writeMemory(addr, static_cast<u8>(m));
 	}
 }
+
+/*
+ * Instruction Set Carry Flag
+ */
+void CPU::SEC(u16 addr)
+{
+	m_P |= P_C_FLAG;
+}
+
+/*
+ * Instruction Set Decimal Mode
+ */
+void CPU::SED(u16 addr)
+{
+	m_P |= P_D_FLAG;
+}
+
+/*
+ * Instruction Set Insterrupt Disable
+ */
+void CPU::SEI(u16 addr)
+{
+	m_P |= P_I_FLAG;
+}
+
 /*
  * Instruction Store Accumulator
  * M = A
@@ -898,11 +1055,10 @@ void CPU::TXA(const u16 addr)
 /*
  * Instruction Transfer X to Stack pointer
  * S = X
- * flags: Z, N
  */
 void CPU::TXS(const u16 addr) 
 {
-	transferRegTo(m_X, m_S);
+	m_S = m_X;
 }
 
 /*
@@ -922,7 +1078,7 @@ void CPU::___(const u16 addr)
 	throw std::exception("Illegal instruction");
 }
 
-void CPU::setFlagIf(u8 flag, bool cond) noexcept
+void CPU::setFlagIf(const u8 flag, const bool cond) noexcept
 {
 	if (cond) 
 	{
@@ -934,7 +1090,7 @@ void CPU::setFlagIf(u8 flag, bool cond) noexcept
 	}
 }
 
-bool CPU::checkFlag(u8 flag) const noexcept
+bool CPU::checkFlag(const u8 flag) const noexcept
 {
 	return m_P & flag ? true : false;
 }

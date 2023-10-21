@@ -52,17 +52,23 @@ public:  // Public functions
 	u8 X()   const noexcept { return m_X;  }
 	u8 Y()   const noexcept { return m_Y;  }
 	u8 S()   const noexcept { return m_S;  }
-	u16 PC() const noexcept { return m_PC; }
 	u8 P()   const noexcept { return m_P;  }
+	u16 PC() const noexcept { return m_PC; }
 
-	void SetA(const u8 A)   noexcept { m_A = A;   }
-	void SetX(const u8 X)   noexcept { m_X = X;   }
-	void SetY(const u8 Y)   noexcept { m_Y = Y;   }
-	void SetS(const u8 S)   noexcept { m_S = S;   }
-	void SetP(const u8 P)   noexcept { m_P = P;   }
-	void SetPC(const u8 PC) noexcept { m_PC = PC; }
+	void SetA(const u8 A)    noexcept { m_A = A;   }
+	void SetX(const u8 X)    noexcept { m_X = X;   }
+	void SetY(const u8 Y)    noexcept { m_Y = Y;   }
+	void SetS(const u8 S)    noexcept { m_S = S;   }
+	void SetP(const u8 P)    noexcept { m_P = P;   }
+	void SetPC(const u16 PC) noexcept { m_PC = PC; }
 
 	u32 GetCycles() const noexcept { return m_cycles; }
+	// fwd declaration 
+	// Used for test and maybe later some watchable information
+private:
+	struct Instruction;
+public:
+	Instruction CurrentInstruction() const noexcept { return m_currentInstr; }
 
 private: // private functions
 	// reads a byte from PC and incrementes PC afterwards

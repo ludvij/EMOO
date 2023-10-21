@@ -11,10 +11,12 @@ protected:
 
 	void SetUp() override
 	{
-		bus.GetCpu().SetP(0);
 		// clear reset cycles
 		clearCycles(8);
 		asse.Link(&bus);
+
+		// reset processor status
+		bus.GetCpu().SetP(0);
 	}
 
 	void TearDown() override

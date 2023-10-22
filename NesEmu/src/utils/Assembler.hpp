@@ -34,13 +34,13 @@ struct AddressingMode
 
 // usage of c++20
 template<class T>
-concept MemoryAccessor = requires(T bus)
+concept MemoryACCessor = requires(T bus)
 {
 	{bus.Read(std::declval<uint16_t>())} -> std::same_as<uint8_t>;
 	{bus.Write(std::declval<uint16_t>(),std::declval<uint8_t>())} -> std::same_as<void>;
 };
 
-template<MemoryAccessor Bus>
+template<MemoryACCessor Bus>
 class Assembler
 {
 public:
@@ -53,51 +53,23 @@ public:
 	void Clean()
 	{
 		m_assembly.clear();
-		m_labelPos.clear();
-		m_labels.clear();
+		m_directAccess.clear();
 		m_bus = nullptr;
 	}
 
 	void Assemble(const std::string& code)
 	{
 		const auto lines = splittrim(code, "\n");
-		for (const auto line : lines)
+		for (const auto& line : lines)
 		{
-			bool goahead = false;
 			// split into instruction and addressing
-			const auto parts = splittrim(line, " ");
+			const auto parts = splittrim(upper(line), " ");
 			if (parts.size() == 1)
 			{
-				goahead = handleSingleValue(parts[0]);
+				if (!handleSingleValue(parts[0]))
+					continue;
 			}
-			if (goahead || parts.size() > 1)
-			{
-				handleMultipleValue(parts);
-			}
-		}
-		for (const auto line : lines)
-		{
-			if (line[0] != ':')
-			{
-				continue;
-			}
-			const std::string lbl = line.substr(1);
-			if (m_labelPos.contains(lbl))
-			{
-				const uint8_t lblPos = m_labelPos[lbl];
-				const auto& vec = m_labels[lbl];
-				for (const auto pos : vec)
-				{
-					m_assembly[pos] = lblPos;
-				}
-			}
-			else
-			{
-				ASSE_LOG_ERROR("label [" << lbl << "] not found\n");
-				ASSE_LOG_INFO("Fatal error, can not continue\n");
-
-				return;
-			}
+			handleMultipleValue(parts);
 		}
 		store();
 	}
@@ -116,73 +88,48 @@ private:
 			m_bus->Write(addr, val);
 		}
 	}
-	// returns true in case of direct memory access
-	// or in case of implid instruction
+	
+	// returns true in case of implied instruction
 	bool handleSingleValue(const std::string& val)
 	{
-		bool goahead = false;
 		// can note be a string_view since stoi does not work with it
 		const std::string noprefix = val.substr(1);
 		const char prefix = val[0];
 		if (prefix == '$')
 		{
 			m_assembly.push_back(std::stoi(noprefix, nullptr, 16));
-		}
-		// single value bin
-		else if (prefix == '%')
-		{
-			m_assembly.push_back(std::stoi(noprefix, nullptr, 2));
-		}
-		// labels
-		else if (prefix == ':')
-		{
-			m_labelPos[noprefix] = static_cast<uint8_t>(m_assembly.size());
-		}
-		// direct access
-		else if (prefix == '&')
-		{
-			goahead = true;
+			return false;
 		}
 		// single value dec
-		else if (isdecimal(val))
+		if (isdecimal(val))
 		{
 			m_assembly.push_back(std::stoi(val, nullptr, 10));
+			return false;
 		}
 		// instruction
-		else
-		{
-			goahead = true;
-		}
-		return goahead;
+		return true;
 	}
 
 	void handleMultipleValue(const std::vector<std::string>& parts)
 	{
-		AddressingMode addressing;
-		const std::string instr = upper(parts[0]);
+		const std::string instr = parts[0];
 		// can't += string view
 		std::string addr = "";
 		for (int i = 1; i < parts.size(); ++i)
 		{
 			addr += parts[i];
 		}
-		// direct memory access
-		std::optional<AddressingMode> dAccess;
-		if (instr[0] == '&') 
-		{
-			dAccess = getAddressing(instr);
-		}
 		const auto [name, lo, hi] = getAddressing(addr);
-		
-		if (dAccess && name)
+		if (!name)
 		{
-			m_directAccess[*(*dAccess).hi << 8 | *(*dAccess).lo] = *lo;
+			ASSE_LOG_INFO("Fatal error, can not continue\n");
 			return;
 		}
-		else if (dAccess && !name)
+		// direct memory access
+		if (instr[0] == '&') 
 		{
-			ASSE_LOG_ERROR("No value provided for direct memory addresing\n");
-			ASSE_LOG_INFO("Fatal error, can not continue\n");
+			auto [_, dlo, dhi] = getAddressing(instr);
+			m_directAccess[*dhi << 8 | *dlo] = *lo;
 			return;
 		}
 
@@ -191,22 +138,15 @@ private:
 		{
 			ASSE_LOG_ERROR("Instruction " << instr << " does not exists\n");
 			ASSE_LOG_INFO("Fatal error, can not continue\n");
-
 			return;
 		}
-		const auto& instrData = s_instrData[instr];
-		if (!name)
-		{
-			ASSE_LOG_INFO("Fatal error, can not continue\n");
-			return;
-		}
-		if (!instrData.contains(*name))
+		if (!s_instrData.at(instr).contains(*name))
 		{
 			ASSE_LOG_ERROR(*name << " is not a valid addressing mode for " << instr << "\n");
 			ASSE_LOG_INFO("Fatal error, can not continue\n");
 			return;
 		}
-		m_assembly.push_back(instrData.at(*name));
+		m_assembly.push_back(s_instrData.at(instr).at(*name));
 		// 3 bytes
 		if (hi && lo)
 		{
@@ -214,7 +154,7 @@ private:
 			m_assembly.push_back(*hi);
 		}
 		// 2 byte
-		else if (lo && !hi)
+		else if (lo)
 		{
 			m_assembly.push_back(*lo);
 		}
@@ -233,159 +173,128 @@ private:
 		AddressingMode a;
 		std::optional<uint16_t> temp = std::nullopt;
 		int nbytes = 0;
-		std::string_view encoding = "";
-		std::string number;
-		bool error = false;
-		// imp
+		// IMP
 		if (text.empty())
 		{
-			a.name = "imp";
+			a.name = "IMP";
 		}
-		// acc
-		else if (ctre::match<"^[aA]$">(text))
+		// ACC
+		else if (text == "a" || text == "A")
 		{
-			a.name = "acc";
+			a.name = "ACC";
 			
 		}
 		// direct memory access
-		else if (auto [whole, mode, num] = ctre::match<"^&([$%]?)(.+)$">(text); whole)
+		else if (auto [whole, mode, num] = ctre::match<"^&([$%]?)([0-9A-F]+)$">(text); whole)
 		{
 			a.name = DIRECT_ACCESS;
-			encoding = mode;
-			number = num;
+			temp = decode(num.str(), mode);
 			nbytes = 2;
 		}
-		// 16 bit explicit hex for abs abx aby
-		else if (auto [whole, num, reg, type] = ctre::match<"^\\$([A-Fa-f0-9]{3,4})(,([xy]))?$">(text); whole)
+		// 16 bit explicit hex for ABS ABX ABY
+		else if (auto [whole, num, reg, type] = ctre::match<"^\\$([A-F0-9]{3,4})(,([XY]))?$">(text); whole)
 		{
-			temp = std::stoi(num.str(), nullptr, 16);
-
 			if (reg)
 			{
-				a.name = "ab";
+				a.name = "AB";
 				*a.name += type;
 			}
 			else
 			{
-				a.name = "abs";
+				a.name = "ABS";
 			}
 
 			nbytes = 2;
-			encoding = "$";
-			number = num;
+			temp = decode(num.str(), "$");
 		}
-		// either abx, zpx, aby or zpy
-		else if (auto [whole, mode, num, type] = ctre::match<"^([$%]?)([^(]+),([xy])$">(text); whole)
+		// either ABX, ZPX, ABY or ZPY
+		else if (auto [whole, mode, num, type] = ctre::match<"^([$%]?)([A-Z0-9]+),([XY])$">(text); whole)
 		{
-			encoding = mode;
-			number = num;
+			temp = decode(num.str(), mode);
 			if (temp > 255)
 			{
-				a.name = "ab";
+				a.name = "AB";
 				*a.name += type;
 				nbytes = 2;
 			}
 			else
 			{
-				a.name = "zp";
+				a.name = "ZP";
 				*a.name += type;
 
 				nbytes = 1;
 			}
 		}
-		// inx
-		else if (auto [whole, mode, num] = ctre::match<"^\\(([$%]?)(.+),x\\)$">(text); whole)
+		// INX
+		else if (auto [whole, mode, num] = ctre::match<"^\\(([$%]?)([A-Z0-9]+),X\\)$">(text); whole)
 		{
-			encoding = mode;
-			number = num;
-			a.name = "inx";
+			temp = decode(num.str(), mode);
+			a.name = "INX";
 			nbytes = 1;
 		}
-		// iny
-		else if (auto [whole, mode, num] = ctre::match<"^\\(([$%]?)(.+)\\),y$">(text); whole)
+		// INY
+		else if (auto [whole, mode, num] = ctre::match<"^\\(([$%]?)([A-Z0-9]+)\\),Y$">(text); whole)
 		{
-			encoding = mode;
-			number = num;
-			a.name = "iny";
+			temp = decode(num.str(), mode);
+			a.name = "INY";
 			nbytes = 1;
 		}
-		// ind
-		else if (auto [whole, mode, num] = ctre::match<"^\\(([$%]?)(.+)\\)$">(text); whole)
+		// IND
+		else if (auto [whole, mode, num] = ctre::match<"^\\(([$%]?)([A-Z0-9]+)\\)$">(text); whole)
 		{
-			encoding = mode;
-			number = num;
-			a.name = "ind";
+			temp = decode(num.str(), mode);
+			a.name = "IND";
 			nbytes = 2;
 		}
-		// imm
-		else if (auto [whole, mode, num] = ctre::match<"^#([$%]?)(.+)$">(text); whole)
+		// IMM
+		else if (auto [whole, mode, num] = ctre::match<"^#([$%]?)([\\-A-Z0-9]+)$">(text); whole)
 		{
-			encoding = mode;
-			number = num;
-			a.name = "imm";
+			temp = decode(num.str(), mode);
+			a.name = "IMM";
 			nbytes = 1;
 		}
-		// labels
-		else if (auto [whole, label] = ctre::match<"^([a-zA-Z].+)$">(text); whole)
-		{
-			m_labels[label.str()].push_back(static_cast<uint8_t>(m_assembly.size() + 1));
-			a.name = "rel";
-			a.lo = 0;
-		}
-		// rel if negative special case
+		// REL if negative special case
 		else if (auto [whole, num] = ctre::match<"^(-\\d+)$">(text); whole)
 		{
-			a.name = "rel";
-			number = num;
-			encoding = "";
+			temp = decode(num.str(), "");
+			a.name = "REL";
 			nbytes = 1;
 		}
-		// abs or zpi
-		else if (auto [whole, mode, num] = ctre::match<"^([$%]?)(.+)$">(text); whole)
+		// ABS or ZPI
+		else if (auto [whole, mode, num] = ctre::match<"^([$%]?)([A-Z0-9]+)$">(text); whole)
 		{
-			encoding = mode;
-			number = num;
+			temp = decode(num.str(), mode);
 			if (temp > 255)
 			{
-				a.name = "abs";
+				a.name = "ABS";
 				nbytes = 2;
 			}
 			else
 			{
-				a.name = "zpi";
+				a.name = "ZPI";
 				nbytes = 1;
-
 			}
 		}
 		else
 		{
 			ASSE_LOG_ERROR("Unrecognized addressing mode\n");
-			error = true;
+			return a;
 		}
 
-		if (!error && nbytes > 0)
+		if (temp && nbytes == 1)
 		{
-			temp = decode(number, encoding);
-			if (!temp)
-			{
-				error = true;
-			}
-			else 
-			{
-				a.lo = *temp & 0x00ff;
-			}
+			a.lo = *temp & 0x00ff;
 		}
-		if (!error && nbytes == 2)
+		else if (temp && nbytes == 2)
 		{
+			a.lo = *temp & 0x00ff;
 			a.hi = (*temp & 0xff00) >> 8;
 		}
-
-		if (error)
+		else if (!temp)
 		{
-			a.name = std::nullopt;
-			a.lo = std::nullopt;
-			a.hi = std::nullopt;
+			return a;
 		}
+		
 		return a;
 	}
 
@@ -416,24 +325,16 @@ private:
 
 	std::optional<uint16_t> decode(const std::string& num, const std::string_view& encoding) const
 	{	
-		std::optional<uint16_t> temp = std::nullopt;
 		if (encoding == "$" && ishexadecimal(num))
 		{
-			temp = std::stoi(num, nullptr, 16);
+			return std::stoi(num, nullptr, 16);
 		}
-		else if (encoding == "%" && isbinary(num))
+		if (isdecimal(num))
 		{
-			temp = std::stoi(num, nullptr, 2);
+			return std::stoi(num, nullptr, 10);
 		}
-		else if (isdecimal(num))
-		{
-			temp = std::stoi(num, nullptr, 10);
-		}
-		else
-		{
-			ASSE_LOG_ERROR(num << " is not a number\n");
-		}
-		return temp;
+		ASSE_LOG_ERROR(num << " is not a number\n");
+		return std::nullopt;
 	}
 
 	bool isdecimal(const std::string_view& s) const noexcept
@@ -452,7 +353,6 @@ private:
 	{
 		const auto isinvalid = [](unsigned char c) -> unsigned char
 		{
-			c = std::toupper(c);
 			return !(
 				std::isdigit(c) || 
 				c == 'A' ||
@@ -466,85 +366,71 @@ private:
 		return std::ranges::count_if(s, isinvalid) == 0;
 	}
 
-	bool isbinary(const std::string_view& s) const noexcept
-	{
-		const auto isinvalid = [](unsigned char c)
-		{
-			return !(
-				c == '0' ||
-				c == '1'
-			);
-		};
-		return std::ranges::count_if(s, isinvalid) == 0;
-	}
 
 private:
 
 	std::vector<uint8_t> m_assembly;
-	std::unordered_map<std::string, std::vector<uint8_t>> m_labels;
-	std::unordered_map<std::string, uint8_t> m_labelPos;
 	std::unordered_map<uint16_t, uint8_t> m_directAccess;
 	
 	Bus* m_bus = nullptr;
 	// C++17 my saviour
 	static inline InstrData s_instrData = {
-		{"ADC",{{"imm",0x69},{"zpi",0x65},{"zpx",0x75},{"abs",0x6d},{"abx",0x7d},{"aby",0x79},{"inx",0x61},{"iny",0x71}}},
-		{"AND",{{"imm",0x29},{"zpi",0x25},{"zpx",0x35},{"abs",0x2d},{"abx",0x3d},{"aby",0x39},{"inx",0x21},{"iny",0x31}}},
-		{"ASL",{{"acc",0x0a},{"zpi",0x06},{"zpx",0x16},{"abs",0x0e},{"abx",0x1e}}},
-		{"BCC",{{"rel",0x90},{"zpi",0x90}}},
-		{"BCS",{{"rel",0xb0},{"zpi",0xb0}}},
-		{"BEQ",{{"rel",0xf0},{"zpi",0xf0}}},
-		{"BIT",{{"zpi",0x24},{"abs",0x2c}}},
-		{"BMI",{{"rel",0x30},{"zpi",0x30}}},
-		{"BNE",{{"rel",0xd0},{"zpi",0xd0}}},
-		{"BPL",{{"rel",0x10},{"zpi",0x10}}},
-		{"BRK",{{"imp",0x00}}},
-		{"BVC",{{"rel",0x50},{"zpi",0x50}}},
-		{"BVS",{{"rel",0x70},{"zpi",0x70}}},
-		{"CLC",{{"imp",0x18},{"zpi",0x18}}},
-		{"CLD",{{"imp",0xd8}}},
-		{"CLI",{{"imp",0x58}}},
-		{"CLV",{{"imp",0xb8}}},
-		{"CMP",{{"imm",0xc9},{"zpi",0xc5},{"zpx",0xd5},{"abs",0xcd},{"abx",0xdd},{"aby",0xd9},{"inx",0xc1},{"iny",0xd1}}},
-		{"CPX",{{"imm",0xe0},{"zpi",0xe4},{"abs",0xec}}},
-		{"CPY",{{"imm",0xc0},{"zpi",0xc4},{"abs",0xcc}}},
-		{"DEC",{{"zpi",0xc6},{"zpx",0xd6},{"abs",0xce},{"abx",0xde}}},
-		{"DEX",{{"imp",0xca}}},
-		{"DEY",{{"imp",0x88}}},
-		{"EOR",{{"imm",0x49},{"zpi",0x45},{"zpx",0x55},{"abs",0x4d},{"abx",0x5d},{"aby",0x59},{"inx",0x41},{"iny",0x51}}},
-		{"INC",{{"zpi",0xe6},{"zpx",0xf6},{"abs",0xee},{"abx",0xfe}}},
-		{"INX",{{"imp",0xe8}}},
-		{"INY",{{"imp",0xc8}}},
-		{"JMP",{{"abs",0x4c},{"ind",0x6c}}},
-		{"JSR",{{"abs",0x20}}},
-		{"LDA",{{"imm",0xa9},{"zpi",0xa5},{"zpx",0xb5},{"abs",0xad},{"abx",0xbd},{"aby",0xb9},{"inx",0xa1},{"iny",0xb1}}},
-		{"LDX",{{"imm",0xa2},{"zpi",0xa6},{"zpy",0xb6},{"abs",0xae},{"aby",0xbe}}},
-		{"LDY",{{"imm",0xa0},{"zpi",0xa4},{"zpx",0xb4},{"abs",0xac},{"abx",0xbc}}},
-		{"LSR",{{"acc",0x4a},{"zpi",0x46},{"zpx",0x56},{"abs",0x4e},{"abx",0x5e}}},
-		{"NOP",{{"imp",0xea}}},
-		{"ORA",{{"imm",0x09},{"zpi",0x05},{"zpx",0x15},{"abs",0x0d},{"abx",0x1d},{"aby",0x19},{"inx",0x01},{"iny",0x11}}},
-		{"PHA",{{"imp",0x48}}},
-		{"PHP",{{"imp",0x08}}},
-		{"PLA",{{"imp",0x68}}},
-		{"PLP",{{"imp",0x28}}},
-		{"ROL",{{"acc",0x2a},{"zpi",0x26},{"zpx",0x36},{"abs",0x2e},{"abx",0x3e}}},
-		{"ROR",{{"acc",0x6a},{"zpi",0x66},{"zpx",0x76},{"abs",0x6e},{"abx",0x7e}}},
-		{"RTI",{{"imp",0x40}}},
-		{"RTS",{{"imp",0x60}}},
-		{"SBC",{{"imm",0xe9},{"zpi",0xe5},{"zpx",0xf5},{"abs",0xed},{"abx",0xfd},{"aby",0xf9},{"inx",0xe1},{"iny",0xf1}}},
-		{"SEC",{{"imp",0x38}}},
-		{"SED",{{"imp",0xf8}}},
-		{"SEI",{{"imp",0x78}}},
-		{"STA",{{"inx",0x81},{"zpi",0x85},{"abs",0x8d},{"iny",0x91},{"zpx",0x95},{"aby",0x99},{"abx",0x9d}}},
-		{"STX",{{"zpi",0x86},{"zpy",0x96},{"abs",0x8e}}},
-		{"STY",{{"zpi",0x84},{"zpx",0x94},{"abs",0x8c}}},
-		{"TAX",{{"imp",0xaa}}},
-		{"TAY",{{"imp",0xa8}}},
-		{"TSX",{{"imp",0xba}}},
-		{"TXA",{{"imp",0x8a}}},
-		{"TXS",{{"imp",0x9a}}},
-		{"TYA",{{"imp",0x98}}}
+		{"ADC",{{"IMM",0x69},{"ZPI",0x65},{"ZPX",0x75},{"ABS",0x6d},{"ABX",0x7d},{"ABY",0x79},{"INX",0x61},{"INY",0x71}}},
+		{"AND",{{"IMM",0x29},{"ZPI",0x25},{"ZPX",0x35},{"ABS",0x2d},{"ABX",0x3d},{"ABY",0x39},{"INX",0x21},{"INY",0x31}}},
+		{"ASL",{{"ACC",0x0a},{"ZPI",0x06},{"ZPX",0x16},{"ABS",0x0e},{"ABX",0x1e}}},
+		{"BCC",{{"REL",0x90},{"ZPI",0x90}}},
+		{"BCS",{{"REL",0xb0},{"ZPI",0xb0}}},
+		{"BEQ",{{"REL",0xf0},{"ZPI",0xf0}}},
+		{"BIT",{{"ZPI",0x24},{"ABS",0x2c}}},
+		{"BMI",{{"REL",0x30},{"ZPI",0x30}}},
+		{"BNE",{{"REL",0xd0},{"ZPI",0xd0}}},
+		{"BPL",{{"REL",0x10},{"ZPI",0x10}}},
+		{"BRK",{{"IMP",0x00}}},
+		{"BVC",{{"REL",0x50},{"ZPI",0x50}}},
+		{"BVS",{{"REL",0x70},{"ZPI",0x70}}},
+		{"CLC",{{"IMP",0x18},{"ZPI",0x18}}},
+		{"CLD",{{"IMP",0xd8}}},
+		{"CLI",{{"IMP",0x58}}},
+		{"CLV",{{"IMP",0xb8}}},
+		{"CMP",{{"IMM",0xc9},{"ZPI",0xc5},{"ZPX",0xd5},{"ABS",0xcd},{"ABX",0xdd},{"ABY",0xd9},{"INX",0xc1},{"INY",0xd1}}},
+		{"CPX",{{"IMM",0xe0},{"ZPI",0xe4},{"ABS",0xec}}},
+		{"CPY",{{"IMM",0xc0},{"ZPI",0xc4},{"ABS",0xcc}}},
+		{"DEC",{{"ZPI",0xc6},{"ZPX",0xd6},{"ABS",0xce},{"ABX",0xde}}},
+		{"DEX",{{"IMP",0xca}}},
+		{"DEY",{{"IMP",0x88}}},
+		{"EOR",{{"IMM",0x49},{"ZPI",0x45},{"ZPX",0x55},{"ABS",0x4d},{"ABX",0x5d},{"ABY",0x59},{"INX",0x41},{"INY",0x51}}},
+		{"INC",{{"ZPI",0xe6},{"ZPX",0xf6},{"ABS",0xee},{"ABX",0xfe}}},
+		{"INX",{{"IMP",0xe8}}},
+		{"INY",{{"IMP",0xc8}}},
+		{"JMP",{{"ABS",0x4c},{"IND",0x6c}}},
+		{"JSR",{{"ABS",0x20}}},
+		{"LDA",{{"IMM",0xa9},{"ZPI",0xa5},{"ZPX",0xb5},{"ABS",0xad},{"ABX",0xbd},{"ABY",0xb9},{"INX",0xa1},{"INY",0xb1}}},
+		{"LDX",{{"IMM",0xa2},{"ZPI",0xa6},{"ZPY",0xb6},{"ABS",0xae},{"ABY",0xbe}}},
+		{"LDY",{{"IMM",0xa0},{"ZPI",0xa4},{"ZPX",0xb4},{"ABS",0xac},{"ABX",0xbc}}},
+		{"LSR",{{"ACC",0x4a},{"ZPI",0x46},{"ZPX",0x56},{"ABS",0x4e},{"ABX",0x5e}}},
+		{"NOP",{{"IMP",0xea}}},
+		{"ORA",{{"IMM",0x09},{"ZPI",0x05},{"ZPX",0x15},{"ABS",0x0d},{"ABX",0x1d},{"ABY",0x19},{"INX",0x01},{"INY",0x11}}},
+		{"PHA",{{"IMP",0x48}}},
+		{"PHP",{{"IMP",0x08}}},
+		{"PLA",{{"IMP",0x68}}},
+		{"PLP",{{"IMP",0x28}}},
+		{"ROL",{{"ACC",0x2a},{"ZPI",0x26},{"ZPX",0x36},{"ABS",0x2e},{"ABX",0x3e}}},
+		{"ROR",{{"ACC",0x6a},{"ZPI",0x66},{"ZPX",0x76},{"ABS",0x6e},{"ABX",0x7e}}},
+		{"RTI",{{"IMP",0x40}}},
+		{"RTS",{{"IMP",0x60}}},
+		{"SBC",{{"IMM",0xe9},{"ZPI",0xe5},{"ZPX",0xf5},{"ABS",0xed},{"ABX",0xfd},{"ABY",0xf9},{"INX",0xe1},{"INY",0xf1}}},
+		{"SEC",{{"IMP",0x38}}},
+		{"SED",{{"IMP",0xf8}}},
+		{"SEI",{{"IMP",0x78}}},
+		{"STA",{{"INX",0x81},{"ZPI",0x85},{"ABS",0x8d},{"INY",0x91},{"ZPX",0x95},{"ABY",0x99},{"ABX",0x9d}}},
+		{"STX",{{"ZPI",0x86},{"ZPY",0x96},{"ABS",0x8e}}},
+		{"STY",{{"ZPI",0x84},{"ZPX",0x94},{"ABS",0x8c}}},
+		{"TAX",{{"IMP",0xaa}}},
+		{"TAY",{{"IMP",0xa8}}},
+		{"TSX",{{"IMP",0xba}}},
+		{"TXA",{{"IMP",0x8a}}},
+		{"TXS",{{"IMP",0x9a}}},
+		{"TYA",{{"IMP",0x98}}}
 	};
-
 };
 }

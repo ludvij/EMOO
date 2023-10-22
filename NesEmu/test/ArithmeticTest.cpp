@@ -159,3 +159,88 @@ TEST_F(TestArithmetic, ADC_INY_OOPS)
 	ASSERT_EQ(bus.GetCpu().A(), 12 + 23);
 	ASSERT_EQ(bus.GetCpu().GetCycles(), 1);
 }
+
+TEST_F(TestArithmetic, ADC_V)
+{
+	asse.Assemble(R"(
+		sec
+		lda #$3f
+		adc #$40
+
+		clc
+		lda #$01
+		adc #$ff
+	)");
+
+	// should overflow
+	clearCycles(2 + 2 + 2);
+
+	ASSERT_EQ(bus.GetCpu().A(), 128);
+	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_V_FLAG);
+
+	clearCycles(2 + 2 + 2);
+
+	ASSERT_EQ(bus.GetCpu().A(), 0);
+	ASSERT_FALSE(bus.GetCpu().P() & Emu::P_V_FLAG);
+}
+
+
+TEST_F(TestArithmetic, SBC)
+{
+	asse.Assemble(R"(
+		sec
+		lda #23
+		sbc #10
+
+		clc
+		lda #$82
+		sbc #1
+
+		sec
+		lda #3
+		sbc #3
+
+		sec
+		lda #3
+		sbc #4
+	)");
+
+	clearCycles(2 + 2 + 2);
+	ASSERT_EQ(bus.GetCpu().A(), 13);
+	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_C_FLAG);
+
+	clearCycles(2 + 2 + 2);
+	ASSERT_EQ(bus.GetCpu().A(), 0x80);
+	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_N_FLAG);
+
+	clearCycles(2 + 2 + 2);
+	ASSERT_EQ(bus.GetCpu().A(), 0);
+	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_Z_FLAG);
+
+	clearCycles(2 + 2 + 2);
+	ASSERT_EQ(bus.GetCpu().A(), 0xff); // -1 in signed 8 bits is 0xff
+	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_V_FLAG);
+}
+
+TEST_F(TestArithmetic, CMP)
+{
+	asse.Assemble(R"(
+		lda #22
+		cmp #21
+
+		lda #20
+		cmp #20
+
+		lda #$84
+		cmp #$04
+	)");
+	
+	clearCycles(2 + 2);
+	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_C_FLAG);
+
+	clearCycles(2 + 2);
+	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_Z_FLAG);
+
+	clearCycles(2 + 2);
+	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_N_FLAG);
+}

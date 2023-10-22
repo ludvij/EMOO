@@ -74,6 +74,14 @@ CPU::CPU()
 	//CLV
 	m_jumpTable[0xB8] = {"CLV", &CPU::addrIMP, &CPU::CLV, 2};
 	//CMP
+	m_jumpTable[0xC9] = {"CMP", &CPU::addrIMM, &CPU::CMP, 2};
+	m_jumpTable[0xC5] = {"CMP", &CPU::addrZPI, &CPU::CMP, 3};
+	m_jumpTable[0xD5] = {"CMP", &CPU::addrZPX, &CPU::CMP, 4};
+	m_jumpTable[0xCD] = {"CMP", &CPU::addrABS, &CPU::CMP, 4};
+	m_jumpTable[0xDD] = {"CMP", &CPU::addrABX, &CPU::CMP, 4};
+	m_jumpTable[0xD9] = {"CMP", &CPU::addrABY, &CPU::CMP, 4};
+	m_jumpTable[0xC1] = {"CMP", &CPU::addrINX, &CPU::CMP, 6};
+	m_jumpTable[0xD1] = {"CMP", &CPU::addrINY, &CPU::CMP, 5};
 	//CPX
 	//CPY
 	//DEC
@@ -165,6 +173,14 @@ CPU::CPU()
 	//RTI
 	//RTS
 	//SBC
+	m_jumpTable[0xE9] = {"SBC", &CPU::addrIMM, &CPU::SBC, 2};
+	m_jumpTable[0xE5] = {"SBC", &CPU::addrZPI, &CPU::SBC, 3};
+	m_jumpTable[0xF5] = {"SBC", &CPU::addrZPX, &CPU::SBC, 4};
+	m_jumpTable[0xED] = {"SBC", &CPU::addrABS, &CPU::SBC, 4};
+	m_jumpTable[0xFD] = {"SBC", &CPU::addrABX, &CPU::SBC, 4};
+	m_jumpTable[0xF9] = {"SBC", &CPU::addrABY, &CPU::SBC, 4};
+	m_jumpTable[0xE1] = {"SBC", &CPU::addrINX, &CPU::SBC, 6};
+	m_jumpTable[0xF1] = {"SBC", &CPU::addrINY, &CPU::SBC, 5};
 	//SEC
 	m_jumpTable[0x38] = {"SEC", &CPU::addrIMP, &CPU::SEC, 2};
 	//SED
@@ -429,42 +445,46 @@ u16 CPU::addrACC()
  * Instruction Add with carry
  * m_A = m_A + M + C
  * flags: C, V, N, Z
+ * 
  * The overflow thing explained with a truth table
+ * http://www.6502.org/tutorials/vflag.html#2.4
+ * 
  * the overflow will be set when a and m share the same sign but r is different
  * A^R will be true when a and r have different symbol
- * ~(A^M) will be true when a and m have the same symbol
+ * M^R will be true when m and r have different symbol
  * anding the two condition will get the result we want
- * ┌---------------------------------------┐
- * | A M R | V | A^R |~(A^M) | A^R &~(A^M) |
- * ├-------┼---┼-----┼-------┼-------------┤
- * | 0 0 0 | 0 |  0  |   1   |      0      |
- * | 0 0 1 | 1 |  1  |   1   |      1      |
- * | 0 1 0 | 0 |  0  |   0   |      0      |
- * | 0 1 1 | 0 |  1  |   0   |      0      |
- * | 1 0 0 | 0 |  1  |   0   |      0      |
- * | 1 0 1 | 0 |  0  |   0   |      0      |
- * | 1 1 0 | 1 |  1  |   1   |      1      |
- * | 1 1 1 | 0 |  0  |   1   |      0      |
- * └-------┴---┴-----┴-------┴-------------┘
+ * then we extract the sign anding with 0x80
+ * ┌-------┬---┬-----┬-----┬-----------┐
+ * | A M R | V | A^R | M^R | A^R & A^M |
+ * ├-------┼---┼-----┼-----┼-----------┤
+ * | 0 0 0 | 0 |  0  |  0  |     0     |
+ * | 0 0 1 | 1 |  1  |  1  |     1     |
+ * | 0 1 0 | 0 |  0  |  1  |     0     |
+ * | 0 1 1 | 0 |  1  |  0  |     0     |
+ * | 1 0 0 | 0 |  1  |  0  |     0     |
+ * | 1 0 1 | 0 |  0  |  1  |     0     |
+ * | 1 1 0 | 1 |  1  |  1  |     1     |
+ * | 1 1 1 | 0 |  0  |  0  |     0     |
+ * └-------┴---┴-----┴-----┴-----------┘
  */
 void CPU::ADC(const u16 addr)
 {
 	// hack to get overflow
 	const u16 m = readMemory(addr);
-	const u16 a16 = m_A;
-	u16 temp = m + a16;
+	const u16 a = m_A;
+	u16 r = m + a;
 	if (checkFlag(P_C_FLAG)) 
 	{
-		temp += 1;
+		r += 1;
 	}
 	// if overflow in bit 7 we set carry flag
-	setFlagIf(P_C_FLAG, temp > 255);
-	setFlagIf(P_Z_FLAG, (temp & 0x00FF) == 0);
+	setFlagIf(P_C_FLAG, r > 255);
+	setFlagIf(P_Z_FLAG, (r & 0x00FF) == 0);
 	// Here should go something with decimal mode, but is not used, so whatever
-	setFlagIf(P_V_FLAG, (~(a16 ^ m) & (a16 ^ temp)) & 0x0080);
-	setFlagIf(P_N_FLAG, temp & 0x80);
+	setFlagIf(P_V_FLAG, (a ^ r) & (m ^ r) & 0x0080);
+	setFlagIf(P_N_FLAG, r & 0x80);
 
-	m_A = temp & 0x00FF;
+	m_A = r & 0x00FF;
 	m_canOops = true;
 }
 
@@ -633,6 +653,25 @@ void CPU::CLI(const u16 addr)
 void CPU::CLV(const u16 addr)
 {
 	m_P &= ~P_V_FLAG;
+}
+
+/*
+ * Instruction Compare
+ * A - M
+ * result is discarded
+ * flags: Z, C, N
+ */
+void CPU::CMP(const u16 addr)
+{
+	const u8 m = readMemory(addr);
+
+	m_discard = m_A - m;
+
+	setFlagIf(P_C_FLAG, m_A >= m);
+	setFlagIf(P_Z_FLAG, m_A == m);
+	setFlagIf(P_N_FLAG, m_discard & 0x80);
+
+	m_canOops = true;
 }
 
 /*
@@ -961,6 +1000,55 @@ void CPU::ROR(const u16 addr)
 }
 
 /*
+ * Instruction Substract with Carry
+ * Substracts the not of the carry flag for some reason
+ * A = A - M - (1 - C)
+ * flags: Z, C, V, N
+ *
+ * The overflow thing explained with a truth table
+ * http://www.6502.org/tutorials/vflag.html#2.4
+ * 
+ * the overflow will be set when a and m share the same sign but r is different
+ * A^R will be true when a and r have different symbol
+ * M^R will be true when m and r have different symbol
+ * anding the two condition will get the result we want
+ * then we extract the sign anding with 0x80
+ * ┌-------┬---┬-----┬-----┬-----------┐
+ * | A M R | V | A^R | M^R | A^R & A^M |
+ * ├-------┼---┼-----┼-----┼-----------┤
+ * | 0 0 0 | 0 |  0  |  0  |     0     |
+ * | 0 0 1 | 1 |  1  |  1  |     1     |
+ * | 0 1 0 | 0 |  0  |  1  |     0     |
+ * | 0 1 1 | 0 |  1  |  0  |     0     |
+ * | 1 0 0 | 0 |  1  |  0  |     0     |
+ * | 1 0 1 | 0 |  0  |  1  |     0     |
+ * | 1 1 0 | 1 |  1  |  1  |     1     |
+ * | 1 1 1 | 0 |  0  |  0  |     0     |
+ * └-------┴---┴-----┴-----┴-----------┘
+ */
+void CPU::SBC(const u16 addr)
+{
+	const u16 m = readMemory(addr);
+	const u16 a = m_A;
+
+	u16 r = a - m;
+	if (!checkFlag(P_C_FLAG))
+	{
+		r = r - 1;
+	}
+	
+	setFlagIf(P_N_FLAG, r & 0x80);
+	setFlagIf(P_Z_FLAG, (r & 0x00ff) == 0);
+	setFlagIf(P_V_FLAG, (a ^ r) & (m ^ r) & 0x0080);
+	// some decimal code should go there but in the nes it is disabled
+	setFlagIf(P_C_FLAG, r & 0x00ff);
+
+	m_A = r & 0x00ff;
+
+	m_canOops = true;
+}
+
+/*
  * Instruction Set Carry Flag
  */
 void CPU::SEC(u16 addr)
@@ -1151,4 +1239,3 @@ u8 CPU::stackPop() noexcept
 }
 
 }
-

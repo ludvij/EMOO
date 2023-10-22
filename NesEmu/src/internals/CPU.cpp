@@ -83,7 +83,13 @@ CPU::CPU()
 	m_jumpTable[0xC1] = {"CMP", &CPU::addrINX, &CPU::CMP, 6};
 	m_jumpTable[0xD1] = {"CMP", &CPU::addrINY, &CPU::CMP, 5};
 	//CPX
+	m_jumpTable[0xE0] = {"CPX", &CPU::addrIMM, &CPU::CPX, 2};
+	m_jumpTable[0xE4] = {"CPX", &CPU::addrZPI, &CPU::CPX, 3};
+	m_jumpTable[0xEC] = {"CPX", &CPU::addrABS, &CPU::CPX, 4};
 	//CPY
+	m_jumpTable[0xC0] = {"CPY", &CPU::addrIMM, &CPU::CPY, 2};
+	m_jumpTable[0xC4] = {"CPY", &CPU::addrZPI, &CPU::CPY, 3};
+	m_jumpTable[0xCC] = {"CPY", &CPU::addrABS, &CPU::CPY, 4};
 	//DEC
 	m_jumpTable[0xC6] = {"DEC", &CPU::addrZPI, &CPU::DEC, 5};
 	m_jumpTable[0xD6] = {"DEC", &CPU::addrZPX, &CPU::DEC, 6};
@@ -672,6 +678,40 @@ void CPU::CMP(const u16 addr)
 	setFlagIf(P_N_FLAG, m_discard & 0x80);
 
 	m_canOops = true;
+}
+
+/*
+ * Instruction Compare X Register
+ * X - M
+ * result is discarded
+ * flags: Z, C, N
+ */
+void CPU::CPX(const u16 addr)
+{
+	const u8 m = readMemory(addr);
+
+	m_discard = m_X - m;
+
+	setFlagIf(P_C_FLAG, m_X >= m);
+	setFlagIf(P_Z_FLAG, m_X == m);
+	setFlagIf(P_N_FLAG, m_discard & 0x80);
+}
+
+/*
+ * Instruction Compare Y Register
+ * Y - M
+ * result is discarded
+ * flags: Z, C, N
+ */
+void CPU::CPY(const u16 addr)
+{
+	const u8 m = readMemory(addr);
+
+	m_discard = m_Y - m;
+
+	setFlagIf(P_C_FLAG, m_Y >= m);
+	setFlagIf(P_Z_FLAG, m_Y == m);
+	setFlagIf(P_N_FLAG, m_discard & 0x80);
 }
 
 /*

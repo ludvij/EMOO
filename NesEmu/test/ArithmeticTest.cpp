@@ -244,3 +244,49 @@ TEST_F(TestArithmetic, CMP)
 	clearCycles(2 + 2);
 	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_N_FLAG);
 }
+
+TEST_F(TestArithmetic, CPX)
+{
+	asse.Assemble(R"(
+		ldx #22
+		cpx #21
+
+		ldx #20
+		cpx #20
+
+		ldx #$84
+		cpx #$04
+	)");
+	
+	clearCycles(2 + 2);
+	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_C_FLAG);
+
+	clearCycles(2 + 2);
+	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_Z_FLAG);
+
+	clearCycles(2 + 2);
+	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_N_FLAG);
+}
+
+TEST_F(TestArithmetic, CPY)
+{
+	asse.Assemble(R"(
+		ldy #22
+		cpy #21
+
+		ldy #20
+		cpy #20
+
+		ldy #$84
+		cpy #$04
+	)");
+	
+	clearCycles(2 + 2);
+	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_C_FLAG);
+
+	clearCycles(2 + 2);
+	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_Z_FLAG);
+
+	clearCycles(2 + 2);
+	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_N_FLAG);
+}

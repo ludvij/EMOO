@@ -64,12 +64,8 @@ public:
 		{
 			// split into instruction and addressing
 			const auto parts = splittrim(upper(line), " ");
-			if (parts.size() == 1)
-			{
-				if (!handleSingleValue(parts[0]))
-					continue;
-			}
-			handleMultipleValue(parts);
+
+			_assemble(parts);
 		}
 		store();
 	}
@@ -88,29 +84,9 @@ private:
 			m_bus->Write(addr, val);
 		}
 	}
-	
-	// returns true in case of implied instruction
-	bool handleSingleValue(const std::string& val)
-	{
-		// can note be a string_view since stoi does not work with it
-		const std::string noprefix = val.substr(1);
-		const char prefix = val[0];
-		if (prefix == '$')
-		{
-			m_assembly.push_back(std::stoi(noprefix, nullptr, 16));
-			return false;
-		}
-		// single value dec
-		if (isdecimal(val))
-		{
-			m_assembly.push_back(std::stoi(val, nullptr, 10));
-			return false;
-		}
-		// instruction
-		return true;
-	}
 
-	void handleMultipleValue(const std::vector<std::string>& parts)
+
+	void _assemble(const std::vector<std::string>& parts)
 	{
 		const std::string instr = parts[0];
 		// can't += string view
@@ -119,7 +95,7 @@ private:
 		{
 			addr += parts[i];
 		}
-		const auto [name, lo, hi] = getAddressing(addr);
+		const auto [name, lo, hi] = parse(addr);
 		if (!name)
 		{
 			ASSE_LOG_INFO("Fatal error, can not continue\n");
@@ -128,7 +104,7 @@ private:
 		// direct memory access
 		if (instr[0] == '&') 
 		{
-			auto [_, dlo, dhi] = getAddressing(instr);
+			auto [_, dlo, dhi] = parse(instr);
 			m_directAccess[*dhi << 8 | *dlo] = *lo;
 			return;
 		}
@@ -147,6 +123,11 @@ private:
 			return;
 		}
 		m_assembly.push_back(s_instrData.at(instr).at(*name));
+		if (instr == "BRK")
+		{
+			// push nop
+			m_assembly.push_back(0xEA);
+		}
 		// 3 bytes
 		if (hi && lo)
 		{
@@ -168,7 +149,7 @@ private:
 		return s;
 	}
 
-	AddressingMode getAddressing(const std::string& text) 
+	AddressingMode parse(const std::string& text) 
 	{
 		AddressingMode a;
 		std::optional<uint16_t> temp = std::nullopt;
@@ -365,7 +346,6 @@ private:
 		};
 		return std::ranges::count_if(s, isinvalid) == 0;
 	}
-
 
 private:
 

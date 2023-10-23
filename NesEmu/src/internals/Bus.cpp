@@ -16,18 +16,15 @@ u8 Bus::Read(u16 addr) const
 	}
 	if (addr < 0x4000) // PPU registers and mirrors
 	{
-		throw std::exception("Not implemented");
 	}
 	if (addr < 0x4018) // APU and IO functionality
 	{
-		throw std::exception("Not implemented");
 	}
 	if (addr < 0x4020) // APU and IO functionality Test mode
 	{
-		throw std::exception("Not implemented");
 	}
 	// cartridge space
-	throw std::exception("Not implemented");
+	return 0;
 }
 
 void Bus::Write(u16 addr, u8 val)
@@ -38,19 +35,15 @@ void Bus::Write(u16 addr, u8 val)
 	}
 	else if (addr < 0x4000) // PPU registers and mirrors
 	{
-		throw std::exception("Not implemented");
 	}
 	else if (addr < 0x4018) // APU and IO functionality
 	{
-		throw std::exception("Not implemented");
 	}
 	else if (addr < 0x4020) // APU and IO functionality Test mode
 	{
-		throw std::exception("Not implemented");
 	}
 	else // cartridge space
 	{
-		throw std::exception("Not implemented");
 	}
 
 	

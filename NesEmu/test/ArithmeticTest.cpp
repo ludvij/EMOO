@@ -26,7 +26,7 @@ TEST_F(TestArithmetic, ADC_ZPI_C)
 {
 	asse.Assemble(R"(
 		adc 2
-		$80
+		&2 $80
 	)");
 	bus.GetCpu().SetA(0x80);
 
@@ -40,7 +40,7 @@ TEST_F(TestArithmetic, ADC_ZPX_Z)
 {
 	asse.Assemble(R"(
 		adc 2
-		$80
+		&2 $80
 	)");
 	bus.GetCpu().SetA(0x80);
 	bus.GetCpu().SetX(1);
@@ -55,7 +55,7 @@ TEST_F(TestArithmetic, ADC_ABS_C)
 {
 	asse.Assemble(R"(
 		adc $0003
-		13
+		&3 13
 	)");
 
 	bus.GetCpu().SetP(Emu::P_C_FLAG);
@@ -288,5 +288,27 @@ TEST_F(TestArithmetic, CPY)
 	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_Z_FLAG);
 
 	clearCycles(2 + 2);
+	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_N_FLAG);
+}
+
+TEST_F(TestArithmetic, BIT)
+{
+	asse.Assemble(R"(
+		lda #$80
+		bit 13
+		&13 $40
+		
+		lda #$80
+		bit 14
+		&14 $80
+		
+	)");
+
+	clearCycles(2 + 3);
+	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_Z_FLAG);
+	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_V_FLAG);
+
+	clearCycles(2 + 3);
+	ASSERT_FALSE(bus.GetCpu().P() & Emu::P_Z_FLAG);
 	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_N_FLAG);
 }

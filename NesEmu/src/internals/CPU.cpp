@@ -8,7 +8,10 @@
 namespace Emu 
 {
 
-constexpr auto MAKE_WORD = [](const u16 hi, const u16 lo) -> u16 { return static_cast<u16>((hi << 8)) | lo; };
+constexpr auto MAKE_WORD = [](const u16 hi, const u16 lo) -> u16 
+{ 
+	return static_cast<u16>((hi << 8)) | lo; 
+};
 
 CPU::CPU()
 {
@@ -118,7 +121,10 @@ CPU::CPU()
 	//INY
 	m_jumpTable[0xC8] = {"INY", &CPU::addrIMP, &CPU::INY, 2};
 	//JMP
+	m_jumpTable[0x4C] = {"JMP", &CPU::addrABS, &CPU::JMP, 3};
+	m_jumpTable[0x6C] = {"JMP", &CPU::addrIND, &CPU::JMP, 5};
 	//JSR
+	m_jumpTable[0x20] = {"JSR", &CPU::addrABS, &CPU::JSR, 6};
 	//LDA
 	m_jumpTable[0xA9] = {"LDA", &CPU::addrIMM, &CPU::LDA, 2};
 	m_jumpTable[0xA5] = {"LDA", &CPU::addrZPI, &CPU::LDA, 3};
@@ -180,6 +186,7 @@ CPU::CPU()
 	// RTI
 	m_jumpTable[0x40] = {"RTI", &CPU::addrIMP, &CPU::RTI, 6};
 	//RTS
+	m_jumpTable[0x60] = {"RTS", &CPU::addrIMP, &CPU::RTS, 6};
 	//SBC
 	m_jumpTable[0xE9] = {"SBC", &CPU::addrIMM, &CPU::SBC, 2};
 	m_jumpTable[0xE5] = {"SBC", &CPU::addrZPI, &CPU::SBC, 3};
@@ -262,18 +269,17 @@ void CPU::Reset()
 	m_S = 0xFD;
 	m_P = 0x34;
 
-	// TODO: NOT YET
-	// 6502 reads memory at $FFFC
-	//u16 addr = 0xFFFC;
-	//u16 lo = readMemory(addr);
-	//u16 hi = readMemory(addr + 1);
+	// 6502 reads memory at $FFFC/D
+	u16 lo = readMemory(m_resetVectorL);
+	u16 hi = readMemory(m_resetVectorH);
 
-	//m_PC = MAKE_WORD(hi, lo);
+	m_PC = MAKE_WORD(hi, lo);
 
 	// reset utility varibles
 	m_canOops = false;
 	m_oopsCycles = 0;
 	m_discard = 0;
+	// this takes 8 cycles
 	m_cycles = 8;
 }
 
@@ -854,6 +860,32 @@ void CPU::INY(const u16 addr)
 }
 
 /*
+ * Instruction Jump
+ * PC = M
+ */
+void CPU::JMP(const u16 addr)
+{
+	m_PC = addr;
+}
+
+/*
+ * Instruction Jump from Subroutine
+ * Pushes pc - 1 to the stack
+ * and sets the pc to M
+ */
+void CPU::JSR(const u16 addr)
+{
+	const u16 temp = m_PC - 1;
+	const u8 pcL = temp & 0x00ff;
+	const u8 pcH = (temp & 0xff00) >> 8;
+
+	stackPush(pcH);
+	stackPush(pcL);
+
+	m_PC = addr;
+}
+
+/*
  * Instruction Load Accumulator
  * A = M
  * flags: Z, N
@@ -1099,6 +1131,19 @@ void CPU::RTI(u16 addr)
 	const u8 pchi = stackPop();
 
 	m_PC = MAKE_WORD(pchi, pclo);
+}
+
+/*
+ * Instruction Return from Subroutine
+ * pulls the PC minus one from the stack
+ */
+void CPU::RTS(u16 addr)
+{
+
+	const u8 lo = stackPop();
+	const u8 hi = stackPop();
+
+	m_PC = MAKE_WORD(hi, lo) + 1;
 }
 
 /*

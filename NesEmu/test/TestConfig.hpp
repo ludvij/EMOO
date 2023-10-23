@@ -14,9 +14,8 @@ protected:
 		asse.Link(&bus);
 		// force reset to get the values I want in the registers
 		bus.GetCpu().Reset();
+		bus.GetCpu().SetPC(0);
 		clearCycles(8);
-		// reset processor status
-		bus.GetCpu().SetP(0);
 	}
 
 	void TearDown() override

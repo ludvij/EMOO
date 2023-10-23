@@ -60,7 +60,7 @@ CPU::CPU()
 	// BPL
 	m_jumpTable[0x10] = {"BPL", &CPU::addrREL, &CPU::BPL, 2};
 	// BRK
-	//m_jumpTable[0x00] = {"BRK", &CPU::addrIMP, &CPU::BRK, 7};
+	m_jumpTable[0x00] = {"BRK", &CPU::addrIMP, &CPU::BRK, 7};
 	// BVC
 	m_jumpTable[0x50] = {"BVC", &CPU::addrREL, &CPU::BVC, 2};
 	// BVS
@@ -147,6 +147,7 @@ CPU::CPU()
 	m_jumpTable[0x56] = {"LSR", &CPU::addrZPX, &CPU::LSR, 6};
 	m_jumpTable[0x5A] = {"LSR", &CPU::addrABX, &CPU::LSR, 7};
 	//NOP
+	m_jumpTable[0xEA] = {"NOP", &CPU::addrIMP, &CPU::NOP, 2};
 	//ORA
 	m_jumpTable[0x09] = {"ORA", &CPU::addrIMM, &CPU::ORA, 2};
 	m_jumpTable[0x05] = {"ORA", &CPU::addrZPI, &CPU::ORA, 3};
@@ -176,7 +177,8 @@ CPU::CPU()
 	m_jumpTable[0x76] = {"ROR", &CPU::addrZPX, &CPU::ROR, 6};
 	m_jumpTable[0x6E] = {"ROR", &CPU::addrABS, &CPU::ROR, 6};
 	m_jumpTable[0x7A] = {"ROR", &CPU::addrABX, &CPU::ROR, 7};
-	//RTI
+	// RTI
+	m_jumpTable[0x40] = {"RTI", &CPU::addrIMP, &CPU::RTI, 6};
 	//RTS
 	//SBC
 	m_jumpTable[0xE9] = {"SBC", &CPU::addrIMM, &CPU::SBC, 2};
@@ -222,7 +224,6 @@ CPU::CPU()
 	//TYA
 	m_jumpTable[0x98] = {"TYA", &CPU::addrIMP, &CPU::TYA, 2};
 
-	Reset();
 }
 
 void CPU::Step()
@@ -611,6 +612,41 @@ void CPU::BPL(const u16 addr)
 	branchIfCond(addr, !checkFlag(P_N_FLAG));
 
 }
+/*
+ * Instruction Force Interrupt
+ * Pushes PC and P to the stack
+ * Then loads the IRQ Interrupt vector ($FFFE/F) 
+ * into the PC and sets the B flag;
+ * 
+ * This instruction is 7 cycles:
+ * 1 read opcode
+ * 2 read padding byte
+ * 3 pushing PC hi byte
+ * 4 pushing PC lo byte
+ * 5 pushing P with B flag
+ * 6 fetch low byte of irq vector from $FFFE
+ * 7 fetch hi byte of irq vector from $FFFF
+ */
+void CPU::BRK(const u16 addr)
+{
+	// padding byte since BRK is a 2 byte instruction
+	// even tho it uses implied mode
+	m_PC++;
+	// automatically setted when an interrupt is triggered
+	const u8 pclo = m_PC & 0x00ff;
+	const u8 pchi = (m_PC & 0xff00) >> 8;
+
+	stackPush(pchi);
+	stackPush(pclo);
+
+	stackPush(m_P | P_1_FLAG | P_B_FLAG);
+	setFlag(P_I_FLAG);
+
+	const u8 lo = readMemory(m_irqVectorL);
+	const u8 hi = readMemory(m_irqVectorH);
+
+	m_PC = MAKE_WORD(hi, lo);
+}
 
 /*
  * Instruction Branch if overflow clear
@@ -893,6 +929,14 @@ void CPU::LSR(const u16 addr)
 }
 
 /*
+ * Instruction No Operation
+ * Does nothing
+ */
+void CPU::NOP(const u16 addr)
+{
+}
+
+/*
  * Instruction Inclusive or
  * m_A = m_A | M
  * Flags: Z, N
@@ -925,10 +969,12 @@ void CPU::PHA(const u16 addr)
 /*
  * Instruction Push Processor status
  * Pushes accumulator to the stack
+ * 
+ * also pushes B flag
  */
 void CPU::PHP(const u16 addr)
 {
-	stackPush(m_P);
+	stackPush(m_P | P_B_FLAG | P_1_FLAG);
 }
 
 /*
@@ -1037,6 +1083,22 @@ void CPU::ROR(const u16 addr)
 	{
 		writeMemory(addr, static_cast<u8>(m));
 	}
+}
+/*
+ * Instruction Return from Interrupt
+ * Used at the end of an interrupt processing routine
+ * Works oppostie of BRK, pulls P and PC from the stack
+ * 
+ * Also discard B flag
+ */
+void CPU::RTI(u16 addr)
+{
+	m_P = stackPop();
+
+	const u8 pclo = stackPop();
+	const u8 pchi = stackPop();
+
+	m_PC = MAKE_WORD(pchi, pclo);
 }
 
 /*
@@ -1210,12 +1272,22 @@ void CPU::setFlagIf(const u8 flag, const bool cond) noexcept
 {
 	if (cond) 
 	{
-		m_P |= (flag); 
+		setFlag(flag);
 	}
 	else 
 	{
-		m_P &= ~(flag);
+		clearFlag(flag);
 	}
+}
+
+void CPU::setFlag(const u8 flag) noexcept
+{
+	m_P |= flag;
+}
+
+void CPU::clearFlag(const u8 flag) noexcept
+{
+	m_P &= ~flag;
 }
 
 bool CPU::checkFlag(const u8 flag) const noexcept

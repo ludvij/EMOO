@@ -11,10 +11,10 @@ protected:
 
 	void SetUp() override
 	{
-		// clear reset cycles
-		clearCycles(8);
 		asse.Link(&bus);
-
+		// force reset to get the values I want in the registers
+		bus.GetCpu().Reset();
+		clearCycles(8);
 		// reset processor status
 		bus.GetCpu().SetP(0);
 	}

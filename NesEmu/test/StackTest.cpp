@@ -67,13 +67,13 @@ TEST_F(TestStack, STACK_PUSH)
 	ASSERT_EQ(bus.Read(0x0100 + bus.GetCpu().S() + 1), 12);
 	ASSERT_EQ(bus.GetCpu().S() + 1, base);
 	clearCycles(3);
-	ASSERT_EQ(bus.Read(0x0100 + bus.GetCpu().S() + 1), 23);
+	ASSERT_EQ(bus.Read(0x0100 + bus.GetCpu().S() + 1), 23 | Emu::P_B_FLAG | Emu::P_1_FLAG);
 	ASSERT_EQ(bus.GetCpu().S() + 2, base);
 	clearCycles(3);
 	ASSERT_EQ(bus.Read(0x0100 + bus.GetCpu().S() + 1), 12);
 	ASSERT_EQ(bus.GetCpu().S() + 3, base);
 	clearCycles(3);
-	ASSERT_EQ(bus.Read(0x0100 + bus.GetCpu().S() + 1), 23);
+	ASSERT_EQ(bus.Read(0x0100 + bus.GetCpu().S() + 1), 23 | Emu::P_B_FLAG | Emu::P_1_FLAG);
 	ASSERT_EQ(bus.GetCpu().S() + 4, base);
 }
 
@@ -119,13 +119,13 @@ TEST_F(TestStack, STACK_POP)
 
 	clearCycles(4);
 	// 0x23, -
-	ASSERT_EQ(12, bus.GetCpu().P());
+	ASSERT_EQ(12 | Emu::P_1_FLAG | Emu::P_B_FLAG, bus.GetCpu().P());
 	ASSERT_EQ(static_cast<Emu::u8>(bus.GetCpu().S() - 3), base);
 
 
 	clearCycles(4);
 	// -
-	ASSERT_EQ(0x23, bus.GetCpu().P());
+	ASSERT_EQ(0x23 | Emu::P_1_FLAG | Emu::P_B_FLAG, bus.GetCpu().P());
 	ASSERT_EQ(static_cast<Emu::u8>(bus.GetCpu().S() - 4), base);
 
 }

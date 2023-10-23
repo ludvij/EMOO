@@ -21,7 +21,7 @@ namespace Emu
 * ││││ │└──>  Interrupt (IRQ) disable flag
 * ││││ └-──>  Decimal mode flag, not used in the NES
 * │││└─────>  Break flag (mostly unused)
-* ││└──────>  Unused flag (always set)
+* ││└──────>  Unused flag (always pushed as 1)
 * │└───────> oVerflow flag
 * └────────>  Negative flag
 */
@@ -196,6 +196,8 @@ private: // private functions
 
 	// some helper functions
 	void setFlagIf(u8 flag, bool cond) noexcept;
+	void setFlag(u8 flag) noexcept;
+	void clearFlag(u8 flag) noexcept;
 	bool checkFlag(u8 flag) const noexcept;
 	bool isImplied() const noexcept;
 
@@ -245,8 +247,15 @@ private: // private members
 
 	// Stack Pointer
 	u8 m_S = 0;
-	u16 m_stackVector = 0x0100;
-
+	// vectors
+	constexpr static u16 m_stackVector  = 0x0100;
+	constexpr static u16 m_irqVectorL   = 0xFFFE;
+	constexpr static u16 m_irqVectorH   = 0xFFFF;
+	constexpr static u16 m_nmiVectorH   = 0xFFFA;
+	constexpr static u16 m_nmiVectorL   = 0xFFFB;
+	constexpr static u16 m_resetVectorL = 0xFFFC;
+	constexpr static u16 m_resetVectorH = 0xFFFB;
+	
 
 	// Status register
 	u8 m_P = 0;

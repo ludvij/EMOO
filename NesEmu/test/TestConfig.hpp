@@ -14,7 +14,8 @@ protected:
 		asse.Link(&bus);
 		// force reset to get the values I want in the registers
 		bus.GetCpu().Reset();
-		bus.GetCpu().SetPC(0);
+		bus.Write(0xFFFC, 0);
+		bus.Write(0xFFFB, 0);
 		clearCycles(8);
 	}
 

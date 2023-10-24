@@ -27,8 +27,8 @@ private:
 
 	u32 m_masterClock = 0;
 
-	//memory 2kb
-	std::array<u8, RAM_SIZE> m_mem = {0};
+	// 64 kb
+	std::array<u8, 0x10000> m_mem = {0};
 };
 
 }

@@ -19,7 +19,7 @@ CPU::CPU()
 	constexpr Instruction invalid = {
 		"___",
 		&CPU::addrIMM, 
-		&CPU::___, 
+		&CPU::XXX, 
 		0
 	};
 	std::ranges::fill(m_jumpTable, invalid);
@@ -247,6 +247,7 @@ void CPU::Step()
 		m_currentInstr = m_jumpTable[m_opcode];
 
 		m_cycles = m_currentInstr.cycles;
+		// get address
 		u16 addr = (this->*m_currentInstr.addrMode)();
 		// execute instruction
 		(this->*m_currentInstr.exec)(addr);
@@ -257,7 +258,7 @@ void CPU::Step()
 		}
 		
 	}
-
+	m_totalCycles++;
 	m_cycles--;
 }
 
@@ -281,6 +282,48 @@ void CPU::Reset()
 	m_discard = 0;
 	// this takes 8 cycles
 	m_cycles = 8;
+}
+
+void CPU::IRQ()
+{
+	if (checkFlag(P_I_FLAG)) 
+		return;
+
+	const u8 pcL = m_PC & 0x00ff;
+	const u8 pcH = (m_PC & 0xff00) >> 8;
+
+	stackPush(pcH);
+	stackPush(pcL);
+
+	clearFlag(P_B_FLAG);
+
+	stackPush(m_P);
+
+	setFlag(P_I_FLAG);
+	const u8 irqL = readMemory(m_irqVectorL);
+	const u8 irqH = readMemory(m_irqVectorH);
+
+	m_PC = MAKE_WORD(irqH, irqL);
+}
+
+void CPU::NMI()
+{
+	const u8 pcL = m_PC & 0x00ff;
+	const u8 pcH = (m_PC & 0xff00) >> 8;
+
+	stackPush(pcH);
+	stackPush(pcL);
+
+	clearFlag(P_B_FLAG);
+
+	stackPush(m_P);
+
+	setFlag(P_I_FLAG);
+
+	const u8 nmiL = readMemory(m_nmiVectorL);
+	const u8 nmiH = readMemory(m_nmiVectorH);
+
+	m_PC = MAKE_WORD(nmiH, nmiL);
 }
 
 
@@ -1307,7 +1350,7 @@ void CPU::TYA(const u16 addr)
 }
 
 [[noreturn]]
-void CPU::___(const u16 addr) 
+void CPU::XXX(const u16 addr) 
 {
 	// commit sudoku
 	throw std::exception("Illegal instruction");

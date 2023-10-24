@@ -24,7 +24,7 @@ u8 Bus::Read(u16 addr) const
 	{
 	}
 	// cartridge space
-	return 0;
+	return m_mem[addr];
 }
 
 void Bus::Write(u16 addr, u8 val)
@@ -33,17 +33,18 @@ void Bus::Write(u16 addr, u8 val)
 	{
 		m_mem[addr & 0x07ff] = val;
 	}
-	else if (addr < 0x4000) // PPU registers and mirrors
-	{
-	}
-	else if (addr < 0x4018) // APU and IO functionality
-	{
-	}
-	else if (addr < 0x4020) // APU and IO functionality Test mode
-	{
-	}
+	// else if (addr < 0x4000) // PPU registers and mirrors
+	// {
+	// }
+	// else if (addr < 0x4018) // APU and IO functionality
+	// {
+	// }
+	// else if (addr < 0x4020) // APU and IO functionality Test mode
+	// {
+	// }
 	else // cartridge space
 	{
+		m_mem[addr] = val;
 	}
 
 	

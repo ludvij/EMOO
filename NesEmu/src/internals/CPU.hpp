@@ -7,7 +7,7 @@
 
 #include "Core.hpp"
 #include <string_view>
-
+#include <array>
 
 
 namespace Emu 
@@ -47,6 +47,8 @@ public:  // Public functions
 	void Step();
 
 	void Reset();
+	void IRQ();
+	void NMI();
 
 	u8 A()   const noexcept { return m_A;  }
 	u8 X()   const noexcept { return m_X;  }
@@ -63,6 +65,7 @@ public:  // Public functions
 	void SetPC(const u16 PC) noexcept { m_PC = PC; }
 
 	u32 GetCycles() const noexcept { return m_cycles; }
+	u32 GetTotalCycles() const noexcept { return m_totalCycles; }
 	// fwd declaration 
 	// Used for test and maybe later some watchable information
 private:
@@ -192,7 +195,7 @@ private: // private functions
 
 	// current workaround for unofficial opcodes
 	[[noreturn]] 
-	void ___(u16 addr);
+	void XXX(u16 addr);
 
 	// some helper functions
 	void setFlagIf(u8 flag, bool cond) noexcept;
@@ -212,6 +215,7 @@ private: // private members
 
 	u32 m_cycles = 0;
 	u32 m_oopsCycles = 0;
+	u32 m_totalCycles = 0;
 	bool m_canOops = false;
 
 
@@ -227,7 +231,7 @@ private: // private members
 	typedef void (CPU::*exec)(u16);
 	struct Instruction
 	{
-		std::string_view name;
+		std::string_view name = "XXX";
 		addrMode addrMode = nullptr;
 		exec exec = nullptr;
 		u8 cycles = 0;

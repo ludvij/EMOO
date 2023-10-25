@@ -12,10 +12,11 @@ u8 Bus::Read(u16 addr) const
 {
 	if (addr < 0x2000) // Ram and ram mirrors
 	{
-		return m_mem[addr & 0x07ff];
+		return m_mem[addr & 0x07FF];
 	}
 	if (addr < 0x4000) // PPU registers and mirrors
 	{
+		return m_mem[addr & 0x07ff + 0x2000];
 	}
 	if (addr < 0x4018) // APU and IO functionality
 	{
@@ -31,11 +32,12 @@ void Bus::Write(u16 addr, u8 val)
 {
 	if (addr < 0x2000) // Ram and ram mirrors
 	{
-		m_mem[addr & 0x07ff] = val;
+		m_mem[addr & 0x07FF] = val;
 	}
-	// else if (addr < 0x4000) // PPU registers and mirrors
-	// {
-	// }
+	else if (addr < 0x4000) // PPU registers and mirrors
+	{
+		m_mem[addr & 0x07FF + 0x2000];
+	}
 	// else if (addr < 0x4018) // APU and IO functionality
 	// {
 	// }

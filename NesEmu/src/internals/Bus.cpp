@@ -36,7 +36,7 @@ void Bus::Write(u16 addr, u8 val)
 	}
 	else if (addr < 0x4000) // PPU registers and mirrors
 	{
-		m_mem[addr & 0x07FF + 0x2000];
+		m_mem[addr & 0x07FF + 0x2000] = val;
 	}
 	// else if (addr < 0x4018) // APU and IO functionality
 	// {

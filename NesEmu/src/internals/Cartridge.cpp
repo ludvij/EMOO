@@ -3,20 +3,49 @@
 
 namespace Emu
 {
-void Cartridge::readPGRChunks()
+
+Cartridge::Cartridge(const std::string& filePath)
+	: m_valid(false)
 {
-	const u8 pgrRomSizeBase = m_header.pgrRamChunks;
-	const u8 pgrMult = m_header.romExt;
-	if ((pgrMult & 0x00ff) == 0x00ff)
+	std::ifstream inputFile;
+	inputFile.open(filePath, std::ios::binary);
+
+	if (!inputFile.is_open())
 	{
-		// evaluated as 2^E * (MM*2 + 1)
-		const u8 exp = (pgrRomSizeBase & 0b11111100) >> 2;
-		const u8 mult = pgrRomSizeBase & 0b00000011;
-		m_pgrRomChunks = std::pow(2, exp) * (mult * 2 + 1);
+		return;
 	}
-	else
+	inputFile.read(std::bit_cast<char*>(&m_header), sizeof(m_header));
+
+	// validate header
+
+	// skip trainer if present
+	if (m_header.mapper1 & 0b100)
 	{
-		m_pgrRomChunks = pgrRomSizeBase | (pgrMult & 0x00ff) << 8;
+		inputFile.seekg(512, std::ios_base::cur);
 	}
+
+	// prg rom is in 16 kiB chunks
+	m_prgRom.resize(m_header.prgRomChunks * 16384);
+	inputFile.read(std::bit_cast<char*>(m_prgRom.data()), static_cast<size_t>(m_prgRom.size()));
+	// chr rom is in 8 kib chunks
+	m_chrRom.resize(m_header.chrRomChunks * 8192);
+	inputFile.read(std::bit_cast<char*>(m_chrRom.data()), static_cast<size_t>(m_chrRom.size()));
+
+	m_mapperNumber = (m_header.mapper2 & 0xf0) | (m_header.mapper1 >> 4);
+	m_mirroring = m_header.mapper1 & 0b1 ? Mirroring::VERTICAL : Mirroring::HORIZONTAL;
+
+	inputFile.close();
+
+	m_valid = true;
+}
+
+u8 Cartridge::CpuRead(u16 addr) const
+{
+	return m_mapper->Read(addr);
+}
+
+void Cartridge::CpuWrite(u16 addr, u8 val)
+{
+	m_mapper->Write(addr, val);
 }
 }

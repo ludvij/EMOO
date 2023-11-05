@@ -1,22 +1,18 @@
-#include "pch.hpp"
+﻿#include "pch.hpp"
 #include "Bus.hpp"
 
 namespace Emu
 {
-Bus::Bus()
-{
-	m_cpu.ConnectBus(this);
-}
 
-u8 Bus::Read(u16 addr) const 
+u8 Bus::Read(u16 addr) const
 {
 	if (addr < 0x2000) // Ram and ram mirrors
 	{
-		return m_mem[addr & 0x07FF];
+		return m_cpuRam[addr & 0x07FF];
 	}
 	if (addr < 0x4000) // PPU registers and mirrors
 	{
-		return m_mem[addr & 0x07ff + 0x2000];
+		return m_ppuRam[addr & 0x07ff + 0x2000];
 	}
 	if (addr < 0x4018) // APU and IO functionality
 	{
@@ -25,18 +21,19 @@ u8 Bus::Read(u16 addr) const
 	{
 	}
 	// cartridge space
-	return m_mem[addr];
+	return m_cpuRam[addr];
 }
+
 
 void Bus::Write(u16 addr, u8 val)
 {
 	if (addr < 0x2000) // Ram and ram mirrors
 	{
-		m_mem[addr & 0x07FF] = val;
+		m_cpuRam[addr & 0x07FF] = val;
 	}
 	else if (addr < 0x4000) // PPU registers and mirrors
 	{
-		m_mem[addr & 0x07FF + 0x2000] = val;
+		m_ppuRam[addr & 0x07FF + 0x2000] = val;
 	}
 	// else if (addr < 0x4018) // APU and IO functionality
 	// {
@@ -46,18 +43,8 @@ void Bus::Write(u16 addr, u8 val)
 	// }
 	else // cartridge space
 	{
-		m_mem[addr] = val;
+		m_cpuRam[addr] = val;
 	}
-
-	
 }
 
-void Bus::Step()
-{
-	if (m_masterClock % NTSC_CLOCK_DIVISOR == 0) 
-	{
-		m_cpu.Step();
-	}
-	m_masterClock++;
-}
 }

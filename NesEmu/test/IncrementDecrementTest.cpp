@@ -22,15 +22,15 @@ TEST_F(TestIncrementDecrement, INC)
 
 	clearCycles(2); // ldx
 	clearCycles(5); // inc zpi
-	ASSERT_EQ(bus.Read(0x23), 0x80);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_N_FLAG);
+	ASSERT_EQ(memory.Read(0x23), 0x80);
+	ASSERT_TRUE(cpu.P() & Emu::P_N_FLAG);
 	clearCycles(6); // inc zpx
-	ASSERT_EQ(bus.Read(0x24), 0xff);
+	ASSERT_EQ(memory.Read(0x24), 0xff);
 	clearCycles(6); // inc abs
-	ASSERT_EQ(bus.Read(0x24), 0);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_Z_FLAG);
+	ASSERT_EQ(memory.Read(0x24), 0);
+	ASSERT_TRUE(cpu.P() & Emu::P_Z_FLAG);
 	clearCycles(7); // inc abx
-	ASSERT_EQ(bus.Read(0x24), 1);
+	ASSERT_EQ(memory.Read(0x24), 1);
 }
 
 TEST_F(TestIncrementDecrement, INX)
@@ -45,14 +45,14 @@ TEST_F(TestIncrementDecrement, INX)
 
 	clearCycles(2); // ldx
 	clearCycles(2); // inx
-	ASSERT_EQ(bus.GetCpu().X(), 0x80);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_N_FLAG);
+	ASSERT_EQ(cpu.X(), 0x80);
+	ASSERT_TRUE(cpu.P() & Emu::P_N_FLAG);
 	clearCycles(2); // ldx
 	clearCycles(2); // inx
-	ASSERT_EQ(bus.GetCpu().X(), 0xff);
+	ASSERT_EQ(cpu.X(), 0xff);
 	clearCycles(2); // inx
-	ASSERT_EQ(bus.GetCpu().X(), 0);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_Z_FLAG);
+	ASSERT_EQ(cpu.X(), 0);
+	ASSERT_TRUE(cpu.P() & Emu::P_Z_FLAG);
 }
 
 TEST_F(TestIncrementDecrement, INY)
@@ -67,14 +67,14 @@ TEST_F(TestIncrementDecrement, INY)
 
 	clearCycles(2); // ldy
 	clearCycles(2); // iny
-	ASSERT_EQ(bus.GetCpu().Y(), 0x80);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_N_FLAG);
+	ASSERT_EQ(cpu.Y(), 0x80);
+	ASSERT_TRUE(cpu.P() & Emu::P_N_FLAG);
 	clearCycles(2); // ldy
 	clearCycles(2); // iny
-	ASSERT_EQ(bus.GetCpu().Y(), 0xff);
+	ASSERT_EQ(cpu.Y(), 0xff);
 	clearCycles(2); // iny
-	ASSERT_EQ(bus.GetCpu().Y(), 0);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_Z_FLAG);
+	ASSERT_EQ(cpu.Y(), 0);
+	ASSERT_TRUE(cpu.P() & Emu::P_Z_FLAG);
 }
 
 TEST_F(TestIncrementDecrement, DEC)
@@ -92,15 +92,15 @@ TEST_F(TestIncrementDecrement, DEC)
 
 	clearCycles(2); // ldx
 	clearCycles(5); // dec zpi
-	ASSERT_EQ(bus.Read(0x23), 0x80);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_N_FLAG);
+	ASSERT_EQ(memory.Read(0x23), 0x80);
+	ASSERT_TRUE(cpu.P() & Emu::P_N_FLAG);
 	clearCycles(6); // dec zpx
-	ASSERT_EQ(bus.Read(0x24), 0);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_Z_FLAG);
+	ASSERT_EQ(memory.Read(0x24), 0);
+	ASSERT_TRUE(cpu.P() & Emu::P_Z_FLAG);
 	clearCycles(6); // dec abs
-	ASSERT_EQ(bus.Read(0x24), 0xff);
+	ASSERT_EQ(memory.Read(0x24), 0xff);
 	clearCycles(7); // dec abx
-	ASSERT_EQ(bus.Read(0x24), 0xfe);
+	ASSERT_EQ(memory.Read(0x24), 0xfe);
 }
 
 TEST_F(TestIncrementDecrement, DEX)
@@ -115,14 +115,14 @@ TEST_F(TestIncrementDecrement, DEX)
 
 	clearCycles(2); // ldx
 	clearCycles(2); // dex
-	ASSERT_EQ(bus.GetCpu().X(), 0x80);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_N_FLAG);
+	ASSERT_EQ(cpu.X(), 0x80);
+	ASSERT_TRUE(cpu.P() & Emu::P_N_FLAG);
 	clearCycles(2); // ldx
 	clearCycles(2); // dex
-	ASSERT_EQ(bus.GetCpu().X(), 0);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_Z_FLAG);
+	ASSERT_EQ(cpu.X(), 0);
+	ASSERT_TRUE(cpu.P() & Emu::P_Z_FLAG);
 	clearCycles(2); // dex
-	ASSERT_EQ(bus.GetCpu().X(), 0xff);
+	ASSERT_EQ(cpu.X(), 0xff);
 }
 
 TEST_F(TestIncrementDecrement, DEY)
@@ -137,12 +137,12 @@ TEST_F(TestIncrementDecrement, DEY)
 
 	clearCycles(2); // ldy
 	clearCycles(2); // dey
-	ASSERT_EQ(bus.GetCpu().Y(), 0x80);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_N_FLAG);
+	ASSERT_EQ(cpu.Y(), 0x80);
+	ASSERT_TRUE(cpu.P() & Emu::P_N_FLAG);
 	clearCycles(2); // ldy
 	clearCycles(2); // dey
-	ASSERT_EQ(bus.GetCpu().Y(), 0);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_Z_FLAG);
+	ASSERT_EQ(cpu.Y(), 0);
+	ASSERT_TRUE(cpu.P() & Emu::P_Z_FLAG);
 	clearCycles(2); // dey
-	ASSERT_EQ(bus.GetCpu().Y(), 0xff);
+	ASSERT_EQ(cpu.Y(), 0xff);
 }

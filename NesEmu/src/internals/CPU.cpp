@@ -4,7 +4,6 @@
 
 #include "Bus.hpp"
 
-
 namespace Emu 
 {
 
@@ -271,8 +270,8 @@ void CPU::Reset()
 	m_P = 0x34;
 
 	// 6502 reads memory at $FFFC/D
-	u16 lo = readMemory(m_resetVectorL);
-	u16 hi = readMemory(m_resetVectorH);
+	u16 lo = memoryRead(m_resetVectorL);
+	u16 hi = memoryRead(m_resetVectorH);
 
 	m_PC = MAKE_WORD(hi, lo);
 
@@ -300,8 +299,8 @@ void CPU::IRQ()
 	stackPush(m_P);
 
 	setFlag(P_I_FLAG);
-	const u8 irqL = readMemory(m_irqVectorL);
-	const u8 irqH = readMemory(m_irqVectorH);
+	const u8 irqL = memoryRead(m_irqVectorL);
+	const u8 irqH = memoryRead(m_irqVectorH);
 
 	m_PC = MAKE_WORD(irqH, irqL);
 }
@@ -320,30 +319,40 @@ void CPU::NMI()
 
 	setFlag(P_I_FLAG);
 
-	const u8 nmiL = readMemory(m_nmiVectorL);
-	const u8 nmiH = readMemory(m_nmiVectorH);
+	const u8 nmiL = memoryRead(m_nmiVectorL);
+	const u8 nmiH = memoryRead(m_nmiVectorH);
 
 	m_PC = MAKE_WORD(nmiH, nmiL);
 }
 
 
-u8 CPU::readMemory(const u16 addr) const
+u8 CPU::memoryRead(const u16 addr) const
 {
+#ifdef NES_EMU_DEBUG
+	if (m_bus == nullptr) 
+		std::throw_with_nested(std::runtime_error("Cpu was not linked to a bus"));
+#endif
 	return m_bus->Read(addr);
 }
 
+void CPU::memoryWrite(const u16 addr, const u8 val) const
+{
+#ifdef NES_EMU_DEBUG
+	if (m_bus == nullptr) 
+		std::throw_with_nested(std::runtime_error("Cpu was not linked to a bus"));
+#endif
+	m_bus->Write(addr, val);
+}
+
+
 u8 CPU::readByte()
 {
-	const u8 value = readMemory(m_PC);
+	const u8 value = memoryRead(m_PC);
 	m_PC++;
 	return value;
 }
 
 
-void CPU::writeMemory(const u16 addr, const u8 val) const
-{
-	m_bus->Write(addr, val);
-}
 
 u16 CPU::addrIMP()
 {
@@ -432,11 +441,11 @@ u16 CPU::addrIND()
 	// hardware bug
 	if (lo == 0x00FF) 
 	{
-		addr = MAKE_WORD(readMemory(notyet & 0x00FF), readMemory(notyet));
+		addr = MAKE_WORD(memoryRead(notyet & 0x00FF), memoryRead(notyet));
 	}
 	else
 	{
-		addr = MAKE_WORD(readMemory(notyet + 1), readMemory(notyet));
+		addr = MAKE_WORD(memoryRead(notyet + 1), memoryRead(notyet));
 	}
 
 	return addr;
@@ -446,8 +455,8 @@ u16 CPU::addrINX()
 {
 	const u16 base = readByte() + m_X;
 
-	const u16 lo = readMemory((base & 0x00FF));
-	const u16 hi = readMemory(((base + 1) & 0x00FF));
+	const u16 lo = memoryRead((base & 0x00FF));
+	const u16 hi = memoryRead(((base + 1) & 0x00FF));
 
 
 	const u16 addr = MAKE_WORD(hi, lo);
@@ -460,8 +469,8 @@ u16 CPU::addrINY()
 {
 	const u16 base = readByte();
 
-	const u16 lo = readMemory(base & 0x00ff);
-	const u16 hi = readMemory((base + 1) & 0x00ff);
+	const u16 lo = memoryRead(base & 0x00ff);
+	const u16 hi = memoryRead((base + 1) & 0x00ff);
 
 	const u16 addr = MAKE_WORD(hi, lo) + m_Y;
 
@@ -526,7 +535,7 @@ u16 CPU::addrACC()
 void CPU::ADC(const u16 addr)
 {
 	// hack to get overflow
-	const u16 m = readMemory(addr);
+	const u16 m = memoryRead(addr);
 	const u16 a = m_A;
 	u16 r = m + a;
 	if (checkFlag(P_C_FLAG)) 
@@ -551,7 +560,7 @@ void CPU::ADC(const u16 addr)
  */
 void CPU::AND(const u16 addr)
 {
-	const u8 m = readMemory(addr);
+	const u8 m = memoryRead(addr);
 	m_A &= m;
 	setFlagIf(P_Z_FLAG, m_A == 0);
 	setFlagIf(P_N_FLAG, m_A & 0x80);
@@ -574,7 +583,7 @@ void CPU::ASL(const u16 addr)
 	}
 	else
 	{
-		m = readMemory(addr);
+		m = memoryRead(addr);
 	}
 
 	setFlagIf(P_C_FLAG, m & 0x80);
@@ -589,7 +598,7 @@ void CPU::ASL(const u16 addr)
 	}
 	else 
 	{
-		writeMemory(addr, m);
+		memoryWrite(addr, m);
 	}
 }
 
@@ -625,7 +634,7 @@ void CPU::BEQ(const u16 addr)
  */
 void CPU::BIT(const u16 addr)
 {
-	const u8 m = readMemory(addr);
+	const u8 m = memoryRead(addr);
 
 	m_discard = m_A & m;
 
@@ -691,8 +700,8 @@ void CPU::BRK(const u16 addr)
 	stackPush(m_P | P_1_FLAG | P_B_FLAG);
 	setFlag(P_I_FLAG);
 
-	const u8 lo = readMemory(m_irqVectorL);
-	const u8 hi = readMemory(m_irqVectorH);
+	const u8 lo = memoryRead(m_irqVectorL);
+	const u8 hi = memoryRead(m_irqVectorH);
 
 	m_PC = MAKE_WORD(hi, lo);
 }
@@ -754,7 +763,7 @@ void CPU::CLV(const u16 addr)
  */
 void CPU::CMP(const u16 addr)
 {
-	const u8 m = readMemory(addr);
+	const u8 m = memoryRead(addr);
 
 	m_discard = m_A - m;
 
@@ -773,7 +782,7 @@ void CPU::CMP(const u16 addr)
  */
 void CPU::CPX(const u16 addr)
 {
-	const u8 m = readMemory(addr);
+	const u8 m = memoryRead(addr);
 
 	m_discard = m_X - m;
 
@@ -790,7 +799,7 @@ void CPU::CPX(const u16 addr)
  */
 void CPU::CPY(const u16 addr)
 {
-	const u8 m = readMemory(addr);
+	const u8 m = memoryRead(addr);
 
 	m_discard = m_Y - m;
 
@@ -806,14 +815,14 @@ void CPU::CPY(const u16 addr)
  */
 void CPU::DEC(const u16 addr)
 {
-	u8 m = readMemory(addr);
+	u8 m = memoryRead(addr);
 
 	m = (m - 1) & 0x00ff;
 
 	setFlagIf(P_N_FLAG, m & 0x80);
 	setFlagIf(P_Z_FLAG, m == 0);
 
-	writeMemory(addr, m);
+	memoryWrite(addr, m);
 }
 
 /*
@@ -849,7 +858,7 @@ void CPU::DEY(const u16 addr)
  */
 void CPU::EOR(const u16 addr)
 {
-	const u8 m = readMemory(addr);
+	const u8 m = memoryRead(addr);
 
 	m_A ^= m;
 
@@ -866,14 +875,14 @@ void CPU::EOR(const u16 addr)
  */
 void CPU::INC(const u16 addr)
 {
-	u8 m = readMemory(addr);
+	u8 m = memoryRead(addr);
 
 	m = (m + 1) & 0x00ff;
 
 	setFlagIf(P_N_FLAG, m & 0x80);
 	setFlagIf(P_Z_FLAG, m == 0);
 
-	writeMemory(addr, m);
+	memoryWrite(addr, m);
 }
 
 /*
@@ -935,7 +944,7 @@ void CPU::JSR(const u16 addr)
  */
 void CPU::LDA(const u16 addr)
 {
-	const u8 m = readMemory(addr);
+	const u8 m = memoryRead(addr);
 
 	transferRegTo(m, m_A);
 
@@ -949,7 +958,7 @@ void CPU::LDA(const u16 addr)
  */
 void CPU::LDX(const u16 addr)
 {
-	const u8 m = readMemory(addr);
+	const u8 m = memoryRead(addr);
 
 	transferRegTo(m, m_X);
 
@@ -963,7 +972,7 @@ void CPU::LDX(const u16 addr)
  */
 void CPU::LDY(const u16 addr)
 {
-	const u8 m = readMemory(addr);
+	const u8 m = memoryRead(addr);
 
 	transferRegTo(m, m_Y);
 
@@ -984,7 +993,7 @@ void CPU::LSR(const u16 addr)
 	}
 	else
 	{
-		m = readMemory(addr);
+		m = memoryRead(addr);
 	}
 
 	setFlagIf(P_C_FLAG, m & 1);
@@ -999,7 +1008,7 @@ void CPU::LSR(const u16 addr)
 	}
 	else
 	{
-		writeMemory(addr, m);
+		memoryWrite(addr, m);
 	}
 }
 
@@ -1018,7 +1027,7 @@ void CPU::NOP(const u16 addr)
  */
 void CPU::ORA(const u16 addr)
 {
-	const u8 m = readMemory(addr);
+	const u8 m = memoryRead(addr);
 
 	m_A |= m;
 
@@ -1089,7 +1098,7 @@ void CPU::ROL(const u16 addr)
 	}
 	else
 	{
-		m = readMemory(addr);
+		m = memoryRead(addr);
 	}
 	// we are in 16 bit realm so if we have
 	// 0000 0000 1011 10001
@@ -1114,7 +1123,7 @@ void CPU::ROL(const u16 addr)
 	}
 	else
 	{
-		writeMemory(addr, static_cast<u8>(m));
+		memoryWrite(addr, static_cast<u8>(m));
 	}
 }
 
@@ -1134,7 +1143,7 @@ void CPU::ROR(const u16 addr)
 	}
 	else
 	{
-		m = readMemory(addr);
+		m = memoryRead(addr);
 	}
 
 	// we set bit 8 in case of carry so we can 
@@ -1156,7 +1165,7 @@ void CPU::ROR(const u16 addr)
 	}
 	else
 	{
-		writeMemory(addr, static_cast<u8>(m));
+		memoryWrite(addr, static_cast<u8>(m));
 	}
 }
 /*
@@ -1218,7 +1227,7 @@ void CPU::RTS(u16 addr)
  */
 void CPU::SBC(const u16 addr)
 {
-	const u16 m = readMemory(addr);
+	const u16 m = memoryRead(addr);
 	const u16 a = m_A;
 
 	u16 r = a - m;
@@ -1268,7 +1277,7 @@ void CPU::SEI(u16 addr)
  */
 void CPU::STA(const u16 addr)
 {
-	writeMemory(addr, m_A);
+	memoryWrite(addr, m_A);
 }
 
 /*
@@ -1277,7 +1286,7 @@ void CPU::STA(const u16 addr)
  */
 void CPU::STX(const u16 addr)
 {
-	writeMemory(addr, m_X);
+	memoryWrite(addr, m_X);
 }
 
 /*
@@ -1286,7 +1295,7 @@ void CPU::STX(const u16 addr)
  */
 void CPU::STY(const u16 addr)
 {
-	writeMemory(addr, m_Y);
+	memoryWrite(addr, m_Y);
 
 }
 
@@ -1353,7 +1362,7 @@ void CPU::TYA(const u16 addr)
 void CPU::XXX(const u16 addr) 
 {
 	// commit sudoku
-	throw std::exception("Illegal instruction");
+	std::throw_with_nested(std::runtime_error("Illegal instruction"));
 }
 
 void CPU::setFlagIf(const u8 flag, const bool cond) noexcept
@@ -1415,7 +1424,7 @@ void CPU::transferRegTo(const u8 from, u8& to) noexcept
 
 void CPU::stackPush(const u8 val) noexcept
 {
-	writeMemory(m_stackVector + m_S, val);
+	memoryWrite(m_stackVector + m_S, val);
 	if (m_S == 0)
 	{
 		m_S = 0xFF;
@@ -1435,7 +1444,7 @@ u8 CPU::stackPop() noexcept
 	{
 		m_S++;
 	}
-	return readMemory(m_stackVector + m_S);
+	return memoryRead(m_stackVector + m_S);
 }
 
 }

@@ -1,4 +1,5 @@
-﻿#pragma once
+﻿#ifndef A6502_TOY_ASSEMBLER
+#define A6502_TOY_ASSEMBLER
 
 #include <string_view>
 #include <optional>
@@ -34,13 +35,13 @@ struct AddressingMode
 
 // usage of c++20
 template<class T>
-concept MemoryACCessor = requires(T bus)
+concept MemoryAccessor = requires(T bus)
 {
 	{bus.Read(std::declval<uint16_t>())} -> std::same_as<uint8_t>;
 	{bus.Write(std::declval<uint16_t>(),std::declval<uint8_t>())} -> std::same_as<void>;
 };
 
-template<MemoryACCessor Bus>
+template<MemoryAccessor Bus>
 class Assembler
 {
 public:
@@ -414,3 +415,4 @@ private:
 	};
 };
 }
+#endif

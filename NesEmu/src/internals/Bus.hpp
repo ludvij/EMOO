@@ -1,34 +1,29 @@
-#pragma once
+﻿#ifndef EMU_BUS_HEADER
+#define EMU_BUS_HEADER
 
 #include "Core.hpp"
 
-#include "CPU.hpp"
 #include <array>
+#include <memory>
 
 namespace Emu
 {
-	
+class Cartridge;
 class Bus
 {
 public:
-	Bus();
 
-	u8 Read(u16 addr) const;
 	void Write(u16 addr, u8 val);
+	u8 Read(u16 addr) const;
 
-	void Step();
-
-	CPU& GetCpu() noexcept { return m_cpu; }
-
+	void ConnectCartridge(const std::shared_ptr<Cartridge> cartridge) { m_cartridge = cartridge; }
 
 private:
-	// Bus components
-	CPU m_cpu;
-
-	u32 m_masterClock = 0;
-
-	// 64 kb
-	std::array<u8, 0x10000> m_mem = {0};
+	std::array<u8, 0x10000> m_cpuRam{0};
+	std::array<u8, 0x800> m_ppuRam{0};
+	std::shared_ptr<Cartridge> m_cartridge;
 };
 
 }
+
+#endif

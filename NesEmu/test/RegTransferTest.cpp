@@ -16,18 +16,18 @@ TEST_F(TestRegTransfer, TAX)
 		tax
 	)");
 
-	bus.GetCpu().SetA(0x80);
+	cpu.SetA(0x80);
 
 	clearCycles(2);
 
-	ASSERT_EQ(bus.GetCpu().X(), 0x80);          
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_N_FLAG); 
+	ASSERT_EQ(cpu.X(), 0x80);          
+	ASSERT_TRUE(cpu.P() & Emu::P_N_FLAG); 
                                           
-	bus.GetCpu().SetA(0);                      
+	cpu.SetA(0);                      
                                           
 	clearCycles(2);                       
-	ASSERT_EQ(bus.GetCpu().X(), 0);             
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_Z_FLAG); 
+	ASSERT_EQ(cpu.X(), 0);             
+	ASSERT_TRUE(cpu.P() & Emu::P_Z_FLAG); 
 }
 
 TEST_F(TestRegTransfer, TAY)
@@ -37,18 +37,18 @@ TEST_F(TestRegTransfer, TAY)
 		tay
 	)");
 
-	bus.GetCpu().SetA(0x80);
+	cpu.SetA(0x80);
 
 	clearCycles(2);
 
-	ASSERT_EQ(bus.GetCpu().Y(), 0x80);          
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_N_FLAG); 
+	ASSERT_EQ(cpu.Y(), 0x80);          
+	ASSERT_TRUE(cpu.P() & Emu::P_N_FLAG); 
                                           
-	bus.GetCpu().SetA(0);                      
+	cpu.SetA(0);                      
                                           
 	clearCycles(2);                       
-	ASSERT_EQ(bus.GetCpu().Y(), 0);             
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_Z_FLAG); 
+	ASSERT_EQ(cpu.Y(), 0);             
+	ASSERT_TRUE(cpu.P() & Emu::P_Z_FLAG); 
 }
 
 TEST_F(TestRegTransfer, TXA)
@@ -58,18 +58,18 @@ TEST_F(TestRegTransfer, TXA)
 		txa
 	)");
 
-	bus.GetCpu().SetX(0x80);
+	cpu.SetX(0x80);
 
 	clearCycles(2);
 
-	ASSERT_EQ(bus.GetCpu().A(), 0x80);          
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_N_FLAG); 
+	ASSERT_EQ(cpu.A(), 0x80);          
+	ASSERT_TRUE(cpu.P() & Emu::P_N_FLAG); 
                                           
-	bus.GetCpu().SetX(0);                      
+	cpu.SetX(0);                      
                                           
 	clearCycles(2);                       
-	ASSERT_EQ(bus.GetCpu().A(), 0);             
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_Z_FLAG); 
+	ASSERT_EQ(cpu.A(), 0);             
+	ASSERT_TRUE(cpu.P() & Emu::P_Z_FLAG); 
 }
 
 TEST_F(TestRegTransfer, TYA)
@@ -79,16 +79,16 @@ TEST_F(TestRegTransfer, TYA)
 		tya
 	)");
 
-	bus.GetCpu().SetY(0x80);
+	cpu.SetY(0x80);
 
 	clearCycles(2);
 
-	ASSERT_EQ(bus.GetCpu().A(), 0x80);          
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_N_FLAG); 
+	ASSERT_EQ(cpu.A(), 0x80);          
+	ASSERT_TRUE(cpu.P() & Emu::P_N_FLAG); 
                                           
-	bus.GetCpu().SetY(0);                      
+	cpu.SetY(0);                      
                                           
 	clearCycles(2);                       
-	ASSERT_EQ(bus.GetCpu().A(), 0);             
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_Z_FLAG); 
+	ASSERT_EQ(cpu.A(), 0);             
+	ASSERT_TRUE(cpu.P() & Emu::P_Z_FLAG); 
 }

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef EMU_CORE_HEADER
+#define EMU_CORE_HEADER
 
 #include <cstdint>
 
@@ -61,3 +62,5 @@ using WriteCallback = std::function<void(u16, u8)>;
 constexpr u16 RAM_SIZE = 0x0800;
 
 }
+
+#endif

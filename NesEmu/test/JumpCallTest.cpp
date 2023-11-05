@@ -16,10 +16,10 @@ TEST_F(TestJumpCall, JMP)
 
 	clearCycles(2 + 3);
 	clearCycles(2);
-	ASSERT_EQ(bus.GetCpu().X(), 24);
+	ASSERT_EQ(cpu.X(), 24);
 
 	clearCycles(3);
-	ASSERT_EQ(bus.GetCpu().PC(), 0x40);
+	ASSERT_EQ(cpu.PC(), 0x40);
 }
 
 TEST_F(TestJumpCall, JSR)
@@ -29,8 +29,8 @@ TEST_F(TestJumpCall, JSR)
 	)");
 	
 	clearCycles(6);
-	ASSERT_EQ(bus.Read(0x1fc), 2);
-	ASSERT_EQ(bus.GetCpu().PC(), 0x13);
+	ASSERT_EQ(memory.Read(0x1fc), 2);
+	ASSERT_EQ(cpu.PC(), 0x13);
 }
 
 TEST_F(TestJumpCall, RTS)
@@ -43,6 +43,6 @@ TEST_F(TestJumpCall, RTS)
 
 	clearCycles(6);
 	clearCycles(6);
-	ASSERT_EQ(3, bus.GetCpu().PC());
+	ASSERT_EQ(3, cpu.PC());
 	
 }

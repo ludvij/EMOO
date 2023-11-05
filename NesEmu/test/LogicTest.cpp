@@ -18,20 +18,20 @@ TEST_F(TestLogic, AND)
 		and #12
 		and #$c0
 	)");
-	bus.GetCpu().SetA(0);
+	cpu.SetA(0);
 	clearCycles(2);
 
-	ASSERT_EQ(bus.GetCpu().A(), 0);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_Z_FLAG);
+	ASSERT_EQ(cpu.A(), 0);
+	ASSERT_TRUE(cpu.P() & Emu::P_Z_FLAG);
 
 
-	bus.GetCpu().SetA(0x80);
+	cpu.SetA(0x80);
 
 	clearCycles(2);
 
-	ASSERT_EQ(bus.GetCpu().A(), 0x80);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_N_FLAG);
-	ASSERT_FALSE(bus.GetCpu().P() & Emu::P_Z_FLAG);
+	ASSERT_EQ(cpu.A(), 0x80);
+	ASSERT_TRUE(cpu.P() & Emu::P_N_FLAG);
+	ASSERT_FALSE(cpu.P() & Emu::P_Z_FLAG);
 }
 
 TEST_F(TestLogic, EOR)
@@ -41,17 +41,17 @@ TEST_F(TestLogic, EOR)
 		eor #$80
 	)");
 
-	bus.GetCpu().SetA(0);
+	cpu.SetA(0);
 	clearCycles(2);
 
-	ASSERT_EQ(bus.GetCpu().A(), 0x80);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_N_FLAG);
+	ASSERT_EQ(cpu.A(), 0x80);
+	ASSERT_TRUE(cpu.P() & Emu::P_N_FLAG);
 
 	clearCycles(2);
 
-	ASSERT_EQ(bus.GetCpu().A(), 0);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_Z_FLAG);
-	ASSERT_FALSE(bus.GetCpu().P() & Emu::P_N_FLAG);
+	ASSERT_EQ(cpu.A(), 0);
+	ASSERT_TRUE(cpu.P() & Emu::P_Z_FLAG);
+	ASSERT_FALSE(cpu.P() & Emu::P_N_FLAG);
 
 }
 
@@ -61,18 +61,18 @@ TEST_F(TestLogic, ORA)
 		ora #$80
 		ora #$00
 	)");
-	bus.GetCpu().SetA(0x01);
+	cpu.SetA(0x01);
 	clearCycles(2);
 
-	ASSERT_EQ(bus.GetCpu().A(), 0x81);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_N_FLAG);
+	ASSERT_EQ(cpu.A(), 0x81);
+	ASSERT_TRUE(cpu.P() & Emu::P_N_FLAG);
 
-	bus.GetCpu().SetA(0);
+	cpu.SetA(0);
 	clearCycles(2);
 
-	ASSERT_EQ(bus.GetCpu().A(), 0);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_Z_FLAG);
-	ASSERT_FALSE(bus.GetCpu().P() & Emu::P_N_FLAG);
+	ASSERT_EQ(cpu.A(), 0);
+	ASSERT_TRUE(cpu.P() & Emu::P_Z_FLAG);
+	ASSERT_FALSE(cpu.P() & Emu::P_N_FLAG);
 }
 
 TEST_F(TestLogic, BIT)
@@ -84,9 +84,9 @@ TEST_F(TestLogic, BIT)
 
 	clearCycles();
 
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_Z_FLAG);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_V_FLAG);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_N_FLAG);
+	ASSERT_TRUE(cpu.P() & Emu::P_Z_FLAG);
+	ASSERT_TRUE(cpu.P() & Emu::P_V_FLAG);
+	ASSERT_TRUE(cpu.P() & Emu::P_N_FLAG);
 
 }
 

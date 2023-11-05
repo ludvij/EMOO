@@ -13,13 +13,13 @@ TEST_F(TestShift, ASL)
 		asl a
 	)");
 
-	bus.GetCpu().SetA(0x80 + 0x40 + 13);
+	cpu.SetA(0x80 + 0x40 + 13);
 
 	clearCycles(2);
 
-	ASSERT_EQ(bus.GetCpu().A(), 0x80 + 26);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_C_FLAG);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_N_FLAG);
+	ASSERT_EQ(cpu.A(), 0x80 + 26);
+	ASSERT_TRUE(cpu.P() & Emu::P_C_FLAG);
+	ASSERT_TRUE(cpu.P() & Emu::P_N_FLAG);
 }
 
 
@@ -33,9 +33,9 @@ TEST_F(TestShift, ASL_WRITE_MEMORY)
 
 	ASSERT_NO_THROW(clearCycles());
 
-	ASSERT_EQ(bus.Read(2), 0x80 + 26);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_C_FLAG);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_N_FLAG);
+	ASSERT_EQ(memory.Read(2), 0x80 + 26);
+	ASSERT_TRUE(cpu.P() & Emu::P_C_FLAG);
+	ASSERT_TRUE(cpu.P() & Emu::P_N_FLAG);
 }
 
 TEST_F(TestShift, LSR)
@@ -44,13 +44,13 @@ TEST_F(TestShift, LSR)
 		lsr a
 	)");
 
-	bus.GetCpu().SetA(1);
+	cpu.SetA(1);
 
 	ASSERT_NO_THROW(clearCycles());
 
-	ASSERT_EQ(bus.GetCpu().A(), 0);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_C_FLAG);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_Z_FLAG);
+	ASSERT_EQ(cpu.A(), 0);
+	ASSERT_TRUE(cpu.P() & Emu::P_C_FLAG);
+	ASSERT_TRUE(cpu.P() & Emu::P_Z_FLAG);
 }
 
 TEST_F(TestShift, ROL)
@@ -59,13 +59,13 @@ TEST_F(TestShift, ROL)
 		rol a
 	)");
 
-	bus.GetCpu().SetA(0x81 + 0x40);
+	cpu.SetA(0x81 + 0x40);
 
 	ASSERT_NO_THROW(clearCycles());
 
-	ASSERT_EQ(bus.GetCpu().A(), 0x82);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_C_FLAG);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_N_FLAG);
+	ASSERT_EQ(cpu.A(), 0x82);
+	ASSERT_TRUE(cpu.P() & Emu::P_C_FLAG);
+	ASSERT_TRUE(cpu.P() & Emu::P_N_FLAG);
 
 }
 
@@ -75,12 +75,12 @@ TEST_F(TestShift, ROR)
 		ror a
 	)");
 
-	bus.GetCpu().SetA(0x81);
-	bus.GetCpu().SetP(Emu::P_C_FLAG);
+	cpu.SetA(0x81);
+	cpu.SetP(Emu::P_C_FLAG);
 
 	ASSERT_NO_THROW(clearCycles());
 
-	ASSERT_EQ(bus.GetCpu().A(), 0x40 + 0x80);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_C_FLAG);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_N_FLAG);
+	ASSERT_EQ(cpu.A(), 0x40 + 0x80);
+	ASSERT_TRUE(cpu.P() & Emu::P_C_FLAG);
+	ASSERT_TRUE(cpu.P() & Emu::P_N_FLAG);
 }

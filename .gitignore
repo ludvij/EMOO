@@ -10,7 +10,7 @@
 
 **/bin
 **/bin-int
-
+**.nes
 # Exceptions
 
 !vendor/premake/bin

@@ -14,12 +14,12 @@ TEST_F(TestArithmetic, ADC_IMM_N)
 	asse.Assemble(R"(
 		adc #$80
 	)");
-	bus.GetCpu().SetA(10);
+	cpu.SetA(10);
 
 	clearCycles();
 
-	ASSERT_EQ(bus.GetCpu().A(), 0x80 + 10);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_N_FLAG);
+	ASSERT_EQ(cpu.A(), 0x80 + 10);
+	ASSERT_TRUE(cpu.P() & Emu::P_N_FLAG);
 }
 
 TEST_F(TestArithmetic, ADC_ZPI_C)
@@ -28,12 +28,12 @@ TEST_F(TestArithmetic, ADC_ZPI_C)
 		adc 2
 		&2 $80
 	)");
-	bus.GetCpu().SetA(0x80);
+	cpu.SetA(0x80);
 
 	clearCycles();
 
-	ASSERT_EQ(bus.GetCpu().A(), 0);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_C_FLAG);
+	ASSERT_EQ(cpu.A(), 0);
+	ASSERT_TRUE(cpu.P() & Emu::P_C_FLAG);
 }
 
 TEST_F(TestArithmetic, ADC_ZPX_Z)
@@ -42,13 +42,13 @@ TEST_F(TestArithmetic, ADC_ZPX_Z)
 		adc 2
 		&2 $80
 	)");
-	bus.GetCpu().SetA(0x80);
-	bus.GetCpu().SetX(1);
+	cpu.SetA(0x80);
+	cpu.SetX(1);
 
 	clearCycles();
 
-	ASSERT_EQ(bus.GetCpu().A(), 0);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_Z_FLAG);
+	ASSERT_EQ(cpu.A(), 0);
+	ASSERT_TRUE(cpu.P() & Emu::P_Z_FLAG);
 }
 
 TEST_F(TestArithmetic, ADC_ABS_C)
@@ -58,13 +58,13 @@ TEST_F(TestArithmetic, ADC_ABS_C)
 		&3 13
 	)");
 
-	bus.GetCpu().SetP(Emu::P_C_FLAG);
-	bus.GetCpu().SetA(12);
+	cpu.SetP(Emu::P_C_FLAG);
+	cpu.SetA(12);
 
 	clearCycles();
 
-	ASSERT_EQ(bus.GetCpu().A(), 26);
-	ASSERT_FALSE(bus.GetCpu().P() & Emu::P_C_FLAG);
+	ASSERT_EQ(cpu.A(), 26);
+	ASSERT_FALSE(cpu.P() & Emu::P_C_FLAG);
 }
 
 TEST_F(TestArithmetic, ADC_ABX_OOPS)
@@ -73,20 +73,20 @@ TEST_F(TestArithmetic, ADC_ABX_OOPS)
 		adc $00ff, x
 		&$0100 13
 	)");
-	bus.Write(0, 0x7D);
-	bus.Write(1, 0xff);
-	bus.Write(2, 0x00);
-	bus.Write(0x0100, 13);
+	memory.Write(0, 0x7D);
+	memory.Write(1, 0xff);
+	memory.Write(2, 0x00);
+	memory.Write(0x0100, 13);
 
-	bus.GetCpu().SetP(Emu::P_C_FLAG);
-	bus.GetCpu().SetA(12);
-	bus.GetCpu().SetX(1);
+	cpu.SetP(Emu::P_C_FLAG);
+	cpu.SetA(12);
+	cpu.SetX(1);
 
 	clearCycles();
 
-	ASSERT_EQ(bus.GetCpu().A(), 26);
+	ASSERT_EQ(cpu.A(), 26);
 	// check for oopscycles
-	ASSERT_EQ(bus.GetCpu().GetCycles(), 4);
+	ASSERT_EQ(cpu.GetCycles(), 4);
 }
 
 TEST_F(TestArithmetic, ADC_ABY_OOPS)
@@ -96,15 +96,15 @@ TEST_F(TestArithmetic, ADC_ABY_OOPS)
 		&$0100 13
 	)");
 
-	bus.GetCpu().SetP(Emu::P_C_FLAG);
-	bus.GetCpu().SetA(12);
-	bus.GetCpu().SetY(1);
+	cpu.SetP(Emu::P_C_FLAG);
+	cpu.SetA(12);
+	cpu.SetY(1);
 
 	clearCycles();
 
-	ASSERT_EQ(bus.GetCpu().A(), 26);
+	ASSERT_EQ(cpu.A(), 26);
 	// check for oopscycles
-	ASSERT_EQ(bus.GetCpu().GetCycles(), 4);
+	ASSERT_EQ(cpu.GetCycles(), 4);
 }
 
 TEST_F(TestArithmetic, ADC_INX)
@@ -116,12 +116,12 @@ TEST_F(TestArithmetic, ADC_INX)
 		&13 0
 	)");
 
-	bus.GetCpu().SetA(12);
-	bus.GetCpu().SetX(2);
+	cpu.SetA(12);
+	cpu.SetX(2);
 
 	clearCycles(6);
 
-	ASSERT_EQ(bus.GetCpu().A(), 12 + 23);
+	ASSERT_EQ(cpu.A(), 12 + 23);
 }
 
 TEST_F(TestArithmetic, ADC_INY_NO_OOPS)
@@ -133,13 +133,13 @@ TEST_F(TestArithmetic, ADC_INY_NO_OOPS)
 		&11 0
 	)");
 
-	bus.GetCpu().SetA(12);
-	bus.GetCpu().SetY(2);
+	cpu.SetA(12);
+	cpu.SetY(2);
 
 	clearCycles(5);
 
-	ASSERT_EQ(bus.GetCpu().A(), 12 + 23);
-	ASSERT_EQ(bus.GetCpu().GetCycles(), 0);
+	ASSERT_EQ(cpu.A(), 12 + 23);
+	ASSERT_EQ(cpu.GetCycles(), 0);
 }
 
 TEST_F(TestArithmetic, ADC_INY_OOPS)
@@ -151,13 +151,13 @@ TEST_F(TestArithmetic, ADC_INY_OOPS)
 		&$0101 23
 	)");
 
-	bus.GetCpu().SetA(12);
-	bus.GetCpu().SetY(2);
+	cpu.SetA(12);
+	cpu.SetY(2);
 
 	clearCycles(5);
 
-	ASSERT_EQ(bus.GetCpu().A(), 12 + 23);
-	ASSERT_EQ(bus.GetCpu().GetCycles(), 1);
+	ASSERT_EQ(cpu.A(), 12 + 23);
+	ASSERT_EQ(cpu.GetCycles(), 1);
 }
 
 TEST_F(TestArithmetic, ADC_V)
@@ -175,13 +175,13 @@ TEST_F(TestArithmetic, ADC_V)
 	// should overflow
 	clearCycles(2 + 2 + 2);
 
-	ASSERT_EQ(bus.GetCpu().A(), 128);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_V_FLAG);
+	ASSERT_EQ(cpu.A(), 128);
+	ASSERT_TRUE(cpu.P() & Emu::P_V_FLAG);
 
 	clearCycles(2 + 2 + 2);
 
-	ASSERT_EQ(bus.GetCpu().A(), 0);
-	ASSERT_FALSE(bus.GetCpu().P() & Emu::P_V_FLAG);
+	ASSERT_EQ(cpu.A(), 0);
+	ASSERT_FALSE(cpu.P() & Emu::P_V_FLAG);
 }
 
 
@@ -206,20 +206,20 @@ TEST_F(TestArithmetic, SBC)
 	)");
 
 	clearCycles(2 + 2 + 2);
-	ASSERT_EQ(bus.GetCpu().A(), 13);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_C_FLAG);
+	ASSERT_EQ(cpu.A(), 13);
+	ASSERT_TRUE(cpu.P() & Emu::P_C_FLAG);
 
 	clearCycles(2 + 2 + 2);
-	ASSERT_EQ(bus.GetCpu().A(), 0x80);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_N_FLAG);
+	ASSERT_EQ(cpu.A(), 0x80);
+	ASSERT_TRUE(cpu.P() & Emu::P_N_FLAG);
 
 	clearCycles(2 + 2 + 2);
-	ASSERT_EQ(bus.GetCpu().A(), 0);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_Z_FLAG);
+	ASSERT_EQ(cpu.A(), 0);
+	ASSERT_TRUE(cpu.P() & Emu::P_Z_FLAG);
 
 	clearCycles(2 + 2 + 2);
-	ASSERT_EQ(bus.GetCpu().A(), 0xff); // -1 in signed 8 bits is 0xff
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_V_FLAG);
+	ASSERT_EQ(cpu.A(), 0xff); // -1 in signed 8 bits is 0xff
+	ASSERT_TRUE(cpu.P() & Emu::P_V_FLAG);
 }
 
 TEST_F(TestArithmetic, CMP)
@@ -236,13 +236,13 @@ TEST_F(TestArithmetic, CMP)
 	)");
 	
 	clearCycles(2 + 2);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_C_FLAG);
+	ASSERT_TRUE(cpu.P() & Emu::P_C_FLAG);
 
 	clearCycles(2 + 2);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_Z_FLAG);
+	ASSERT_TRUE(cpu.P() & Emu::P_Z_FLAG);
 
 	clearCycles(2 + 2);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_N_FLAG);
+	ASSERT_TRUE(cpu.P() & Emu::P_N_FLAG);
 }
 
 TEST_F(TestArithmetic, CPX)
@@ -259,13 +259,13 @@ TEST_F(TestArithmetic, CPX)
 	)");
 	
 	clearCycles(2 + 2);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_C_FLAG);
+	ASSERT_TRUE(cpu.P() & Emu::P_C_FLAG);
 
 	clearCycles(2 + 2);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_Z_FLAG);
+	ASSERT_TRUE(cpu.P() & Emu::P_Z_FLAG);
 
 	clearCycles(2 + 2);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_N_FLAG);
+	ASSERT_TRUE(cpu.P() & Emu::P_N_FLAG);
 }
 
 TEST_F(TestArithmetic, CPY)
@@ -282,13 +282,13 @@ TEST_F(TestArithmetic, CPY)
 	)");
 	
 	clearCycles(2 + 2);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_C_FLAG);
+	ASSERT_TRUE(cpu.P() & Emu::P_C_FLAG);
 
 	clearCycles(2 + 2);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_Z_FLAG);
+	ASSERT_TRUE(cpu.P() & Emu::P_Z_FLAG);
 
 	clearCycles(2 + 2);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_N_FLAG);
+	ASSERT_TRUE(cpu.P() & Emu::P_N_FLAG);
 }
 
 TEST_F(TestArithmetic, BIT)
@@ -305,10 +305,10 @@ TEST_F(TestArithmetic, BIT)
 	)");
 
 	clearCycles(2 + 3);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_Z_FLAG);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_V_FLAG);
+	ASSERT_TRUE(cpu.P() & Emu::P_Z_FLAG);
+	ASSERT_TRUE(cpu.P() & Emu::P_V_FLAG);
 
 	clearCycles(2 + 3);
-	ASSERT_FALSE(bus.GetCpu().P() & Emu::P_Z_FLAG);
-	ASSERT_TRUE(bus.GetCpu().P() & Emu::P_N_FLAG);
+	ASSERT_FALSE(cpu.P() & Emu::P_Z_FLAG);
+	ASSERT_TRUE(cpu.P() & Emu::P_N_FLAG);
 }

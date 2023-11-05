@@ -79,5 +79,6 @@
 		"xtree": "cpp",
 		"xutility": "cpp",
 		"numeric": "cpp"
-	}
+	},
+	"C_Cpp.default.compilerPath": "/usr/bin/g++"
 }

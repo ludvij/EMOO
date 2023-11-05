@@ -1,4 +1,5 @@
-#pragma once
+#ifndef EMU_CPU_HEADER
+#define EMU_CPU_HEADER
 
 /*
 * This file contains the definition of the 6502 CPU (ricoh RP2A03) 
@@ -42,7 +43,7 @@ class CPU
 public:  // Public functions
 	CPU();
 
-	void ConnectBus(Bus* bus) noexcept {m_bus = bus; }
+	void ConnectBus(Bus* bus) {m_bus = bus; }
 
 	void Step();
 
@@ -50,35 +51,37 @@ public:  // Public functions
 	void IRQ();
 	void NMI();
 
-	u8 A()   const noexcept { return m_A;  }
-	u8 X()   const noexcept { return m_X;  }
-	u8 Y()   const noexcept { return m_Y;  }
-	u8 S()   const noexcept { return m_S;  }
-	u8 P()   const noexcept { return m_P;  }
-	u16 PC() const noexcept { return m_PC; }
+	u8 A()   const { return m_A;  }
+	u8 X()   const { return m_X;  }
+	u8 Y()   const { return m_Y;  }
+	u8 S()   const { return m_S;  }
+	u8 P()   const { return m_P;  }
+	u16 PC() const { return m_PC; }
 
-	void SetA(const u8 A)    noexcept { m_A = A;   }
-	void SetX(const u8 X)    noexcept { m_X = X;   }
-	void SetY(const u8 Y)    noexcept { m_Y = Y;   }
-	void SetS(const u8 S)    noexcept { m_S = S;   }
-	void SetP(const u8 P)    noexcept { m_P = P;   }
-	void SetPC(const u16 PC) noexcept { m_PC = PC; }
+	void SetA(const u8 A)    { m_A = A;   }
+	void SetX(const u8 X)    { m_X = X;   }
+	void SetY(const u8 Y)    { m_Y = Y;   }
+	void SetS(const u8 S)    { m_S = S;   }
+	void SetP(const u8 P)    { m_P = P;   }
+	void SetPC(const u16 PC) { m_PC = PC; }
 
-	u32 GetCycles() const noexcept { return m_cycles; }
-	u32 GetTotalCycles() const noexcept { return m_totalCycles; }
+	u32 GetCycles() const { return m_cycles; }
+	u32 GetTotalCycles() const { return m_totalCycles; }
+
+
+private:
 	// fwd declaration 
 	// Used for test and maybe later some watchable information
-private:
 	struct Instruction;
 public:
-	Instruction CurrentInstruction() const noexcept { return m_currentInstr; }
+	Instruction CurrentInstruction() const { return m_currentInstr; }
 
 private: // private functions
+	u8 memoryRead(u16 addr) const;
+	void memoryWrite(u16 addr, u8 val) const;
 	// reads a byte from PC and incrementes PC afterwards
 	u8 readByte();
 
-	u8 readMemory(u16 addr) const;
-	void writeMemory(u16 addr, u8 val) const;
 
 
 	// addressing modes
@@ -194,8 +197,7 @@ private: // private functions
 	void TYA(u16 addr);
 
 	// current workaround for unofficial opcodes
-	[[noreturn]] 
-	void XXX(u16 addr);
+	[[noreturn]] void XXX(u16 addr);
 
 	// some helper functions
 	void setFlagIf(u8 flag, bool cond) noexcept;
@@ -227,13 +229,13 @@ private: // private members
 	*	an exec that acts as the operation itself
 	*	and the number of m_cycles the operation will take
 	*/
-	typedef u16 (CPU::*addrMode)();
-	typedef void (CPU::*exec)(u16);
+	typedef u16 (CPU::*addressingMode)();
+	typedef void (CPU::*execution)(u16);
 	struct Instruction
 	{
 		std::string_view name = "XXX";
-		addrMode addrMode = nullptr;
-		exec exec = nullptr;
+		addressingMode addrMode = nullptr;
+		execution exec = nullptr;
 		u8 cycles = 0;
 	};
 
@@ -274,3 +276,4 @@ private: // private members
 
 }
 
+#endif

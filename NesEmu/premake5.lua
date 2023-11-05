@@ -34,7 +34,7 @@ project "NesEmu"
 
 	filter "configurations:Debug"
 		defines { 
-			"DEBUG" 
+			"NES_EMU_DEBUG" 
 		}
 		runtime "debug"
 		symbols "On"
@@ -44,7 +44,7 @@ project "NesEmu"
 
 	filter "configurations:Release"
 		defines { 
-			"NDEBUG" 
+			"NES_EMU_NDEBUG" 
 		}
 		links {
 			-- "vendor/lib/release/googletest.lib"

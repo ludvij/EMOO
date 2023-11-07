@@ -14,7 +14,7 @@ template<u16 address>
 struct MemoryMappedRegister
 {
 	void Link(Bus* bus) { m_bus = bus; }
-
+	u16 Address() const { return address; }
 	u8 Get() const
 	{ 
 		#ifdef NES_EMU_DEBUG
@@ -31,8 +31,14 @@ struct MemoryMappedRegister
 		#endif
 		m_bus->Write(address, val);
 	}
-	u8 operator()() const         { return Get(); }
-	void operator()(const u8 val) { Set(val);     }
+	bool CheckBit(const u8 bit) const
+	{
+		return (Get() >> bit) & 1
+	}
+
+	bool operator[](const u8 bit) const { return CheckBit(bit); }
+	u8 operator()() const { return Get(); }
+	void operator()(const u8 val) { Set(val); }
 
 	// I don't want to reassign this, ever
 	MemoryMappedRegister(const MemoryMappedRegister&)            = delete;
@@ -57,6 +63,7 @@ public:
 	MemoryMappedRegister<0x2006> PPUADDR;
 	MemoryMappedRegister<0x2007> PPUDATA;
 	MemoryMappedRegister<0x4014> OAMDMA;
+
 private:
 	u8 memoryRead(u16 addr);
 	void memoryWrite(u16 addr, u8 val);

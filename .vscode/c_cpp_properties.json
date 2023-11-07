@@ -7,8 +7,8 @@
             ],
             "defines": [],
             "cStandard": "c17",
-            "compilerPath": "/usr/bin/g++-12",
-            "cppStandard": "c++20"
+            "compilerPath": "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.34.31933/bin/Hostx64/x64/cl.exe",
+            "cppStandard": "c++23"
         }
     ],
     "version": 4

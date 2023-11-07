@@ -4,7 +4,7 @@
 namespace Emu
 {
 
-u8 Bus::Read(u16 addr) const
+u8 Bus::Read(const u16 addr) const
 {
 	if (addr < 0x2000) // Ram and ram mirrors
 	{
@@ -12,7 +12,7 @@ u8 Bus::Read(u16 addr) const
 	}
 	if (addr < 0x4000) // PPU registers and mirrors
 	{
-		return m_ppuRam[addr & 0x07ff + 0x2000];
+		return m_ppuRam[(addr - 0x2000) & 0x07FF];
 	}
 	if (addr < 0x4018) // APU and IO functionality
 	{
@@ -20,12 +20,14 @@ u8 Bus::Read(u16 addr) const
 	if (addr < 0x4020) // APU and IO functionality Test mode
 	{
 	}
-	// cartridge space
-	return m_cpuRam[addr];
+	else // cartridge space
+	{
+		return m_cartridge->CpuRead(addr - 0x4020);
+	}
 }
 
 
-void Bus::Write(u16 addr, u8 val)
+void Bus::Write(const u16 addr, const u8 val)
 {
 	if (addr < 0x2000) // Ram and ram mirrors
 	{
@@ -33,17 +35,17 @@ void Bus::Write(u16 addr, u8 val)
 	}
 	else if (addr < 0x4000) // PPU registers and mirrors
 	{
-		m_ppuRam[addr & 0x07FF + 0x2000] = val;
+		m_ppuRam[(addr - 0x2000) & 0x07FF] = val;
 	}
-	// else if (addr < 0x4018) // APU and IO functionality
-	// {
-	// }
-	// else if (addr < 0x4020) // APU and IO functionality Test mode
-	// {
-	// }
-	else // cartridge space
+	else if (addr < 0x4018) // APU and IO functionality
 	{
-		m_cpuRam[addr] = val;
+	}
+	else if (addr < 0x4020) // APU and IO functionality Test mode
+	{
+	}
+	else if(addr <= 0xFFFF) // cartridge space
+	{
+		m_cartridge->CpuWrite(addr - 0x4020, val);
 	}
 }
 

@@ -41,7 +41,7 @@ class Cartridge
 public:
 	explicit Cartridge(const std::string& filePath);
 
-	void ConnectBus(Bus* memoryManager) { m_memory = memoryManager; }
+	void ConnectBus(Bus* bus) { m_bus = bus; }
 
 	u8   CpuRead(u16 addr) const;
 	void CpuWrite(u16 addr, u8 val);
@@ -53,12 +53,12 @@ private:
 
 private:
 
-	Bus* m_memory = nullptr;
+	Bus* m_bus = nullptr;
 
 	iNesHeader m_header = {};
 	bool m_valid;
 
-	std::unique_ptr<Mapper> m_mapper;
+	std::unique_ptr<IMapper> m_mapper;
 
 	Mirroring m_mirroring;
 	u16 m_mapperNumber = 0;

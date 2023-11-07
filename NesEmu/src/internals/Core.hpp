@@ -50,13 +50,6 @@ constexpr u32  PAL_MASTER_CLOCK_SIGNAL =  PAL_COLOR_SUBCARRIER_FREQ * 6;
 
 
 /*
-* Read and write callback for device communication
-*/
-using ReadCallback  = std::function<u8(u16)>;
-using WriteCallback = std::function<void(u16, u8)>;
-
-
-/*
 * ram sizes and stuff
 */
 constexpr u16 RAM_SIZE = 0x0800;

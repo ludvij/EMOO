@@ -9,7 +9,7 @@ namespace Emu
  * mapper 000 (NROM)
  * 
  */
-class NROM : public Mapper
+class NROM : public IMapper
 {
 
 };

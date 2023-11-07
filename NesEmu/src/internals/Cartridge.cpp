@@ -1,6 +1,8 @@
 #include "pch.hpp"
 #include "Cartridge.hpp"
 
+#include "mappers/NROM.hpp"
+
 namespace Emu
 {
 
@@ -34,18 +36,27 @@ Cartridge::Cartridge(const std::string& filePath)
 	m_mapperNumber = (m_header.mapper2 & 0xf0) | (m_header.mapper1 >> 4);
 	m_mirroring = m_header.mapper1 & 0b1 ? Mirroring::VERTICAL : Mirroring::HORIZONTAL;
 
-	inputFile.close();
 
+	switch (m_mapperNumber)
+	{
+	case 0:
+		m_mapper = std::make_unique<NROM>();
+		break;
+	default:
+		std::throw_with_nested(std::runtime_error("Mapper not implemented"));
+	}
+
+	inputFile.close();
 	m_valid = true;
 }
 
 u8 Cartridge::CpuRead(u16 addr) const
 {
-	return m_mapper->Read(addr);
+	return m_mapper->CpuRead(addr);
 }
 
 void Cartridge::CpuWrite(u16 addr, u8 val)
 {
-	m_mapper->Write(addr, val);
+	m_mapper->CpuWrite(addr, val);
 }
 }

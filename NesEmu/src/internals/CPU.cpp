@@ -487,7 +487,7 @@ u16 CPU::addrREL()
 	u16 offset = readByte();
 
 	// this contraption here is to emulate wrap around
-	// could also be done by casting to s8, but I have grown attached
+	// could also be done by casting to i8, but I have grown attached
 	// to the machine that killed Shinzo Abe as represented here
 	// if bit 7 is set it will twos complement it to the negatives, but being u16
 

@@ -14,7 +14,7 @@ template<u16 address>
 struct MemoryMappedRegister
 {
 	void Link(Bus* bus) { m_bus = bus; }
-	u16 Address() const { return address; }
+	consteval u16 Address() const { return address; }
 	u8 Get() const
 	{ 
 		#ifdef NES_EMU_DEBUG
@@ -47,7 +47,7 @@ private:
 	Bus* m_bus = nullptr;
 };
 
-
+class Bus;
 class PPU
 {
 public:

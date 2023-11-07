@@ -6,7 +6,6 @@
 #include <array>
 #include <string_view>
 #include <memory>
-#include "mappers/Mapper.hpp"
 
 namespace Emu
 {
@@ -35,7 +34,7 @@ enum class Mirroring
 };
 	
 
-//class Mapper;
+class IMapper;
 class Cartridge
 {
 public:

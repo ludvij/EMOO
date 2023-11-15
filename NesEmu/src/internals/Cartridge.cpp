@@ -14,7 +14,7 @@ Cartridge::Cartridge(const std::string& filePath)
 
 	if (!inputFile.is_open())
 	{
-		return;
+		std::throw_with_nested(std::runtime_error("File not found"));
 	}
 	inputFile.read(std::bit_cast<char*>(&m_header), sizeof(m_header));
 
@@ -40,7 +40,7 @@ Cartridge::Cartridge(const std::string& filePath)
 	switch (m_mapperNumber)
 	{
 	case 0:
-		m_mapper = std::make_unique<NROM>();
+		m_mapper = std::make_unique<NROM>(m_header.prgRomChunks, m_header.chrRomChunks);
 		break;
 	default:
 		std::throw_with_nested(std::runtime_error("Mapper not implemented"));
@@ -52,11 +52,13 @@ Cartridge::Cartridge(const std::string& filePath)
 
 u8 Cartridge::CpuRead(u16 addr) const
 {
-	return m_mapper->CpuRead(addr);
+	const u16 mappedAddr = m_mapper->CpuMapRead(addr);
+	return m_prgRom[mappedAddr];
 }
 
 void Cartridge::CpuWrite(u16 addr, u8 val)
 {
-	m_mapper->CpuWrite(addr, val);
+	const u16 mappedAddr = m_mapper->CpuMapWrite(addr);
+	m_prgRom[mappedAddr] = val;
 }
 }

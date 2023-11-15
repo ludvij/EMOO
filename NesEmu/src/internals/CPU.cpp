@@ -270,8 +270,8 @@ void CPU::Reset()
 	m_P = 0x34;
 
 	// 6502 reads memory at $FFFC/D
-	u16 lo = memoryRead(m_resetVectorL);
-	u16 hi = memoryRead(m_resetVectorH);
+	u16 lo = memoryRead(s_resetVectorL);
+	u16 hi = memoryRead(s_resetVectorH);
 
 	m_PC = MAKE_WORD(hi, lo);
 
@@ -299,8 +299,8 @@ void CPU::IRQ()
 	stackPush(m_P);
 
 	setFlag(P_I_FLAG);
-	const u8 irqL = memoryRead(m_irqVectorL);
-	const u8 irqH = memoryRead(m_irqVectorH);
+	const u8 irqL = memoryRead(s_irqVectorL);
+	const u8 irqH = memoryRead(s_irqVectorH);
 
 	m_PC = MAKE_WORD(irqH, irqL);
 }
@@ -319,8 +319,8 @@ void CPU::NMI()
 
 	setFlag(P_I_FLAG);
 
-	const u8 nmiL = memoryRead(m_nmiVectorL);
-	const u8 nmiH = memoryRead(m_nmiVectorH);
+	const u8 nmiL = memoryRead(s_nmiVectorL);
+	const u8 nmiH = memoryRead(s_nmiVectorH);
 
 	m_PC = MAKE_WORD(nmiH, nmiL);
 }
@@ -700,8 +700,8 @@ void CPU::BRK(const u16 addr)
 	stackPush(m_P | P_1_FLAG | P_B_FLAG);
 	setFlag(P_I_FLAG);
 
-	const u8 lo = memoryRead(m_irqVectorL);
-	const u8 hi = memoryRead(m_irqVectorH);
+	const u8 lo = memoryRead(s_irqVectorL);
+	const u8 hi = memoryRead(s_irqVectorH);
 
 	m_PC = MAKE_WORD(hi, lo);
 }
@@ -1365,7 +1365,7 @@ void CPU::XXX(const u16 addr)
 	std::throw_with_nested(std::runtime_error("Illegal instruction"));
 }
 
-void CPU::setFlagIf(const u8 flag, const bool cond) noexcept
+void CPU::setFlagIf(const u8 flag, const bool cond) 
 {
 	if (cond) 
 	{
@@ -1377,27 +1377,27 @@ void CPU::setFlagIf(const u8 flag, const bool cond) noexcept
 	}
 }
 
-void CPU::setFlag(const u8 flag) noexcept
+void CPU::setFlag(const u8 flag) 
 {
 	m_P |= flag;
 }
 
-void CPU::clearFlag(const u8 flag) noexcept
+void CPU::clearFlag(const u8 flag) 
 {
 	m_P &= ~flag;
 }
 
-bool CPU::checkFlag(const u8 flag) const noexcept
+bool CPU::checkFlag(const u8 flag) const 
 {
 	return m_P & flag ? true : false;
 }
 
-bool CPU::isImplied() const noexcept
+bool CPU::isImplied() const 
 {
 	return m_currentInstr.addrMode == &CPU::addrIMP || m_currentInstr.addrMode == &CPU::addrACC;
 }
 
-void CPU::branchIfCond(const u16 addr, bool cond) noexcept
+void CPU::branchIfCond(const u16 addr, bool cond) 
 {
 	// flag is clear
 	if (cond)
@@ -1415,16 +1415,16 @@ void CPU::branchIfCond(const u16 addr, bool cond) noexcept
 	}
 }
 
-void CPU::transferRegTo(const u8 from, u8& to) noexcept
+void CPU::transferRegTo(const u8 from, u8& to) 
 {
 	to = from;
 	setFlagIf(P_Z_FLAG, to == 0);
 	setFlagIf(P_N_FLAG, to & 0x80);
 }
 
-void CPU::stackPush(const u8 val) noexcept
+void CPU::stackPush(const u8 val) 
 {
-	memoryWrite(m_stackVector + m_S, val);
+	memoryWrite(s_stackVector + m_S, val);
 	if (m_S == 0)
 	{
 		m_S = 0xFF;
@@ -1434,7 +1434,8 @@ void CPU::stackPush(const u8 val) noexcept
 		m_S--;
 	}
 }
-u8 CPU::stackPop() noexcept
+
+u8 CPU::stackPop() 
 {
 	if (m_S == 0xFF)
 	{
@@ -1444,7 +1445,7 @@ u8 CPU::stackPop() noexcept
 	{
 		m_S++;
 	}
-	return memoryRead(m_stackVector + m_S);
+	return memoryRead(s_stackVector + m_S);
 }
 
 }

@@ -20,14 +20,31 @@ void PPU::ConnectBus(Bus *bus)
 	OAMDMA.Link(bus);
 }
 
+void PPU::Step()
+{
+	m_cycles++;
+	// a single frame takes 241 * 262 cycles 
+	// basically this plots a pixel per cycle since the nes screen is 256 * 240
+	// 20 of those scanlines is tanek in vblank
+	if (m_cycles >= 341)
+	{
+		m_cycles = 0;
+		m_scanlines++;
+		if (m_scanlines >= 262)
+		{
+			m_scanlines = -1;
+		}
+	}
+}
+
 u8 PPU::memoryRead(u16 addr)
 {
-	return m_bus->Read(addr);
+	
 }
 
 void PPU::memoryWrite(u16 addr, u8 val)
 {
-	m_bus->Write(addr, val);
+	
 }
 
 }

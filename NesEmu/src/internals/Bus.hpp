@@ -9,6 +9,11 @@
 namespace Emu
 {
 class Cartridge;
+
+/*
+ * This class is an abstraction for the cpu memory, separated from the cpu class
+ * since everyone and their mother has to access it somehow
+ */
 class Bus
 {
 public:
@@ -16,7 +21,7 @@ public:
 	void Write(u16 addr, u8 val);
 	u8 Read(u16 addr) const;
 
-	void ConnectCartridge(const std::shared_ptr<Cartridge> cartridge) { m_cartridge = cartridge; }
+	void ConnectCartridge(const std::shared_ptr<Cartridge>& cartridge) { m_cartridge = cartridge; }
 
 private:
 	// maybe do this in a single array in the form of
@@ -25,7 +30,7 @@ private:
 	// 0x3020 bytes to be exact
 	// std::array<u8, 0x4020> m_memor{0};
 	std::array<u8, 0x800> m_cpuRam{0};
-	std::array<u8, 0x8  > m_ppuRam{0};
+	std::array<u8, 0x8> m_ppuRegisters{0};
 	std::shared_ptr<Cartridge> m_cartridge;
 };
 

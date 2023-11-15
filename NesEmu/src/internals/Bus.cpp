@@ -24,7 +24,7 @@ u8 Bus::Read(const u16 addr) const
 	}
 	if (addr >= 0x2000 && addr < 0x4000) // PPU registers and mirrors
 	{
-		return m_ppuRam[TranslateMirroredAddress(addr, 0x8, 0x2000)];
+		return m_ppuRegisters[TranslateMirroredAddress(addr, 0x8, 0x2000)];
 	}
 	if (addr >= 0x4000 && addr < 0x4018) // APU and IO functionality
 	{
@@ -34,10 +34,9 @@ u8 Bus::Read(const u16 addr) const
 	}
 	else // cartridge space
 	{
-		return m_cartridge->CpuRead(addr - 0x4020);
+		return m_cartridge->CpuRead(addr);
 	}
 }
-
 
 void Bus::Write(const u16 addr, const u8 val)
 {
@@ -47,7 +46,7 @@ void Bus::Write(const u16 addr, const u8 val)
 	}
 	else if (addr >= 0x2000 && addr < 0x4000) // PPU registers and mirrors
 	{
-		m_ppuRam[TranslateMirroredAddress(addr, 0x8, 0x2000)] = val;
+		m_ppuRegisters[TranslateMirroredAddress(addr, 0x8, 0x2000)] = val;
 	}
 	if (addr >= 0x4000 && addr < 0x4018) // APU and IO functionality
 	{
@@ -57,7 +56,7 @@ void Bus::Write(const u16 addr, const u8 val)
 	}
 	else // cartridge space
 	{
-		m_cartridge->CpuWrite(addr - 0x4020, val);
+		m_cartridge->CpuWrite(addr, val);
 	}
 }
 

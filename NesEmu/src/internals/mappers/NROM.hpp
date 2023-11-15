@@ -2,6 +2,7 @@
 #define EMU_NROM_HEADER
 
 #include "Mapper.hpp"
+#include "internals/Core.hpp"
 
 namespace Emu
 {
@@ -11,7 +12,13 @@ namespace Emu
  */
 class NROM : public IMapper
 {
+	NROM(u8 prgBanks, u8 chrBanks);
 
+	virtual u16 CpuMapRead (const u16 addr) const override;
+	virtual u16 CpuMapWrite(const u16 addr) const override;
+
+	virtual u16 PpuMapRead (const u16 addr) const override;
+	virtual u16 PpuMapWrite(const u16 addr) const override;
 };
 } // namespace Emu
 

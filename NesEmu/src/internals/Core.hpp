@@ -13,7 +13,7 @@
 namespace Emu
 {
 /*
-* Some type definitions to make the code easier to readMemory
+* Some type definitions to make the code easier to read
 * since using uint8_t or unsigned char each time I want
 * to use any internal it's going to be cumbersome.
 * 
@@ -27,6 +27,8 @@ using i16 =  int16_t;
 using u16 = uint16_t;
 using i32 =  int32_t;
 using u32 = uint32_t;
+using i64 =  int64_t;
+using u64 = uint64_t;
 
 /*
 * NTSC color subcarrier frequency
@@ -38,16 +40,23 @@ using u32 = uint32_t;
 * I'll keep the values of the PAL Color subcarrier frequency and 
 * the clock divisor to make the nes run at the required speed just in case
 */
-constexpr u32 NTSC_COLOR_SUBCARRIER_FREQ = 3579545;
-constexpr u32 NTSC_CLOCK_DIVISOR = 12;
-constexpr u32  PAL_COLOR_SUBCARRIER_FREQ = 4433619;
-constexpr u32  PAL_CLOCK_DIVISOR = 16;
+
+
+struct Configuration
+{
+	const u32 ColorSubcarrier;
+	const u32 CpuClockDivisor;
+	const u32 PpuClockDivisor;
+	const u32 FrameRate;
+};
+
+inline constexpr Configuration NTSC{3579545, 12, 4, 60};
+inline constexpr Configuration PAL {4433619, 16, 5, 50};
+
 /*
 * Master clock of the nes
 * it's 6 times the ntsc color subcarrier frequency
 */
-constexpr u32 NTSC_MASTER_CLOCK_SIGNAL = NTSC_COLOR_SUBCARRIER_FREQ * 6;
-constexpr u32  PAL_MASTER_CLOCK_SIGNAL =  PAL_COLOR_SUBCARRIER_FREQ * 6;
 
 }
 

@@ -35,6 +35,7 @@ enum class Mirroring
 	
 
 class IMapper;
+
 class Cartridge
 {
 public:

@@ -2,24 +2,26 @@
 #define EMU_CONSOLE_HEADER
 
 #include "internals/Core.hpp"
-#include "internals/CPU.hpp"
-#include "internals/Bus.hpp"
-#include "internals/Cartridge.hpp"
 
+#include "internals/CPU.hpp"
+#include "internals/PPU.hpp"
+#include "internals/Bus.hpp"
 
 #include <memory>
 
 namespace Emu
 {
-	
+
+class Cartridge;
+
 class Console
 {
 public:
-	Console();
+	Console(Configuration conf);
 
 	void Step();
 
-	CPU& GetCpu()  { return m_cpu; }
+	CPU& GetCpu() { return m_cpu; }
 	Bus& GetBus() { return m_bus; }
 
 	void LoadCartridge(const std::string& filepath);
@@ -27,12 +29,15 @@ public:
 private:
 	// Bus components
 	CPU m_cpu;
+	PPU m_ppu;
 	Bus m_bus;
 
 	u32 m_masterClock = 0;
 
 	std::shared_ptr<Cartridge> m_cartridge;
 	
+	// configuration struct containing platform related info (ntsc, pal)
+	Configuration m_conf;
 };
 
 }

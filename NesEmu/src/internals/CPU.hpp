@@ -14,18 +14,18 @@
 namespace Emu 
 {
 /*
-* Processor status (m_S) flags
-* 7654 3210
-* NV1B DIZC
-* ││││ │││└>  Carry flag
-* ││││ ││└─>  Zero flag
-* ││││ │└──>  Interrupt (IRQ) disable flag
-* ││││ └-──>  Decimal mode flag, not used in the NES
-* │││└─────>  Break flag (mostly unused)
-* ││└──────>  Unused flag (always pushed as 1)
-* │└───────> oVerflow flag
-* └────────>  Negative flag
-*/
+ * Processor status (m_S) flags
+ * 7654 3210
+ * NV1B DIZC
+ * ││││ │││└>  Carry flag
+ * ││││ ││└─>  Zero flag
+ * ││││ │└──>  Interrupt (IRQ) disable flag
+ * ││││ └-──>  Decimal mode flag, not used in the NES
+ * │││└─────>  Break flag (mostly unused)
+ * ││└──────>  Unused flag (always pushed as 1)
+ * │└───────> oVerflow flag
+ * └────────>  Negative flag
+ */
 constexpr u8 P_C_FLAG = 0b00000001;
 constexpr u8 P_Z_FLAG = 0b00000010;
 constexpr u8 P_I_FLAG = 0b00000100;
@@ -65,16 +65,8 @@ public:  // Public functions
 	void SetP(const u8 P)    { m_P = P;   }
 	void SetPC(const u16 PC) { m_PC = PC; }
 
-	u32 GetCycles() const { return m_cycles; }
+	u32 GetCycles()      const { return m_cycles;      }
 	u32 GetTotalCycles() const { return m_totalCycles; }
-
-
-private:
-	// fwd declaration 
-	// Used for test and maybe later some watchable information
-	struct Instruction;
-public:
-	Instruction CurrentInstruction() const { return m_currentInstr; }
 
 private: // private functions
 	u8 memoryRead(u16 addr) const;
@@ -200,16 +192,16 @@ private: // private functions
 	[[noreturn]] void XXX(u16 addr);
 
 	// some helper functions
-	void setFlagIf(u8 flag, bool cond) noexcept;
-	void setFlag(u8 flag) noexcept;
-	void clearFlag(u8 flag) noexcept;
-	bool checkFlag(u8 flag) const noexcept;
-	bool isImplied() const noexcept;
+	void setFlagIf(u8 flag, bool cond);
+	void setFlag(u8 flag);
+	void clearFlag(u8 flag);
+	bool checkFlag(u8 flag) const;
+	bool isImplied() const;
 
-	void branchIfCond(u16 addr, bool cond) noexcept;
-	void transferRegTo(u8 from, u8& to) noexcept;
-	void stackPush(u8 val) noexcept;
-	u8 stackPop() noexcept;
+	void branchIfCond(u16 addr, bool cond);
+	void transferRegTo(u8 from, u8& to);
+	void stackPush(u8 val);
+	u8 stackPop();
 
 
 private: // private members
@@ -254,13 +246,13 @@ private: // private members
 	// Stack Pointer
 	u8 m_S = 0;
 	// vectors
-	constexpr static u16 m_stackVector  = 0x0100;
-	constexpr static u16 m_irqVectorL   = 0xFFFE;
-	constexpr static u16 m_irqVectorH   = 0xFFFF;
-	constexpr static u16 m_nmiVectorH   = 0xFFFA;
-	constexpr static u16 m_nmiVectorL   = 0xFFFB;
-	constexpr static u16 m_resetVectorL = 0xFFFC;
-	constexpr static u16 m_resetVectorH = 0xFFFB;
+	constexpr static u16 s_stackVector  = 0x0100;
+	constexpr static u16 s_irqVectorL   = 0xFFFE;
+	constexpr static u16 s_irqVectorH   = 0xFFFF;
+	constexpr static u16 s_nmiVectorH   = 0xFFFA;
+	constexpr static u16 s_nmiVectorL   = 0xFFFB;
+	constexpr static u16 s_resetVectorL = 0xFFFC;
+	constexpr static u16 s_resetVectorH = 0xFFFB;
 	
 
 	// Status register
@@ -272,6 +264,7 @@ private: // private members
 	// some operations do not save the result, I'll be saving them for
 	// utility reasons
 	u8 m_discard = 0;
+
 };
 
 }

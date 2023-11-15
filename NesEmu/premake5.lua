@@ -22,6 +22,9 @@ project "NesEmu"
 
 	filter "system:windows"
 		systemversion "latest"
+		defines {
+			"NES_EMU_PLATFORM_WINDOWS"
+		}
 	
 	
 -- Uncomment to disable tests

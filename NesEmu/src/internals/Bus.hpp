@@ -18,8 +18,8 @@ class Bus
 {
 public:
 
-	void Write(u16 addr, u8 val);
 	u8 Read(u16 addr) const;
+	void Write(u16 addr, u8 val);
 
 	void ConnectCartridge(const std::shared_ptr<Cartridge>& cartridge) { m_cartridge = cartridge; }
 

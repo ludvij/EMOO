@@ -9,30 +9,6 @@
 
 namespace Emu
 {
-/*
- * https://www.nesdev.org/wiki/INES
- */
-struct iNesHeader
-{
-	char name[4];
-	u8 prgRomChunks;
-	u8 chrRomChunks;
-	u8 mapper1;
-	u8 mapper2;
-	u8 prgRamSize;
-	u8 tv1;
-	u8 tv2;
-	u8 unused[5];
-
-};
-
-
-enum class Mirroring
-{
-	VERTICAL,
-	HORIZONTAL,
-};
-	
 
 class IMapper;
 
@@ -43,11 +19,35 @@ public:
 
 	void ConnectBus(Bus* bus) { m_bus = bus; }
 
-	u8   CpuRead(u16 addr) const;
-	void CpuWrite(u16 addr, u8 val);
+	std::optional<u8> CpuRead(u16 addr) const;
+	bool CpuWrite(u16 addr, u8 val);
 
-	u8   PpuRead(u16 addr) const;
-	void PpuWrite(u16 addr, u8 val);
+	std::optional<u8> PpuRead(u16 addr) const;
+	bool PpuWrite(u16 addr, u8 val);
+
+public:
+	/*
+	* https://www.nesdev.org/wiki/INES
+	*/
+	struct iNesHeader
+	{
+		char name[4];
+		u8 prgRomChunks;
+		u8 chrRomChunks;
+		u8 mapper1;
+		u8 mapper2;
+		u8 prgRamSize;
+		u8 tv1;
+		u8 tv2;
+		u8 unused[5];
+	};
+	
+	enum class Mirroring
+	{
+		VERTICAL,
+		HORIZONTAL,
+	};
+	
 private:
 
 

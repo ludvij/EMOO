@@ -32,12 +32,41 @@ private:
 };
 
 class Bus;
+/**
+ * 
+ *          ___  ___
+ *         |*  \/   |
+ * R/W  >01]        [40< VCC
+ * D0   [02]        [39> ALE
+ * D1   [03]        [38] AD0
+ * D2   [04]        [37] AD1
+ * D3   [05]        [36] AD2
+ * D4   [06]        [35] AD3
+ * D5   [07]        [34] AD4
+ * D6   [08]        [33] AD5
+ * D7   [09]        [32] AD6
+ * A2   >10]  2C02  [31] AD7
+ * A1   >11]        [30> A8
+ * A0   >12]        [29> A9
+ * /CS  >13]        [28> A10
+ * EXT1 [14]        [27> A11
+ * EXT2 [15]        [26> A12
+ * EXT3 [16]        [25> A13
+ * EXT4 [17]        [24> /R
+ * CLK  >18]        [23> /W
+ * /VBL <19]        [22< /SYNC
+ * VEE  >20]        [21> VOUT
+ *         |        |
+ *          --------
+ */
 class PPU
 {
 public:
 	void ConnectBus(Bus* bus);
 
 	void Step();
+
+	void ConnectCartridge(const std::shared_ptr<Cartridge>& cartridge) { m_cartridge = cartridge; }
 
 public:
 	/*
@@ -77,13 +106,16 @@ private:
 
 private:
 	Bus* m_bus = nullptr;
+	std::shared_ptr<Cartridge> m_cartridge;
 
 	u32 m_cycles = 0;
 	u32 m_scanlines = 0;
 	
 	// 2 nametables
 	// other 2 are provided in cartridge
-	std::array<u8, 0x1000> m_ram;
+	std::array<u8, 2000> m_ram;
+	// backup if nametables are not handled by the cartridge (unlikely)
+	std::array<u8, 0x2000> m_patternTable;
 	// not configurable palette inner ram
 	// $3F00         -> Universal background color
 	// $3F01 - $3F03 -> Background palette 0

@@ -26,5 +26,6 @@
 #include "NesEmu.hpp"
 
 // utils
+#include <optional>
 
 #endif

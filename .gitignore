@@ -1,6 +1,8 @@
-# Visual studio files and folders
+# config files
 .vs/
 .vscode/
+.idea/
+# Visual studio files and folders
 **.sln
 **.vcxproj
 **.vcxproj.filters
@@ -8,7 +10,6 @@
 **.dotSettings.user
 
 # Binaries
-
 **/bin
 **/bin-int
 **.nes

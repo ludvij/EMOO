@@ -39,7 +39,62 @@ void PPU::Step()
 
 u8 PPU::memoryRead(u16 addr)
 {
-	
+	if (0 <= addr && addr <= 0x0FFF) // pattern table 1
+	{
+		if (const auto val = m_cartridge->PpuRead(addr); val)
+		{
+			return *val;
+		}
+		else 
+		{
+			return m_patternTable[addr];
+		}
+	}	
+	else if (0x1000 <= addr && addr <= 0x1FFF) // pattern table 2
+	{
+		if (const auto val = m_cartridge->PpuRead(addr); val)
+		{
+			return *val;
+		}
+		else 
+		{
+			return m_patternTable[addr];
+		}
+	}
+	else if (0x2000 <= addr && addr <= 0x23FF) // nametable 0
+	{
+		return m_ram[addr - 0x2000];
+	}
+	else if (0x2400 <= addr && addr <= 0x27FF) // nametable 1
+	{
+		return m_ram[addr - 0x2000];
+	}
+	else if (0x2800 <= addr && addr <= 0x2BFF) // nametable 2
+	{
+		if (const auto val = m_cartridge->PpuRead(addr); val)
+		{
+			return *val;
+		}
+		else 
+		{
+			return m_ram[addr - 0x2800];
+		}
+	}
+	else if (0x2C00 <= addr && addr <= 0x2FFF) // nametable 3
+	{
+		if (const auto val = m_cartridge->PpuRead(addr); val)
+		{
+			return *val;
+		}
+		else 
+		{
+			return m_ram[addr - 0x2800];
+		}
+	}
+	else if (0x3000 <= addr && addr <= 0x3EFF)
+	{
+		// nametalbe mirroring, I have to check this
+	}
 }
 
 void PPU::memoryWrite(u16 addr, u8 val)

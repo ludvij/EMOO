@@ -50,15 +50,54 @@ Cartridge::Cartridge(const std::string& filePath)
 	m_valid = true;
 }
 
-u8 Cartridge::CpuRead(u16 addr) const
+std::optional<u8> Cartridge::CpuRead(u16 addr) const
 {
-	const u16 mappedAddr = m_mapper->CpuMapRead(addr);
-	return m_prgRom[mappedAddr];
+	if (const auto mappedAddr = m_mapper->CpuMapRead(addr); mappedAddr) 
+	{
+		return m_prgRom[*mappedAddr];
+	} 
+	else 
+	{
+		return std::nullopt;
+	}
+
 }
 
-void Cartridge::CpuWrite(u16 addr, u8 val)
+bool Cartridge::CpuWrite(u16 addr, u8 val)
 {
-	const u16 mappedAddr = m_mapper->CpuMapWrite(addr);
-	m_prgRom[mappedAddr] = val;
+	if (const auto mappedAddr = m_mapper->PpuMapWrite(addr); mappedAddr) 
+	{
+		m_prgRom[*mappedAddr] = val;
+		return true;
+	} 
+	else 
+	{
+		return false;
+	}
+}
+
+std::optional<u8> Cartridge::PpuRead(u16 addr) const
+{
+	if (const auto mappedAddr = m_mapper->PpuMapRead(addr); mappedAddr) 
+	{
+		return m_prgRom[*mappedAddr];
+	} 
+	else 
+	{
+		return std::nullopt;
+	}
+}
+
+bool Cartridge::PpuWrite(u16 addr, u8 val)
+{
+	if (const auto mappedAddr = m_mapper->PpuMapRead(addr); mappedAddr) 
+	{
+		m_chrRom[*mappedAddr] = val;
+		return true;
+	} 
+	else 
+	{
+		return false;
+	}
 }
 }

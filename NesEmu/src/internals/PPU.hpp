@@ -111,6 +111,8 @@ private:
 	enum class MirrorName {A, B, C, D};
 	template<MirrorName m1, MirrorName m2, MirrorName m3, MirrorName m4>
 	u8 nametableMirroringRead(u16 addr);
+	template<MirrorName m1, MirrorName m2, MirrorName m3, MirrorName m4>
+	u8 nametableMirroringWrite(u16 addr, u8 val);
 
 private:
 	Bus* m_bus = nullptr;
@@ -178,6 +180,41 @@ u8 PPU::nametableMirroringRead(const u16 addr)
 		else if constexpr (m4 == MirrorName::B) return m_ram[strippedAddr & 0x3FF + 0x400];
 		else if constexpr (m1 == MirrorName::C) return *m_cartridge->PpuRead(addr);
 		else if constexpr (m1 == MirrorName::D) return *m_cartridge->PpuRead(addr);
+	}
+	Lud::Unreachable();
+}
+template <PPU::MirrorName m1, PPU::MirrorName m2, PPU::MirrorName m3, PPU::MirrorName m4>
+inline u8 PPU::nametableMirroringWrite(const u16 addr, const u8 val)
+{
+	// remove top 4 bits to access proper mirroring
+	const u16 strippedAddr = addr & 0x0FFF;
+	if (strippedAddr <= 0x03FF)
+	{
+		if      constexpr (m1 == MirrorName::A) m_ram[strippedAddr & 0x3FF] = val;
+		else if constexpr (m1 == MirrorName::B) m_ram[strippedAddr & 0x3FF + 0x400] = val;
+		else if constexpr (m1 == MirrorName::C) *m_cartridge->PpuRead(addr) = val;
+		else if constexpr (m1 == MirrorName::D) *m_cartridge->PpuRead(addr) = val;
+	}
+	else if (0x0400 <= strippedAddr && strippedAddr <= 0x07FF)
+	{
+		if      constexpr (m1 == MirrorName::A) m_ram[strippedAddr & 0x3FF] = val;
+		else if constexpr (m1 == MirrorName::B) m_ram[strippedAddr & 0x3FF + 0x400] = val;
+		else if constexpr (m1 == MirrorName::C) *m_cartridge->PpuRead(addr) = val;
+		else if constexpr (m1 == MirrorName::D) *m_cartridge->PpuRead(addr) = val;
+	}
+	else if (0x0800 <= strippedAddr && strippedAddr <= 0x0BFF)
+	{
+		if      constexpr (m1 == MirrorName::A) m_ram[strippedAddr & 0x3FF] = val;
+		else if constexpr (m1 == MirrorName::B) m_ram[strippedAddr & 0x3FF + 0x400] = val;
+		else if constexpr (m1 == MirrorName::C) *m_cartridge->PpuRead(addr) = val;
+		else if constexpr (m1 == MirrorName::D) *m_cartridge->PpuRead(addr) = val;
+	}
+	else if (0x0C00 <= strippedAddr && strippedAddr <= 0x0FFF)
+	{
+		if      constexpr (m1 == MirrorName::A) m_ram[strippedAddr & 0x3FF] = val;
+		else if constexpr (m1 == MirrorName::B) m_ram[strippedAddr & 0x3FF + 0x400] = val;
+		else if constexpr (m1 == MirrorName::C) *m_cartridge->PpuRead(addr) = val;
+		else if constexpr (m1 == MirrorName::D) *m_cartridge->PpuRead(addr) = val;
 	}
 	Lud::Unreachable();
 }

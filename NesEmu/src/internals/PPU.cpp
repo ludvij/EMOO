@@ -88,7 +88,43 @@ u8 PPU::memoryRead(const u16 addr)
 
 void PPU::memoryWrite(u16 addr, u8 val)
 {
-	
+	if (addr <= 0x0FFF) // pattern table 0
+	{
+		if (!m_cartridge->PpuWrite(addr, val))
+		{
+			m_patternTable[addr] = val;
+		}
+	}	
+	else if (0x1000 <= addr && addr <= 0x1FFF) // pattern table 1
+	{
+		if (!m_cartridge->PpuWrite(addr, val))
+		{
+			m_patternTable[addr] = val;
+		}
+	}
+	// https://www.nesdev.org/wiki/Mirroring#Nametable_Mirroring
+	else if (0x2000 <= addr && addr <= 0x3EFF)
+	{
+		if (m_cartridge->GetMirroring() == Cartridge::Mirroring::Vertical)
+		{
+			nametableMirroringWrite<MirrorName::A, MirrorName::B, MirrorName::A, MirrorName::B>(addr, val);
+		}
+		else if (m_cartridge->GetMirroring() == Cartridge::Mirroring::Horizontal)
+		{
+			nametableMirroringWrite<MirrorName::A, MirrorName::A, MirrorName::B, MirrorName::B>(addr, val);
+		}
+	}
+	else if (0x3F00 <= addr && addr <= 0x3FFF)
+	{
+		//https://www.nesdev.org/wiki/PPU_palettes#Memory_Map
+		u16 strippedAddr = addr & 0x001F;
+		if      (addr == 0x0010) strippedAddr = 0x0000;
+		else if (addr == 0x0014) strippedAddr = 0x0004;
+		else if (addr == 0x0018) strippedAddr = 0x0008;
+		else if (addr == 0x001C) strippedAddr = 0x000C;
+		m_palleteRamIndexes[addr] = val;
+	}
+	Lud::Unreachable();
 }
 
 

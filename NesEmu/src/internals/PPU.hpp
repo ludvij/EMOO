@@ -146,28 +146,28 @@ u8 PPU::nametableMirroringRead(u16 addr)
 	if (strippedAddr <= 0x03FF)
 	{
 		if      constexpr (m1 == MirrorName::A) return m_ram[strippedAddr & 0x3FF];
-		else if constexpr (m1 == MirrorName::B) return m_ram[strippedAddr & 0x7FF];
+		else if constexpr (m1 == MirrorName::B) return m_ram[strippedAddr & 0x3FF + 0x400];
 		else if constexpr (m1 == MirrorName::C) return *m_cartridge->PpuRead(addr);
 		else if constexpr (m1 == MirrorName::D) return *m_cartridge->PpuRead(addr);
 	}
 	else if (0x0400 <= strippedAddr && strippedAddr <= 0x07FF)
 	{
 		if      constexpr (m2 == MirrorName::A) return m_ram[strippedAddr & 0x3FF];
-		else if constexpr (m2 == MirrorName::B) return m_ram[strippedAddr & 0x7FF];
-		else if constexpr (m1 == MirrorName::C) return *m_cartridge->PpuRead(addr);
-		else if constexpr (m1 == MirrorName::D) return *m_cartridge->PpuRead(addr);
+		else if constexpr (m2 == MirrorName::B) return m_ram[strippedAddr & 0x3FF + 0x400];
+		else if constexpr (m2 == MirrorName::C) return *m_cartridge->PpuRead(addr);
+		else if constexpr (m2 == MirrorName::D) return *m_cartridge->PpuRead(addr);
 	}
 	else if (0x0800 <= strippedAddr && strippedAddr <= 0x0BFF)
 	{
 		if      constexpr (m3 == MirrorName::A) return m_ram[strippedAddr & 0x3FF];
-		else if constexpr (m3 == MirrorName::B) return m_ram[strippedAddr & 0x7FF];
-		else if constexpr (m1 == MirrorName::C) return *m_cartridge->PpuRead(addr);
-		else if constexpr (m1 == MirrorName::D) return *m_cartridge->PpuRead(addr);
+		else if constexpr (m3 == MirrorName::B) return m_ram[strippedAddr & 0x3FF + 0x400];
+		else if constexpr (m3 == MirrorName::C) return *m_cartridge->PpuRead(addr);
+		else if constexpr (m3 == MirrorName::D) return *m_cartridge->PpuRead(addr);
 	}
 	else if (0x0C00 <= strippedAddr && strippedAddr <= 0x0FFF)
 	{
 		if      constexpr (m4 == MirrorName::A) return m_ram[strippedAddr & 0x3FF];
-		else if constexpr (m4 == MirrorName::B) return m_ram[strippedAddr & 0x7FF];
+		else if constexpr (m4 == MirrorName::B) return m_ram[strippedAddr & 0x3FF + 0x400];
 		else if constexpr (m1 == MirrorName::C) return *m_cartridge->PpuRead(addr);
 		else if constexpr (m1 == MirrorName::D) return *m_cartridge->PpuRead(addr);
 	}

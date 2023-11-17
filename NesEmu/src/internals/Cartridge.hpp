@@ -6,11 +6,11 @@
 #include <array>
 #include <string_view>
 #include <memory>
+#include <optional>
+#include "mappers/Mapper.hpp"
 
 namespace Emu
 {
-
-class IMapper;
 
 class Cartridge
 {
@@ -44,9 +44,15 @@ public:
 	
 	enum class Mirroring
 	{
-		VERTICAL,
-		HORIZONTAL,
+		Vertical,
+		Horizontal,
+		//SingleScreen,
+		//FourScreen,
+		//ThreeScreenVertical
 	};
+	Mirroring GetMirroring() { return m_mirroring; }
+	
+
 	
 private:
 

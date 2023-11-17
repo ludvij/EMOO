@@ -8,7 +8,7 @@
 int main()
 {
 		
-	Emu::Cartridge c("../test.nes");
+	Emu::Cartridge c("../../test.nes");
 
 	return 0;
 }

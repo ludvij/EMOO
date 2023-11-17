@@ -37,9 +37,9 @@ void PPU::Step()
 	}
 }
 
-u8 PPU::memoryRead(u16 addr)
+u8 PPU::memoryRead(const u16 addr)
 {
-	if (0 <= addr && addr <= 0x0FFF) // pattern table 1
+	if (addr <= 0x0FFF) // pattern table 1
 	{
 		if (const auto val = m_cartridge->PpuRead(addr); val)
 		{
@@ -61,45 +61,34 @@ u8 PPU::memoryRead(u16 addr)
 			return m_patternTable[addr];
 		}
 	}
-	else if (0x2000 <= addr && addr <= 0x23FF) // nametable 0
+	// https://www.nesdev.org/wiki/Mirroring#Nametable_Mirroring
+	// $2000                - $2FFF
+	//  0010 0000 0000 0000 -  0010 1111 1111 1111
+	// $3000                - $3EFF
+	//  0011 0000 0000 0000 -  0011 1110 1111 1111
+	// nametable 0 $0000                - $03FF
+	//              0000 0000 0000 0000 -  0000 0011 1111 1111
+	// nametable 1 $0400                - $07FF
+	//              0000 0100 0000 0000 -  0000 0111 1111 1111
+	else if (0x2000 <= addr && addr <= 0x3EFF)
 	{
-		return m_ram[addr - 0x2000];
-	}
-	else if (0x2400 <= addr && addr <= 0x27FF) // nametable 1
-	{
-		return m_ram[addr - 0x2000];
-	}
-	else if (0x2800 <= addr && addr <= 0x2BFF) // nametable 2
-	{
-		if (const auto val = m_cartridge->PpuRead(addr); val)
+		if (m_cartridge->GetMirroring() == Cartridge::Mirroring::Vertical)
 		{
-			return *val;
+			return nametableMirroringRead<MirrorName::A, MirrorName::B, MirrorName::A, MirrorName::B>(addr);
 		}
-		else 
+		else if (m_cartridge->GetMirroring() == Cartridge::Mirroring::Horizontal)
 		{
-			return m_ram[addr - 0x2800];
-		}
-	}
-	else if (0x2C00 <= addr && addr <= 0x2FFF) // nametable 3
-	{
-		if (const auto val = m_cartridge->PpuRead(addr); val)
-		{
-			return *val;
-		}
-		else 
-		{
-			return m_ram[addr - 0x2800];
+			return nametableMirroringRead<MirrorName::A, MirrorName::A, MirrorName::B, MirrorName::B>(addr);
 		}
 	}
-	else if (0x3000 <= addr && addr <= 0x3EFF)
-	{
-		// nametalbe mirroring, I have to check this
-	}
+	Lud::Unreachable();
 }
 
 void PPU::memoryWrite(u16 addr, u8 val)
 {
 	
 }
+
+
 
 }

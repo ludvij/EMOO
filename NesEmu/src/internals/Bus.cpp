@@ -26,16 +26,17 @@ u8 Bus::Read(const u16 addr) const
 	{
 		return m_ppuRegisters[TranslateMirroredAddress(addr, 0x8, 0x2000)];
 	}
-	if (addr >= 0x4000 && addr < 0x4018) // APU and IO functionality
-	{
-	}
-	if (addr >= 0x4018 && addr < 0x4020) // APU and IO functionality Test mode
-	{
-	}
+	//if (addr >= 0x4000 && addr < 0x4018) // APU and IO functionality
+	//{
+	//}
+	//if (addr >= 0x4018 && addr < 0x4020) // APU and IO functionality Test mode
+	//{
+	//}
 	else // cartridge space
 	{
 		return *m_cartridge->CpuRead(addr);
 	}
+
 }
 
 void Bus::Write(const u16 addr, const u8 val)

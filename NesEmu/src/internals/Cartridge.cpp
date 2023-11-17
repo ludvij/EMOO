@@ -34,7 +34,7 @@ Cartridge::Cartridge(const std::string& filePath)
 	inputFile.read(std::bit_cast<char*>(m_chrRom.data()), static_cast<size_t>(m_chrRom.size()));
 
 	m_mapperNumber = (m_header.mapper2 & 0xf0) | (m_header.mapper1 >> 4);
-	m_mirroring = m_header.mapper1 & 0b1 ? Mirroring::VERTICAL : Mirroring::HORIZONTAL;
+	m_mirroring = m_header.mapper1 & 0b1 ? Mirroring::Vertical : Mirroring::Horizontal;
 
 
 	switch (m_mapperNumber)

@@ -9,7 +9,6 @@
 */
 
 
-
 namespace Emu
 {
 /*
@@ -57,6 +56,7 @@ inline constexpr Configuration PAL {4433619, 16, 5, 50};
 * Master clock of the nes
 * it's 6 times the ntsc color subcarrier frequency
 */
+
 
 }
 

@@ -27,5 +27,7 @@
 
 // utils
 #include <optional>
+#include <bit>
+#include "utils/Unreachable.hpp"
 
 #endif

@@ -223,8 +223,8 @@ private: // private members
 	*/
 	typedef u16 (CPU::*addressingMode)();
 	typedef void (CPU::*execution)(u16);
-	struct Instruction
-	{
+	struct Instruction {
+	
 		std::string_view name = "XXX";
 		addressingMode addrMode = nullptr;
 		execution exec = nullptr;

@@ -12,6 +12,7 @@ namespace Emu
  */
 class NROM : public IMapper
 {
+public:
 	NROM(u8 prgBanks, u8 chrBanks);
 
 	virtual std::optional<u16> CpuMapRead (const u16 addr) const override;

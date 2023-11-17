@@ -3,6 +3,8 @@
 
 #include "Core.hpp"
 #include "Bus.hpp"
+#include "Cartridge.hpp"
+#include "utils/Unreachable.hpp"
 
 namespace Emu
 {
@@ -14,6 +16,7 @@ constexpr u32 PAL_FRAMERATE  = 50;
 template<u16 address>
 struct MemoryMappedRegister
 {
+	MemoryMappedRegister() = default;
 	void Link(Bus* bus) { m_bus = bus; }
 
 	consteval u16 Address() const { return address; }
@@ -32,7 +35,7 @@ private:
 };
 
 class Bus;
-/**
+/*
  * 
  *          ___  ___
  *         |*  \/   |
@@ -104,6 +107,11 @@ private:
 	u8 memoryRead(u16 addr);
 	void memoryWrite(u16 addr, u8 val);
 
+	// quick hack to easily implement mirrorings
+	enum class MirrorName {A, B, C, D};
+	template<MirrorName m1, MirrorName m2, MirrorName m3, MirrorName m4>
+	u8 nametableMirroringRead(u16 addr);
+
 private:
 	Bus* m_bus = nullptr;
 	std::shared_ptr<Cartridge> m_cartridge;
@@ -113,9 +121,9 @@ private:
 	
 	// 2 nametables
 	// other 2 are provided in cartridge
-	std::array<u8, 2000> m_ram;
+	std::array<u8, 2000> m_ram{0};
 	// backup if nametables are not handled by the cartridge (unlikely)
-	std::array<u8, 0x2000> m_patternTable;
+	std::array<u8, 0x2000> m_patternTable{0};
 	// not configurable palette inner ram
 	// $3F00         -> Universal background color
 	// $3F01 - $3F03 -> Background palette 0
@@ -127,9 +135,44 @@ private:
 	// $3F15 - $3F17 -> Sprite color 1
 	// $3F19 - $3F1B -> Sprite color 2
 	// $3F1D - $3F1F -> Sprite color 3
-	std::array<u8, 0x0020> m_pallete;
+	std::array<u8, 0x0020> m_pallete{0};
 };
 
+template <PPU::MirrorName m1, PPU::MirrorName m2, PPU::MirrorName m3, PPU::MirrorName m4>
+u8 PPU::nametableMirroringRead(u16 addr)
+{
+	// remove top 4 bits to access proper mirroring
+	const u16 strippedAddr = addr & 0x0FFF;
+	if (strippedAddr <= 0x03FF)
+	{
+		if      constexpr (m1 == MirrorName::A) return m_ram[strippedAddr & 0x3FF];
+		else if constexpr (m1 == MirrorName::B) return m_ram[strippedAddr & 0x7FF];
+		else if constexpr (m1 == MirrorName::C) return *m_cartridge->PpuRead(addr);
+		else if constexpr (m1 == MirrorName::D) return *m_cartridge->PpuRead(addr);
+	}
+	else if (0x0400 <= strippedAddr && strippedAddr <= 0x07FF)
+	{
+		if      constexpr (m2 == MirrorName::A) return m_ram[strippedAddr & 0x3FF];
+		else if constexpr (m2 == MirrorName::B) return m_ram[strippedAddr & 0x7FF];
+		else if constexpr (m1 == MirrorName::C) return *m_cartridge->PpuRead(addr);
+		else if constexpr (m1 == MirrorName::D) return *m_cartridge->PpuRead(addr);
+	}
+	else if (0x0800 <= strippedAddr && strippedAddr <= 0x0BFF)
+	{
+		if      constexpr (m3 == MirrorName::A) return m_ram[strippedAddr & 0x3FF];
+		else if constexpr (m3 == MirrorName::B) return m_ram[strippedAddr & 0x7FF];
+		else if constexpr (m1 == MirrorName::C) return *m_cartridge->PpuRead(addr);
+		else if constexpr (m1 == MirrorName::D) return *m_cartridge->PpuRead(addr);
+	}
+	else if (0x0C00 <= strippedAddr && strippedAddr <= 0x0FFF)
+	{
+		if      constexpr (m4 == MirrorName::A) return m_ram[strippedAddr & 0x3FF];
+		else if constexpr (m4 == MirrorName::B) return m_ram[strippedAddr & 0x7FF];
+		else if constexpr (m1 == MirrorName::C) return *m_cartridge->PpuRead(addr);
+		else if constexpr (m1 == MirrorName::D) return *m_cartridge->PpuRead(addr);
+	}
+	Lud::Unreachable();
+}
 }
 
 #endif

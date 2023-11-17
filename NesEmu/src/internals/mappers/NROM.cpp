@@ -29,16 +29,16 @@ NROM::NROM(const u8 prgBanks, const u8 chrBanks)
 std::optional<u16> NROM::CpuMapRead(const u16 addr) const
 {
 	// out of range
-	if (addr < 0x8000) 
-	{
+	if (addr < 0x8000)  {
+	
 		return std::nullopt;
 	} 
-	if (m_prgBanks == 1)
-	{
+	if (m_prgBanks == 1) {
+	
 		return addr & 0x3FFF;
 	}
-	else
-	{
+	else {
+	
 		return addr & 0x7FFF;
 	}
 }
@@ -53,8 +53,8 @@ std::optional<u16> NROM::CpuMapWrite(const u16 addr) const
  */
 std::optional<u16> NROM::PpuMapRead(const u16 addr) const
 {
-	if (addr >= 0x2000) 
-	{
+	if (addr >= 0x2000)  {
+	
 		return std::nullopt;
 	}
 	return addr;

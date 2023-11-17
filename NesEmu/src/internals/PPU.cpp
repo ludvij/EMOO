@@ -39,7 +39,7 @@ void PPU::Step()
 
 u8 PPU::memoryRead(const u16 addr)
 {
-	if (addr <= 0x0FFF) // pattern table 1
+	if (addr <= 0x0FFF) // pattern table 0
 	{
 		if (const auto val = m_cartridge->PpuRead(addr); val)
 		{
@@ -50,7 +50,7 @@ u8 PPU::memoryRead(const u16 addr)
 			return m_patternTable[addr];
 		}
 	}	
-	else if (0x1000 <= addr && addr <= 0x1FFF) // pattern table 2
+	else if (0x1000 <= addr && addr <= 0x1FFF) // pattern table 1
 	{
 		if (const auto val = m_cartridge->PpuRead(addr); val)
 		{
@@ -62,14 +62,6 @@ u8 PPU::memoryRead(const u16 addr)
 		}
 	}
 	// https://www.nesdev.org/wiki/Mirroring#Nametable_Mirroring
-	// $2000                - $2FFF
-	//  0010 0000 0000 0000 -  0010 1111 1111 1111
-	// $3000                - $3EFF
-	//  0011 0000 0000 0000 -  0011 1110 1111 1111
-	// nametable 0 $0000                - $03FF
-	//              0000 0000 0000 0000 -  0000 0011 1111 1111
-	// nametable 1 $0400                - $07FF
-	//              0000 0100 0000 0000 -  0000 0111 1111 1111
 	else if (0x2000 <= addr && addr <= 0x3EFF)
 	{
 		if (m_cartridge->GetMirroring() == Cartridge::Mirroring::Vertical)
@@ -80,6 +72,16 @@ u8 PPU::memoryRead(const u16 addr)
 		{
 			return nametableMirroringRead<MirrorName::A, MirrorName::A, MirrorName::B, MirrorName::B>(addr);
 		}
+	}
+	else if (0x3F00 <= addr && addr <= 0x3FFF)
+	{
+		//https://www.nesdev.org/wiki/PPU_palettes#Memory_Map
+		u16 strippedAddr = addr & 0x001F;
+		if      (addr == 0x0010) strippedAddr = 0x0000;
+		else if (addr == 0x0014) strippedAddr = 0x0004;
+		else if (addr == 0x0018) strippedAddr = 0x0008;
+		else if (addr == 0x001C) strippedAddr = 0x000C;
+		return m_palleteRamIndexes[addr];
 	}
 	Lud::Unreachable();
 }

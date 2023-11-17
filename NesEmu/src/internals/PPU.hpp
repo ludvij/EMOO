@@ -135,11 +135,19 @@ private:
 	// $3F15 - $3F17 -> Sprite color 1
 	// $3F19 - $3F1B -> Sprite color 2
 	// $3F1D - $3F1F -> Sprite color 3
-	std::array<u8, 0x0020> m_pallete{0};
+	std::array<u8, 0x0020> m_palleteRamIndexes{0};
+
+	struct OAM {
+		u8 y;
+		u8 tileNum;
+		u8 attribute;
+		u8 x;
+	};
+	std::array<OAM, 64> m_ObjetAttributeMemory{0};
 };
 
 template <PPU::MirrorName m1, PPU::MirrorName m2, PPU::MirrorName m3, PPU::MirrorName m4>
-u8 PPU::nametableMirroringRead(u16 addr)
+u8 PPU::nametableMirroringRead(const u16 addr)
 {
 	// remove top 4 bits to access proper mirroring
 	const u16 strippedAddr = addr & 0x0FFF;

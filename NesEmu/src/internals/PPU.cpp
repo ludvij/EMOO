@@ -11,6 +11,12 @@ void PPU::Step()
 	// a single frame takes 241 * 262 cycles 
 	// basically this plots a pixel per cycle since the nes screen is 256 * 240
 	// 20 of those scanlines is tanek in vblank
+
+
+	if (m_cycles >= 257 && m_cycles <= 320)
+	{
+		m_oam_addr = 0;
+	}
 	if (m_cycles >= 341)
 	{
 		m_cycles = 0;
@@ -24,22 +30,63 @@ void PPU::Step()
 
 u8 PPU::CpuRead(u16 addr)
 {
-	return 0;
+	u8 data;
+	if (addr == 0x2002) // status
+	{
+		m_w = 0;
+		data = m_ppu_status;
+		m_ppu_status ^= (1 << 7);
+	}
+	else if (addr == 0x2004) // oam data
+	{
+		data = m_oam_data[m_oam_addr];
+	
+	}
+	else  // cheat so the compiler shuts up
+	{
+		Lud::Unreachable();
+	}
+	return data;
 }
 
 void PPU::CpuWrite(const u16 addr, const u8 val)
 {
-	if (addr == 0x2006)
+	if (addr == 0x2000) // control
 	{
-		if (m_address_latch)
+		m_ppu_ctrl = val;
+	}
+	else if (addr == 0x2001) // mask
+	{
+		m_ppu_mask = val;
+	}
+	else if (addr == 0x2003) // oam address
+	{
+		m_oam_addr = val;
+	}
+	else if (addr == 0x2004)
+	{
+		if (m_scanlines > 239)
+		{
+			m_oam_data[m_oam_addr] = val;
+			m_oam_addr++;
+
+		}
+	}
+	else if (addr == 0x2005) // ppu scroll
+	{
+		//TODO:
+	}
+	else if (addr == 0x2006)
+	{
+		if (m_w)
 		{
 			m_ppu_addr = val & 0xFF;
-			m_address_latch = 1;
+			m_w = 1;
 		}
 		else
 		{
 			m_ppu_addr |= (val & 0x3F) << 8;
-			m_address_latch = 1;
+			m_w = 1;
 		}
 	}
 	else if (addr == 0x2007)

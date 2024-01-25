@@ -38,20 +38,27 @@ private:
 private:
 	std::shared_ptr<Cartridge> m_cartridge;
 
+	// MMIO registers
 	u8 m_ppu_ctrl    = 0;
 	u8 m_ppu_status  = 0;
 	u8 m_ppu_mask    = 0;
 	u8 m_oam_addr    = 0;
-	u8 m_oam_data    = 0;
+	//u8 m_oam_data    = 0;
 	u16 m_ppu_scroll = 0;
 	u16 m_ppu_addr   = 0;
 	u8 m_ppu_data    = 0;
 	u8 m_oam_dma     = 0;
 
+	// internal registers
+	u8 m_v = 0;
+	u8 m_t = 0;
+	u8 m_x = 0;
+	u8 m_w = 0;
+
+
 	u32 m_cycles = 0;
 	u32 m_scanlines = 0;
 
-	u8 m_address_latch = 0;
 	
 	// 2 nametables
 	// other 2 are provided in cartridge
@@ -70,6 +77,16 @@ private:
 	// $3F19 - $3F1B -> Sprite color 2
 	// $3F1D - $3F1F -> Sprite color 3
 	std::array<u8, 0x0020> m_palleteRamIndexes{0};
+
+	// this was lifted from one lone coder
+	struct OAM_Data
+	{
+		u8 y;
+		u8 id;
+		u8 attribute;
+		u8 x;
+	} OAM[64];
+	u8* m_oam_data = (u8*)OAM;
 };
 
 template <PPU::MirrorName m1, PPU::MirrorName m2, PPU::MirrorName m3, PPU::MirrorName m4>

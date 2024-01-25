@@ -2,24 +2,9 @@
 
 #include "PPU.hpp"
 
-#include "Bus.hpp"
 
 namespace Emu
 {
-void PPU::ConnectBus(Bus *bus)
-{
-	m_bus = bus;
-	PPUCTRL.Link(bus);
-	PPUMASK.Link(bus);
-	PPUSCROLL.Link(bus);
-	OAMADDR.Link(bus);
-	OAMDATA.Link(bus);
-	PPUSCROLL.Link(bus);
-	PPUADDR.Link(bus);
-	PPUDATA.Link(bus);
-	OAMDMA.Link(bus);
-}
-
 void PPU::Step()
 {
 	m_cycles++;
@@ -34,6 +19,33 @@ void PPU::Step()
 		{
 			m_scanlines = -1;
 		}
+	}
+}
+
+u8 PPU::CpuRead(u16 addr)
+{
+	return 0;
+}
+
+void PPU::CpuWrite(const u16 addr, const u8 val)
+{
+	if (addr == 0x2006)
+	{
+		if (m_address_latch)
+		{
+			m_ppu_addr = val & 0xFF;
+			m_address_latch = 1;
+		}
+		else
+		{
+			m_ppu_addr |= (val & 0x3F) << 8;
+			m_address_latch = 1;
+		}
+	}
+	else if (addr == 0x2007)
+	{
+		memoryWrite(m_ppu_addr, m_ppu_data);
+		m_ppu_addr += m_ppu_ctrl >> 2 & 1;
 	}
 }
 

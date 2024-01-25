@@ -2,7 +2,6 @@
 #define EMU_PPU_HEADER
 
 #include "Core.hpp"
-#include "Bus.hpp"
 #include "Cartridge.hpp"
 #include "utils/Unreachable.hpp"
 
@@ -12,97 +11,19 @@ namespace Emu
 constexpr u32 NTSC_FRAMERATE = 60;
 constexpr u32 PAL_FRAMERATE  = 50;
 
-
-template<u16 address>
-struct MemoryMappedRegister
-{
-	MemoryMappedRegister() = default;
-	void Link(Bus* bus) { m_bus = bus; }
-
-	consteval u16 Address() const { return address; }
-
-	u8   Get() const       { return m_bus->Read(address); }
-	void Set(const u8 val) { m_bus->Write(address, val);  }
-
-	u8   operator()() const       { return Get(); }
-	void operator()(const u8 val) { Set(val);     }
-
-	// I don't want to reassign this, ever
-	MemoryMappedRegister(const MemoryMappedRegister&)            = delete;
-	MemoryMappedRegister& operator=(const MemoryMappedRegister&) = delete;
-private:
-	Bus* m_bus = nullptr;
-};
-
-class Bus;
-/*
- * 
- *          ___  ___
- *         |*  \/   |
- * R/W  >01]        [40< VCC
- * D0   [02]        [39> ALE
- * D1   [03]        [38] AD0
- * D2   [04]        [37] AD1
- * D3   [05]        [36] AD2
- * D4   [06]        [35] AD3
- * D5   [07]        [34] AD4
- * D6   [08]        [33] AD5
- * D7   [09]        [32] AD6
- * A2   >10]  2C02  [31] AD7
- * A1   >11]        [30> A8
- * A0   >12]        [29> A9
- * /CS  >13]        [28> A10
- * EXT1 [14]        [27> A11
- * EXT2 [15]        [26> A12
- * EXT3 [16]        [25> A13
- * EXT4 [17]        [24> /R
- * CLK  >18]        [23> /W
- * /VBL <19]        [22< /SYNC
- * VEE  >20]        [21> VOUT
- *         |        |
- *          --------
- */
 class PPU
 {
 public:
-	void ConnectBus(Bus* bus);
 
 	void Step();
 
 	void ConnectCartridge(const std::shared_ptr<Cartridge>& cartridge) { m_cartridge = cartridge; }
 
-public:
-	/*
-	 * VPHB SINN
-	 * ││││ ││└┴> Base Nametable address 
-	 * |||| ||    (0 = $2000, 1 = $2400, 2 = $2800, 3 = $2C00)
-	 * ││││ │└──> VRAM address increment per CPU read/write of PPUDATA
-	 * |||| |     (0: add 1, going across; 1: add 32, going down)
-	 * ││││ └-──> Sprite pattern table address for 8x8 sprites
-	 * ||||       (0: $0000; 1 = $1000; ignored in 8x16)
-	 * │││└─────> Background pattern table address
-	 * |||        (0: $0000; 1 = $1000)
-	 * ││└──────> Sprite size
-	 * ||         (0: 8x8; 1 = 16x16)
-	 * │└───────> PPU master/slave select
-	 * |          (0: read backdrop from EXT pins; 1: output color on EXT pins)
-	 * └────────> Generate and NMI at the start of the vertical blanking interval
-	 *            (0: off; 1: on)
-	 */
-	MemoryMappedRegister<0x2000> PPUCTRL;
-	MemoryMappedRegister<0x2001> PPUMASK;
-	MemoryMappedRegister<0x2002> PPUSTATUS;
-	MemoryMappedRegister<0x2003> OAMADDR;
-	MemoryMappedRegister<0x2004> OAMDATA;
-	MemoryMappedRegister<0x2005> PPUSCROLL;
-	MemoryMappedRegister<0x2006> PPUADDR;
-	MemoryMappedRegister<0x2007> PPUDATA;
-	MemoryMappedRegister<0x4014> OAMDMA;
+	// not const some reads modify data
+	u8 CpuRead(u16 addr);
+	void CpuWrite(u16 addr, u8 val);
 
 private:
-	// not const some reads modify data
-	u8 cpuRead(u16 addr);
-	void cpuWrite(u16 addr, u8 val);
 
 	u8 memoryRead(u16 addr);
 	void memoryWrite(u16 addr, u8 val);
@@ -115,11 +36,22 @@ private:
 	u8 nametableMirroringWrite(u16 addr, u8 val);
 
 private:
-	Bus* m_bus = nullptr;
 	std::shared_ptr<Cartridge> m_cartridge;
+
+	u8 m_ppu_ctrl    = 0;
+	u8 m_ppu_status  = 0;
+	u8 m_ppu_mask    = 0;
+	u8 m_oam_addr    = 0;
+	u8 m_oam_data    = 0;
+	u16 m_ppu_scroll = 0;
+	u16 m_ppu_addr   = 0;
+	u8 m_ppu_data    = 0;
+	u8 m_oam_dma     = 0;
 
 	u32 m_cycles = 0;
 	u32 m_scanlines = 0;
+
+	u8 m_address_latch = 0;
 	
 	// 2 nametables
 	// other 2 are provided in cartridge
@@ -138,14 +70,6 @@ private:
 	// $3F19 - $3F1B -> Sprite color 2
 	// $3F1D - $3F1F -> Sprite color 3
 	std::array<u8, 0x0020> m_palleteRamIndexes{0};
-
-	struct OAM {
-		u8 y;
-		u8 tileNum;
-		u8 attribute;
-		u8 x;
-	};
-	std::array<OAM, 64> m_ObjetAttributeMemory{0};
 };
 
 template <PPU::MirrorName m1, PPU::MirrorName m2, PPU::MirrorName m3, PPU::MirrorName m4>
@@ -192,29 +116,29 @@ inline u8 PPU::nametableMirroringWrite(const u16 addr, const u8 val)
 	{
 		if      constexpr (m1 == MirrorName::A) m_ram[strippedAddr & 0x3FF] = val;
 		else if constexpr (m1 == MirrorName::B) m_ram[strippedAddr & 0x3FF + 0x400] = val;
-		else if constexpr (m1 == MirrorName::C) *m_cartridge->PpuRead(addr) = val;
-		else if constexpr (m1 == MirrorName::D) *m_cartridge->PpuRead(addr) = val;
+		else if constexpr (m1 == MirrorName::C) m_cartridge->PpuWrite(addr, val);
+		else if constexpr (m1 == MirrorName::D) m_cartridge->PpuWrite(addr, val);
 	}
 	else if (0x0400 <= strippedAddr && strippedAddr <= 0x07FF)
 	{
 		if      constexpr (m1 == MirrorName::A) m_ram[strippedAddr & 0x3FF] = val;
 		else if constexpr (m1 == MirrorName::B) m_ram[strippedAddr & 0x3FF + 0x400] = val;
-		else if constexpr (m1 == MirrorName::C) *m_cartridge->PpuRead(addr) = val;
-		else if constexpr (m1 == MirrorName::D) *m_cartridge->PpuRead(addr) = val;
+		else if constexpr (m1 == MirrorName::C) m_cartridge->PpuWrite(addr, val);
+		else if constexpr (m1 == MirrorName::D) m_cartridge->PpuWrite(addr, val);
 	}
 	else if (0x0800 <= strippedAddr && strippedAddr <= 0x0BFF)
 	{
 		if      constexpr (m1 == MirrorName::A) m_ram[strippedAddr & 0x3FF] = val;
 		else if constexpr (m1 == MirrorName::B) m_ram[strippedAddr & 0x3FF + 0x400] = val;
-		else if constexpr (m1 == MirrorName::C) *m_cartridge->PpuRead(addr) = val;
-		else if constexpr (m1 == MirrorName::D) *m_cartridge->PpuRead(addr) = val;
+		else if constexpr (m1 == MirrorName::C) m_cartridge->PpuWrite(addr, val);
+		else if constexpr (m1 == MirrorName::D) m_cartridge->PpuWrite(addr, val);
 	}
 	else if (0x0C00 <= strippedAddr && strippedAddr <= 0x0FFF)
 	{
 		if      constexpr (m1 == MirrorName::A) m_ram[strippedAddr & 0x3FF] = val;
 		else if constexpr (m1 == MirrorName::B) m_ram[strippedAddr & 0x3FF + 0x400] = val;
-		else if constexpr (m1 == MirrorName::C) *m_cartridge->PpuRead(addr) = val;
-		else if constexpr (m1 == MirrorName::D) *m_cartridge->PpuRead(addr) = val;
+		else if constexpr (m1 == MirrorName::C) m_cartridge->PpuWrite(addr, val);
+		else if constexpr (m1 == MirrorName::D) m_cartridge->PpuWrite(addr, val);
 	}
 	Lud::Unreachable();
 }

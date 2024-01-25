@@ -3,14 +3,7 @@
 
 namespace Emu
 {
-// wanted to see how the javadoc thing fares
-/**
- * @brief Translates the address provided into an address minus an offset mirrored to size exclussive
- * @param addr The address to be translated
- * @param size frequency of mirrors, size is exclussive, operation is addr % (size - 1)
- * @param offset default is 0, translates address given the offest by substracting offset to address
- * 
- */
+
 constexpr auto TranslateMirroredAddress = [](const u16 addr, const u16 size, const u16 offset=0) -> u16
 { 
 	return (addr - offset) % (size - 1); 
@@ -24,7 +17,7 @@ u8 Bus::Read(const u16 addr) const
 	}
 	if (addr >= 0x2000 && addr < 0x4000) // PPU registers and mirrors
 	{
-		return m_ppuRegisters[TranslateMirroredAddress(addr, 0x8, 0x2000)];
+		return m_ppu->CpuRead(addr);
 	}
 	//if (addr >= 0x4000 && addr < 0x4018) // APU and IO functionality
 	//{
@@ -47,7 +40,7 @@ void Bus::Write(const u16 addr, const u8 val)
 	}
 	else if (addr >= 0x2000 && addr < 0x4000) // PPU registers and mirrors
 	{
-		m_ppuRegisters[TranslateMirroredAddress(addr, 0x8, 0x2000)] = val;
+		m_ppu->CpuWrite(addr, val);
 	}
 	if (addr >= 0x4000 && addr < 0x4018) // APU and IO functionality
 	{

@@ -2,6 +2,7 @@
 #define EMU_BUS_HEADER
 
 #include "Core.hpp"
+#include "PPU.hpp"
 
 #include <array>
 #include <memory>
@@ -22,6 +23,7 @@ public:
 	void Write(u16 addr, u8 val);
 
 	void ConnectCartridge(const std::shared_ptr<Cartridge>& cartridge) { m_cartridge = cartridge; }
+	void ConnectPPU(PPU* ppu) { m_ppu = ppu; }
 
 private:
 	// maybe do this in a single array in the form of
@@ -30,8 +32,8 @@ private:
 	// 0x3020 bytes to be exact
 	// std::array<u8, 0x4020> m_memor{0};
 	std::array<u8, 0x800> m_cpuRam{0};
-	std::array<u8, 0x8> m_ppuRegisters{0};
 	std::shared_ptr<Cartridge> m_cartridge;
+	PPU* m_ppu = nullptr;
 };
 
 }

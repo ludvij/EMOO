@@ -7,7 +7,7 @@ Console::Console(Configuration conf)
 	: m_conf(conf)
 {
 	m_cpu.ConnectBus(&m_bus);
-	m_ppu.ConnectBus(&m_bus);
+	m_bus.ConnectPPU(&m_ppu);
 	//m_apu.ConnectBus(&m_bus);
 }
 

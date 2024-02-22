@@ -50,9 +50,18 @@ private:
 	u8 m_oam_dma     = 0;
 
 	// internal registers
+	// during rendering:  used for the scroll position, 
+	// outside rendering: used as the current VRAM address
 	u8 m_v = 0;
+	// during rendering:  starting coarse-x for the next scanline,
+	//                    starting y scroll for the screen
+	// outside rendering: holds the VRAM or scroll position before tranfering it
+	//                    to V
 	u8 m_t = 0;
+	// the fine-x position of the current scroll
 	u8 m_x = 0;
+	// toggles on each write to either PPUSCROLL or PPUADDR, indicating wether is the first or
+	// second write, clears on reads to PPUSTATUS
 	u8 m_w = 0;
 
 

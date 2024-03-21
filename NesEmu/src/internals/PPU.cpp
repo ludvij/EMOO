@@ -28,19 +28,29 @@ void PPU::Step()
 	}
 }
 
-u8 PPU::CpuRead(u16 addr)
+u8 PPU::CpuRead(const u16 addr)
 {
 	u8 data;
-	if (addr == 0x2002) // status
+	if (addr == PPU_STATUS_ADDR) // status
 	{
 		m_w = 0;
 		data = m_ppu_status;
 		m_ppu_status ^= (1 << 7);
 	}
-	else if (addr == 0x2004) // oam data
+	// https://www.nesdev.org/wiki/PPU_registers#Data_($2007)_%3C%3E_read/write
+	else if (addr == OAM_DATA_ADDR) // oam data
 	{
-		data = m_oam_data[m_oam_addr];
-	
+		data = m_oam_data[addr];
+	}
+	else if (addr == PPU_DATA_ADDR) 
+	{
+		// reads before the palette range [0, 0x3f00] are delayed one cycle
+		data = m_data_buffer;
+		m_data_buffer = memoryRead(m_v);
+		// reads in the palette range return inmediately 
+		if (m_v >= 0x3F00) data = m_data_buffer;
+
+		m_v += (m_ppu_ctrl & 0b0000'0010) ? 32 : 1;
 	}
 	else  // cheat so the compiler shuts up
 	{
@@ -51,19 +61,21 @@ u8 PPU::CpuRead(u16 addr)
 
 void PPU::CpuWrite(const u16 addr, const u8 val)
 {
-	if (addr == 0x2000) // control
+	if (addr == PPU_CTRL_ADDR) // control
 	{
 		m_ppu_ctrl = val;
+		// set nametables
+		m_t = ((m_ppu_ctrl & 0b0000'0011) << 10) | (m_t & 0b1100'1111);
 	}
-	else if (addr == 0x2001) // mask
+	else if (addr == PPU_MASK_ADDR) // mask
 	{
 		m_ppu_mask = val;
 	}
-	else if (addr == 0x2003) // oam address
+	else if (addr == OAM_ADDR_ADDR) // oam address
 	{
 		m_oam_addr = val;
 	}
-	else if (addr == 0x2004)
+	else if (addr == OAM_DATA_ADDR)
 	{
 		if (m_scanlines > 239)
 		{
@@ -72,27 +84,18 @@ void PPU::CpuWrite(const u16 addr, const u8 val)
 
 		}
 	}
-	else if (addr == 0x2005) // ppu scroll
+	else if (addr == PPU_SCROLL_ADDR) // ppu scroll
 	{
-		//TODO:
+		write_ppu_scroll(val);
 	}
-	else if (addr == 0x2006)
+	else if (addr == PPU_ADDR_ADDR)
 	{
-		if (m_w)
-		{
-			m_ppu_addr = val & 0xFF;
-			m_w = 1;
-		}
-		else
-		{
-			m_ppu_addr |= (val & 0x3F) << 8;
-			m_w = 1;
-		}
+		write_ppu_addr(val);
 	}
-	else if (addr == 0x2007)
+	else if (addr == PPU_DATA_ADDR)
 	{
-		memoryWrite(m_ppu_addr, m_ppu_data);
-		m_ppu_addr += m_ppu_ctrl >> 2 & 1;
+		memoryWrite(m_v, m_ppu_data);
+		m_v += (m_ppu_ctrl & 0b0000'0010) ? 32 : 1;
 	}
 }
 
@@ -140,7 +143,7 @@ u8 PPU::memoryRead(const u16 addr)
 		else if (addr == 0x0014) strippedAddr = 0x0004;
 		else if (addr == 0x0018) strippedAddr = 0x0008;
 		else if (addr == 0x001C) strippedAddr = 0x000C;
-		return m_palleteRamIndexes[addr];
+		return m_palleteRamIndexes[strippedAddr];
 	}
 	Lud::Unreachable();
 }
@@ -181,9 +184,57 @@ void PPU::memoryWrite(u16 addr, u8 val)
 		else if (addr == 0x0014) strippedAddr = 0x0004;
 		else if (addr == 0x0018) strippedAddr = 0x0008;
 		else if (addr == 0x001C) strippedAddr = 0x000C;
-		m_palleteRamIndexes[addr] = val;
+		m_palleteRamIndexes[strippedAddr] = val;
 	}
 	Lud::Unreachable();
+}
+
+void PPU::write_ppu_addr(const u8 val)
+{
+	if (!m_w)
+	{
+		// clear hi byte
+		m_t &= 0x00FF;
+		// mirror down hi byte
+		m_t = static_cast<u16>((val & 0x3F) << 8) | (m_t & 0x00FF);
+		m_w = 1;
+	}
+	else
+	{
+		// clear lo byte
+		
+		m_t = static_cast<u16>(m_t & 0xFF00) | val;
+		m_v = m_t;
+		m_w = 0;
+	}
+}
+
+// during rendering registers t and v can be seen as
+// yyy NN YYYYY XXXXX
+// ||| || ||||| └┴┴┴┴> corse x scroll
+// ||| || └┴┴┴┴──────> coarse y scroll
+// ||| └┴────────────> nametable select
+// └┴┴───────────────> fine y scroll
+//                     fine x scroll is stored in x register
+void PPU::write_ppu_scroll(const u8 val)
+{
+	if (!m_w) 
+	{
+		// store 3 lo bits of val into fine x
+		m_x = val & 0x7;
+		// store 5 hi bits of val into coarse x of t (bits from 0 to 4)
+		m_t = (val >> 3) | (m_t & 0b111'11'11111'00000);
+		m_w = 1;
+	}
+	else 
+	{
+		// store 3 lo bits of val into fine y (bits from 12 to 14)
+		m_t = ((val & 0x7) << 12) | (m_t & 0b000'11'11111'11111);
+		// store 5 hi bits of val into coarse y (bits from 5 to 9)
+		m_t = ((val >> 3) << 5) | (m_t & 0b111'11'00000'11111);
+		m_w = 0;
+	}
+
 }
 
 

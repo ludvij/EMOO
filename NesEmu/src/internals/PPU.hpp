@@ -11,6 +11,8 @@ namespace Emu
 constexpr u32 NTSC_FRAMERATE = 60;
 constexpr u32 PAL_FRAMERATE  = 50;
 
+
+
 class PPU
 {
 public:
@@ -27,6 +29,8 @@ private:
 
 	u8 memoryRead(u16 addr);
 	void memoryWrite(u16 addr, u8 val);
+	void write_ppu_addr(u8 val);
+	void write_ppu_scroll(u8 val);
 
 	// quick hack to easily implement mirrorings
 	enum class MirrorName {A, B, C, D};
@@ -35,33 +39,63 @@ private:
 	template<MirrorName m1, MirrorName m2, MirrorName m3, MirrorName m4>
 	u8 nametableMirroringWrite(u16 addr, u8 val);
 
+
+
 private:
 	std::shared_ptr<Cartridge> m_cartridge;
 
 	// MMIO registers
-	u8 m_ppu_ctrl    = 0;
-	u8 m_ppu_status  = 0;
-	u8 m_ppu_mask    = 0;
-	u8 m_oam_addr    = 0;
-	//u8 m_oam_data    = 0;
-	u16 m_ppu_scroll = 0;
-	u16 m_ppu_addr   = 0;
-	u8 m_ppu_data    = 0;
-	u8 m_oam_dma     = 0;
+	u8 m_ppu_ctrl     = 0;
+	u8 m_ppu_status   = 0;
+	u8 m_ppu_mask     = 0;
+	u8 m_oam_addr     = 0;
+	//u8 m_oam_data     = 0;
+	u8 m_ppu_scroll_x = 0;
+	u8 m_ppu_scroll_y = 0;
+	//u16 m_ppu_addr    = 0;
+	u8 m_ppu_data     = 0;
+	u8 m_oam_dma      = 0;
+
+	u8 m_data_buffer;
+
+	// $2000 
+	const u16 PPU_CTRL_ADDR   = 0x2000;
+	// $2001 
+	const u16 PPU_MASK_ADDR   = 0x2001;
+	// $2002 
+	const u16 PPU_STATUS_ADDR = 0x2002;
+	// $2003 
+	const u16 OAM_ADDR_ADDR   = 0x2003;
+	// $2004 
+	const u16 OAM_DATA_ADDR   = 0x2004;
+	// $2005 
+	const u16 PPU_SCROLL_ADDR = 0x2005;
+	// $2006 
+	const u16 PPU_ADDR_ADDR   = 0x2006;
+	// $2007 
+	const u16 PPU_DATA_ADDR   = 0x2007;
+	// $4014 
+	const u16 OAM_DMA_ADDR    = 0x4014;
 
 	// internal registers
 	// during rendering:  used for the scroll position, 
 	// outside rendering: used as the current VRAM address
-	u8 m_v = 0;
+	// this is the current VRAM address
+	//   15 bits
+	u16 m_v = 0;
 	// during rendering:  starting coarse-x for the next scanline,
 	//                    starting y scroll for the screen
 	// outside rendering: holds the VRAM or scroll position before tranfering it
 	//                    to V
-	u8 m_t = 0;
+	// this is the temporary VRAM address
+	//   15 bits
+	u16 m_t = 0;
 	// the fine-x position of the current scroll
+	//    3 bits
 	u8 m_x = 0;
 	// toggles on each write to either PPUSCROLL or PPUADDR, indicating wether is the first or
 	// second write, clears on reads to PPUSTATUS
+	//    1 bit
 	u8 m_w = 0;
 
 

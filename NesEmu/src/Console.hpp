@@ -22,7 +22,10 @@ public:
 	void Step();
 
 	CPU& GetCpu() { return m_cpu; }
+	PPU& GetPpu() { return m_ppu; }
 	Bus& GetBus() { return m_bus; }
+
+	void Reset();
 
 	void LoadCartridge(const std::string& filepath);
 

@@ -1,6 +1,6 @@
 ﻿#include "pch.hpp"
 
-#include "TestConfig.hpp"
+#include "../TestConfig.hpp"
 
 
 class TestLoadStore : public TestFixture
@@ -18,17 +18,17 @@ TEST_F(TestLoadStore, LDA)
 
 	clearCycles(2);
 
-	ASSERT_EQ(cpu.A(), 23);
+	ASSERT_EQ(console.GetCpu().A(), 23);
 
 	clearCycles(2);
 
-	ASSERT_EQ(cpu.A(), 0x80);
-	ASSERT_TRUE(cpu.P() & Emu::P_N_FLAG);
+	ASSERT_EQ(console.GetCpu().A(), 0x80);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::P_N_FLAG);
 
 	clearCycles(2);
 
-	ASSERT_EQ(cpu.A(), 0);
-	ASSERT_TRUE(cpu.P() & Emu::P_Z_FLAG);
+	ASSERT_EQ(console.GetCpu().A(), 0);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::P_Z_FLAG);
 }
 
 TEST_F(TestLoadStore, LDX)
@@ -41,17 +41,17 @@ TEST_F(TestLoadStore, LDX)
 
 	clearCycles(2);
 
-	ASSERT_EQ(cpu.X(), 23);
+	ASSERT_EQ(console.GetCpu().X(), 23);
 
 	clearCycles(2);
 
-	ASSERT_EQ(cpu.X(), 0x80);
-	ASSERT_TRUE(cpu.P() & Emu::P_N_FLAG);
+	ASSERT_EQ(console.GetCpu().X(), 0x80);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::P_N_FLAG);
 
 	clearCycles(2);
 
-	ASSERT_EQ(cpu.X(), 0);
-	ASSERT_TRUE(cpu.P() & Emu::P_Z_FLAG);
+	ASSERT_EQ(console.GetCpu().X(), 0);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::P_Z_FLAG);
 }
 
 TEST_F(TestLoadStore, LDY)
@@ -64,17 +64,17 @@ TEST_F(TestLoadStore, LDY)
 
 	clearCycles(2);
 
-	ASSERT_EQ(cpu.Y(), 23);
+	ASSERT_EQ(console.GetCpu().Y(), 23);
 
 	clearCycles(2);
 
-	ASSERT_EQ(cpu.Y(), 0x80);
-	ASSERT_TRUE(cpu.P() & Emu::P_N_FLAG);
+	ASSERT_EQ(console.GetCpu().Y(), 0x80);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::P_N_FLAG);
 
 	clearCycles(2);
 
-	ASSERT_EQ(cpu.Y(), 0);
-	ASSERT_TRUE(cpu.P() & Emu::P_Z_FLAG);
+	ASSERT_EQ(console.GetCpu().Y(), 0);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::P_Z_FLAG);
 }
 
 TEST_F(TestLoadStore, STA)
@@ -86,7 +86,7 @@ TEST_F(TestLoadStore, STA)
 
 	clearCycles(2 + 4);
 
-	ASSERT_EQ(memory.Read(0x1212), 23);
+	ASSERT_EQ(console.GetBus().Read(0x1212), 23);
 }
 
 TEST_F(TestLoadStore, STX)
@@ -100,7 +100,7 @@ TEST_F(TestLoadStore, STX)
 
 	clearCycles(2 + 4 + 4);
 
-	ASSERT_EQ(memory.Read(0x1212), 23);
+	ASSERT_EQ(console.GetBus().Read(0x1212), 23);
 }
 
 TEST_F(TestLoadStore, STY)
@@ -114,5 +114,5 @@ TEST_F(TestLoadStore, STY)
 
 	clearCycles(2 + 4 + 4);
 
-	ASSERT_EQ(memory.Read(0x1212), 23);
+	ASSERT_EQ(console.GetBus().Read(0x1212), 23);
 }

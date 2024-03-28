@@ -246,13 +246,13 @@ private: // private members
 	// Stack Pointer
 	u8 m_S = 0;
 	// vectors
-	constexpr static u16 s_stackVector  = 0x0100;
-	constexpr static u16 s_irqVectorL   = 0xFFFE;
-	constexpr static u16 s_irqVectorH   = 0xFFFF;
-	constexpr static u16 s_nmiVectorH   = 0xFFFA;
-	constexpr static u16 s_nmiVectorL   = 0xFFFB;
-	constexpr static u16 s_resetVectorL = 0xFFFC;
-	constexpr static u16 s_resetVectorH = 0xFFFB;
+	constexpr static u16 STACK_VECTOR    = 0x0100;
+	constexpr static u16 IRQ_VECTOR_LO   = 0xFFFE;
+	constexpr static u16 IRQ_VECTOR_HI   = 0xFFFF;
+	constexpr static u16 NMI_VECTOR_LO   = 0xFFFA;
+	constexpr static u16 NMI_VECTOR_HI   = 0xFFFB;
+	constexpr static u16 RESET_VECTOR_LO = 0xFFFC;
+	constexpr static u16 RESET_VECTOR_HI = 0xFFFD;
 	
 
 	// Status register

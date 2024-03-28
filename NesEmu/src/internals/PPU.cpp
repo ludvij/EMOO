@@ -5,6 +5,10 @@
 
 namespace Emu
 {
+PPU::PPU(Configuration conf)
+{
+	load_palette(conf.palette_src);
+}
 void PPU::Step()
 {
 	m_cycles++;
@@ -28,6 +32,20 @@ void PPU::Step()
 	}
 }
 
+void PPU::Reset()
+{
+	m_ppu_ctrl = 0;
+	m_ppu_mask = 0;
+	m_scanlines = 0;
+	m_cycles = 0;
+	m_x = 0;
+	m_v = 0;
+	m_t = 0;
+	m_w = 0;
+	m_data_buffer = 0;
+	m_ppu_status = 0;
+}
+
 u8 PPU::CpuRead(const u16 addr)
 {
 	u8 data;
@@ -46,7 +64,7 @@ u8 PPU::CpuRead(const u16 addr)
 	{
 		// reads before the palette range [0, 0x3f00] are delayed one cycle
 		data = m_data_buffer;
-		m_data_buffer = memoryRead(m_v);
+		m_data_buffer = memory_read(m_v);
 		// reads in the palette range return inmediately 
 		if (m_v >= 0x3F00) data = m_data_buffer;
 
@@ -94,12 +112,12 @@ void PPU::CpuWrite(const u16 addr, const u8 val)
 	}
 	else if (addr == PPU_DATA_ADDR)
 	{
-		memoryWrite(m_v, m_ppu_data);
+		memory_write(m_v, m_ppu_data);
 		m_v += (m_ppu_ctrl & 0b0000'0010) ? 32 : 1;
 	}
 }
 
-u8 PPU::memoryRead(const u16 addr)
+u8 PPU::memory_read(const u16 addr)
 {
 	if (addr <= 0x0FFF) // pattern table 0
 	{
@@ -148,7 +166,7 @@ u8 PPU::memoryRead(const u16 addr)
 	Lud::Unreachable();
 }
 
-void PPU::memoryWrite(u16 addr, u8 val)
+void PPU::memory_write(u16 addr, u8 val)
 {
 	if (addr <= 0x0FFF) // pattern table 0
 	{
@@ -235,6 +253,18 @@ void PPU::write_ppu_scroll(const u8 val)
 		m_w = 0;
 	}
 
+}
+
+void PPU::load_palette(const char* src)
+{
+	std::ifstream file(src);
+	// TODO: add more sophisticated handling
+#ifdef NES_EMU_DEBUG
+	if (!file.is_open()) {
+		std::throw_with_nested(std::runtime_error("File not found"));
+	}
+#endif // NES_EMU_DEBUG
+	file.read(std::bit_cast<char*>(m_palette.data()), sizeof(m_palette));
 }
 
 

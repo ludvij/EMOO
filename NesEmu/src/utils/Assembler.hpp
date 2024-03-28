@@ -171,7 +171,7 @@ private:
 			if (reg)
 			{
 				a.name = "AB";
-				*a.name += type;
+				a.name += type;
 			}
 			else
 			{
@@ -188,13 +188,13 @@ private:
 			if (temp > 255)
 			{
 				a.name = "AB";
-				*a.name += type;
+				a.name += type;
 				nbytes = 2;
 			}
 			else
 			{
 				a.name = "ZP";
-				*a.name += type;
+				a.name += type;
 
 				nbytes = 1;
 			}

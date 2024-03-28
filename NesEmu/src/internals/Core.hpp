@@ -47,10 +47,12 @@ struct Configuration
 	const u32 CpuClockDivisor;
 	const u32 PpuClockDivisor;
 	const u32 FrameRate;
+	// c++ strings will be my downfall
+	const char* palette_src;
 };
 
-inline constexpr Configuration NTSC{3579545, 12, 4, 60};
-inline constexpr Configuration PAL {4433619, 16, 5, 50};
+inline constexpr Configuration NTSC{3579545, 12, 4, 60, "palettes/NTSC.pal"};
+inline constexpr Configuration PAL {4433619, 16, 5, 50, "palettes/NTSC.pal"};
 
 /*
 * Master clock of the nes

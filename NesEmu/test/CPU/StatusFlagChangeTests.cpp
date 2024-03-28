@@ -1,6 +1,6 @@
 ﻿#include "pch.hpp"
 
-#include "TestConfig.hpp"
+#include "../TestConfig.hpp"
 
 
 class TestStatusFlagChange : public TestFixture
@@ -14,7 +14,7 @@ TEST_F(TestStatusFlagChange, SEC)
 
 	clearCycles(2);
 
-	ASSERT_TRUE(cpu.P() & Emu::P_C_FLAG );
+	ASSERT_TRUE(console.GetCpu().P() & Emu::P_C_FLAG );
 }
 
 
@@ -24,7 +24,7 @@ TEST_F(TestStatusFlagChange, CLC)
 
 	clearCycles(4);
 
-	ASSERT_FALSE(cpu.P() & Emu::P_C_FLAG );
+	ASSERT_FALSE(console.GetCpu().P() & Emu::P_C_FLAG );
 }
 
 TEST_F(TestStatusFlagChange, SED)
@@ -33,7 +33,7 @@ TEST_F(TestStatusFlagChange, SED)
 
 	clearCycles(2);
 
-	ASSERT_TRUE(cpu.P() & Emu::P_D_FLAG );
+	ASSERT_TRUE(console.GetCpu().P() & Emu::P_D_FLAG );
 }
 
 
@@ -43,7 +43,7 @@ TEST_F(TestStatusFlagChange, CLD)
 
 	clearCycles(4);
 
-	ASSERT_FALSE(cpu.P() & Emu::P_D_FLAG );
+	ASSERT_FALSE(console.GetCpu().P() & Emu::P_D_FLAG );
 }
 
 TEST_F(TestStatusFlagChange, SEI)
@@ -52,7 +52,7 @@ TEST_F(TestStatusFlagChange, SEI)
 
 	clearCycles(2);
 
-	ASSERT_TRUE(cpu.P() & Emu::P_I_FLAG );
+	ASSERT_TRUE(console.GetCpu().P() & Emu::P_I_FLAG );
 }
 
 
@@ -62,15 +62,15 @@ TEST_F(TestStatusFlagChange, CLI)
 
 	clearCycles(4);
 
-	ASSERT_FALSE(cpu.P() & Emu::P_I_FLAG );
+	ASSERT_FALSE(console.GetCpu().P() & Emu::P_I_FLAG );
 }
 
 TEST_F(TestStatusFlagChange, CLV)
 {
-	cpu.SetP(Emu::P_V_FLAG);
+	console.GetCpu().SetP(Emu::P_V_FLAG);
 	asse.Assemble("clv");
 
 	clearCycles(2);
 
-	ASSERT_FALSE(cpu.P() & Emu::P_V_FLAG );
+	ASSERT_FALSE(console.GetCpu().P() & Emu::P_V_FLAG );
 }

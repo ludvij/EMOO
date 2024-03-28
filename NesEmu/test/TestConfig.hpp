@@ -2,24 +2,31 @@
 #include <gtest/gtest.h>
 
 #include <NesEmu.hpp>
-
 #include <utils/Assembler.hpp>
 
 class TestFixture : public testing::Test
 {
 protected:
-	Emu::CPU cpu;
-	Emu::Bus memory;
+	Emu::Console console;
 	A6502::Assembler<Emu::Bus> asse;
+
+	TestFixture()
+		: console(Emu::NTSC)
+	{
+		asse.Link(&console.GetBus());
+	}
 
 	void SetUp() override
 	{
-		asse.Link(&memory);
-		cpu.ConnectBus(&memory);
+		// reload Cartridge memory
+		console.LoadCartridge("test/blank.nes");
+
+
 		// force reset to get the values I want in the registers
-		cpu.Reset();
-		memory.Write(0xFFFC, 0);
-		memory.Write(0xFFFB, 0);
+		console.Reset();
+		console.GetBus().Write(0xFFFC, 0);
+		console.GetBus().Write(0xFFFB, 0);
+		// clear startup cycles
 		clearCycles(8);
 	}
 
@@ -32,7 +39,7 @@ protected:
 	{
 		for (int i = 0; i < x; ++i)
 		{
-			cpu.Step();
+			console.GetCpu().Step();
 		}
 	}
 };

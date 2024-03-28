@@ -9,73 +9,76 @@ namespace Emu
 {
 
 constexpr u32 NTSC_FRAMERATE = 60;
-constexpr u32 PAL_FRAMERATE  = 50;
+constexpr u32 PAL_FRAMERATE = 50;
 
-
+struct Color {
+	u8 R;
+	u8 G;
+	u8 B;
+};
 
 class PPU
 {
 public:
-
+	PPU(Configuration conf);
 	void Step();
 
 	void ConnectCartridge(const std::shared_ptr<Cartridge>& cartridge) { m_cartridge = cartridge; }
+
+	void Reset();
 
 	// not const some reads modify data
 	u8 CpuRead(u16 addr);
 	void CpuWrite(u16 addr, u8 val);
 
+	u8  X() const { return m_x; }
+	u8  W() const { return m_w; }
+	u16 V() const { return m_v; }
+	u16 T() const { return m_t; }
+
 private:
 
-	u8 memoryRead(u16 addr);
-	void memoryWrite(u16 addr, u8 val);
+	u8 memory_read(u16 addr);
+	void memory_write(u16 addr, u8 val);
 	void write_ppu_addr(u8 val);
 	void write_ppu_scroll(u8 val);
 
 	// quick hack to easily implement mirrorings
-	enum class MirrorName {A, B, C, D};
+	enum class MirrorName { A, B, C, D };
 	template<MirrorName m1, MirrorName m2, MirrorName m3, MirrorName m4>
 	u8 nametableMirroringRead(u16 addr);
 	template<MirrorName m1, MirrorName m2, MirrorName m3, MirrorName m4>
 	u8 nametableMirroringWrite(u16 addr, u8 val);
 
+	void load_palette(const char* src);
 
 
 private:
 	std::shared_ptr<Cartridge> m_cartridge;
 
 	// MMIO registers
-	u8 m_ppu_ctrl     = 0;
-	u8 m_ppu_status   = 0;
-	u8 m_ppu_mask     = 0;
-	u8 m_oam_addr     = 0;
+	u8 m_ppu_ctrl = 0b0000'0000;
+	u8 m_ppu_mask = 0b0000'0000;
+	u8 m_ppu_status = 0b1010'0000; // power up state +0+x xxxx
+	u8 m_oam_addr = 0;
 	//u8 m_oam_data     = 0;
 	u8 m_ppu_scroll_x = 0;
 	u8 m_ppu_scroll_y = 0;
 	//u16 m_ppu_addr    = 0;
-	u8 m_ppu_data     = 0;
-	u8 m_oam_dma      = 0;
+	u8 m_ppu_data = 0;
+	u8 m_oam_dma = 0;
 
-	u8 m_data_buffer;
-
-	// $2000 
-	const u16 PPU_CTRL_ADDR   = 0x2000;
-	// $2001 
-	const u16 PPU_MASK_ADDR   = 0x2001;
-	// $2002 
-	const u16 PPU_STATUS_ADDR = 0x2002;
-	// $2003 
-	const u16 OAM_ADDR_ADDR   = 0x2003;
-	// $2004 
-	const u16 OAM_DATA_ADDR   = 0x2004;
-	// $2005 
-	const u16 PPU_SCROLL_ADDR = 0x2005;
-	// $2006 
-	const u16 PPU_ADDR_ADDR   = 0x2006;
-	// $2007 
-	const u16 PPU_DATA_ADDR   = 0x2007;
-	// $4014 
-	const u16 OAM_DMA_ADDR    = 0x4014;
+	u8 m_data_buffer = 0;
+									     
+	constexpr static u16 PPU_CTRL_ADDR   = 0x2000;
+	constexpr static u16 PPU_MASK_ADDR   = 0x2001;
+	constexpr static u16 PPU_STATUS_ADDR = 0x2002;
+	constexpr static u16 OAM_ADDR_ADDR   = 0x2003;
+	constexpr static u16 OAM_DATA_ADDR   = 0x2004;
+	constexpr static u16 PPU_SCROLL_ADDR = 0x2005;
+	constexpr static u16 PPU_ADDR_ADDR   = 0x2006;
+	constexpr static u16 PPU_DATA_ADDR   = 0x2007;
+	constexpr static u16 OAM_DMA_ADDR    = 0x4014;
 
 	// internal registers
 	// during rendering:  used for the scroll position, 
@@ -102,12 +105,12 @@ private:
 	u32 m_cycles = 0;
 	u32 m_scanlines = 0;
 
-	
+
 	// 2 nametables
 	// other 2 are provided in cartridge
-	std::array<u8, 2000> m_ram{0};
+	std::array<u8, 2000> m_ram{ 0 };
 	// backup if nametables are not handled by the cartridge (unlikely)
-	std::array<u8, 0x2000> m_patternTable{0};
+	std::array<u8, 0x2000> m_patternTable{ 0 };
 	// not configurable palette inner ram
 	// $3F00         -> Universal background color
 	// $3F01 - $3F03 -> Background palette 0
@@ -119,16 +122,18 @@ private:
 	// $3F15 - $3F17 -> Sprite color 1
 	// $3F19 - $3F1B -> Sprite color 2
 	// $3F1D - $3F1F -> Sprite color 3
-	std::array<u8, 0x0020> m_palleteRamIndexes{0};
-
-	// this was lifted from one lone coder
+	std::array<u8, 0x0020> m_palleteRamIndexes{ 0 };
+	//https://www.nesdev.org/wiki/PPU_palettes#2C02
+	//TODO: add palette file handling instead of static array
+	std::array<Color, 0x40> m_palette;
+        // this was lifted from one lone coder
 	struct OAM_Data
 	{
 		u8 y;
 		u8 id;
 		u8 attribute;
 		u8 x;
-	} OAM[64];
+	} OAM[64] = { 0 };
 	u8* m_oam_data = (u8*)OAM;
 };
 

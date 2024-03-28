@@ -270,8 +270,8 @@ void CPU::Reset()
 	m_P = 0x34;
 
 	// 6502 reads memory at $FFFC/D
-	u16 lo = memoryRead(s_resetVectorL);
-	u16 hi = memoryRead(s_resetVectorH);
+	u16 lo = memoryRead(RESET_VECTOR_LO);
+	u16 hi = memoryRead(RESET_VECTOR_HI);
 
 	m_PC = MAKE_WORD(hi, lo);
 
@@ -299,8 +299,8 @@ void CPU::IRQ()
 	stackPush(m_P);
 
 	setFlag(P_I_FLAG);
-	const u8 irqL = memoryRead(s_irqVectorL);
-	const u8 irqH = memoryRead(s_irqVectorH);
+	const u8 irqL = memoryRead(IRQ_VECTOR_LO);
+	const u8 irqH = memoryRead(IRQ_VECTOR_HI);
 
 	m_PC = MAKE_WORD(irqH, irqL);
 }
@@ -319,8 +319,8 @@ void CPU::NMI()
 
 	setFlag(P_I_FLAG);
 
-	const u8 nmiL = memoryRead(s_nmiVectorL);
-	const u8 nmiH = memoryRead(s_nmiVectorH);
+	const u8 nmiL = memoryRead(NMI_VECTOR_LO);
+	const u8 nmiH = memoryRead(NMI_VECTOR_HI);
 
 	m_PC = MAKE_WORD(nmiH, nmiL);
 }
@@ -700,8 +700,8 @@ void CPU::BRK(const u16 addr)
 	stackPush(m_P | P_1_FLAG | P_B_FLAG);
 	setFlag(P_I_FLAG);
 
-	const u8 lo = memoryRead(s_irqVectorL);
-	const u8 hi = memoryRead(s_irqVectorH);
+	const u8 lo = memoryRead(IRQ_VECTOR_LO);
+	const u8 hi = memoryRead(IRQ_VECTOR_HI);
 
 	m_PC = MAKE_WORD(hi, lo);
 }
@@ -1424,7 +1424,7 @@ void CPU::transferRegTo(const u8 from, u8& to)
 
 void CPU::stackPush(const u8 val) 
 {
-	memoryWrite(s_stackVector + m_S, val);
+	memoryWrite(STACK_VECTOR + m_S, val);
 	if (m_S == 0)
 	{
 		m_S = 0xFF;
@@ -1445,7 +1445,7 @@ u8 CPU::stackPop()
 	{
 		m_S++;
 	}
-	return memoryRead(s_stackVector + m_S);
+	return memoryRead(STACK_VECTOR + m_S);
 }
 
 }

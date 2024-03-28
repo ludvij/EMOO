@@ -3,8 +3,9 @@
 
 namespace Emu
 {
-Console::Console(Configuration conf)
+Console::Console(Configuration conf = NTSC)
 	: m_conf(conf)
+	, m_ppu(conf)
 {
 	m_cpu.ConnectBus(&m_bus);
 	m_bus.ConnectPPU(&m_ppu);
@@ -22,6 +23,12 @@ void Console::Step()
 		m_ppu.Step();
 	}
 	m_masterClock++;
+}
+
+void Console::Reset()
+{
+	m_cpu.Reset();
+	m_ppu.Reset();
 }
 
 void Console::LoadCartridge(const std::string& filepath)

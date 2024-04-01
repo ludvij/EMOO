@@ -18,8 +18,8 @@
 #include <backends/imgui_impl_vulkan.h>
 #include <stdio.h>          // printf, fprintf
 #include <stdlib.h>         // abort
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_vulkan.h>
+#include <SDL.h>
+#include <SDL_vulkan.h>
 #include <vulkan/vulkan.h>
 //#include <vulkan/vulkan_beta.h>
 

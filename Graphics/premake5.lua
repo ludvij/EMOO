@@ -16,7 +16,7 @@ project "Graphics"
 	includedirs {
 		"src",
 		"vendor/sdl2/include",
-		"../vendor/imgui",
+		"../vendor/ImGui",
 		"%{IncludeDir.VulkanSDK}",
 		"../NesEmu/src"
 	}

@@ -1,6 +1,6 @@
 workspace "TFG"
 	architecture "x86_64"
-	startproject "NesEmu"
+	startproject "Graphics"
 
 	configurations { 
 		"Debug", 
@@ -21,3 +21,4 @@ group ""
 
 
 include "NesEmu"
+include "GraphicsExternal.lua"

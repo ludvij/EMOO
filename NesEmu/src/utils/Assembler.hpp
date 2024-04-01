@@ -26,7 +26,6 @@ struct AddressingMode
 	std::optional<uint8_t> lo;
 	std::optional<uint8_t> hi;
 };
-// usage of c++20
 template <class T>
 concept MemoryAccessor = requires(T bus) {
 	{

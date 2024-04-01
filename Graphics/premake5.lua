@@ -1,5 +1,5 @@
 project "Graphics"
-	kind "StaticLib"
+	kind "ConsoleApp"
 	language "C++"
 	cppdialect "c++20"
 	targetdir ("%{wks.location}/bin/" .. outputDir .. "/%{prj.name}")
@@ -15,7 +15,25 @@ project "Graphics"
 
 	includedirs {
 		"src",
-		"vendor/include"
+		"vendor/sdl2/include",
+		"../vendor/imgui",
+		"%{IncludeDir.VulkanSDK}",
+		"../NesEmu/src"
+	}
+
+	libdirs {
+		"vendor/sdl2"
+	}
+
+	links {
+		"SDL2",
+		"ImGui",
+		"NesEmu",
+		"%{Library.Vulkan}"
+	}
+
+	defines {
+		"SDL_MAIN_HANDLED"
 	}
 
 	filter "system:windows"

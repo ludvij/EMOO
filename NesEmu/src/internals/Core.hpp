@@ -52,7 +52,7 @@ struct Configuration
 };
 
 inline constexpr Configuration NTSC{3579545, 12, 4, 60, "palettes/NTSC.pal"};
-inline constexpr Configuration PAL {4433619, 16, 5, 50, "palettes/NTSC.pal"};
+inline constexpr Configuration PAL {4433619, 16, 5, 50, "palettes/PAL.pal"};
 
 /*
 * Master clock of the nes

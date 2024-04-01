@@ -1,5 +1,5 @@
 project "NesEmu"
-	kind "ConsoleApp"
+	kind "StaticLib"
 	language "C++"
 	cppdialect "c++20"
 	targetdir ("%{wks.location}/bin/" .. outputDir .. "/%{prj.name}")
@@ -8,8 +8,8 @@ project "NesEmu"
 	files { 
 		"src/**.hpp", 
 		"src/**.cpp",
-		"test/**.cpp",
-		"test/**.hpp"
+		-- "test/**.cpp",
+		-- "test/**.hpp"
 	}
 
 	pchheader "pch.hpp"
@@ -26,13 +26,17 @@ project "NesEmu"
 			"NES_EMU_PLATFORM_WINDOWS"
 		}
 	
+	postbuildcommands {
+		"{COPYDIR} %[palettes] %[../Graphics/Palettes]"
+	}
+	
 	
 -- Uncomment to disable tests
 
 
-	defines {
-		"NES_EMU_TEST"
-	}
+	-- defines {
+	-- 	"NES_EMU_TEST"
+	-- }
 	
 
 	filter "configurations:Debug"
@@ -42,7 +46,7 @@ project "NesEmu"
 		runtime "debug"
 		symbols "On"
 		links {
-			"vendor/lib/debug/googletest.lib"
+			-- "vendor/lib/debug/googletest.lib"
 		}
 
 	filter "configurations:Release"
@@ -50,7 +54,7 @@ project "NesEmu"
 			"NES_EMU_NDEBUG" 
 		}
 		links {
-			"vendor/lib/release/googletest.lib"
+			-- "vendor/lib/release/googletest.lib"
 		}
 		runtime "release"
 		optimize "On"

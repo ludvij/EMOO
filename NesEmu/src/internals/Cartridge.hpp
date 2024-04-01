@@ -5,6 +5,7 @@
 
 #include <array>
 #include <string_view>
+#include <vector>
 #include <memory>
 #include <optional>
 #include "mappers/Mapper.hpp"

@@ -14,11 +14,16 @@ workspace "TFG"
 
 outputDir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
+include "setupVulkan.lua"
+
 group "Dependencies"
 	include "vendor/premake"
+	include "vendor/imgui"
 group ""
 
 
 
-include "NesEmu"
-include "GraphicsExternal.lua"
+group "Core"
+	include "Graphics"
+	include "NesEmu"
+group ""

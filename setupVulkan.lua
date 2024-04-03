@@ -11,8 +11,3 @@ Library = {}
 Library["Vulkan"] = "%{LibraryDir.VulkanSDK}/vulkan-1.lib"
 
 
-group "Dependencies"
-   include "vendor/imgui"
-group ""
-
-include "Graphics"

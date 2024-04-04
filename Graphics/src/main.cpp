@@ -1,4 +1,5 @@
 
+#if 0
 #include "Application.hpp"
 #include <imgui.h>
 int main() 
@@ -60,4 +61,18 @@ int main()
 	delete app;
 
 	return 0;
+}
+#endif
+#include <SDL.h>
+#include <SDL_vulkan.h>
+#include <vulkan/vulkan.h>
+
+#include <iostream>
+#include <Renderer.hpp>
+
+int main()
+{
+	Ui::Renderer* renderer = new Ui::Renderer();
+
+	delete renderer;
 }

@@ -4,6 +4,9 @@
 #include "Core.hpp"
 #include "Cartridge.hpp"
 #include "utils/Unreachable.hpp"
+#include <span>
+#include <array>
+
 
 namespace Emu
 {
@@ -52,9 +55,15 @@ private:
 
 	void load_palette(const char* src);
 
+	// gets called after each frame
+	void SetRenderCallback(std::function<void(std::span<Color, 256 * 240>)> callback) { m_callback = callback; }
+
 
 private:
+	std::array<Color, 256 * 240> m_screen;
 	std::shared_ptr<Cartridge> m_cartridge;
+
+	std::function<void(std::span<Color, 256 * 240>)> m_callback;
 
 	// MMIO registers
 	u8 m_ppu_ctrl = 0b0000'0000;

@@ -8,6 +8,7 @@ project "Graphics"
 	files { 
 		"src/**.hpp", 
 		"src/**.cpp",
+		"src/**.embed"
 	}
 
 	-- pchheader "pch.hpp"

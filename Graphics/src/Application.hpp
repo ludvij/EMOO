@@ -4,11 +4,14 @@
 #include <string>
 #include <functional>
 #include <memory>
+#include <unordered_map>
 #include <NesEmu.hpp>
 #include "Components/IComponent.hpp"
 
 
 struct SDL_Window;
+
+struct ImFont;
 
 
 namespace Ui
@@ -59,6 +62,8 @@ private:
 
 	std::vector<std::shared_ptr<IComponent>> m_components;
 	std::function<void()> m_menuCallback;
+
+	std::unordered_map<const char*, ImFont*> m_fonts;
 };
 
 }

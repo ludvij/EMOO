@@ -11,7 +11,8 @@
 #include <functional>
 #include "Components/IComponent.hpp"
 
-#include "ImGui/OpenSans.embed"
+#include "ImGui/OpenSans-Regular.embed"
+#include "ImGui/CascadiaMono-Regular.embed"
 
 // Dear ImGui: standalone example application for SDL2 + Vulkan
 
@@ -488,8 +489,16 @@ void Application::init()
 
     ImFontConfig fontConfig;
     fontConfig.FontDataOwnedByAtlas = false;
-    ImFont* font = io.Fonts->AddFontFromMemoryCompressedTTF(OpenSans_compressed_data, OpenSans_compressed_size, 25.0f, &fontConfig);
-    io.FontDefault = font;
+    io.Fonts->AddFontDefault();
+    ImFont* main_font = io.Fonts->AddFontFromMemoryCompressedTTF(OpenSans_compressed_data, OpenSans_compressed_size, 25.0f, &fontConfig);
+    ImFont* secondary_font = io.Fonts->AddFontFromMemoryCompressedTTF(OpenSans_compressed_data, OpenSans_compressed_size, 20.0f, &fontConfig);
+    ImFont* debug_font = io.Fonts->AddFontFromMemoryCompressedTTF(CascadiaMono_compressed_data, CascadiaMono_compressed_size, 20.0f, &fontConfig);
+
+    io.FontDefault = main_font;
+
+    m_fonts["main"] = main_font;
+    m_fonts["secondary"] = secondary_font;
+    m_fonts["debug"] = debug_font;
 
   
 }

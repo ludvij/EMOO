@@ -1,5 +1,5 @@
 
-#if 0
+#if 1
 #include "Application.hpp"
 #include <imgui.h>
 int main() 
@@ -62,7 +62,7 @@ int main()
 
 	return 0;
 }
-#endif
+#else
 #include <SDL.h>
 #include <SDL_vulkan.h>
 #include <vulkan/vulkan.h>
@@ -76,3 +76,5 @@ int main()
 
 	delete renderer;
 }
+
+#endif

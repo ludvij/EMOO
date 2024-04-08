@@ -40,7 +40,8 @@ project "Graphics"
 	filter "system:windows"
 		systemversion "latest"
 		defines {
-			"NES_EMU_PLATFORM_WINDOWS"
+			"NES_EMU_PLATFORM_WINDOWS",
+			"WIN32"
 		}
 	
 
@@ -58,3 +59,6 @@ project "Graphics"
 
 		runtime "release"
 		optimize "On"
+
+include "setupVulkan.lua"
+	

@@ -14,7 +14,6 @@ workspace "TFG"
 
 outputDir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
-include "setupVulkan.lua"
 
 group "Dependencies"
 	include "vendor/premake"

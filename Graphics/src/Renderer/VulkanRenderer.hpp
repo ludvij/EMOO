@@ -1,9 +1,10 @@
 #ifndef GRAPHICS_RENDERER_HEADER
 #define GRAPHICS_RENDERER_HEADER
 
-#include <vulkan/vulkan.h>
+#include <vulkan/vulkan.hpp>
 #include <SDL.h>
 #include <SDL_vulkan.h>
+#include <vector>
 
 
 namespace Ui
@@ -21,14 +22,21 @@ public:
 private:
 	void initWindow();
 	void initVulkan();
+		void createVulkanInstance();
+		void selectVulkanPhysicalDevice();
+		void selectLogicalDevice();
 
 	void cleanupVulkan();
 	void cleanupSdl();
+
 private:
 	SDL_Window* m_window = nullptr;
 
-	VkInstance m_vk_instance = VK_NULL_HANDLE;
-	VkAllocationCallbacks* m_vk_allocators = nullptr;
+	vk::Instance m_instance;
+	vk::PhysicalDevice m_physical_device;
+	vk::Device m_device;
+	vk::Queue m_graphics_queue;
+
 };
 }
 #endif

@@ -69,11 +69,15 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debug_report(VkDebugReportFlagsEXT flags, 
 }
 #endif // APP_USE_VULKAN_DEBUG_REPORT
 
-static bool IsExtensionAvailable(const ImVector<VkExtensionProperties>& properties, const char* extension)
+static bool is_extension_available(const ImVector<VkExtensionProperties>& properties, const char* extension)
 {
-    for (const VkExtensionProperties& p : properties)
+    for (const VkExtensionProperties& p : properties) 
+    {
         if (strcmp(p.extensionName, extension) == 0)
+        {
             return true;
+        }
+    }
     return false;
 }
 
@@ -124,10 +128,10 @@ static void SetupVulkan(ImVector<const char*> instance_extensions)
         check_vk_result(err);
 
         // Enable required extensions
-        if (IsExtensionAvailable(properties, VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME))
+        if (is_extension_available(properties, VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME))
             instance_extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
 #ifdef VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME
-        if (IsExtensionAvailable(properties, VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME))
+        if (is_extension_available(properties, VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME))
         {
             instance_extensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
             create_info.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;

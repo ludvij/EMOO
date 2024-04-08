@@ -1089,11 +1089,11 @@ static void ImGui_ImplSDL2_SwapBuffers(ImGuiViewport* viewport, void*)
 // SDL is graceful enough to _not_ need <vulkan/vulkan.h> so we can safely include this.
 #if SDL_HAS_VULKAN
 #include <SDL_vulkan.h>
-static int ImGui_ImplSDL2_CreateVkSurface(ImGuiViewport* viewport, ImU64 m_vk_instance, const void* vk_allocator, ImU64* out_vk_surface)
+static int ImGui_ImplSDL2_CreateVkSurface(ImGuiViewport* viewport, ImU64 m_instance, const void* vk_allocator, ImU64* out_vk_surface)
 {
     ImGui_ImplSDL2_ViewportData* vd = (ImGui_ImplSDL2_ViewportData*)viewport->PlatformUserData;
     (void)vk_allocator;
-    SDL_bool ret = SDL_Vulkan_CreateSurface(vd->Window, (VkInstance)m_vk_instance, (VkSurfaceKHR*)out_vk_surface);
+    SDL_bool ret = SDL_Vulkan_CreateSurface(vd->Window, (VkInstance)m_instance, (VkSurfaceKHR*)out_vk_surface);
     return ret ? 0 : 1; // ret ? VK_SUCCESS : VK_NOT_READY
 }
 #endif // SDL_HAS_VULKAN

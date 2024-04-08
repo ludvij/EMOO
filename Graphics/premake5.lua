@@ -11,6 +11,10 @@ project "Graphics"
 		"src/**.embed"
 	}
 
+	flags {
+		"FatalWarnings"
+	}
+
 	-- pchheader "pch.hpp"
 	-- pchsource "src/pch.cpp"
 

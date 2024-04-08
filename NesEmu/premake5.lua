@@ -12,6 +12,10 @@ project "NesEmu"
 		-- "test/**.hpp"
 	}
 
+	flags {
+		"FatalWarnings"
+	}
+
 	pchheader "pch.hpp"
 	pchsource "src/pch.cpp"
 

@@ -7,6 +7,7 @@ project "Graphics"
 
 	files { 
 		"src/**.hpp", 
+		"src/**.h", 
 		"src/**.cpp",
 		"src/**.embed"
 	}

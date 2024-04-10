@@ -63,16 +63,17 @@ int main()
 	return 0;
 }
 #else
-#include <SDL.h>
-#include <SDL_vulkan.h>
-#include <vulkan/vulkan.h>
 
 #include <iostream>
+#include "Window/SDL.hpp"
 #include "Renderer/VulkanRenderer.hpp"
+
+using Ui::Renderer, Ui::SDL;
 
 int main()
 {
-	Ui::Renderer* renderer = new Ui::Renderer();
+	SDL::Get().Init("Vulkan Window", 800, 800);
+	Renderer* renderer = new Renderer();
 
 	delete renderer;
 }

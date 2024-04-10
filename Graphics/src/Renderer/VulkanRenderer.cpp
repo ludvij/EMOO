@@ -9,7 +9,10 @@
 #include <iostream>
 #include <vector>
 #include <set>
-#include <optional>
+#include <limits>
+#include <algorithm>
+#include "Window/SDL.hpp"
+
 
 #include <vulkan/vulkan.hpp>
 
@@ -17,60 +20,8 @@
     #define APP_USE_VULKAN_DEBUG_REPORT
     // including a cpp file, I know, cringe, but it's only purpose is to get junk out of this file, 
     // so it's okay
-    #include "DebugMessengerUtils.cpp"
+    #include "Vulkan/DebugMessengerUtils.cpp"
 #endif
-
-
-struct QueueFamilyIndices 
-{
-    std::optional<uint32_t> graphics_family;
-    std::optional<uint32_t> presents_family;
-
-    bool IsComplete() const
-    {
-        return graphics_family.has_value() 
-            && presents_family.has_value();
-    }
-};
-
-static QueueFamilyIndices find_queue_families(const vk::PhysicalDevice& device, const vk::SurfaceKHR& surface)
-{
-    QueueFamilyIndices indices;
-    const std::vector<vk::QueueFamilyProperties> queue_families = device.getQueueFamilyProperties();
-
-    for (uint32_t i = 0; i < queue_families.size(); i++) 
-    {
-        if (queue_families[i].queueFlags & vk::QueueFlagBits::eGraphics)
-        {
-            indices.graphics_family = i;
-
-            if(device.getSurfaceSupportKHR(i, surface))
-            {
-                indices.presents_family = i;
-            }
-
-            if (indices.IsComplete())
-            {
-                break;
-            }
-        }
-    }
-
-    return indices;
-}
-
-bool is_extension_available(const std::vector<vk::ExtensionProperties>& properties, const char* extension)
-{
-    for (const vk::ExtensionProperties& p : properties) 
-    {
-        if (strcmp(p.extensionName, extension) == 0)
-        {
-            return true;
-        }
-    }
-    return false;
-}
-
 
 
 
@@ -90,37 +41,14 @@ Renderer::~Renderer()
 
 void Renderer::Init()
 {
-    initWindow();
     initVulkan();
 }
 
 void Renderer::Cleanup()
 {
     cleanupVulkan();
-    cleanupSdl();
 }
 
-void Renderer::initWindow()
-{
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0) 
-	{
-        SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Error %s\n", SDL_GetError());
-		std::exit(1);
-	}
-
-    SDL_WindowFlags window_flags = static_cast<SDL_WindowFlags>(
-        SDL_WINDOW_VULKAN | 
-        SDL_WINDOW_RESIZABLE | 
-        SDL_WINDOW_ALLOW_HIGHDPI
-    );
-
-	m_window = SDL_CreateWindow("Vulkan Window", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 800, window_flags);
-    if (m_window == nullptr)
-    {
-        SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Error: SDL_CreateWindow(): %s\n", SDL_GetError());
-        std::exit(1);
-    }
-}
 
 void Renderer::initVulkan()
 {
@@ -140,21 +68,9 @@ void Renderer::initVulkan()
     createSurface();
     selectVulkanPhysicalDevice();
     selectLogicalDevice();
-}
-
-bool Renderer::is_device_suitable(const vk::PhysicalDevice& device) const
-{
-    const QueueFamilyIndices indices = find_queue_families(device, m_surface);
-
-    const auto available_extensions = device.enumerateDeviceExtensionProperties();
-    std::set<std::string> required_extensions(m_device_extensions.begin(), m_device_extensions.end());
-
-    for (const auto& extension : available_extensions)
-    {
-        required_extensions.erase(extension.extensionName);
-    }
-
-    return indices.IsComplete() && required_extensions.empty();
+    createSwapChain();
+    createImageViews();
+    createGraphicsPipeline();
 }
 
 void Renderer::createVulkanInstance()
@@ -163,10 +79,11 @@ void Renderer::createVulkanInstance()
     const vk::ApplicationInfo app_info("NES EMULATOR TFG Luis Vijande", 1, "NES Emulator Rendering Engine", 1, VK_API_VERSION_1_1);
 
     std::vector<const char*> extensions;
+
     uint32_t extensions_count = 0;
-    SDL_Vulkan_GetInstanceExtensions(m_window, &extensions_count, nullptr);
+    SDL_Vulkan_GetInstanceExtensions(SDL::Get(), &extensions_count, nullptr);
     extensions.resize(extensions_count);
-    SDL_Vulkan_GetInstanceExtensions(m_window, &extensions_count, extensions.data());
+    SDL_Vulkan_GetInstanceExtensions(SDL::Get(), &extensions_count, extensions.data());
 
 #ifdef APP_USE_VULKAN_DEBUG_REPORT
     extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
@@ -190,7 +107,7 @@ void Renderer::selectVulkanPhysicalDevice()
     for (const auto& device : devices)
     {
         const auto properties = device.getProperties();
-        if (is_device_suitable(device) && properties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu)
+        if (isDeviceSuitable(device) && properties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu)
         {
             m_physical_device = device;
             return;
@@ -204,7 +121,7 @@ void Renderer::selectVulkanPhysicalDevice()
 void Renderer::createSurface()
 {
     VkSurfaceKHR surface;
-    if (SDL_Vulkan_CreateSurface(m_window, m_instance, &surface) == SDL_FALSE)
+    if (SDL_Vulkan_CreateSurface(SDL::Get(), m_instance, &surface) == SDL_FALSE)
     {
         std::exit(1);
     }
@@ -214,7 +131,7 @@ void Renderer::createSurface()
 
 void Renderer::selectLogicalDevice()
 {
-    const QueueFamilyIndices indices = find_queue_families(m_physical_device, m_surface);
+    const u::QueueFamilyIndices indices = u::findQueueFamilies(m_physical_device, m_surface);
     std::vector<vk::DeviceQueueCreateInfo> queue_create_infos;
     const std::set<uint32_t> unique_queue_families = {
         indices.graphics_family.value(), 
@@ -243,22 +160,129 @@ void Renderer::selectLogicalDevice()
 }
 
 
+void Renderer::createSwapChain()
+{
+    u::SwapChainSupportDetails support = u::querySwapchainSupport(m_physical_device, m_surface);
+
+    vk::SurfaceFormatKHR surface_format = u::chooseSwapSurfaceFormat(support.formats);
+    vk::PresentModeKHR present_mode = u::chooseSwapSurfacePresentMode(support.present_modes);
+    vk::Extent2D extent = u::chooseSwapExtent(support.capabilities, SDL::Get());
+
+    uint32_t image_count = support.capabilities.minImageCount + 1;
+    if (support.capabilities.maxImageCount > 0 && image_count > support.capabilities.maxImageCount)
+    {
+        image_count = support.capabilities.maxImageCount;
+    }
+
+    vk::SwapchainCreateInfoKHR create_info(
+        vk::SwapchainCreateFlagsKHR(), 
+        m_surface, 
+        image_count, 
+        surface_format.format,
+        surface_format.colorSpace,
+        extent,
+        1,
+        vk::ImageUsageFlagBits::eColorAttachment
+    );
+
+    const u::QueueFamilyIndices indices = u::findQueueFamilies(m_physical_device, m_surface);
+    uint32_t queue_family_indices[] = {indices.graphics_family.value(), indices.presents_family.value()};
+    if (indices.graphics_family != indices.presents_family)
+    {
+        create_info.imageSharingMode = vk::SharingMode::eConcurrent;
+        create_info.queueFamilyIndexCount = 2;
+        create_info.pQueueFamilyIndices = queue_family_indices;
+    }
+    
+    create_info.preTransform = support.capabilities.currentTransform;
+    create_info.presentMode = present_mode;
+    create_info.clipped = vk::True;
+    create_info.oldSwapchain = VK_NULL_HANDLE;
+
+    m_swapchain = {
+        .swapchain = m_device.createSwapchainKHR(create_info),
+        .extent = extent,
+        .format = surface_format.format,
+    };
+    auto images = m_device.getSwapchainImagesKHR(m_swapchain);
+    m_swapchain.frames.resize(images.size());
+    for(size_t i = 0; i < images.size(); i++)
+    {
+        m_swapchain.frames[i].image = images[i];
+    }
+    
+}
+
+void Renderer::createImageViews()
+{
+
+    for(size_t i = 0; i < m_swapchain.frames.size(); i++)
+    {
+        vk::ImageViewCreateInfo create_info(
+            vk::ImageViewCreateFlags(),
+            m_swapchain.frames[i].image,
+            vk::ImageViewType::e2D,
+            m_swapchain.format,
+            {}, // all to eIdentity
+            { vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 }
+        );
+
+        m_swapchain.frames[i].view = m_device.createImageView(create_info);
+    }
+}
+
+void Renderer::createGraphicsPipeline()
+{
+    // input assembler
+    // vertex shader
+    // tessellation
+    // geometry shader
+    // rasterization
+    // fragment shader
+    // color blending
+}
+
+
 // cleans the vulkan things
 void Renderer::cleanupVulkan()
 {
 #ifdef APP_USE_VULKAN_DEBUG_REPORT
     m_instance.destroyDebugUtilsMessengerEXT(debug_messenger);
 #endif // APP_USE_VULKAN_DEBUG_REPORT
+    for(const auto& image_frames : m_swapchain.frames)
+    {
+        m_device.destroyImageView(image_frames.view);
+    }
+    m_device.destroySwapchainKHR(m_swapchain);
     m_instance.destroySurfaceKHR(m_surface);
     m_device.destroy();
     m_instance.destroy();
+
 }
 
-void Renderer::cleanupSdl()
+
+bool Renderer::isDeviceSuitable(const vk::PhysicalDevice device) const
 {
-    SDL_DestroyWindow(m_window);
+    const u::QueueFamilyIndices indices = u::findQueueFamilies(device, m_surface);
 
-    SDL_Quit();
+    const auto available_extensions = device.enumerateDeviceExtensionProperties();
+    std::set<std::string> required_extensions(m_device_extensions.begin(), m_device_extensions.end());
+
+    for (const auto& extension : available_extensions)
+    {
+        required_extensions.erase(extension.extensionName);
+    }
+
+    bool swapchain_adequate = false;
+    if (required_extensions.empty())
+    {
+        const auto swapchain_support = u::querySwapchainSupport(device, m_surface);
+        swapchain_adequate = !swapchain_support.formats.empty() && !swapchain_support.present_modes.empty();
+    }
+    return indices.IsComplete() && required_extensions.empty() && swapchain_adequate;
 }
+
+
+
 
 }

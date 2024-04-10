@@ -5,7 +5,10 @@
 #include <SDL.h>
 #include <SDL_vulkan.h>
 #include <vector>
+#include <optional>
 
+#include "Vulkan/Swapchain.hpp"
+#include "Vulkan/Queues.hpp"
 
 namespace Ui
 {
@@ -19,22 +22,25 @@ public:
 	void Init();
 	void Cleanup();
 
+
 private:
-	void initWindow();
 	void initVulkan();
-		void createVulkanInstance();
-		void createSurface();
-		void selectVulkanPhysicalDevice();
-		void selectLogicalDevice();
+	// vulkan init things
+	void createVulkanInstance();
+	void createSurface();
+	void selectVulkanPhysicalDevice();
+	void selectLogicalDevice();
+	void createSwapChain();
+	void createImageViews();
+	void createGraphicsPipeline();
 
 	void cleanupVulkan();
-	void cleanupSdl();
 
-	bool is_device_suitable(const vk::PhysicalDevice& device) const;
 
+
+	bool isDeviceSuitable(const vk::PhysicalDevice device) const;
 
 private:
-	SDL_Window* m_window = nullptr;
 
 	vk::Instance       m_instance;
 	vk::PhysicalDevice m_physical_device;
@@ -43,9 +49,12 @@ private:
 	vk::Queue          m_presents_queue;
 	vk::SurfaceKHR     m_surface;
 
-	std::vector<const char*> m_device_extensions = {
+	u::SwapchainBundle m_swapchain;
+
+	std::vector<const char*> m_device_extensions{
 		vk::KHRSwapchainExtensionName
 	};
+
 };
 }
 #endif

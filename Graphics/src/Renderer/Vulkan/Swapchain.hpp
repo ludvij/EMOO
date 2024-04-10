@@ -1,5 +1,5 @@
 #ifndef GRAPHICS_SWAPCHAIN_HEADER
-#define GRPHICS_SWAPCHAIN_HEADER
+#define GRAPHICS_SWAPCHAIN_HEADER
 
 #include <vector>
 #include <vulkan/vulkan.hpp>

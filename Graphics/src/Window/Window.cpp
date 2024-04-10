@@ -1,4 +1,4 @@
-#include "SDL.hpp"
+#include "Window.hpp"
 #include <cstdlib>
 
 #include <vulkan/vulkan.hpp>
@@ -6,23 +6,19 @@
 namespace Ui
 {
 
-SDL& SDL::Get()
+Window& Window::Get()
 {
-	static SDL s_instance;
+	static Window s_instance;
 	return s_instance;
 }
 
-std::vector<const char*> SDL::GetInstanceExtensions()
-{
-    
-}
 	
 
-SDL::~SDL()
+Window::~Window()
 {
     SDL_DestroyWindow(m_window);
 }
-void SDL::Init(const char* name, uint32_t w, uint32_t h)
+void Window::Init(const char* name, uint32_t w, uint32_t h)
 {
     SDL_Init(SDL_INIT_VIDEO);
 	SDL_WindowFlags window_flags = static_cast<SDL_WindowFlags>(

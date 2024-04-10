@@ -65,14 +65,14 @@ int main()
 #else
 
 #include <iostream>
-#include "Window/SDL.hpp"
+#include "Window/Window.hpp"
 #include "Renderer/VulkanRenderer.hpp"
 
-using Ui::Renderer, Ui::SDL;
+using Ui::Renderer, Ui::Window;
 
 int main()
 {
-	SDL::Get().Init("Vulkan Window", 800, 800);
+	Window::Get().Init("Vulkan Window", 800, 800);
 	Renderer* renderer = new Renderer();
 
 	delete renderer;

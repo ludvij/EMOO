@@ -11,8 +11,10 @@
 #include <set>
 #include <limits>
 #include <algorithm>
-#include "Window/SDL.hpp"
+#include "Window/Window.hpp"
 
+#define LUD_SLURPER_IMPLEMENTATION
+#include "Util/Slurper.hpp"
 
 #include <vulkan/vulkan.hpp>
 
@@ -23,7 +25,9 @@
     #include "Vulkan/DebugMessengerUtils.cpp"
 #endif
 
-
+#include "Vulkan/Swapchain.hpp"
+#include "Vulkan/Queues.hpp"
+#include "Vulkan/Shader.hpp"
 
 
 
@@ -81,9 +85,9 @@ void Renderer::createVulkanInstance()
     std::vector<const char*> extensions;
 
     uint32_t extensions_count = 0;
-    SDL_Vulkan_GetInstanceExtensions(SDL::Get(), &extensions_count, nullptr);
+    SDL_Vulkan_GetInstanceExtensions(Window::Get(), &extensions_count, nullptr);
     extensions.resize(extensions_count);
-    SDL_Vulkan_GetInstanceExtensions(SDL::Get(), &extensions_count, extensions.data());
+    SDL_Vulkan_GetInstanceExtensions(Window::Get(), &extensions_count, extensions.data());
 
 #ifdef APP_USE_VULKAN_DEBUG_REPORT
     extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
@@ -121,7 +125,7 @@ void Renderer::selectVulkanPhysicalDevice()
 void Renderer::createSurface()
 {
     VkSurfaceKHR surface;
-    if (SDL_Vulkan_CreateSurface(SDL::Get(), m_instance, &surface) == SDL_FALSE)
+    if (SDL_Vulkan_CreateSurface(Window::Get(), m_instance, &surface) == SDL_FALSE)
     {
         std::exit(1);
     }
@@ -166,7 +170,7 @@ void Renderer::createSwapChain()
 
     vk::SurfaceFormatKHR surface_format = u::chooseSwapSurfaceFormat(support.formats);
     vk::PresentModeKHR present_mode = u::chooseSwapSurfacePresentMode(support.present_modes);
-    vk::Extent2D extent = u::chooseSwapExtent(support.capabilities, SDL::Get());
+    vk::Extent2D extent = u::chooseSwapExtent(support.capabilities, Window::Get());
 
     uint32_t image_count = support.capabilities.minImageCount + 1;
     if (support.capabilities.maxImageCount > 0 && image_count > support.capabilities.maxImageCount)
@@ -233,13 +237,80 @@ void Renderer::createImageViews()
 
 void Renderer::createGraphicsPipeline()
 {
-    // input assembler
-    // vertex shader
-    // tessellation
-    // geometry shader
-    // rasterization
-    // fragment shader
-    // color blending
+    auto vert_shader_code = Lud::Slurper::SlurpChars("Shader/SPIRV/vert.spv", std::ios::binary);
+    auto frag_shader_code = Lud::Slurper::SlurpChars("Shader/SPIRV/frag.spv", std::ios::binary);
+
+    vk::ShaderModule vert_shader_module = createShaderModule(m_device, vert_shader_code);
+    vk::ShaderModule frag_shader_module = createShaderModule(m_device, frag_shader_code);
+
+    vk::PipelineShaderStageCreateInfo vert_shader_stage_info(
+        vk::PipelineShaderStageCreateFlags(),
+        vk::ShaderStageFlagBits::eVertex,
+        vert_shader_module,
+        "main"
+    );
+
+    vk::PipelineShaderStageCreateInfo frag_shader_stage_info(
+        vk::PipelineShaderStageCreateFlags(),
+        vk::ShaderStageFlagBits::eFragment,
+        frag_shader_module,
+        "main"
+    );
+
+    vk::PipelineShaderStageCreateInfo shader_stages[] = {vert_shader_stage_info, frag_shader_stage_info};
+
+    /*std::vector<vk::DynamicState> dynamic_states = {vk::DynamicState::eViewport, vk::DynamicState::eScissor};
+
+    vk::PipelineDynamicStateCreateInfo dynamic_state_info(vk::PipelineDynamicStateCreateFlags(), dynamic_states);*/
+
+    vk::PipelineVertexInputStateCreateInfo vertex_input_info(vk::PipelineVertexInputStateCreateFlags());
+
+    m_device.destroyShaderModule(vert_shader_module);
+    m_device.destroyShaderModule(frag_shader_module);
+
+    vk::PipelineInputAssemblyStateCreateInfo input_assembly_info(
+        vk::PipelineInputAssemblyStateCreateFlags(),
+        vk::PrimitiveTopology::eTriangleList,
+        vk::False
+    );
+
+    vk::Viewport viewport(
+        0.0f, 
+        0.0f, 
+        static_cast<float>(m_swapchain.extent.width),
+        static_cast<float>(m_swapchain.extent.height),
+        0.0f,
+        1.0f
+    );
+
+    vk::Rect2D scissor({0, 0}, m_swapchain.extent);
+
+    vk::PipelineRasterizationStateCreateInfo rasterizer_info(
+        vk::PipelineRasterizationStateCreateFlags(),
+        vk::False,
+        vk::False,
+        vk::PolygonMode::eFill,
+        vk::CullModeFlagBits::eBack,
+        vk::FrontFace::eClockwise,
+        vk::False,
+        0.0f,
+        0.0f,
+        0.0f,
+        1.0f
+    );
+
+    vk::PipelineMultisampleStateCreateInfo multisamplig_info(
+        vk::PipelineMultisampleStateCreateFlagBits(),
+        vk::SampleCountFlagBits::e1,
+        vk::False,
+        1.0f,
+        nullptr,
+        vk::False,
+        vk::False
+    );
+
+
+
 }
 
 
@@ -257,7 +328,7 @@ void Renderer::cleanupVulkan()
     m_instance.destroySurfaceKHR(m_surface);
     m_device.destroy();
     m_instance.destroy();
-
+    
 }
 
 

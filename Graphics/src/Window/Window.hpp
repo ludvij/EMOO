@@ -8,24 +8,21 @@
 
 namespace Ui
 {
-class SDL
+class Window
 {
 using NativeType = SDL_Window*;
 public:
-	static SDL& Get();
-	~SDL();
+	static Window& Get();
+	~Window();
 
 	void Init(const char* name, uint32_t w, uint32_t h);
 
-	std::vector<const char*> GetInstanceExtensions();
-
-
-	SDL(SDL const&)            = delete;
-	void operator=(SDL const&) = delete;
+	Window(Window const&)            = delete;
+	void operator=(Window const&) = delete;
 	operator NativeType() { return m_window; };
 
 private:
-	SDL() = default;
+	Window() = default;
 
 private:
 	NativeType m_window = nullptr;

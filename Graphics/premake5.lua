@@ -74,7 +74,7 @@ include "setupVulkan.lua"
 	filter 'files:Shader/*'
 		buildmessage "Compiling %{file.relpath}"
 		buildcommands {
-			VULKAN_SDK .. '/BIN/glslangValidator -V -o "%{file.directory}/SPIRV/%{file.basename}.spv" "%{file.relpath}"'
+			'%{VULKAN_SDK}/BIN/glslangValidator -V -o "%{file.directory}/SPIRV/%{file.name}.spv" "%{file.relpath}"'
 		}
 
 		buildoutputs {

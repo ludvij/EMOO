@@ -414,7 +414,7 @@ void Engine::init_background_pipelines()
 
 	m_gradient_pipeline_layout = m_device.createPipelineLayout(compute_layout);
 
-	auto shader_module = vkutil::load_shader_module("Shader/SPIRV/gradient.spv", m_device);
+	auto shader_module = vkutil::load_shader_module("Shader/SPIRV/gradient.comp.spv", m_device);
 
 	vk::PipelineShaderStageCreateInfo stage_info({}, vk::ShaderStageFlagBits::eCompute, shader_module, "main");
 

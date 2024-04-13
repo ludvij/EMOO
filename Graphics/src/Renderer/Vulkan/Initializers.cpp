@@ -134,4 +134,26 @@ vk::RenderingInfo rendering_info(vk::Extent2D render_extent, vk::RenderingAttach
 	return info;
 }
 
+vk::PipelineLayoutCreateInfo pipeline_layout_create_info()
+{
+	vk::PipelineLayoutCreateInfo info;
+
+	info.setLayoutCount = 0;
+	info.pSetLayouts = nullptr;
+
+	info.pushConstantRangeCount = 0;
+	info.pSetLayouts = 0;
+	info.pushConstantRangeCount = 0;
+	info.pPushConstantRanges = nullptr;
+
+	return info;
+}
+
+vk::PipelineShaderStageCreateInfo pipeline_shader_stage_create_info(vk::ShaderStageFlagBits flags, vk::ShaderModule module)
+{
+	vk::PipelineShaderStageCreateInfo info({}, flags, module, "main");
+
+	return info;
+}
+
 }

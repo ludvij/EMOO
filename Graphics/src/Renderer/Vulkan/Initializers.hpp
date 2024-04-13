@@ -32,5 +32,9 @@ vk::RenderingAttachmentInfo attachment_info(vk::ImageView view, vk::ClearValue* 
 
 vk::RenderingInfo rendering_info(vk::Extent2D render_extent, vk::RenderingAttachmentInfo* color_attachment, vk::RenderingAttachmentInfo* depth_attachment);
 
+vk::PipelineShaderStageCreateInfo pipeline_shader_stage_create_info(vk::ShaderStageFlagBits flags, vk::ShaderModule module);
+
+vk::PipelineLayoutCreateInfo pipeline_layout_create_info();
+
 }
 #endif // !GRAPHICS_RENDERER_INITIALIZERS_HEADER

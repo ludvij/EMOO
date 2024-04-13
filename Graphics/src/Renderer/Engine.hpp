@@ -37,8 +37,6 @@ struct AllocatedImage
 	VmaAllocation allocation;
 };
 
-}
-
 struct FrameData 
 {
 	vk::CommandPool command_pool;
@@ -51,6 +49,24 @@ struct FrameData
 
 	Detail::DeletionQueue deletion_queue;
 };
+
+template<size_t N>
+struct ComputePushConstants
+{
+	std::array<glm::vec4, N> data;
+};
+
+struct ComputeEffect
+{
+	std::string_view name;
+
+	vk::Pipeline       pipeline;
+	vk::PipelineLayout layout;
+
+	ComputePushConstants<4> data;
+};
+}
+
 
 constexpr uint32_t FRAME_OVERLAP = 2;
 
@@ -74,6 +90,8 @@ private:
 
 	void draw_background(vk::CommandBuffer cmd);
 
+	void draw_geometry(vk::CommandBuffer cmd);
+
 
 private:
 
@@ -93,13 +111,16 @@ private:
 	void init_descriptors();
 
 	void init_pipelines();
-	void init_background_pipelines();
+
+	void init_background_pipeline();
+
+	void init_triangle_pipeline();
 
 
 	void create_swapchain(uint32_t width, uint32_t height);
 	void destroy_swapchain();
 
-	FrameData& get_current_frame() { return m_frames[m_frame_number % FRAME_OVERLAP]; }
+	Detail::FrameData& get_current_frame() { return m_frames[m_frame_number % FRAME_OVERLAP]; }
 
 private: 
 	// vulkan structures
@@ -110,7 +131,7 @@ private:
 	vkutil::SwapchainBundle    m_swapchain;
 	vk::DebugUtilsMessengerEXT m_debug_messenger;
 
-	FrameData m_frames[FRAME_OVERLAP];
+	Detail::FrameData m_frames[FRAME_OVERLAP];
 
 	// queue
 	vkutil::QueueBundle m_graphics_queue;
@@ -131,8 +152,10 @@ private:
 	vk::DescriptorSet           m_draw_image_descriptors;
 	vk::DescriptorSetLayout     m_draw_image_descriptor_layout;
 
-	vk::Pipeline       m_gradient_pipeline;
 	vk::PipelineLayout m_gradient_pipeline_layout;
+
+	vk::PipelineLayout m_triangle_pipeline_layout;
+	vk::Pipeline       m_triangle_pipeline;
 
 private:
 
@@ -148,6 +171,9 @@ private:
 	vk::Fence m_imm_fence;
 	vk::CommandBuffer m_imm_command_buffer;
 	vk::CommandPool   m_imm_command_pool;
+
+	std::vector<Detail::ComputeEffect> m_background_effects;
+	int m_current_background_effect{ 0 };
 
 };
 

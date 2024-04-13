@@ -11,8 +11,8 @@
 
 #include "Util/lud_assert.hpp"
 
-#include "Vulkan/Initializers.hpp"
 #include "Vulkan/Descriptors.hpp"
+#include "Vulkan/Initializers.hpp"
 
 #define VMA_IMPLEMENTATION
 #include <vma/vk_mem_alloc.h>
@@ -110,6 +110,8 @@ void Engine::draw()
 
 	draw_background(cmd);
 
+	draw_geometry(cmd);
+
 
 	vkutil::transition_image(
 		cmd, 
@@ -166,11 +168,39 @@ void Engine::draw()
 
 void Engine::draw_background(vk::CommandBuffer cmd)
 {
-	cmd.bindPipeline(vk::PipelineBindPoint::eCompute, m_gradient_pipeline);
+	Detail::ComputeEffect& effect = m_background_effects[m_current_background_effect];
+
+	cmd.bindPipeline(vk::PipelineBindPoint::eCompute, effect.pipeline);
 	
 	cmd.bindDescriptorSets(vk::PipelineBindPoint::eCompute, m_gradient_pipeline_layout, 0, m_draw_image_descriptors, nullptr);
 
+	cmd.pushConstants(m_gradient_pipeline_layout, vk::ShaderStageFlagBits::eCompute, 0, sizeof(effect.data), &effect.data);
+
 	cmd.dispatch(static_cast<uint32_t>(std::ceil(m_draw_extent.width / 16.0)), static_cast<uint32_t>(std::ceil(m_draw_extent.height / 16.0)), 1);
+}
+
+void Engine::draw_geometry(vk::CommandBuffer cmd)
+{
+	vk::RenderingAttachmentInfo color_attachment = vkinit::attachment_info(m_draw_image.view, nullptr, vk::ImageLayout::eGeneral);
+
+	vk::RenderingInfo render_info = vkinit::rendering_info(m_draw_extent, &color_attachment, nullptr);
+
+	cmd.beginRendering(render_info);
+
+	cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, m_triangle_pipeline);
+	
+	vk::Viewport viewport(0, 0, static_cast<float>(m_draw_extent.width), static_cast<float>(m_draw_extent.height), 0.0f, 1.0f);
+
+	cmd.setViewport(0, viewport);
+
+	vk::Rect2D scissor({0, 0}, {m_draw_extent.width, m_draw_extent.height});
+
+	cmd.setScissor(0, scissor);
+
+	cmd.draw(3, 1, 0, 0);
+
+
+	cmd.endRendering();
 }
 
 
@@ -206,9 +236,23 @@ void Engine::Run()
 
 		ImGui_ImplVulkan_NewFrame();
 		ImGui_ImplSDL2_NewFrame();
+
 		ImGui::NewFrame();
 
-		ImGui::ShowDemoWindow();
+		if (ImGui::Begin("background"))
+		{
+			Detail::ComputeEffect& selected = m_background_effects[m_current_background_effect];
+
+			ImGui::Text("Selected effect: ", selected.name);
+			ImGui::SliderInt("Effect index", &m_current_background_effect, 0, static_cast<uint32_t>(m_background_effects.size() - 1));
+
+			ImGui::InputFloat4("data[0]", std::bit_cast<float*>(&selected.data.data[0]));
+			ImGui::InputFloat4("data[1]", std::bit_cast<float*>(&selected.data.data[1]));
+			ImGui::InputFloat4("data[2]", std::bit_cast<float*>(&selected.data.data[2]));
+			ImGui::InputFloat4("data[3]", std::bit_cast<float*>(&selected.data.data[3]));
+
+		}
+		ImGui::End();
 
 		ImGui::Render();
 
@@ -347,7 +391,7 @@ void Engine::init_commands()
 
 	m_imm_command_buffer = m_device.allocateCommandBuffers(cmd_alloc_info).front();
 
-	m_deletion_queue.push_function([=]() {
+	m_deletion_queue.push_function([&]() {
 		m_device.destroyCommandPool(m_imm_command_pool);
 	});
 }
@@ -405,30 +449,90 @@ void Engine::init_descriptors()
 
 void Engine::init_pipelines()
 {
-	init_background_pipelines();
+	init_background_pipeline();
+	
+
+	init_triangle_pipeline();
 }
 
-void Engine::init_background_pipelines()
+void Engine::init_background_pipeline()
 {
-	vk::PipelineLayoutCreateInfo compute_layout({}, m_draw_image_descriptor_layout);
+	vk::PushConstantRange push_constants(vk::ShaderStageFlagBits::eCompute, 0, sizeof(Detail::ComputePushConstants<4>));
+	vk::PipelineLayoutCreateInfo compute_layout({}, m_draw_image_descriptor_layout, push_constants);
 
 	m_gradient_pipeline_layout = m_device.createPipelineLayout(compute_layout);
 
-	auto shader_module = vkutil::load_shader_module("Shader/SPIRV/gradient.comp.spv", m_device);
+	auto gradient_shader = vkutil::load_shader_module("Shader/SPIRV/gradient_color.comp.spv", m_device);
 
-	vk::PipelineShaderStageCreateInfo stage_info({}, vk::ShaderStageFlagBits::eCompute, shader_module, "main");
+	vk::PipelineShaderStageCreateInfo stage_info({}, vk::ShaderStageFlagBits::eCompute, gradient_shader, "main");
 
 	vk::ComputePipelineCreateInfo compute_info({}, stage_info, m_gradient_pipeline_layout);
 
-	auto [res, val] = m_device.createComputePipeline({}, compute_info);
-	VK_CHECK(res);
-	m_gradient_pipeline = val;
+	Detail::ComputeEffect gradient;
+	gradient.layout = m_gradient_pipeline_layout;
+	gradient.name = "gradient";
+	gradient.data = {{glm::vec4(1,0,0,1), glm::vec4(0,0,1,1)}};
 
-	m_device.destroyShaderModule(shader_module);
+	VK_CHECK(m_device.createComputePipelines(VK_NULL_HANDLE, 1, &compute_info, nullptr, &gradient.pipeline));
+
+
+	auto sky_shader = vkutil::load_shader_module("Shader/SPIRV/sky.comp.spv", m_device);
+	compute_info.stage.module = sky_shader;
+
+	Detail::ComputeEffect sky;
+	sky.layout = m_gradient_pipeline_layout;
+	sky.name = "sky";
+	sky.data = {{glm::vec4(0.1, 0.2, 0.4, 0.97)}};
+
+	VK_CHECK(m_device.createComputePipelines(VK_NULL_HANDLE, 1, &compute_info, nullptr, &sky.pipeline));
+
+
+	m_background_effects.push_back(gradient);
+	m_background_effects.push_back(sky);
+
+	m_device.destroyShaderModule(gradient_shader);
+	m_device.destroyShaderModule(sky_shader);
 
 	m_deletion_queue.push_function([&](){
 		m_device.destroyPipelineLayout(m_gradient_pipeline_layout);
-		m_device.destroyPipeline(m_gradient_pipeline);
+		for (const auto& effect : m_background_effects)
+		{
+			m_device.destroyPipeline(effect.pipeline);
+		}
+	});
+}
+
+void Engine::init_triangle_pipeline()
+{
+	auto frag_module = vkutil::load_shader_module("Shader/SPIRV/colored_triangle.frag.spv", m_device);
+	auto vert_module = vkutil::load_shader_module("Shader/SPIRV/colored_triangle.vert.spv", m_device);
+
+	auto pipeline_layout_info = vkinit::pipeline_layout_create_info();
+
+	m_triangle_pipeline_layout = m_device.createPipelineLayout(pipeline_layout_info);
+
+
+	vkutil::PipelineBuilder builder;
+
+	m_triangle_pipeline = builder
+		.SetPipelineLayout(m_triangle_pipeline_layout)
+		.SetShaders(vert_module, frag_module)
+		.SetInputTopology(vk::PrimitiveTopology::eTriangleList)
+		.SetPolygonMode(vk::PolygonMode::eFill)
+		.SetCullMode(vk::CullModeFlagBits::eNone, vk::FrontFace::eClockwise)
+		.SetMultisamplingNone()
+		.DisableBlending()
+		.DisableDepthTest()
+		.SetColorAttachmentFormat(m_draw_image.format)
+		.SetDepthFormat(vk::Format::eUndefined)
+		.Build(m_device);
+
+	m_device.destroyShaderModule(frag_module);
+	m_device.destroyShaderModule(vert_module);
+
+	m_deletion_queue.push_function([&](){ 
+		m_device.destroyPipelineLayout(m_triangle_pipeline_layout);
+		m_device.destroyPipeline(m_triangle_pipeline);
 	});
 }
 
@@ -525,6 +629,8 @@ void Engine::init_imgui()
 		ImGui::DestroyContext();
 		m_device.destroyDescriptorPool(imgui_pool);
 	});
+
+	ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
 }
 

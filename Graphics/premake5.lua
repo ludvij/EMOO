@@ -9,7 +9,10 @@ project "Graphics"
 		"src/**.hpp", 
 		"src/**.h", 
 		"src/**.cpp",
-		"src/**.embed"
+		"src/**.embed",
+		"Shader/**.comp",
+		"Shader/**.frag",
+		"Shader/**.vert",
 	}
 
 	flags {
@@ -52,18 +55,30 @@ project "Graphics"
 
 	filter "configurations:Debug"
 		defines { 
-			"NES_EMU_DEBUG" 
+			"GRAPHICS_DEBUG" 
 		}
 		runtime "debug"
 		symbols "On"
 	
 	filter "configurations:Release"
 		defines { 
-			"NES_EMU_NDEBUG" 
+			"GRAPHICS_NDEBUG",
+			"NDEBUG"
 		}
 
 		runtime "release"
 		optimize "On"
 
 include "setupVulkan.lua"
+
+	filter 'files:Shader/*'
+		buildmessage "Compiling %{file.relpath}"
+		buildcommands {
+			VULKAN_SDK .. '/BIN/glslangValidator -V -o "%{file.directory}/SPIRV/%{file.basename}.spv" "%{file.relpath}"'
+		}
+
+		buildoutputs {
+			"%{file.directory}/SPIRV/%{file.basename}.spv"
+		}
+
 	

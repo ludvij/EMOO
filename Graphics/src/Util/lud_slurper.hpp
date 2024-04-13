@@ -67,11 +67,11 @@ public:
 
 
 	// reads whole file to char vector
-	std::vector<char> ReadChars();
+	template<typename T> std::vector<T> ReadTo();
 
-	static std::vector<char> SlurpChars(const std::string_view& filename, std::ios_base::openmode mode = std::ios_base::in);
-	static std::vector<char> SlurpChars(const std::string& filename, std::ios_base::openmode mode = std::ios_base::in);
-	static std::vector<char> SlurpChars(const char* filename, std::ios_base::openmode mode = std::ios_base::in);
+	template<typename T> static std::vector<T> SlurpTo(const std::string_view& filename, std::ios_base::openmode mode = std::ios_base::in);
+	template<typename T> static std::vector<T> SlurpTo(const std::string& filename, std::ios_base::openmode mode = std::ios_base::in);
+	template<typename T> static std::vector<T> SlurpTo(const char* filename, std::ios_base::openmode mode = std::ios_base::in);
 
 	// closes file
 	void Close();
@@ -79,7 +79,9 @@ public:
 	bool HasSpace(size_t size);
 
 private:
-	std::ifstream file;
+	std::ifstream m_file;
+	std::ios_base::openmode m_mode;
+
 };
 }
 
@@ -95,16 +97,19 @@ inline Slurper::Slurper()
 inline Slurper::Slurper(const std::string_view& filename, const std::ios_base::openmode mode) 
 	: Slurper()
 { 
+	m_mode = mode;
 	Open(filename, mode); 
 }
 inline Slurper::Slurper(const std::string& filename, const std::ios_base::openmode mode) 
 	: Slurper()
 { 
+	m_mode = mode;
 	Open(filename, mode); 
 }
 inline Slurper::Slurper(const char* filename, const std::ios_base::openmode mode ) 
 	: Slurper()
 { 
+	m_mode = mode;
 	Open(filename, mode); 
 }
 
@@ -136,7 +141,7 @@ inline Slurper& Lud::Slurper::Open(const std::string_view& filename, const std::
 	if (IsOpen()) {
 		Close();
 	}
-	file.open(std::string(filename), mode);
+	m_file.open(std::string(filename), mode);
 	return *this;
 }
 inline Slurper& Lud::Slurper::Open(const std::string& filename, const std::ios_base::openmode mode) 
@@ -144,7 +149,7 @@ inline Slurper& Lud::Slurper::Open(const std::string& filename, const std::ios_b
 	if (IsOpen()) {
 		Close();
 	}
-	file.open(filename, mode);
+	m_file.open(filename, mode);
 	return *this;
 } 
 inline Slurper& Lud::Slurper::Open(const char* filename, const std::ios_base::openmode mode) 
@@ -152,19 +157,19 @@ inline Slurper& Lud::Slurper::Open(const char* filename, const std::ios_base::op
 	if (IsOpen()) {
 		Close();
 	}
-	file.open(filename, mode);
+	m_file.open(filename, mode);
 	return *this;
 }
 
 inline bool Slurper::IsOpen() const
 {
-	return file.is_open();
+	return m_file.is_open();
 }
 
 inline Slurper& Slurper::Reset() 
 {
-	file.clear();
-	file.seekg(0, std::ios::beg);
+	m_file.clear();
+	m_file.seekg(0, std::ios::beg);
 
 	return *this;
 }
@@ -172,7 +177,7 @@ inline Slurper& Slurper::Reset()
 
 inline void Slurper::Close()
 {
-	file.close();
+	m_file.close();
 }
 
 inline std::optional<std::string> Slurper::Read(const size_t chars)
@@ -182,7 +187,7 @@ inline std::optional<std::string> Slurper::Read(const size_t chars)
 	}
 	char* buffer = new char[chars];
 
-	file.read(buffer, chars);
+	m_file.read(buffer, chars);
 	std::string text(buffer);
 
 	delete[] buffer;
@@ -203,13 +208,13 @@ template<class T> std::optional<T> Slurper::ReadStructure()
 
 template<class T> void Slurper::ReadToStructure(T& t)
 {
-	file.read(std::bit_cast<char*>(&t), sizeof(t));
+	m_file.read(std::bit_cast<char*>(&t), sizeof(t));
 }
 
 inline std::string Slurper::ReadLine()
 {
 	std::string line;
-	std::getline(file, line);
+	std::getline(m_file, line);
 
 	return line;
 }
@@ -218,7 +223,7 @@ inline std::vector<std::string> Slurper::ReadLines()
 {
 	std::vector<std::string> lines;
 
-	for(std::string line; std::getline(file, line);) {
+	for(std::string line; std::getline(m_file, line);) {
 		lines.emplace_back(line);
 	}
 	return lines;
@@ -226,18 +231,18 @@ inline std::vector<std::string> Slurper::ReadLines()
 
 inline size_t Slurper::Where()  
 {
-	return file.tellg();
+	return m_file.tellg();
 }
 
 inline Slurper& Slurper::Move(const size_t pos)
 {
-	file.seekg(pos);
+	m_file.seekg(pos);
 	return *this;
 }
 
 inline Slurper& Slurper::Move(const size_t offset, const std::ios_base::seekdir dir)
 {
-	file.seekg(offset, dir);
+	m_file.seekg(offset, dir);
 	return *this;
 }
 
@@ -250,32 +255,37 @@ inline bool Slurper::HasSpace(const size_t size)
 	return size < length - current;
 }
 
-inline std::vector<char> Slurper::ReadChars()
+template<typename T>
+inline std::vector<T> Slurper::ReadTo()
 {
-	size_t file_size = static_cast<size_t>(file.tellg());
-	std::vector<char> buffer(file_size);
+	if (!(m_mode & std::ios::ate))
+		Move(0, std::ios::end);
+	size_t file_size = static_cast<size_t>(Where());
+	std::vector<T> buffer(file_size / sizeof(T));
 	Move(0);
-	file.read(buffer.data(), file_size);
+	m_file.read(reinterpret_cast<char*>(buffer.data()), file_size);
 	
 	return buffer;
 }
-
-inline std::vector<char> Slurper::SlurpChars(const std::string_view& filename, std::ios_base::openmode mode)
+template<typename T>
+inline std::vector<T> Slurper::SlurpTo(const std::string_view& filename, std::ios_base::openmode mode)
 {
 	Slurper file(filename, mode | std::ios::ate);
-	return file.ReadChars();
+	return file.ReadTo<T>();
 }
 
-inline std::vector<char> Slurper::SlurpChars(const std::string& filename, std::ios_base::openmode mode)
+template<typename T>
+inline std::vector<T> Slurper::SlurpTo(const std::string& filename, std::ios_base::openmode mode)
 {
 	Slurper file(filename, mode | std::ios::ate);
-	return file.ReadChars();
+	return file.ReadTo<T>();
 }
 
-inline std::vector<char> Slurper::SlurpChars(const char* filename, std::ios_base::openmode mode)
+template<typename T>
+inline std::vector<T> Slurper::SlurpTo(const char* filename, std::ios_base::openmode mode)
 {
 	Slurper file(filename, mode | std::ios::ate);
-	return file.ReadChars();
+	return file.ReadTo<T>();
 }
 
 }

@@ -31,7 +31,7 @@ project "NesEmu"
 		}
 	
 	postbuildcommands {
-		"{COPYDIR} %[palettes] %[../Graphics/Palettes]"
+		-- "{COPYDIR} %[palettes] %[../Graphics/Palettes]"
 	}
 	
 	

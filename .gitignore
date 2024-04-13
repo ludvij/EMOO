@@ -16,3 +16,5 @@
 # Exceptions
 
 !vendor/premake/bin
+
+Makefile

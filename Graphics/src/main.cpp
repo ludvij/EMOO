@@ -65,17 +65,17 @@ int main()
 #else
 
 #include <iostream>
-#include "Window/Window.hpp"
-#include "Renderer/VulkanRenderer.hpp"
+#include "Renderer/Engine.hpp"
 
-using Ui::Renderer, Ui::Window;
+using Ui::Engine;
 
 int main()
 {
-	Window::Get().Init("Vulkan Window", 800, 800);
-	Renderer* renderer = new Renderer();
+	Engine* engine = new Engine();
 
-	delete renderer;
+	engine->Run();
+
+	delete engine;
 }
 
 #endif

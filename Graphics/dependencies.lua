@@ -7,8 +7,10 @@ IncludeDir["stb"] = "vendor/stb"
 IncludeDir["imgui"] = "../vendor/ImGui"
 IncludeDir["sdl2"] = "vendor/sdl2/include"
 IncludeDir["NesEmu"] = "../NesEmu/src"
-IncludeDir["fastgltf"] = "../vendor/fastgltf/include"
--- IncludeDir["gltf"]
+IncludeDir["stb"] = "vendor/stb"
+IncludeDir["tiny_gltf"] = "vendor/tiny_gltf"
+IncludeDir["json"] = "vendor/json"
+IncludeDir["lud_utils"] = "../vendor/lud_utils"
 
 LibraryDir = {}
 LibraryDir["VulkanSDK"] = "%{VULKAN_SDK}/Lib"

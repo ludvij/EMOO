@@ -9,6 +9,8 @@
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
+#include <tiny_gltf.h>
+
 //#include <fastgltf/glm_element_traits.hpp>
 //#include <fastgltf/parser.hpp>
 //#include <fastgltf/tools.hpp>

@@ -30,7 +30,10 @@ project "Graphics"
 		"%{IncludeDir.glm}",
 		"%{IncludeDir.stb}",
 		"%{IncludeDir.NesEmu}",
-		"%{IncludeDir.fastgltf}"
+		"%{IncludeDir.tiny_gltf}",
+		"%{IncludeDir.stb}",
+		"%{IncludeDir.json}",
+		"%{IncludeDir.lud_utils}",
 
 	}
 
@@ -41,7 +44,6 @@ project "Graphics"
 	links {
 		"ImGui",
 		"NesEmu",
-		"fastgltf",
 		"%{Library.sdl2}",
 		"%{Library.Vulkan}"
 	}

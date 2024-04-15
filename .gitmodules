@@ -7,3 +7,4 @@
 [submodule "vendor/imgui"]
 	path = vendor/imgui
 	url = git@github.com:ludvij/imgui.git
+	branch = docking

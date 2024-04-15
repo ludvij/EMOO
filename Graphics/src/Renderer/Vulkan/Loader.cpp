@@ -25,6 +25,8 @@ std::optional<std::vector<std::shared_ptr<MeshAsset>>> load_gltf_meshes(Engine* 
 	data.loadFromFile(path);
 
 	constexpr auto gltf_options = fastgltf::Options::LoadGLBBuffers | fastgltf::Options::LoadExternalBuffers;
+
+	return std::nullopt;
 }
 
 }

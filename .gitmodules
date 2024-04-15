@@ -4,3 +4,6 @@
 [submodule "vendor/fastgltf"]
 	path = vendor/fastgltf
 	url = git@github.com:ludvij/fastgltf.git
+[submodule "imgui"]
+	path = imgui
+	url = git@github.com:ludvij/imgui.git

@@ -269,6 +269,13 @@ void Engine::Run()
 
 		ImGui::Render();
 
+		//// Update and Render additional Platform Windows
+  //      if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+  //      {
+  //          ImGui::UpdatePlatformWindows();
+  //          ImGui::RenderPlatformWindowsDefault();
+  //      }
+
 		draw();
 	}
 }
@@ -763,7 +770,23 @@ void Engine::init_imgui()
 	pipeline_create_info.colorAttachmentCount = 1;
 	pipeline_create_info.pColorAttachmentFormats = &m_swapchain.format;
 
+	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
+
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+	//io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+
+	 ImGui::StyleColorsDark();
+    //ImGui::StyleColorsLight();
+
+     // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
+    ImGuiStyle& style = ImGui::GetStyle();
+    if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+    {
+        style.WindowRounding = 0.0f;
+        style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+    }
 
 	ImGui_ImplSDL2_InitForVulkan(m_window);
 
@@ -792,7 +815,7 @@ void Engine::init_imgui()
 		m_device.destroyDescriptorPool(imgui_pool);
 	});
 
-	ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+	
 
 }
 

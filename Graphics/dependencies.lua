@@ -1,0 +1,22 @@
+VULKAN_SDK = os.getenv("VULKAN_SDK")
+
+IncludeDir = {}
+IncludeDir["VulkanSDK"] = "%{VULKAN_SDK}/Include"
+IncludeDir["glm"] = "%{VULKAN_SDK}/Include"
+IncludeDir["stb"] = "vendor/stb"
+IncludeDir["imgui"] = "../vendor/ImGui"
+IncludeDir["sdl2"] = "vendor/sdl2/include"
+IncludeDir["NesEmu"] = "../NesEmu/src"
+IncludeDir["fastgltf"] = "../vendor/fastgltf/include"
+-- IncludeDir["gltf"]
+
+LibraryDir = {}
+LibraryDir["VulkanSDK"] = "%{VULKAN_SDK}/Lib"
+LibraryDir["sdl2"] = "vendor/sdl2/lib"
+
+Library = {}
+Library["Vulkan"] = "%{LibraryDir.VulkanSDK}/vulkan-1.lib"
+Library["sdl2"] = "%{LibraryDir.sdl2}/SDL2"
+
+
+

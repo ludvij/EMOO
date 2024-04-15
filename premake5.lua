@@ -17,6 +17,7 @@ outputDir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 group "Dependencies"
 	include "vendor/premake"
 	include "vendor/imgui"
+	include "vendor/fastgltf"
 group ""
 
 

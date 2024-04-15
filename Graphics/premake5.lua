@@ -3,7 +3,7 @@ project "Graphics"
 	language "C++"
 	cppdialect "c++20"
 	targetdir ("%{wks.location}/bin/" .. outputDir .. "/%{prj.name}")
-	objdir ("%{wks.location}/bin-int/" .. outputDir .. "/%{prj.name}")
+	objdir ("%{wks.location}/bin/intermediates/" .. outputDir .. "/%{prj.name}")
 
 	files { 
 		"src/**.hpp", 
@@ -24,20 +24,25 @@ project "Graphics"
 
 	includedirs {
 		"src",
-		"vendor/sdl2/include",
-		"../vendor/ImGui",
+		"%{IncludeDir.sdl2}",
+		"%{IncludeDir.imgui}",
 		"%{IncludeDir.VulkanSDK}",
-		"../NesEmu/src"
+		"%{IncludeDir.glm}",
+		"%{IncludeDir.stb}",
+		"%{IncludeDir.NesEmu}",
+		"%{IncludeDir.fastgltf}"
+
 	}
 
 	libdirs {
-		"vendor/sdl2"
+		"%{LibraryDir.sdl}"
 	}
 
 	links {
-		"SDL2",
 		"ImGui",
 		"NesEmu",
+		"fastgltf",
+		"%{Library.sdl2}",
 		"%{Library.Vulkan}"
 	}
 
@@ -69,7 +74,7 @@ project "Graphics"
 		runtime "release"
 		optimize "On"
 
-include "setupVulkan.lua"
+include "dependencies.lua"
 
 	filter 'files:Shader/*'
 		buildmessage "Compiling %{file.relpath}"

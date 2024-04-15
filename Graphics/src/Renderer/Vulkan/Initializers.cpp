@@ -149,6 +149,13 @@ vk::PipelineLayoutCreateInfo pipeline_layout_create_info()
 	return info;
 }
 
+vk::BufferCreateInfo buffer_create_info(size_t size, vk::BufferUsageFlags usage)
+{
+	vk::BufferCreateInfo info({}, size, usage);
+
+	return info;
+}
+
 vk::PipelineShaderStageCreateInfo pipeline_shader_stage_create_info(vk::ShaderStageFlagBits flags, vk::ShaderModule module)
 {
 	vk::PipelineShaderStageCreateInfo info({}, flags, module, "main");

@@ -36,5 +36,7 @@ vk::PipelineShaderStageCreateInfo pipeline_shader_stage_create_info(vk::ShaderSt
 
 vk::PipelineLayoutCreateInfo pipeline_layout_create_info();
 
+vk::BufferCreateInfo buffer_create_info(size_t size, vk::BufferUsageFlags usage);
+
 }
 #endif // !GRAPHICS_RENDERER_INITIALIZERS_HEADER

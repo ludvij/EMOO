@@ -11,7 +11,6 @@
 
 # Binaries
 **/bin
-**/bin-int
 **.nes
 # Exceptions
 

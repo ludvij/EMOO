@@ -19,12 +19,56 @@
 #include <glm/mat4x4.hpp>
 #include <glm/vec4.hpp>
 
-constexpr auto VK_CHECK = [](vk::Result err)
+
+#define VK_CHECK(err) \
+do { \
+	if (err != vk::Result::eSuccess) \
+	{ \
+		std::cerr << "Detected Vulkan error: " << vk::to_string(err) << '\n'; \
+		throw std::runtime_error(vk::to_string(err)); \
+	} \
+} while (0) 
+
+namespace Ui::Detail
 {
-    if (err != vk::Result::eSuccess)
-    {
-        std::cerr << "Detected Vulkan error: " << vk::to_string(err) << '\n';
-        throw std::runtime_error(vk::to_string(err));
-    }
+struct AllocatedImage
+{
+	vk::Image     image;
+	vk::ImageView view;
+	vk::Format    format;
+	vk::Extent3D  extent;
+	VmaAllocation allocation;
 };
+
+
+struct AllocatedBuffer
+{
+    vk::Buffer        buffer;
+	VmaAllocation     allocation;
+	VmaAllocationInfo info{};
+
+};
+
+struct Vertex
+{
+	glm::vec3 position;
+	float uv_x;
+	glm::vec3 normal;
+	float uv_y;
+	glm::vec4 color;
+};
+
+struct GPUMeshBuffers 
+{
+	AllocatedBuffer   index_buffer;
+	AllocatedBuffer   vertex_buffer;
+	vk::DeviceAddress address;
+};
+
+struct GPUDrawPushConstants 
+{
+	glm::mat4 world_matrix;
+	vk::DeviceAddress vertex_buffer;
+};
+}
 #endif

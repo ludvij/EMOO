@@ -4,7 +4,7 @@ project "Premake"
 	kind "Utility"
 
 	targetdir ("%{wks.location}/bin/" .. outputDir .. "/%{prj.name}")
-	objdir ("%{wks.location}/bin-int/" .. outputDir .. "/%{prj.name}")
+	objdir ("%{wks.location}/bin/intermediates/" .. outputDir .. "/%{prj.name}")
 
 	files{
 		"%{wks.location}/**.lua"

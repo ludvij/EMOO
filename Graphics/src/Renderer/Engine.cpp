@@ -79,6 +79,8 @@ void Engine::init()
 
 	init_imgui();
 
+	init_default_data();
+
 	m_initialised = true;
 }
 
@@ -199,6 +201,17 @@ void Engine::draw_geometry(vk::CommandBuffer cmd)
 
 	cmd.draw(3, 1, 0, 0);
 
+	cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, m_mesh_pipeline);
+
+	Detail::GPUDrawPushConstants push_constants;
+	push_constants.world_matrix = glm::mat4{ 1.0f };
+	push_constants.vertex_buffer = m_rectangle.address;
+
+	cmd.pushConstants(m_mesh_pipeline_layout, vk::ShaderStageFlagBits::eVertex, 0, sizeof(push_constants), &push_constants);
+
+	cmd.bindIndexBuffer(m_rectangle.index_buffer.buffer, 0, vk::IndexType::eUint32);
+
+	cmd.drawIndexed(6, 1, 0, 0, 0);
 
 	cmd.endRendering();
 }
@@ -358,9 +371,7 @@ void Engine::init_swapchain()
 	draw_image_alloc_info.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 	draw_image_alloc_info.requiredFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
-	VkImage dummy;
-	vmaCreateImage(m_allocator, &draw_image_info, &draw_image_alloc_info, &dummy, &m_draw_image.allocation, nullptr);
-	m_draw_image.image = dummy;
+	vmaCreateImage(m_allocator, &draw_image_info, &draw_image_alloc_info, std::bit_cast<VkImage*>(&m_draw_image.image), &m_draw_image.allocation, nullptr);
 
 	auto draw_image_view_info = vkinit::image_view_create_info(m_draw_image.format, m_draw_image.image, vk::ImageAspectFlagBits::eColor);
 
@@ -453,6 +464,7 @@ void Engine::init_pipelines()
 	
 
 	init_triangle_pipeline();
+	init_mesh_pipeline();
 }
 
 void Engine::init_background_pipeline()
@@ -536,6 +548,71 @@ void Engine::init_triangle_pipeline()
 	});
 }
 
+void Engine::init_mesh_pipeline()
+{
+	auto frag_module = vkutil::load_shader_module("Shader/SPIRV/colored_triangle.frag.spv", m_device);
+	auto vert_module = vkutil::load_shader_module("Shader/SPIRV/colored_triangle_mesh.vert.spv", m_device);
+
+	auto pipeline_layout_info = vkinit::pipeline_layout_create_info();
+
+	vk::PushConstantRange buffer_range(vk::ShaderStageFlagBits::eVertex, 0, sizeof(Detail::GPUDrawPushConstants));
+
+	pipeline_layout_info.setPushConstantRanges(buffer_range);
+
+	m_mesh_pipeline_layout = m_device.createPipelineLayout(pipeline_layout_info);
+
+
+	vkutil::PipelineBuilder builder;
+
+	m_mesh_pipeline = builder
+		.SetPipelineLayout(m_mesh_pipeline_layout)
+		.SetShaders(vert_module, frag_module)
+		.SetInputTopology(vk::PrimitiveTopology::eTriangleList)
+		.SetPolygonMode(vk::PolygonMode::eFill)
+		.SetCullMode(vk::CullModeFlagBits::eNone, vk::FrontFace::eClockwise)
+		.SetMultisamplingNone()
+		.DisableBlending()
+		.DisableDepthTest()
+		.SetColorAttachmentFormat(m_draw_image.format)
+		.SetDepthFormat(vk::Format::eUndefined)
+		.Build(m_device);
+
+	m_device.destroyShaderModule(frag_module);
+	m_device.destroyShaderModule(vert_module);
+
+	m_deletion_queue.push_function([&](){ 
+		m_device.destroyPipelineLayout(m_mesh_pipeline_layout);
+		m_device.destroyPipeline(m_mesh_pipeline);
+	});
+}
+
+void Engine::init_default_data()
+{
+	std::array<Detail::Vertex, 4> rect_vertices;
+
+	rect_vertices[0].position = {0.5,-0.5, 0};
+	rect_vertices[1].position = {0.5,0.5, 0};
+	rect_vertices[2].position = {-0.5,-0.5, 0};
+	rect_vertices[3].position = {-0.5,0.5, 0};
+
+	rect_vertices[0].color = {0,0, 0,1};
+	rect_vertices[1].color = { 0.5,0.5,0.5 ,1};
+	rect_vertices[2].color = { 1,0, 0,1 };
+	rect_vertices[3].color = { 0,1, 0,1 };
+
+	std::array<uint32_t, 6> rect_indices;
+
+	rect_indices[0] = 0;
+	rect_indices[1] = 1;
+	rect_indices[2] = 2;
+
+	rect_indices[3] = 2;
+	rect_indices[4] = 1;
+	rect_indices[5] = 3;
+
+	m_rectangle = upload_mesh(rect_indices, rect_vertices);
+}
+
 void Engine::create_swapchain(uint32_t width, uint32_t height)
 {
 	vkb::SwapchainBuilder swapchain_builder{ m_physical_device, m_device, m_surface };
@@ -574,6 +651,91 @@ void Engine::destroy_swapchain()
 	{
 		m_device.destroyImageView(image_frames.view);
 	}
+}
+
+Detail::AllocatedBuffer Engine::create_buffer(size_t alloc_size, vk::BufferUsageFlags usage, VmaMemoryUsage memory_usage)
+{
+	VkBufferCreateInfo info = vkinit::buffer_create_info(alloc_size, usage);
+
+	VmaAllocationCreateInfo vma_alloc_info = {};
+	vma_alloc_info.usage = memory_usage;
+	vma_alloc_info.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
+	
+	Detail::AllocatedBuffer buffer;
+
+
+	VK_CHECK(vk::Result(vmaCreateBuffer(
+		m_allocator, 
+		&info, 
+		&vma_alloc_info, 
+		std::bit_cast<VkBuffer*>(&buffer.buffer),
+		&buffer.allocation, 
+		&buffer.info
+	)));
+
+
+	return buffer;
+	
+
+}
+
+void Engine::destroy_buffer(const Detail::AllocatedBuffer& buffer)
+{
+	vmaDestroyBuffer(m_allocator, buffer.buffer, buffer.allocation);
+}
+
+Detail::GPUMeshBuffers Engine::upload_mesh(std::span<uint32_t> indices, std::span<Detail::Vertex> vertices)
+{
+	const size_t vertex_buffer_size = vertices.size() * sizeof(Detail::Vertex);
+	const size_t index_buffer_size = indices.size() * sizeof(uint32_t);
+
+	Detail::GPUMeshBuffers surface;
+
+	surface.vertex_buffer = create_buffer(
+		vertex_buffer_size, 
+		vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eShaderDeviceAddress,
+		VMA_MEMORY_USAGE_GPU_ONLY
+	);
+
+	vk::BufferDeviceAddressInfo device_address_info(surface.vertex_buffer.buffer);
+	surface.address = m_device.getBufferAddress(device_address_info);
+
+	surface.index_buffer = create_buffer(
+		index_buffer_size,
+		vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eTransferDst,
+		VMA_MEMORY_USAGE_GPU_ONLY
+	);
+
+
+	Detail::AllocatedBuffer staging = create_buffer(
+		vertex_buffer_size + index_buffer_size,
+		vk::BufferUsageFlagBits::eTransferSrc,
+		VMA_MEMORY_USAGE_CPU_ONLY
+	);
+
+	void* data = staging.allocation->GetMappedData();
+
+	// copy vertex buffer
+	std::memcpy(data, vertices.data(), vertex_buffer_size);
+	std::memcpy(std::bit_cast<char*>(data) + vertex_buffer_size, indices.data(), index_buffer_size);
+
+	immediate_submit([&](vk::CommandBuffer cmd) {
+		vk::BufferCopy vertex_copy(0, 0, vertex_buffer_size);
+		cmd.copyBuffer(staging.buffer, surface.vertex_buffer.buffer, vertex_copy);
+
+		vk::BufferCopy index_copy(vertex_buffer_size, 0, index_buffer_size);
+		cmd.copyBuffer(staging.buffer, surface.index_buffer.buffer, index_copy);
+	});
+
+	m_deletion_queue.push_function([=]() {
+		destroy_buffer(surface.vertex_buffer);
+		destroy_buffer(surface.index_buffer);
+	});
+
+	destroy_buffer(staging);
+
+	return surface;
+
 }
 
 void Engine::init_imgui()

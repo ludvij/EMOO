@@ -1,0 +1,8 @@
+C:\Users\luisv\Desktop\tfg\NesEmu\src\Console.cpp;C:\Users\luisv\Desktop\tfg\bin-int\Debug-windows-x86_64\NesEmu\Console.obj
+C:\Users\luisv\Desktop\tfg\NesEmu\src\internals\Bus.cpp;C:\Users\luisv\Desktop\tfg\bin-int\Debug-windows-x86_64\NesEmu\Bus.obj
+C:\Users\luisv\Desktop\tfg\NesEmu\src\internals\CPU.cpp;C:\Users\luisv\Desktop\tfg\bin-int\Debug-windows-x86_64\NesEmu\CPU.obj
+C:\Users\luisv\Desktop\tfg\NesEmu\src\internals\Cartridge.cpp;C:\Users\luisv\Desktop\tfg\bin-int\Debug-windows-x86_64\NesEmu\Cartridge.obj
+C:\Users\luisv\Desktop\tfg\NesEmu\src\internals\PPU.cpp;C:\Users\luisv\Desktop\tfg\bin-int\Debug-windows-x86_64\NesEmu\PPU.obj
+C:\Users\luisv\Desktop\tfg\NesEmu\src\internals\mappers\NROM.cpp;C:\Users\luisv\Desktop\tfg\bin-int\Debug-windows-x86_64\NesEmu\NROM.obj
+C:\Users\luisv\Desktop\tfg\NesEmu\src\main.cpp;C:\Users\luisv\Desktop\tfg\bin-int\Debug-windows-x86_64\NesEmu\main.obj
+C:\Users\luisv\Desktop\tfg\NesEmu\src\pch.cpp;C:\Users\luisv\Desktop\tfg\bin-int\Debug-windows-x86_64\NesEmu\pch.obj

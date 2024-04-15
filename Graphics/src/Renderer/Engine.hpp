@@ -28,15 +28,6 @@ struct DeletionQueue
 	void flush();
 };
 
-struct AllocatedImage
-{
-	vk::Image     image;
-	vk::ImageView view;
-	vk::Format    format;
-	vk::Extent3D  extent;
-	VmaAllocation allocation;
-};
-
 struct FrameData 
 {
 	vk::CommandPool command_pool;
@@ -113,14 +104,21 @@ private:
 	void init_pipelines();
 
 	void init_background_pipeline();
-
 	void init_triangle_pipeline();
+	void init_mesh_pipeline();
+
+	void init_default_data();
 
 
 	void create_swapchain(uint32_t width, uint32_t height);
 	void destroy_swapchain();
 
 	Detail::FrameData& get_current_frame() { return m_frames[m_frame_number % FRAME_OVERLAP]; }
+
+	Detail::AllocatedBuffer create_buffer(size_t alloc_size, vk::BufferUsageFlags usage, VmaMemoryUsage memory_usage);
+	void destroy_buffer(const Detail::AllocatedBuffer& buffer);
+
+	Detail::GPUMeshBuffers upload_mesh(std::span<uint32_t> indices, std::span<Detail::Vertex> vertices);
 
 private: 
 	// vulkan structures
@@ -156,6 +154,11 @@ private:
 
 	vk::PipelineLayout m_triangle_pipeline_layout;
 	vk::Pipeline       m_triangle_pipeline;
+
+	vk::PipelineLayout m_mesh_pipeline_layout;
+	vk::Pipeline       m_mesh_pipeline;
+
+	Detail::GPUMeshBuffers m_rectangle;
 
 private:
 

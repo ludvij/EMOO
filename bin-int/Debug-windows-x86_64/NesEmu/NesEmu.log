@@ -1,0 +1,9 @@
+﻿  pch.cpp
+  Console.cpp
+  Bus.cpp
+  CPU.cpp
+  Cartridge.cpp
+  PPU.cpp
+  NROM.cpp
+  main.cpp
+  NesEmu.vcxproj -> C:\Users\luisv\Desktop\tfg\bin\Debug-windows-x86_64\NesEmu\NesEmu.lib

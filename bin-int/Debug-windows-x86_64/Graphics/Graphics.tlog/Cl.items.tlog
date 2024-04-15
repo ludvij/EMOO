@@ -1,0 +1,10 @@
+C:\Users\luisv\Desktop\tfg\Graphics\src\Application.cpp;C:\Users\luisv\Desktop\tfg\bin-int\Debug-windows-x86_64\Graphics\Application.obj
+C:\Users\luisv\Desktop\tfg\Graphics\src\ImGui\ImGuiBuild.cpp;C:\Users\luisv\Desktop\tfg\bin-int\Debug-windows-x86_64\Graphics\ImGuiBuild.obj
+C:\Users\luisv\Desktop\tfg\Graphics\src\Renderer\Engine.cpp;C:\Users\luisv\Desktop\tfg\bin-int\Debug-windows-x86_64\Graphics\Engine.obj
+C:\Users\luisv\Desktop\tfg\Graphics\src\Renderer\Vulkan\Bootstrap\vkBootstrap.cpp;C:\Users\luisv\Desktop\tfg\bin-int\Debug-windows-x86_64\Graphics\vkBootstrap.obj
+C:\Users\luisv\Desktop\tfg\Graphics\src\Renderer\Vulkan\Descriptors.cpp;C:\Users\luisv\Desktop\tfg\bin-int\Debug-windows-x86_64\Graphics\Descriptors.obj
+C:\Users\luisv\Desktop\tfg\Graphics\src\Renderer\Vulkan\Initializers.cpp;C:\Users\luisv\Desktop\tfg\bin-int\Debug-windows-x86_64\Graphics\Initializers.obj
+C:\Users\luisv\Desktop\tfg\Graphics\src\Renderer\Vulkan\Loader.cpp;C:\Users\luisv\Desktop\tfg\bin-int\Debug-windows-x86_64\Graphics\Loader.obj
+C:\Users\luisv\Desktop\tfg\Graphics\src\Renderer\Vulkan\vkutil\Images.cpp;C:\Users\luisv\Desktop\tfg\bin-int\Debug-windows-x86_64\Graphics\Images.obj
+C:\Users\luisv\Desktop\tfg\Graphics\src\Renderer\Vulkan\vkutil\Pipelines.cpp;C:\Users\luisv\Desktop\tfg\bin-int\Debug-windows-x86_64\Graphics\Pipelines.obj
+C:\Users\luisv\Desktop\tfg\Graphics\src\main.cpp;C:\Users\luisv\Desktop\tfg\bin-int\Debug-windows-x86_64\Graphics\main.obj

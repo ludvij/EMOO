@@ -3,7 +3,7 @@ project "NesEmu"
 	language "C++"
 	cppdialect "c++20"
 	targetdir ("%{wks.location}/bin/" .. outputDir .. "/%{prj.name}")
-	objdir ("%{wks.location}/bin-int/" .. outputDir .. "/%{prj.name}")
+	objdir ("%{wks.location}/bin/intermediates/" .. outputDir .. "/%{prj.name}")
 
 	files { 
 		"src/**.hpp", 

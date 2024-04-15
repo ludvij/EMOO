@@ -25,6 +25,8 @@ struct MeshAsset
 };
 
 class Engine;
+
+std::optional<std::vector<std::shared_ptr<MeshAsset>>> load_gltf_meshes(Engine* engine, std::filesystem::path path);
 }
 
 #endif //! GRAPHICS_RENDERER_LOADER

@@ -6,7 +6,7 @@
 #include <SDL.h>
 #include <SDL_vulkan.h>
 
-#include "Vulkan/Bootstrap/vkBootstrap.h"
+#include "vkBootstrap.h"
 
 
 #include <lud_assert.hpp>
@@ -686,8 +686,8 @@ void Engine::destroy_buffer(const Detail::AllocatedBuffer& buffer)
 
 Detail::GPUMeshBuffers Engine::upload_mesh(std::span<uint32_t> indices, std::span<Detail::Vertex> vertices)
 {
-	const size_t vertex_buffer_size = vertices.size() * sizeof(Detail::Vertex);
-	const size_t index_buffer_size = indices.size() * sizeof(uint32_t);
+	const size_t vertex_buffer_size = vertices.size_bytes();
+	const size_t index_buffer_size = indices.size_bytes(); 
 
 	Detail::GPUMeshBuffers surface;
 

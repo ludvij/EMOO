@@ -51,7 +51,7 @@ public:
 		//FourScreen,
 		//ThreeScreenVertical
 	};
-	Mirroring GetMirroring() { return m_mirroring; }
+	Mirroring GetMirroring() const { return m_mirroring; }
 	
 
 	

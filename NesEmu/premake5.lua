@@ -9,7 +9,9 @@ project "NesEmu"
 		"src/**.hpp", 
 		"src/**.cpp",
 		-- "test/**.cpp",
-		-- "test/**.hpp"
+		-- "test/**.hpp",
+
+		"%{IncludeDir.ctre}/**.hpp",
 	}
 
 	flags {
@@ -21,7 +23,8 @@ project "NesEmu"
 
 	includedirs {
 		"src",
-		"vendor/include"
+		"%{IncludeDir.ctre}",
+		"%{IncludeDir.gtest}",
 	}
 
 	filter "system:windows"
@@ -50,7 +53,7 @@ project "NesEmu"
 		runtime "debug"
 		symbols "On"
 		links {
-			-- "vendor/lib/debug/googletest.lib"
+			-- "%{Library.gtest_debug}"
 		}
 
 	filter "configurations:Release"
@@ -58,7 +61,7 @@ project "NesEmu"
 			"NES_EMU_NDEBUG" 
 		}
 		links {
-			-- "vendor/lib/release/googletest.lib"
+			-- "%{Library.gtest_release}"
 		}
 		runtime "release"
 		optimize "On"

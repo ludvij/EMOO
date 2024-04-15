@@ -9,7 +9,14 @@ project "Graphics"
 		"src/**.hpp", 
 		"src/**.h", 
 		"src/**.cpp",
+
+		"%{IncludeDir.vk_bootrstrap}/**.cpp",
+		"%{IncludeDir.vk_bootrstrap}/**.h",
+		"%{IncludeDir.stb_image}/**.h",
+		"%{IncludeDir.lud_utils}/**.hpp",
+
 		"src/**.embed",
+
 		"Shader/**.comp",
 		"Shader/**.frag",
 		"Shader/**.vert",
@@ -28,22 +35,18 @@ project "Graphics"
 		"%{IncludeDir.imgui}",
 		"%{IncludeDir.VulkanSDK}",
 		"%{IncludeDir.glm}",
-		"%{IncludeDir.stb}",
+		"%{IncludeDir.stb_image}",
 		"%{IncludeDir.NesEmu}",
-		"%{IncludeDir.tiny_gltf}",
-		"%{IncludeDir.stb}",
-		"%{IncludeDir.json}",
+		"%{IncludeDir.fastgltf}",
 		"%{IncludeDir.lud_utils}",
-
+		"%{IncludeDir.vk_bootrstrap}",
 	}
 
-	libdirs {
-		"%{LibraryDir.sdl}"
-	}
 
 	links {
 		"ImGui",
 		"NesEmu",
+		"fastgltf",
 		"%{Library.sdl2}",
 		"%{Library.Vulkan}"
 	}
@@ -76,7 +79,6 @@ project "Graphics"
 		runtime "release"
 		optimize "On"
 
-include "dependencies.lua"
 
 	filter 'files:Shader/*'
 		buildmessage "Compiling %{file.relpath}"

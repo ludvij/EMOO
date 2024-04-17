@@ -22,7 +22,11 @@
 #include <backends/imgui_impl_sdl2.h>
 #include <backends/imgui_impl_vulkan.h>
 
+#include "ImGui/OpenSans-Regular.embed"
 
+#define GLM_ENABLE_EXPERIMENTAL
+
+#include <glm/gtx/transform.hpp>
 
 namespace Ui
 {
@@ -53,7 +57,10 @@ void Engine::init()
 
 	SDL_Init(SDL_INIT_VIDEO);
 
-	SDL_WindowFlags window_flags = static_cast<SDL_WindowFlags>(SDL_WINDOW_VULKAN);
+	SDL_WindowFlags window_flags = static_cast<SDL_WindowFlags>(
+		SDL_WINDOW_VULKAN |
+		SDL_WINDOW_RESIZABLE
+	);
 
 	m_window = SDL_CreateWindow(
 		"Vulkan engine",
@@ -92,9 +99,19 @@ void Engine::draw()
 	get_current_frame().deletion_queue.flush();
 	m_device.resetFences(get_current_frame().render_fence);
 
-	const auto [result, swapchain_image_index] = m_device.acquireNextImageKHR(m_swapchain, 1'000'000'000, get_current_frame()
-																			  .swapchain_semaphore);
-	VK_CHECK(result);
+	uint32_t swapchain_image_index;
+
+	try 
+	{
+		const auto [err, val] = m_device.acquireNextImageKHR(m_swapchain, 1'000'000'000, get_current_frame().swapchain_semaphore);
+		VK_CHECK(err);
+		swapchain_image_index = val;
+	}
+	catch (vk::OutOfDateKHRError)
+	{
+		m_resize_requested = true;
+		return;
+	}
 
 	vk::CommandBuffer cmd = get_current_frame().command_buffer;
 
@@ -104,13 +121,31 @@ void Engine::draw()
 
 	cmd.begin(cmd_begin_info);
 
-	vkutil::transition_image(cmd, m_draw_image.image,
-							 vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral);
+	vkutil::transition_image(
+		cmd, 
+		m_draw_image.image,
+		vk::ImageLayout::eUndefined, 
+		vk::ImageLayout::eGeneral
+	);
+							 
 
-	m_draw_extent.width = m_draw_image.extent.width;
-	m_draw_extent.height = m_draw_image.extent.height;
+	m_draw_extent.width  = static_cast<uint32_t>(std::min(m_swapchain.extent.width,  m_draw_image.extent.width) * m_render_scale);
+	m_draw_extent.height = static_cast<uint32_t>(std::min(m_swapchain.extent.height, m_draw_image.extent.height) * m_render_scale);
 
 	draw_background(cmd);
+
+	vkutil::transition_image(
+		cmd, 
+		m_draw_image.image,
+		vk::ImageLayout::eGeneral, 
+		vk::ImageLayout::eColorAttachmentOptimal
+	);
+	vkutil::transition_image(
+		cmd, 
+		m_depth_image.image,
+		vk::ImageLayout::eUndefined, 
+		vk::ImageLayout::eDepthAttachmentOptimal
+	);
 
 	draw_geometry(cmd);
 
@@ -118,7 +153,7 @@ void Engine::draw()
 	vkutil::transition_image(
 		cmd, 
 		m_draw_image.image, 
-		vk::ImageLayout::eGeneral, 
+		vk::ImageLayout::eColorAttachmentOptimal, 
 		vk::ImageLayout::eTransferSrcOptimal
 	);
 	vkutil::transition_image(
@@ -163,7 +198,16 @@ void Engine::draw()
 	// prepare present
 	vk::PresentInfoKHR present_info(get_current_frame().render_semaphore, m_swapchain.swapchain, swapchain_image_index);
 
-	VK_CHECK(m_graphics_queue.queue.presentKHR(present_info));
+
+	try
+	{
+		VK_CHECK(m_graphics_queue.queue.presentKHR(present_info));
+	}
+	catch (vk::OutOfDateKHRError)
+	{
+		m_resize_requested = true;
+		return;
+	}
 
 	m_frame_number++;
 }
@@ -184,12 +228,13 @@ void Engine::draw_background(vk::CommandBuffer cmd)
 void Engine::draw_geometry(vk::CommandBuffer cmd)
 {
 	vk::RenderingAttachmentInfo color_attachment = vkinit::attachment_info(m_draw_image.view, nullptr, vk::ImageLayout::eGeneral);
+	vk::RenderingAttachmentInfo depth_attachment = vkinit::depth_attachment_info(m_depth_image.view, vk::ImageLayout::eDepthAttachmentOptimal);
 
-	vk::RenderingInfo render_info = vkinit::rendering_info(m_draw_extent, &color_attachment, nullptr);
+	vk::RenderingInfo render_info = vkinit::rendering_info(m_draw_extent, &color_attachment, &depth_attachment);
 
 	cmd.beginRendering(render_info);
 
-	cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, m_triangle_pipeline);
+	cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, m_mesh_pipeline);
 	
 	vk::Viewport viewport(0, 0, static_cast<float>(m_draw_extent.width), static_cast<float>(m_draw_extent.height), 0.0f, 1.0f);
 
@@ -199,45 +244,76 @@ void Engine::draw_geometry(vk::CommandBuffer cmd)
 
 	cmd.setScissor(0, scissor);
 
-	cmd.draw(3, 1, 0, 0);
+	glm::mat4 view = glm::translate(glm::vec3{0, 0, -5});
 
-	cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, m_mesh_pipeline);
+	glm::mat4 projection = glm::perspective(
+		glm::radians(70.0f), 
+		static_cast<float>(m_draw_extent.width) / static_cast<float>(m_draw_extent.height),
+		10000.0f,
+		0.1f
+	);
 
-	Detail::GPUDrawPushConstants push_constants;
-	push_constants.world_matrix = glm::mat4{ 1.0f };
-	push_constants.vertex_buffer = m_rectangle.address;
+	projection[1][1] *= -1;
 
-	cmd.pushConstants(m_mesh_pipeline_layout, vk::ShaderStageFlagBits::eVertex, 0, sizeof(push_constants), &push_constants);
 
-	cmd.bindIndexBuffer(m_rectangle.index_buffer.buffer, 0, vk::IndexType::eUint32);
+	Detail::GPUDrawPushConstants push_constants{};
+	push_constants.world_matrix = projection * view;
+	push_constants.vertex_buffer = m_test_meshes[2]->mesh_buffers.address;
 
-	cmd.drawIndexed(6, 1, 0, 0, 0);
+	cmd.pushConstants(m_mesh_pipeline_layout, vk::ShaderStageFlagBits::eVertex, 0, sizeof(Detail::GPUDrawPushConstants), &push_constants);
+
+	cmd.bindIndexBuffer(m_test_meshes[2]->mesh_buffers.index_buffer.buffer, 0, vk::IndexType::eUint32);
+
+	cmd.drawIndexed(m_test_meshes[2]->surfaces[0].count, 1, m_test_meshes[2]->surfaces[0].start_index, 0, 0);
 
 	cmd.endRendering();
+}
+
+void Engine::resize_swapchain()
+{
+	m_device.waitIdle();
+
+	destroy_swapchain();
+
+	int w, h;
+	SDL_GetWindowSize(m_window, &w, &h);
+	m_window_extent.width = w;
+	m_window_extent.height = h;
+
+	create_swapchain(m_window_extent.width, m_window_extent.height);
+
+	m_resize_requested = false;
 }
 
 
 void Engine::Run()
 {
-	SDL_Event e;
 	bool should_quit = false;
 
+	SDL_Event event;
 	while (!should_quit)
 	{
-		while (SDL_PollEvent(&e) != 0)
+		while (SDL_PollEvent(&event) != 0)
 		{
-			if (e.type == SDL_QUIT)
+			ImGui_ImplSDL2_ProcessEvent(&event);
+			if (event.type == SDL_QUIT)
 				should_quit = true;
 
-			if (e.type == SDL_WINDOWEVENT)
+			if (event.type == SDL_WINDOWEVENT)
 			{
-				if (e.window.event == SDL_WINDOWEVENT_MINIMIZED)
+				if (event.window.event == SDL_WINDOWEVENT_MINIMIZED)
+				{
 					m_stop_rendering = true;
-				if (e.window.event == SDL_WINDOWEVENT_RESTORED)
+				}
+				if (event.window.event == SDL_WINDOWEVENT_RESTORED)
+				{
 					m_stop_rendering = false;
+				}
+				if (event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(m_window))
+				{
+					should_quit = true;
+				}
 			}
-
-			ImGui_ImplSDL2_ProcessEvent(&e);
 		}
 
 		if (m_stop_rendering)
@@ -247,6 +323,11 @@ void Engine::Run()
 			continue;
 		}
 
+		if (m_resize_requested)
+		{
+			resize_swapchain();
+		}
+
 		ImGui_ImplVulkan_NewFrame();
 		ImGui_ImplSDL2_NewFrame();
 
@@ -254,6 +335,7 @@ void Engine::Run()
 
 		if (ImGui::Begin("background"))
 		{
+			ImGui::SliderFloat("Render scale", &m_render_scale, 0.3f, 1.0f);
 			Detail::ComputeEffect& selected = m_background_effects[m_current_background_effect];
 
 			ImGui::Text("Selected effect: ", selected.name);
@@ -269,14 +351,14 @@ void Engine::Run()
 
 		ImGui::Render();
 
-		//// Update and Render additional Platform Windows
-  //      if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-  //      {
-  //          ImGui::UpdatePlatformWindows();
-  //          ImGui::RenderPlatformWindowsDefault();
-  //      }
-
 		draw();
+		// Update and Render additional Platform Windows
+        if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+        {
+            ImGui::UpdatePlatformWindows();
+            ImGui::RenderPlatformWindowsDefault();
+        }
+
 	}
 }
 
@@ -305,7 +387,6 @@ void Engine::init_vulkan()
 		.build()
 		.value();
 
-
 	m_instance = vkb_inst.instance;
 	m_debug_messenger = vkb_inst.debug_messenger;
 
@@ -327,11 +408,13 @@ void Engine::init_vulkan()
 	vkb::PhysicalDeviceSelector selector{ vkb_inst };
 	vkb::PhysicalDevice vkb_physical_device = selector
 		.set_minimum_version(1, 3)
+		.add_required_extension(VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME)
 		.set_required_features_13(features_13)
 		.set_required_features_12(features_12)
 		.set_surface(m_surface)
 		.select()
 		.value();
+
 
 	vkb::DeviceBuilder device_buidler{ vkb_physical_device };
 
@@ -384,9 +467,26 @@ void Engine::init_swapchain()
 
 	m_draw_image.view = m_device.createImageView(draw_image_view_info);
 
+	m_depth_image.format = vk::Format::eD32Sfloat;
+	m_depth_image.extent = draw_image_extent;
+
+	vk::ImageUsageFlags depth_image_usage = 
+		vk::ImageUsageFlagBits::eDepthStencilAttachment;
+
+	VkImageCreateInfo depth_image_info = vkinit::image_create_info(m_depth_image.format, depth_image_usage, draw_image_extent);
+
+	vmaCreateImage(m_allocator, &depth_image_info, &draw_image_alloc_info, std::bit_cast<VkImage*>(&m_depth_image.image), &m_depth_image.allocation, nullptr);
+	
+	auto depth_image_view = vkinit::image_view_create_info(m_depth_image.format, m_depth_image.image, vk::ImageAspectFlagBits::eDepth);
+
+	m_depth_image.view = m_device.createImageView(depth_image_view);
+
 	m_deletion_queue.push_function([=]() {
 		m_device.destroyImageView(m_draw_image.view);
 		vmaDestroyImage(m_allocator, m_draw_image.image, m_draw_image.allocation);
+
+		m_device.destroyImageView(m_depth_image.view);
+		vmaDestroyImage(m_allocator, m_depth_image.image, m_depth_image.allocation);
 	});
 }
 
@@ -469,8 +569,6 @@ void Engine::init_pipelines()
 {
 	init_background_pipeline();
 	
-
-	init_triangle_pipeline();
 	init_mesh_pipeline();
 }
 
@@ -521,40 +619,6 @@ void Engine::init_background_pipeline()
 	});
 }
 
-void Engine::init_triangle_pipeline()
-{
-	auto frag_module = vkutil::load_shader_module("Shader/SPIRV/colored_triangle.frag.spv", m_device);
-	auto vert_module = vkutil::load_shader_module("Shader/SPIRV/colored_triangle.vert.spv", m_device);
-
-	auto pipeline_layout_info = vkinit::pipeline_layout_create_info();
-
-	m_triangle_pipeline_layout = m_device.createPipelineLayout(pipeline_layout_info);
-
-
-	vkutil::PipelineBuilder builder;
-
-	m_triangle_pipeline = builder
-		.SetPipelineLayout(m_triangle_pipeline_layout)
-		.SetShaders(vert_module, frag_module)
-		.SetInputTopology(vk::PrimitiveTopology::eTriangleList)
-		.SetPolygonMode(vk::PolygonMode::eFill)
-		.SetCullMode(vk::CullModeFlagBits::eNone, vk::FrontFace::eClockwise)
-		.SetMultisamplingNone()
-		.DisableBlending()
-		.DisableDepthTest()
-		.SetColorAttachmentFormat(m_draw_image.format)
-		.SetDepthFormat(vk::Format::eUndefined)
-		.Build(m_device);
-
-	m_device.destroyShaderModule(frag_module);
-	m_device.destroyShaderModule(vert_module);
-
-	m_deletion_queue.push_function([&](){ 
-		m_device.destroyPipelineLayout(m_triangle_pipeline_layout);
-		m_device.destroyPipeline(m_triangle_pipeline);
-	});
-}
-
 void Engine::init_mesh_pipeline()
 {
 	auto frag_module = vkutil::load_shader_module("Shader/SPIRV/colored_triangle.frag.spv", m_device);
@@ -578,10 +642,10 @@ void Engine::init_mesh_pipeline()
 		.SetPolygonMode(vk::PolygonMode::eFill)
 		.SetCullMode(vk::CullModeFlagBits::eNone, vk::FrontFace::eClockwise)
 		.SetMultisamplingNone()
-		.DisableBlending()
-		.DisableDepthTest()
+		.EnableBlendingAdditive()
+		.EnableDepthTest(true, vk::CompareOp::eGreaterOrEqual)
 		.SetColorAttachmentFormat(m_draw_image.format)
-		.SetDepthFormat(vk::Format::eUndefined)
+		.SetDepthFormat(m_depth_image.format)
 		.Build(m_device);
 
 	m_device.destroyShaderModule(frag_module);
@@ -595,29 +659,7 @@ void Engine::init_mesh_pipeline()
 
 void Engine::init_default_data()
 {
-	std::array<Detail::Vertex, 4> rect_vertices;
-
-	rect_vertices[0].position = {0.5,-0.5, 0};
-	rect_vertices[1].position = {0.5,0.5, 0};
-	rect_vertices[2].position = {-0.5,-0.5, 0};
-	rect_vertices[3].position = {-0.5,0.5, 0};
-
-	rect_vertices[0].color = {0,0, 0,1};
-	rect_vertices[1].color = { 0.5,0.5,0.5 ,1};
-	rect_vertices[2].color = { 1,0, 0,1 };
-	rect_vertices[3].color = { 0,1, 0,1 };
-
-	std::array<uint32_t, 6> rect_indices;
-
-	rect_indices[0] = 0;
-	rect_indices[1] = 1;
-	rect_indices[2] = 2;
-
-	rect_indices[3] = 2;
-	rect_indices[4] = 1;
-	rect_indices[5] = 3;
-
-	m_rectangle = upload_mesh(rect_indices, rect_vertices);
+	m_test_meshes = load_gltf_meshes(this, "assets/basicmesh.glb").value();
 }
 
 void Engine::create_swapchain(uint32_t width, uint32_t height)
@@ -691,7 +733,7 @@ void Engine::destroy_buffer(const Detail::AllocatedBuffer& buffer)
 	vmaDestroyBuffer(m_allocator, buffer.buffer, buffer.allocation);
 }
 
-Detail::GPUMeshBuffers Engine::upload_mesh(std::span<uint32_t> indices, std::span<Detail::Vertex> vertices)
+Detail::GPUMeshBuffers Engine::UploadMesh(std::span<uint32_t> indices, std::span<Detail::Vertex> vertices)
 {
 	const size_t vertex_buffer_size = vertices.size_bytes();
 	const size_t index_buffer_size = indices.size_bytes(); 
@@ -762,7 +804,12 @@ void Engine::init_imgui()
 	};
 
 
-	vk::DescriptorPoolCreateInfo imgui_pool_info(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet, 1000, pool_sizes);
+	vk::DescriptorPoolCreateInfo imgui_pool_info = vk::DescriptorPoolCreateInfo(
+		vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet, 
+		1000, 
+		static_cast<uint32_t>(IM_ARRAYSIZE(pool_sizes)),
+		pool_sizes
+	);
 	auto imgui_pool = m_device.createDescriptorPool(imgui_pool_info);
 
 
@@ -775,7 +822,7 @@ void Engine::init_imgui()
 
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-	//io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
 	 ImGui::StyleColorsDark();
     //ImGui::StyleColorsLight();
@@ -805,6 +852,13 @@ void Engine::init_imgui()
 	init_info.PipelineRenderingCreateInfo = pipeline_create_info;
 
 	ImGui_ImplVulkan_Init(&init_info);
+
+	ImFontConfig fontConfig;
+    fontConfig.FontDataOwnedByAtlas = false;
+    io.Fonts->AddFontDefault();
+    ImFont* main_font = io.Fonts->AddFontFromMemoryCompressedTTF(OpenSans_compressed_data, OpenSans_compressed_size, 20.0f, &fontConfig);
+    io.FontDefault = main_font;
+
 
 	immediate_submit([&](vk::CommandBuffer cmd){ ImGui_ImplVulkan_CreateFontsTexture(); });
 

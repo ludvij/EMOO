@@ -26,9 +26,12 @@ public:
 	PipelineBuilder& SetCullMode(vk::CullModeFlags cull_mode, vk::FrontFace front_face);
 	PipelineBuilder& SetMultisamplingNone();
 	PipelineBuilder& DisableBlending();
+	PipelineBuilder& EnableBlendingAdditive();
+	PipelineBuilder& EnableBlendingAlphablend();
 	PipelineBuilder& SetColorAttachmentFormat(vk::Format format);
 	PipelineBuilder& SetDepthFormat(vk::Format format);
 	PipelineBuilder& DisableDepthTest();
+	PipelineBuilder& EnableDepthTest(bool depth_write_enable, vk::CompareOp op);
 
 private:
 	std::vector<vk::PipelineShaderStageCreateInfo> m_shader_stages;

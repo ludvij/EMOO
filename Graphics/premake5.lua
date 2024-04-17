@@ -52,14 +52,15 @@ project "Graphics"
 	}
 
 	defines {
-		"SDL_MAIN_HANDLED"
+		"SDL_MAIN_HANDLED",
+		"GLM_FORCE_DEPTH_ZERO_TO_ONE"
 	}
 
 	filter "system:windows"
 		systemversion "latest"
 		defines {
 			"NES_EMU_PLATFORM_WINDOWS",
-			"WIN32"
+			"WIN32",
 		}
 	
 

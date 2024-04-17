@@ -25,7 +25,5 @@ group ""
 
 
 
-group "Core"
-	include "Graphics"
-	include "NesEmu"
-group ""
+include "Graphics"
+include "NesEmu"

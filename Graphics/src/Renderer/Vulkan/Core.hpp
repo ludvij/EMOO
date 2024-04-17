@@ -35,16 +35,16 @@ struct AllocatedImage
 {
 	vk::Image     image;
 	vk::ImageView view;
-	vk::Format    format;
+	vk::Format    format{ vk::Format::eUndefined };
 	vk::Extent3D  extent;
-	VmaAllocation allocation;
+	VmaAllocation allocation{ nullptr };
 };
 
 
 struct AllocatedBuffer
 {
     vk::Buffer        buffer;
-	VmaAllocation     allocation;
+	VmaAllocation     allocation{ nullptr };
 	VmaAllocationInfo info{};
 
 };
@@ -62,7 +62,7 @@ struct GPUMeshBuffers
 {
 	AllocatedBuffer   index_buffer;
 	AllocatedBuffer   vertex_buffer;
-	vk::DeviceAddress address;
+	vk::DeviceAddress address{};
 };
 
 struct GPUDrawPushConstants 

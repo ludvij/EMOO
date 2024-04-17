@@ -16,7 +16,7 @@ struct ImageFrame
 struct SwapchainBundle
 {
 	vk::SwapchainKHR swapchain;
-	vk::Format format;
+	vk::Format format{ vk::Format::eUndefined };
 	vk::Extent2D extent;
 	
 	std::vector<ImageFrame> frames;

@@ -10,6 +10,7 @@
 
 
 #include "Vulkan/Descriptors.hpp"
+#include "Vulkan/Loader.hpp"
 
 
 struct SDL_Window;
@@ -54,7 +55,7 @@ struct ComputeEffect
 	vk::Pipeline       pipeline;
 	vk::PipelineLayout layout;
 
-	ComputePushConstants<4> data;
+	ComputePushConstants<4> data{};
 };
 }
 
@@ -73,6 +74,8 @@ public:
 	VmaAllocator GetAllocator();
 	vk::Device GetDevice();
 
+	Detail::GPUMeshBuffers UploadMesh(std::span<uint32_t> indices, std::span<Detail::Vertex> vertices);
+
 private:
 	void init();
 	void cleanup();
@@ -83,6 +86,8 @@ private:
 
 	void draw_geometry(vk::CommandBuffer cmd);
 
+	void resize_swapchain();
+
 
 private:
 
@@ -92,6 +97,10 @@ private:
 	vk::Extent2D m_window_extent{ 1700, 900 };
 
 	SDL_Window* m_window{ nullptr };
+
+
+	bool m_resize_requested{ false };
+
 
 private:
 
@@ -104,7 +113,6 @@ private:
 	void init_pipelines();
 
 	void init_background_pipeline();
-	void init_triangle_pipeline();
 	void init_mesh_pipeline();
 
 	void init_default_data();
@@ -118,7 +126,6 @@ private:
 	Detail::AllocatedBuffer create_buffer(size_t alloc_size, vk::BufferUsageFlags usage, VmaMemoryUsage memory_usage);
 	void destroy_buffer(const Detail::AllocatedBuffer& buffer);
 
-	Detail::GPUMeshBuffers upload_mesh(std::span<uint32_t> indices, std::span<Detail::Vertex> vertices);
 
 private: 
 	// vulkan structures
@@ -143,7 +150,9 @@ private:
 
 	// image to send to swapchain
 	Detail::AllocatedImage m_draw_image;
+	Detail::AllocatedImage m_depth_image;
 	vk::Extent2D           m_draw_extent;
+	float m_render_scale = 1.0f;
 
 	// descriptors for compute shaders
 	Detail::DescriptorAllocator m_descriptor_allocator;
@@ -152,13 +161,11 @@ private:
 
 	vk::PipelineLayout m_gradient_pipeline_layout;
 
-	vk::PipelineLayout m_triangle_pipeline_layout;
-	vk::Pipeline       m_triangle_pipeline;
 
 	vk::PipelineLayout m_mesh_pipeline_layout;
 	vk::Pipeline       m_mesh_pipeline;
 
-	Detail::GPUMeshBuffers m_rectangle;
+	std::vector<std::shared_ptr<MeshAsset>> m_test_meshes;
 
 private:
 

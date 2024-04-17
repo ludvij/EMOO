@@ -38,5 +38,7 @@ vk::PipelineLayoutCreateInfo pipeline_layout_create_info();
 
 vk::BufferCreateInfo buffer_create_info(size_t size, vk::BufferUsageFlags usage);
 
+vk::RenderingAttachmentInfo depth_attachment_info(vk::ImageView view, vk::ImageLayout layout = vk::ImageLayout::eColorAttachmentOptimal);
+
 }
 #endif // !GRAPHICS_RENDERER_INITIALIZERS_HEADER

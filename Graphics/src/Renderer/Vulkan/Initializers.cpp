@@ -156,6 +156,19 @@ vk::BufferCreateInfo buffer_create_info(size_t size, vk::BufferUsageFlags usage)
 	return info;
 }
 
+vk::RenderingAttachmentInfo depth_attachment_info(vk::ImageView view, vk::ImageLayout layout)
+{
+	vk::RenderingAttachmentInfo depth_attachment;
+
+	depth_attachment.imageView = view;
+	depth_attachment.imageLayout = layout;
+    depth_attachment.loadOp = vk::AttachmentLoadOp::eClear;
+    depth_attachment.storeOp = vk::AttachmentStoreOp::eStore;
+    depth_attachment.clearValue.depthStencil.depth = 0.0f;
+
+    return depth_attachment;
+}
+
 vk::PipelineShaderStageCreateInfo pipeline_shader_stage_create_info(vk::ShaderStageFlagBits flags, vk::ShaderModule module)
 {
 	vk::PipelineShaderStageCreateInfo info({}, flags, module, "main");

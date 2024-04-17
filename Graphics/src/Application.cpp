@@ -495,10 +495,10 @@ void Application::init()
     fontConfig.FontDataOwnedByAtlas = false;
     io.Fonts->AddFontDefault();
     ImFont* main_font = io.Fonts->AddFontFromMemoryCompressedTTF(OpenSans_compressed_data, OpenSans_compressed_size, 25.0f, &fontConfig);
+    io.FontDefault = main_font;
     ImFont* secondary_font = io.Fonts->AddFontFromMemoryCompressedTTF(OpenSans_compressed_data, OpenSans_compressed_size, 20.0f, &fontConfig);
     ImFont* debug_font = io.Fonts->AddFontFromMemoryCompressedTTF(CascadiaMono_compressed_data, CascadiaMono_compressed_size, 20.0f, &fontConfig);
 
-    io.FontDefault = main_font;
 
     m_fonts["main"] = main_font;
     m_fonts["secondary"] = secondary_font;

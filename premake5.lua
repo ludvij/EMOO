@@ -23,6 +23,9 @@ group "Dependencies"
 	include "vendor/fastgltf"
 group ""
 
+group "utility"
+	include "utility/compile_shader_to_embed"
+group ""
 
 
 include "Graphics"

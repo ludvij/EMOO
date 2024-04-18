@@ -1,8 +1,8 @@
 #ifndef GRAPHICS_RENDERER_DESCRIPTORS_HEADER
 #define GRAPHICS_RENDERER_DESCRIPTORS_HEADER
 
-#include <vector>
 #include <deque>
+#include <vector>
 #include <vulkan/vulkan.hpp>
 
 namespace Ui::Detail
@@ -40,7 +40,7 @@ private:
 	std::vector<PoolSizeRatio>      ratios;
 	std::vector<vk::DescriptorPool> full_pools;
 	std::vector<vk::DescriptorPool> ready_pools;
-	uint32_t sets_per_pool;
+	uint32_t sets_per_pool{ 0 };
 };
 
 class DescriptorWriter

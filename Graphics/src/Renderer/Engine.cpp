@@ -62,7 +62,7 @@ void Engine::init()
 	SDL_WindowFlags window_flags = static_cast<SDL_WindowFlags>(
 		SDL_WINDOW_VULKAN |
 		SDL_WINDOW_RESIZABLE
-	);
+		);
 
 	m_window = SDL_CreateWindow(
 		"Vulkan engine",
@@ -101,22 +101,21 @@ void Engine::draw()
 	get_current_frame().deletion_queue.Flush();
 	get_current_frame().frame_descriptor.ClearPools(m_device);
 
-	uint32_t swapchain_image_index;
+	u32 swapchain_image_index;
 
-	try 
+	try
 	{
 		const auto [err, val] = m_device.acquireNextImageKHR(m_swapchain, 1'000'000'000, get_current_frame().swapchain_semaphore);
 		VK_CHECK(err);
 		swapchain_image_index = val;
-	}
-	catch (const vk::OutOfDateKHRError&)
+	} catch (const vk::OutOfDateKHRError&)
 	{
 		m_resize_requested = true;
 		return;
 	}
 
-	m_draw_extent.width  = static_cast<uint32_t>(std::min(m_swapchain.extent.width,  m_draw_image.extent.width) * m_render_scale);
-	m_draw_extent.height = static_cast<uint32_t>(std::min(m_swapchain.extent.height, m_draw_image.extent.height) * m_render_scale);
+	m_draw_extent.width = static_cast<u32>( std::min(m_swapchain.extent.width, m_draw_image.extent.width) * m_render_scale );
+	m_draw_extent.height = static_cast<u32>( std::min(m_swapchain.extent.height, m_draw_image.extent.height) * m_render_scale );
 
 	m_device.resetFences(get_current_frame().render_fence);
 	get_current_frame().command_buffer.reset();
@@ -129,26 +128,26 @@ void Engine::draw()
 	cmd.begin(cmd_begin_info);
 
 	vkutil::transition_image(
-		cmd, 
+		cmd,
 		m_draw_image.image,
-		vk::ImageLayout::eUndefined, 
+		vk::ImageLayout::eUndefined,
 		vk::ImageLayout::eGeneral
 	);
-							 
+
 
 
 	draw_background(cmd);
 
 	vkutil::transition_image(
-		cmd, 
+		cmd,
 		m_draw_image.image,
-		vk::ImageLayout::eGeneral, 
+		vk::ImageLayout::eGeneral,
 		vk::ImageLayout::eColorAttachmentOptimal
 	);
 	vkutil::transition_image(
-		cmd, 
+		cmd,
 		m_depth_image.image,
-		vk::ImageLayout::eUndefined, 
+		vk::ImageLayout::eUndefined,
 		vk::ImageLayout::eDepthAttachmentOptimal
 	);
 
@@ -156,29 +155,29 @@ void Engine::draw()
 
 
 	vkutil::transition_image(
-		cmd, 
-		m_draw_image.image, 
-		vk::ImageLayout::eColorAttachmentOptimal, 
+		cmd,
+		m_draw_image.image,
+		vk::ImageLayout::eColorAttachmentOptimal,
 		vk::ImageLayout::eTransferSrcOptimal
 	);
 	vkutil::transition_image(
-		cmd, 
-		m_swapchain.frames[swapchain_image_index].image, 
-		vk::ImageLayout::eUndefined, 
+		cmd,
+		m_swapchain.frames[swapchain_image_index].image,
+		vk::ImageLayout::eUndefined,
 		vk::ImageLayout::eTransferDstOptimal
 	);
 	vkutil::copy_image_to_image(
-		cmd, 
-		m_draw_image.image, 
-		m_swapchain.frames[swapchain_image_index].image, 
-		m_draw_extent, 
+		cmd,
+		m_draw_image.image,
+		m_swapchain.frames[swapchain_image_index].image,
+		m_draw_extent,
 		m_swapchain.extent
 	);
 
 	vkutil::transition_image(
-		cmd, 
-		m_swapchain.frames[swapchain_image_index].image, 
-		vk::ImageLayout::eTransferDstOptimal, 
+		cmd,
+		m_swapchain.frames[swapchain_image_index].image,
+		vk::ImageLayout::eTransferDstOptimal,
 		vk::ImageLayout::eColorAttachmentOptimal
 	);
 
@@ -207,8 +206,7 @@ void Engine::draw()
 	try
 	{
 		VK_CHECK(m_graphics_queue.queue.presentKHR(present_info));
-	}
-	catch (const vk::OutOfDateKHRError&)
+	} catch (const vk::OutOfDateKHRError&)
 	{
 		m_resize_requested = true;
 		return;
@@ -222,12 +220,12 @@ void Engine::draw_background(vk::CommandBuffer cmd)
 	ComputeEffect& effect = m_background_effects[m_current_background_effect];
 
 	cmd.bindPipeline(vk::PipelineBindPoint::eCompute, effect.pipeline);
-	
+
 	cmd.bindDescriptorSets(vk::PipelineBindPoint::eCompute, m_gradient_pipeline_layout, 0, m_draw_image_descriptors, nullptr);
 
 	cmd.pushConstants(m_gradient_pipeline_layout, vk::ShaderStageFlagBits::eCompute, 0, sizeof(effect.data), &effect.data);
 
-	cmd.dispatch(static_cast<uint32_t>(std::ceil(m_draw_extent.width / 16.0)), static_cast<uint32_t>(std::ceil(m_draw_extent.height / 16.0)), 1);
+	cmd.dispatch(static_cast<u32>( std::ceil(m_draw_extent.width / 16.0) ), static_cast<u32>( std::ceil(m_draw_extent.height / 16.0) ), 1);
 }
 
 void Engine::draw_geometry(vk::CommandBuffer cmd)
@@ -241,38 +239,39 @@ void Engine::draw_geometry(vk::CommandBuffer cmd)
 	cmd.beginRendering(render_info);
 
 	cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, m_mesh_pipeline);
-	
-	vk::Viewport viewport(0, 0, static_cast<float>(m_draw_extent.width), static_cast<float>(m_draw_extent.height), 0.0f, 1.0f);
+
+	vk::Viewport viewport(0, 0, static_cast<float>( m_draw_extent.width ), static_cast<float>( m_draw_extent.height ), 0.0f, 1.0f);
 
 	cmd.setViewport(0, viewport);
 
-	vk::Rect2D scissor({0, 0}, {m_draw_extent.width, m_draw_extent.height});
+	vk::Rect2D scissor({ 0, 0 }, { m_draw_extent.width, m_draw_extent.height });
 
 	cmd.setScissor(0, scissor);
 
 	auto gpu_scene_buffer = create_buffer(sizeof(GPUSceneData), vk::BufferUsageFlagBits::eUniformBuffer, VMA_MEMORY_USAGE_CPU_TO_GPU);
 
 	// TODO: cache
-	GPUSceneData* scene_uniform_data = std::bit_cast<GPUSceneData*>(gpu_scene_buffer.allocation->GetMappedData());
+	GPUSceneData* scene_uniform_data = std::bit_cast<GPUSceneData*>( gpu_scene_buffer.allocation->GetMappedData() );
 	*scene_uniform_data = m_scene_data;
 
 	auto global_descriptor = get_current_frame().frame_descriptor.Allocate(m_device, m_scene_data_descriptor_layout);
 
-	get_current_frame().deletion_queue.PushFunction([=, this] {
-		destroy_buffer(gpu_scene_buffer);
-	});
-	
+	get_current_frame().deletion_queue.PushFunction([=, this]
+		{
+			destroy_buffer(gpu_scene_buffer);
+		});
+
 
 	DescriptorWriter writer;
 	writer
 		.WriteBuffer(0, gpu_scene_buffer.buffer, sizeof(GPUSceneData), 0, vk::DescriptorType::eUniformBuffer)
 		.UpdateSet(m_device, global_descriptor);
 
-	glm::mat4 view = glm::translate(glm::vec3{0, 0, -5});
+	glm::mat4 view = glm::translate(glm::vec3{ 0, 0, -5 });
 
 	glm::mat4 projection = glm::perspective(
-		glm::radians(70.0f), 
-		static_cast<float>(m_draw_extent.width) / static_cast<float>(m_draw_extent.height),
+		glm::radians(70.0f),
+		static_cast<float>( m_draw_extent.width ) / static_cast<float>( m_draw_extent.height ),
 		10000.0f,
 		0.1f
 	);
@@ -363,12 +362,12 @@ void Engine::Run()
 			ComputeEffect& selected = m_background_effects[m_current_background_effect];
 
 			ImGui::Text("Selected effect: ", selected.name);
-			ImGui::SliderInt("Effect index", &m_current_background_effect, 0, static_cast<uint32_t>(m_background_effects.size() - 1));
+			ImGui::SliderInt("Effect index", &m_current_background_effect, 0, static_cast<u32>( m_background_effects.size() - 1 ));
 
-			ImGui::InputFloat4("data[0]", std::bit_cast<float*>(&selected.data.data[0]));
-			ImGui::InputFloat4("data[1]", std::bit_cast<float*>(&selected.data.data[1]));
-			ImGui::InputFloat4("data[2]", std::bit_cast<float*>(&selected.data.data[2]));
-			ImGui::InputFloat4("data[3]", std::bit_cast<float*>(&selected.data.data[3]));
+			ImGui::InputFloat4("data[0]", std::bit_cast<float*>( &selected.data.data[0] ));
+			ImGui::InputFloat4("data[1]", std::bit_cast<float*>( &selected.data.data[1] ));
+			ImGui::InputFloat4("data[2]", std::bit_cast<float*>( &selected.data.data[2] ));
+			ImGui::InputFloat4("data[3]", std::bit_cast<float*>( &selected.data.data[3] ));
 
 		}
 		ImGui::End();
@@ -377,11 +376,11 @@ void Engine::Run()
 
 		draw();
 		// Update and Render additional Platform Windows
-        if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-        {
-            ImGui::UpdatePlatformWindows();
-            ImGui::RenderPlatformWindowsDefault();
-        }
+		if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+		{
+			ImGui::UpdatePlatformWindows();
+			ImGui::RenderPlatformWindowsDefault();
+		}
 
 	}
 }
@@ -403,10 +402,10 @@ void Engine::init_vulkan()
 	vkb::InstanceBuilder builder;
 
 	vkb::Instance vkb_inst = builder.set_app_name("NES Emulator")
-#ifdef GRAPHICS_DEBUG
+	#ifdef GRAPHICS_DEBUG
 		.request_validation_layers(true)
 		.use_default_debug_messenger()
-#endif // GRAPHICS_DEBUG
+	#endif // GRAPHICS_DEBUG
 		.require_api_version(1, 3, 0)
 		.build()
 		.value();
@@ -458,9 +457,12 @@ void Engine::init_vulkan()
 	allocator_info.device = m_device;
 	allocator_info.instance = m_instance;
 	allocator_info.flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT;
-	
+
 	VK_CHECK(vmaCreateAllocator(&allocator_info, &m_allocator));
-	m_deletion_queue.PushFunction([&]() { vmaDestroyAllocator(m_allocator); });
+	m_deletion_queue.PushFunction([&]()
+		{
+			vmaDestroyAllocator(m_allocator);
+		});
 
 }
 
@@ -473,7 +475,7 @@ void Engine::init_swapchain()
 	m_draw_image.format = vk::Format::eR16G16B16A16Sfloat;
 	m_draw_image.extent = draw_image_extent;
 
-	vk::ImageUsageFlags draw_image_usage = 
+	vk::ImageUsageFlags draw_image_usage =
 		vk::ImageUsageFlagBits::eTransferDst |
 		vk::ImageUsageFlagBits::eTransferSrc |
 		vk::ImageUsageFlagBits::eStorage |
@@ -486,11 +488,11 @@ void Engine::init_swapchain()
 	draw_image_alloc_info.requiredFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
 	VK_CHECK(vmaCreateImage(
-		m_allocator, 
-		&draw_image_info, 
-		&draw_image_alloc_info, 
-		std::bit_cast<VkImage*>(&m_draw_image.image), 
-		&m_draw_image.allocation, 
+		m_allocator,
+		&draw_image_info,
+		&draw_image_alloc_info,
+		std::bit_cast<VkImage*>( &m_draw_image.image ),
+		&m_draw_image.allocation,
 		nullptr
 	));
 
@@ -501,24 +503,25 @@ void Engine::init_swapchain()
 	m_depth_image.format = vk::Format::eD32Sfloat;
 	m_depth_image.extent = draw_image_extent;
 
-	vk::ImageUsageFlags depth_image_usage = 
+	vk::ImageUsageFlags depth_image_usage =
 		vk::ImageUsageFlagBits::eDepthStencilAttachment;
 
 	VkImageCreateInfo depth_image_info = vkinit::image_create_info(m_depth_image.format, depth_image_usage, draw_image_extent);
 
-	vmaCreateImage(m_allocator, &depth_image_info, &draw_image_alloc_info, std::bit_cast<VkImage*>(&m_depth_image.image), &m_depth_image.allocation, nullptr);
-	
+	vmaCreateImage(m_allocator, &depth_image_info, &draw_image_alloc_info, std::bit_cast<VkImage*>( &m_depth_image.image ), &m_depth_image.allocation, nullptr);
+
 	auto depth_image_view = vkinit::image_view_create_info(m_depth_image.format, m_depth_image.image, vk::ImageAspectFlagBits::eDepth);
 
 	m_depth_image.view = m_device.createImageView(depth_image_view);
 
-	m_deletion_queue.PushFunction([=]() {
-		m_device.destroyImageView(m_draw_image.view);
-		vmaDestroyImage(m_allocator, m_draw_image.image, m_draw_image.allocation);
+	m_deletion_queue.PushFunction([=]()
+		{
+			m_device.destroyImageView(m_draw_image.view);
+			vmaDestroyImage(m_allocator, m_draw_image.image, m_draw_image.allocation);
 
-		m_device.destroyImageView(m_depth_image.view);
-		vmaDestroyImage(m_allocator, m_depth_image.image, m_depth_image.allocation);
-	});
+			m_device.destroyImageView(m_depth_image.view);
+			vmaDestroyImage(m_allocator, m_depth_image.image, m_depth_image.allocation);
+		});
 }
 
 
@@ -540,9 +543,10 @@ void Engine::init_commands()
 
 	m_imm_command_buffer = m_device.allocateCommandBuffers(cmd_alloc_info).front();
 
-	m_deletion_queue.PushFunction([&]() {
-		m_device.destroyCommandPool(m_imm_command_pool);
-	});
+	m_deletion_queue.PushFunction([&]()
+		{
+			m_device.destroyCommandPool(m_imm_command_pool);
+		});
 }
 
 
@@ -558,7 +562,10 @@ void Engine::init_sync_structures()
 	}
 
 	m_imm_fence = m_device.createFence(fence_info);
-	m_deletion_queue.PushFunction([=](){ m_device.destroyFence(m_imm_fence);});
+	m_deletion_queue.PushFunction([=]()
+		{
+			m_device.destroyFence(m_imm_fence);
+		});
 }
 
 void Engine::init_descriptors()
@@ -601,25 +608,27 @@ void Engine::init_descriptors()
 		m_frames[i].frame_descriptor = DescriptorAllocatorGrowable{};
 		m_frames[i].frame_descriptor.Init(m_device, 1000, frame_sizes);
 
-		m_deletion_queue.PushFunction([&, i]() {
-			m_frames[i].frame_descriptor.DestroyPools(m_device);
-		});
+		m_deletion_queue.PushFunction([&, i]()
+			{
+				m_frames[i].frame_descriptor.DestroyPools(m_device);
+			});
 	}
 
-	
 
-	m_deletion_queue.PushFunction([&]() {
-		m_descriptor_allocator.DestroyPools(m_device);
-		m_device.destroyDescriptorSetLayout(m_draw_image_descriptor_layout);
-		m_device.destroyDescriptorSetLayout(m_scene_data_descriptor_layout);
-	});
-	
+
+	m_deletion_queue.PushFunction([&]()
+		{
+			m_descriptor_allocator.DestroyPools(m_device);
+			m_device.destroyDescriptorSetLayout(m_draw_image_descriptor_layout);
+			m_device.destroyDescriptorSetLayout(m_scene_data_descriptor_layout);
+		});
+
 }
 
 void Engine::init_pipelines()
 {
 	init_background_pipeline();
-	
+
 	init_mesh_pipeline();
 }
 
@@ -639,7 +648,7 @@ void Engine::init_background_pipeline()
 	ComputeEffect gradient;
 	gradient.layout = m_gradient_pipeline_layout;
 	gradient.name = "gradient";
-	gradient.data = {{glm::vec4(1,0,0,1), glm::vec4(0,0,1,1)}};
+	gradient.data = { {glm::vec4(1,0,0,1), glm::vec4(0,0,1,1)} };
 
 	VK_CHECK(m_device.createComputePipelines(VK_NULL_HANDLE, 1, &compute_info, nullptr, &gradient.pipeline));
 
@@ -650,7 +659,7 @@ void Engine::init_background_pipeline()
 	ComputeEffect sky;
 	sky.layout = m_gradient_pipeline_layout;
 	sky.name = "sky";
-	sky.data = {{glm::vec4(0.1, 0.2, 0.4, 0.97)}};
+	sky.data = { {glm::vec4(0.1, 0.2, 0.4, 0.97)} };
 
 	VK_CHECK(m_device.createComputePipelines(VK_NULL_HANDLE, 1, &compute_info, nullptr, &sky.pipeline));
 
@@ -661,13 +670,14 @@ void Engine::init_background_pipeline()
 	m_device.destroyShaderModule(gradient_shader);
 	m_device.destroyShaderModule(sky_shader);
 
-	m_deletion_queue.PushFunction([&](){
-		m_device.destroyPipelineLayout(m_gradient_pipeline_layout);
-		for (const auto& effect : m_background_effects)
+	m_deletion_queue.PushFunction([&]()
 		{
-			m_device.destroyPipeline(effect.pipeline);
-		}
-	});
+			m_device.destroyPipelineLayout(m_gradient_pipeline_layout);
+			for (const auto& effect : m_background_effects)
+			{
+				m_device.destroyPipeline(effect.pipeline);
+			}
+		});
 }
 
 void Engine::init_mesh_pipeline()
@@ -702,18 +712,65 @@ void Engine::init_mesh_pipeline()
 	m_device.destroyShaderModule(frag_module);
 	m_device.destroyShaderModule(vert_module);
 
-	m_deletion_queue.PushFunction([&](){ 
-		m_device.destroyPipelineLayout(m_mesh_pipeline_layout);
-		m_device.destroyPipeline(m_mesh_pipeline);
-	});
+	m_deletion_queue.PushFunction([&]()
+		{
+			m_device.destroyPipelineLayout(m_mesh_pipeline_layout);
+			m_device.destroyPipeline(m_mesh_pipeline);
+		});
 }
 
 void Engine::init_default_data()
 {
 	m_test_meshes = load_gltf_meshes(this, "assets/basicmesh.glb").value();
+
+	u32 white = 0xFFFFFFFF;
+	u32 grey  = 0xAAAAAAFF;
+	u32 black = 0x000000FF;
+
+	m_white_image = create_image(
+		std::bit_cast<void*>( &white ), { 1, 1, 1 }, vk::Format::eR8G8B8A8Unorm, vk::ImageUsageFlagBits::eSampled);
+	m_grey_image = create_image(
+		std::bit_cast<void*>( &grey ), { 1, 1, 1 }, vk::Format::eR8G8B8A8Unorm, vk::ImageUsageFlagBits::eSampled);
+	m_black_image = create_image(
+		std::bit_cast<void*>( &black ), { 1, 1, 1 }, vk::Format::eR8G8B8A8Unorm, vk::ImageUsageFlagBits::eSampled);
+
+	// checkered image
+	u32 magenta = 0xFF00FFFF;
+	std::array<u32, 16 * 16> pixels;
+	for (size_t x = 0; x < 16; x++)
+	{
+		for (size_t y = 0; y < 16; y++)
+		{
+			pixels[y * 16 + x] = ( ( x % 2 ) ^ ( y % 2 ) ) ? magenta : black;
+		}
+	}
+
+	m_error_checkerboard_image = create_image(
+		pixels.data(), { 16, 16, 1 }, vk::Format::eR8G8B8A8Unorm, vk::ImageUsageFlagBits::eSampled);
+
+	vk::SamplerCreateInfo sampler_info;
+
+	sampler_info.minFilter = vk::Filter::eNearest;
+	sampler_info.magFilter = vk::Filter::eNearest;
+	m_default_sampler_nearest = m_device.createSampler(sampler_info);
+
+	sampler_info.minFilter = vk::Filter::eLinear;
+	sampler_info.magFilter = vk::Filter::eLinear;
+	m_default_sampler_linear = m_device.createSampler(sampler_info);
+
+	m_deletion_queue.PushFunction([&]()
+		{
+			m_device.destroySampler(m_default_sampler_linear);
+			m_device.destroySampler(m_default_sampler_nearest);
+			destroy_image(m_white_image);
+			destroy_image(m_black_image);
+			destroy_image(m_grey_image);
+			destroy_image(m_error_checkerboard_image);
+		});
+
 }
 
-void Engine::create_swapchain(uint32_t width, uint32_t height)
+void Engine::create_swapchain(u32 width, u32 height)
 {
 	vkb::SwapchainBuilder swapchain_builder{ m_physical_device, m_device, m_surface };
 	m_swapchain.format = vk::Format::eB8G8R8A8Unorm;
@@ -721,9 +778,9 @@ void Engine::create_swapchain(uint32_t width, uint32_t height)
 	vkb::Swapchain vkb_swapchain = swapchain_builder
 		//.use_default_format_selection()
 		.set_desired_format(vk::SurfaceFormatKHR(m_swapchain.format, vk::ColorSpaceKHR::eSrgbNonlinear))
-		.set_desired_present_mode(static_cast<VkPresentModeKHR>(vk::PresentModeKHR::eFifo))
+		.set_desired_present_mode(static_cast<VkPresentModeKHR>( vk::PresentModeKHR::eFifo ))
 		.set_desired_extent(width, height)
-		.add_image_usage_flags(static_cast<VkImageUsageFlagBits>(vk::ImageUsageFlagBits::eTransferDst))
+		.add_image_usage_flags(static_cast<VkImageUsageFlagBits>( vk::ImageUsageFlagBits::eTransferDst ))
 		.build()
 		.value();
 
@@ -741,6 +798,8 @@ void Engine::create_swapchain(uint32_t width, uint32_t height)
 		m_swapchain.frames[i].image = images[i];
 		m_swapchain.frames[i].view = views[i];
 	}
+
+
 }
 
 void Engine::destroy_swapchain()
@@ -760,21 +819,21 @@ AllocatedBuffer Engine::create_buffer(size_t alloc_size, vk::BufferUsageFlags us
 	VmaAllocationCreateInfo vma_alloc_info = {};
 	vma_alloc_info.usage = memory_usage;
 	vma_alloc_info.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
-	
+
 	AllocatedBuffer buffer;
 
 
 	VK_CHECK(vk::Result(vmaCreateBuffer(
-		m_allocator, 
-		&info, 
-		&vma_alloc_info, 
-		std::bit_cast<VkBuffer*>(&buffer.buffer),
-		&buffer.allocation, 
+		m_allocator,
+		&info,
+		&vma_alloc_info,
+		std::bit_cast<VkBuffer*>( &buffer.buffer ),
+		&buffer.allocation,
 		&buffer.info
 	)));
 
 	return buffer;
-	
+
 }
 
 void Engine::destroy_buffer(const AllocatedBuffer& buffer)
@@ -788,37 +847,91 @@ AllocatedImage Engine::create_image(vk::Extent3D size, vk::Format format, vk::Im
 	image.extent = size;
 	image.format = format;
 
-	VkImageCreateInfo info = vkinit::image_create_info(format, usage, size);
+	VkImageCreateInfo img_info = vkinit::image_create_info(format, usage, size);
 	if (mipmapped)
 	{
-		info.mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(size.width, size.height)))) + 1;
+		img_info.mipLevels = static_cast<u32>( std::floor(std::log2(std::max(size.width, size.height))) ) + 1;
 	}
 
 	// allways allocate images on dedicated GPU memory
 	VmaAllocationCreateInfo alloc_info = {};
 	alloc_info.usage = VMA_MEMORY_USAGE_GPU_ONLY;
-	alloc_info.requiredFlags = static_cast<VkMemoryPropertyFlags>(vk::MemoryPropertyFlagBits::eDeviceLocal);
+	alloc_info.requiredFlags = static_cast<VkMemoryPropertyFlags>( vk::MemoryPropertyFlagBits::eDeviceLocal );
 
 	VK_CHECK(vmaCreateImage(
-		m_allocator, 
-		&info,
+		m_allocator,
+		&img_info,
 		&alloc_info,
-		std::bit_cast<VkImage*>(& image.image),
+		std::bit_cast<VkImage*>( &image.image ),
 		&image.allocation,
 		nullptr
 	));
 
+	vk::ImageAspectFlags aspect_flags = vk::ImageAspectFlagBits::eColor;
+	if (format == vk::Format::eD32Sfloat)
+	{
+		aspect_flags = vk::ImageAspectFlagBits::eDepth;
+	}
+
+	auto view_info = vkinit::image_view_create_info(format, image.image, aspect_flags);
+	view_info.subresourceRange.levelCount = img_info.mipLevels;
+
+	image.view = m_device.createImageView(view_info);
+
+	return image;
 }
 
-GPUMeshBuffers Engine::UploadMesh(std::span<uint32_t> indices, std::span<Vertex> vertices)
+AllocatedImage Engine::create_image(void* data, vk::Extent3D size, vk::Format format, vk::ImageUsageFlags usage, bool mipmapped)
+{
+	size_t data_size = static_cast<size_t>( size.depth * size.width * size.height ) * 4;
+	AllocatedBuffer upload_buffer = create_buffer(
+		data_size,
+		vk::BufferUsageFlagBits::eTransferSrc,
+		VMA_MEMORY_USAGE_CPU_TO_GPU
+	);
+
+	AllocatedImage image = create_image(
+		size,
+		format,
+		usage | vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eTransferSrc,
+		mipmapped
+	);
+
+	immediate_submit([&](vk::CommandBuffer cmd)
+		{
+			vkutil::transition_image(cmd, image.image, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);
+
+			vk::BufferImageCopy copy_region(
+				0, 0, 0,
+				{ vk::ImageAspectFlagBits::eColor,0,0,1 },
+				{},
+				size
+			);
+			cmd.copyBufferToImage(upload_buffer.buffer, image.image, vk::ImageLayout::eTransferDstOptimal, copy_region);
+
+			vkutil::transition_image(cmd, image.image, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
+		});
+
+	destroy_buffer(upload_buffer);
+
+	return image;
+}
+
+void Engine::destroy_image(const AllocatedImage& img)
+{
+	m_device.destroyImageView(img.view);
+	vmaDestroyImage(m_allocator, img.image, img.allocation);
+}
+
+GPUMeshBuffers Engine::UploadMesh(std::span<u32> indices, std::span<Vertex> vertices)
 {
 	const size_t vertex_buffer_size = vertices.size_bytes();
-	const size_t index_buffer_size = indices.size_bytes(); 
+	const size_t index_buffer_size = indices.size_bytes();
 
 	GPUMeshBuffers surface;
 
 	surface.vertex_buffer = create_buffer(
-		vertex_buffer_size, 
+		vertex_buffer_size,
 		vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eShaderDeviceAddress,
 		VMA_MEMORY_USAGE_GPU_ONLY
 	);
@@ -843,20 +956,22 @@ GPUMeshBuffers Engine::UploadMesh(std::span<uint32_t> indices, std::span<Vertex>
 
 	// copy vertex buffer
 	std::memcpy(data, vertices.data(), vertex_buffer_size);
-	std::memcpy(std::bit_cast<char*>(data) + vertex_buffer_size, indices.data(), index_buffer_size);
+	std::memcpy(std::bit_cast<char*>( data ) + vertex_buffer_size, indices.data(), index_buffer_size);
 
-	immediate_submit([&](vk::CommandBuffer cmd) {
-		vk::BufferCopy vertex_copy(0, 0, vertex_buffer_size);
-		cmd.copyBuffer(staging.buffer, surface.vertex_buffer.buffer, vertex_copy);
+	immediate_submit([&](vk::CommandBuffer cmd)
+		{
+			vk::BufferCopy vertex_copy(0, 0, vertex_buffer_size);
+			cmd.copyBuffer(staging.buffer, surface.vertex_buffer.buffer, vertex_copy);
 
-		vk::BufferCopy index_copy(vertex_buffer_size, 0, index_buffer_size);
-		cmd.copyBuffer(staging.buffer, surface.index_buffer.buffer, index_copy);
-	});
+			vk::BufferCopy index_copy(vertex_buffer_size, 0, index_buffer_size);
+			cmd.copyBuffer(staging.buffer, surface.index_buffer.buffer, index_copy);
+		});
 
-	m_deletion_queue.PushFunction([=]() {
-		destroy_buffer(surface.vertex_buffer);
-		destroy_buffer(surface.index_buffer);
-	});
+	m_deletion_queue.PushFunction([=]()
+		{
+			destroy_buffer(surface.vertex_buffer);
+			destroy_buffer(surface.index_buffer);
+		});
 
 	destroy_buffer(staging);
 
@@ -882,9 +997,9 @@ void Engine::init_imgui()
 
 
 	vk::DescriptorPoolCreateInfo imgui_pool_info = vk::DescriptorPoolCreateInfo(
-		vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet, 
-		1000, 
-		static_cast<uint32_t>(IM_ARRAYSIZE(pool_sizes)),
+		vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet,
+		1000,
+		static_cast<u32>( IM_ARRAYSIZE(pool_sizes) ),
 		pool_sizes
 	);
 	auto imgui_pool = m_device.createDescriptorPool(imgui_pool_info);
@@ -901,52 +1016,56 @@ void Engine::init_imgui()
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
-	 ImGui::StyleColorsDark();
-    //ImGui::StyleColorsLight();
+	ImGui::StyleColorsDark();
+	//ImGui::StyleColorsLight();
 
-     // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
-    ImGuiStyle& style = ImGui::GetStyle();
-    if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-    {
-        style.WindowRounding = 0.0f;
-        style.Colors[ImGuiCol_WindowBg].w = 1.0f;
-    }
+	 // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
+	ImGuiStyle& style = ImGui::GetStyle();
+	if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+	{
+		style.WindowRounding = 0.0f;
+		style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+	}
 
 	ImGui_ImplSDL2_InitForVulkan(m_window);
 
 	ImGui_ImplVulkan_InitInfo init_info = {};
-	init_info.Instance            = m_instance;
-	init_info.PhysicalDevice      = m_physical_device;
-	init_info.Device              = m_device;
-	init_info.Queue               = m_graphics_queue.queue;
-	init_info.QueueFamily         = m_graphics_queue.family;
-	init_info.DescriptorPool      = imgui_pool;
-	init_info.MinImageCount       = 3;
-	init_info.ImageCount          = 3;
+	init_info.Instance = m_instance;
+	init_info.PhysicalDevice = m_physical_device;
+	init_info.Device = m_device;
+	init_info.Queue = m_graphics_queue.queue;
+	init_info.QueueFamily = m_graphics_queue.family;
+	init_info.DescriptorPool = imgui_pool;
+	init_info.MinImageCount = 3;
+	init_info.ImageCount = 3;
 	init_info.UseDynamicRendering = true;
-	init_info.MSAASamples         = VK_SAMPLE_COUNT_1_BIT;
+	init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 
 	init_info.PipelineRenderingCreateInfo = pipeline_create_info;
 
 	ImGui_ImplVulkan_Init(&init_info);
 
 	ImFontConfig fontConfig;
-    fontConfig.FontDataOwnedByAtlas = false;
-    io.Fonts->AddFontDefault();
-    ImFont* main_font = io.Fonts->AddFontFromMemoryCompressedTTF(OpenSans_compressed_data, OpenSans_compressed_size, 20.0f, &fontConfig);
-    io.FontDefault = main_font;
+	fontConfig.FontDataOwnedByAtlas = false;
+	io.Fonts->AddFontDefault();
+	ImFont* main_font = io.Fonts->AddFontFromMemoryCompressedTTF(OpenSans_compressed_data, OpenSans_compressed_size, 20.0f, &fontConfig);
+	io.FontDefault = main_font;
 
 
-	immediate_submit([&](vk::CommandBuffer cmd){ ImGui_ImplVulkan_CreateFontsTexture(); });
+	immediate_submit([&](vk::CommandBuffer cmd)
+		{
+			ImGui_ImplVulkan_CreateFontsTexture();
+		});
 
-	m_deletion_queue.PushFunction([=]() {
-		ImGui_ImplVulkan_Shutdown();
-		ImGui_ImplSDL2_Shutdown();
-		ImGui::DestroyContext();
-		m_device.destroyDescriptorPool(imgui_pool);
-	});
+	m_deletion_queue.PushFunction([=]()
+		{
+			ImGui_ImplVulkan_Shutdown();
+			ImGui_ImplSDL2_Shutdown();
+			ImGui::DestroyContext();
+			m_device.destroyDescriptorPool(imgui_pool);
+		});
 
-	
+
 
 }
 
@@ -971,7 +1090,7 @@ void Engine::immediate_submit(std::function<void(vk::CommandBuffer cmd)>&& funct
 	m_graphics_queue.queue.submit2(submit, m_imm_fence);
 
 	VK_CHECK(m_device.waitForFences(m_imm_fence, vk::True, std::numeric_limits<uint64_t>::max()));
-	
+
 }
 
 void Engine::draw_imgui(vk::CommandBuffer cmd, vk::ImageView view)
@@ -1023,9 +1142,9 @@ void DeletionQueue::PushFunction(std::function<void()>&& function)
 
 void DeletionQueue::Flush()
 {
-	for(auto it = deletors.rbegin(); it != deletors.rend(); ++it)
+	for (auto it = deletors.rbegin(); it != deletors.rend(); ++it)
 	{
-		(*it)();
+		( *it )( );
 	}
 
 	deletors.clear();

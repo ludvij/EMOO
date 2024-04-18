@@ -3,10 +3,10 @@
 
 #include "Vulkan/Core.hpp"
 
-#include "Vulkan/vkutil/Swapchain.hpp"
-#include "Vulkan/vkutil/Queue.hpp"
 #include "Vulkan/vkutil/Images.hpp"
 #include "Vulkan/vkutil/Pipelines.hpp"
+#include "Vulkan/vkutil/Queue.hpp"
+#include "Vulkan/vkutil/Swapchain.hpp"
 
 
 #include "Vulkan/Descriptors.hpp"
@@ -17,9 +17,9 @@ struct SDL_Window;
 
 namespace Ui
 {
-using namespace Detail;
 
-namespace Detail {
+namespace Detail
+{
 
 class DeletionQueue
 {
@@ -33,7 +33,7 @@ private:
 
 };
 
-struct FrameData 
+struct FrameData
 {
 	vk::CommandPool   command_pool;
 	vk::CommandBuffer command_buffer;
@@ -64,8 +64,9 @@ struct ComputeEffect
 };
 }
 
+using namespace Detail;
 
-constexpr uint32_t FRAME_OVERLAP = 2;
+constexpr u32 FRAME_OVERLAP = 2;
 
 class Engine
 {
@@ -79,7 +80,7 @@ public:
 	VmaAllocator GetAllocator();
 	vk::Device GetDevice();
 
-	GPUMeshBuffers UploadMesh(std::span<uint32_t> indices, std::span<Vertex> vertices);
+	GPUMeshBuffers UploadMesh(std::span<u32> indices, std::span<Vertex> vertices);
 
 private:
 	void init();
@@ -97,7 +98,7 @@ private:
 private:
 
 	bool m_initialised{ false };
-	uint32_t m_frame_number{ 0 };
+	u32 m_frame_number{ 0 };
 	bool m_stop_rendering{ false };
 	vk::Extent2D m_window_extent{ 1700, 900 };
 
@@ -123,10 +124,13 @@ private:
 	void init_default_data();
 
 
-	void create_swapchain(uint32_t width, uint32_t height);
+	void create_swapchain(u32 width, u32 height);
 	void destroy_swapchain();
 
-	FrameData& get_current_frame() { return m_frames[m_frame_number % FRAME_OVERLAP]; }
+	FrameData& get_current_frame()
+	{
+		return m_frames[m_frame_number % FRAME_OVERLAP];
+	}
 
 	AllocatedBuffer create_buffer(size_t alloc_size, vk::BufferUsageFlags usage, VmaMemoryUsage memory_usage);
 	void destroy_buffer(const AllocatedBuffer& buffer);
@@ -136,7 +140,7 @@ private:
 	void destroy_image(const AllocatedImage& img);
 
 
-private: 
+private:
 	// vulkan structures
 	vk::Instance               m_instance;
 	vk::PhysicalDevice         m_physical_device;
@@ -178,6 +182,14 @@ private:
 	vk::Pipeline       m_mesh_pipeline;
 
 	std::vector<std::shared_ptr<MeshAsset>> m_test_meshes;
+
+	AllocatedImage m_white_image;
+	AllocatedImage m_black_image;
+	AllocatedImage m_grey_image;
+	AllocatedImage m_error_checkerboard_image;
+
+	vk::Sampler m_default_sampler_linear;
+	vk::Sampler m_default_sampler_nearest;
 
 private:
 

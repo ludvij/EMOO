@@ -64,4 +64,5 @@ project "NesEmu"
 			-- "%{Library.gtest_release}"
 		}
 		runtime "release"
+		symbols "Off"
 		optimize "On"

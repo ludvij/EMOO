@@ -14,7 +14,7 @@ void transition_image(vk::CommandBuffer cmd, vk::Image image, vk::ImageLayout cu
 		new_layout
 	);
 
-	vk::ImageAspectFlagBits aspect_mask = (new_layout == vk::ImageLayout::eDepthAttachmentOptimal) ?
+	vk::ImageAspectFlagBits aspect_mask = ( new_layout == vk::ImageLayout::eDepthAttachmentOptimal ) ?
 		vk::ImageAspectFlagBits::eDepth : vk::ImageAspectFlagBits::eColor;
 	image_barrier.subresourceRange = vkinit::image_subresource_range(aspect_mask);
 	image_barrier.image = image;

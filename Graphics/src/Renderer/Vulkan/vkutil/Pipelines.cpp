@@ -9,7 +9,7 @@ namespace Ui::vkutil
 {
 vk::ShaderModule load_shader_module(const char* filepath, vk::Device device)
 {
-	auto code = Lud::Slurper::SlurpTo<uint32_t>(filepath, std::ios::binary);
+	auto code = Lud::Slurper::SlurpTo<uint32_t>(filepath, std::ios::in | std::ios::binary);
 
 	vk::ShaderModuleCreateInfo info({}, code);
 
@@ -24,13 +24,13 @@ PipelineBuilder::PipelineBuilder()
 }
 PipelineBuilder& PipelineBuilder::Clear()
 {
-	m_input_assembly          = vk::PipelineInputAssemblyStateCreateInfo();
-	m_rasterizer              = vk::PipelineRasterizationStateCreateInfo();
-	m_color_blend_attachment  = vk::PipelineColorBlendAttachmentState();
-	m_multisampling           = vk::PipelineMultisampleStateCreateInfo();
-	m_pipeline_layout         = vk::PipelineLayout();
-	m_depth_stencil           = vk::PipelineDepthStencilStateCreateInfo();
-	m_render_info             = vk::PipelineRenderingCreateInfo();
+	m_input_assembly = vk::PipelineInputAssemblyStateCreateInfo();
+	m_rasterizer = vk::PipelineRasterizationStateCreateInfo();
+	m_color_blend_attachment = vk::PipelineColorBlendAttachmentState();
+	m_multisampling = vk::PipelineMultisampleStateCreateInfo();
+	m_pipeline_layout = vk::PipelineLayout();
+	m_depth_stencil = vk::PipelineDepthStencilStateCreateInfo();
+	m_render_info = vk::PipelineRenderingCreateInfo();
 	m_color_attachment_format = vk::Format();
 
 	m_shader_stages.clear();
@@ -92,10 +92,10 @@ PipelineBuilder& PipelineBuilder::SetMultisamplingNone()
 
 PipelineBuilder& PipelineBuilder::DisableBlending()
 {
-	m_color_blend_attachment.colorWriteMask = 
-		vk::ColorComponentFlagBits::eR | 
-		vk::ColorComponentFlagBits::eG | 
-		vk::ColorComponentFlagBits::eB | 
+	m_color_blend_attachment.colorWriteMask =
+		vk::ColorComponentFlagBits::eR |
+		vk::ColorComponentFlagBits::eG |
+		vk::ColorComponentFlagBits::eB |
 		vk::ColorComponentFlagBits::eA;
 	m_color_blend_attachment.blendEnable = vk::False;
 
@@ -104,10 +104,10 @@ PipelineBuilder& PipelineBuilder::DisableBlending()
 
 PipelineBuilder& PipelineBuilder::EnableBlendingAdditive()
 {
-	m_color_blend_attachment.colorWriteMask = 
-		vk::ColorComponentFlagBits::eR | 
-		vk::ColorComponentFlagBits::eG | 
-		vk::ColorComponentFlagBits::eB | 
+	m_color_blend_attachment.colorWriteMask =
+		vk::ColorComponentFlagBits::eR |
+		vk::ColorComponentFlagBits::eG |
+		vk::ColorComponentFlagBits::eB |
 		vk::ColorComponentFlagBits::eA;
 	m_color_blend_attachment.blendEnable = vk::True;
 	m_color_blend_attachment.srcColorBlendFactor = vk::BlendFactor::eOne;
@@ -122,10 +122,10 @@ PipelineBuilder& PipelineBuilder::EnableBlendingAdditive()
 
 PipelineBuilder& PipelineBuilder::EnableBlendingAlphablend()
 {
-	m_color_blend_attachment.colorWriteMask = 
-		vk::ColorComponentFlagBits::eR | 
-		vk::ColorComponentFlagBits::eG | 
-		vk::ColorComponentFlagBits::eB | 
+	m_color_blend_attachment.colorWriteMask =
+		vk::ColorComponentFlagBits::eR |
+		vk::ColorComponentFlagBits::eG |
+		vk::ColorComponentFlagBits::eB |
 		vk::ColorComponentFlagBits::eA;
 	m_color_blend_attachment.blendEnable = vk::True;
 	m_color_blend_attachment.srcColorBlendFactor = vk::BlendFactor::eOneMinusDstAlpha;
@@ -143,7 +143,7 @@ PipelineBuilder& PipelineBuilder::SetColorAttachmentFormat(vk::Format format)
 	m_color_attachment_format = format;
 	m_render_info.colorAttachmentCount = 1;
 	m_render_info.pColorAttachmentFormats = &m_color_attachment_format;
-	
+
 	return *this;
 }
 PipelineBuilder& PipelineBuilder::SetDepthFormat(vk::Format format)

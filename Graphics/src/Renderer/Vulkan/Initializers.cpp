@@ -75,14 +75,14 @@ vk::SubmitInfo2 submit_info(vk::CommandBufferSubmitInfo* cmd, vk::SemaphoreSubmi
 vk::ImageCreateInfo image_create_info(const vk::Format format, vk::ImageUsageFlags usage_flags, vk::Extent3D extent)
 {
 	vk::ImageCreateInfo info = vk::ImageCreateInfo({},
-												   vk::ImageType::e2D,
-												   format,
-												   extent,
-												   1,
-												   1,
-												   vk::SampleCountFlagBits::e1,
-												   vk::ImageTiling::eOptimal,
-												   usage_flags
+		vk::ImageType::e2D,
+		format,
+		extent,
+		1,
+		1,
+		vk::SampleCountFlagBits::e1,
+		vk::ImageTiling::eOptimal,
+		usage_flags
 	);
 
 	return info;
@@ -113,8 +113,8 @@ vk::RenderingAttachmentInfo attachment_info(vk::ImageView view, vk::ClearValue* 
 	info.imageLayout = layout;
 	info.loadOp = clear ? vk::AttachmentLoadOp::eClear : vk::AttachmentLoadOp::eLoad;
 	info.storeOp = vk::AttachmentStoreOp::eStore;
-	
-	if (clear != nullptr)
+
+	if ( clear != nullptr )
 	{
 		info.clearValue = *clear;
 	}
@@ -124,7 +124,7 @@ vk::RenderingAttachmentInfo attachment_info(vk::ImageView view, vk::ClearValue* 
 vk::RenderingInfo rendering_info(vk::Extent2D render_extent, vk::RenderingAttachmentInfo* color_attachment, vk::RenderingAttachmentInfo* depth_attachment)
 {
 	vk::RenderingInfo info;
-	info.renderArea = vk::Rect2D{ vk::Offset2D{ 0, 0}, render_extent};
+	info.renderArea = vk::Rect2D{ vk::Offset2D{ 0, 0}, render_extent };
 	info.layerCount = 1;
 	info.colorAttachmentCount = 1;
 	info.pColorAttachments = color_attachment;
@@ -162,11 +162,11 @@ vk::RenderingAttachmentInfo depth_attachment_info(vk::ImageView view, vk::ImageL
 
 	depth_attachment.imageView = view;
 	depth_attachment.imageLayout = layout;
-    depth_attachment.loadOp = vk::AttachmentLoadOp::eClear;
-    depth_attachment.storeOp = vk::AttachmentStoreOp::eStore;
-    depth_attachment.clearValue.depthStencil.depth = 0.0f;
+	depth_attachment.loadOp = vk::AttachmentLoadOp::eClear;
+	depth_attachment.storeOp = vk::AttachmentStoreOp::eStore;
+	depth_attachment.clearValue.depthStencil.depth = 0.0f;
 
-    return depth_attachment;
+	return depth_attachment;
 }
 
 vk::PipelineShaderStageCreateInfo pipeline_shader_stage_create_info(vk::ShaderStageFlagBits flags, vk::ShaderModule module)

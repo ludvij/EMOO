@@ -760,7 +760,7 @@ class DeviceBuilder {
     DeviceBuilder& custom_queue_setup(std::vector<CustomQueueDescription> queue_descriptions);
 
     // Add a structure to the pNext chain of VkDeviceCreateInfo.
-    // The structure must be valid when DeviceBuilder::build() is called.
+    // The structure must be valid when DeviceBuilder::Build() is called.
     template <typename T> DeviceBuilder& add_pNext(T* structure) {
         info.pNext_chain.push_back(reinterpret_cast<VkBaseOutStructure*>(structure));
         return *this;
@@ -912,7 +912,7 @@ class SwapchainBuilder {
     SwapchainBuilder& set_composite_alpha_flags(VkCompositeAlphaFlagBitsKHR composite_alpha_flags);
 
     // Add a structure to the pNext chain of VkSwapchainCreateInfoKHR.
-    // The structure must be valid when SwapchainBuilder::build() is called.
+    // The structure must be valid when SwapchainBuilder::Build() is called.
     template <typename T> SwapchainBuilder& add_pNext(T* structure) {
         info.pNext_chain.push_back(reinterpret_cast<VkBaseOutStructure*>(structure));
         return *this;

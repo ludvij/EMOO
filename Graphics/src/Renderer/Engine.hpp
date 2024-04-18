@@ -17,21 +17,25 @@ struct SDL_Window;
 
 namespace Ui
 {
+using namespace Detail;
 
 namespace Detail {
 
-struct DeletionQueue
+class DeletionQueue
 {
+public:
+
+	void PushFunction(std::function<void()>&& function);
+
+	void Flush();
+private:
 	std::deque<std::function<void()>> deletors;
 
-	void push_function(std::function<void()>&& function);
-
-	void flush();
 };
 
 struct FrameData 
 {
-	vk::CommandPool command_pool;
+	vk::CommandPool   command_pool;
 	vk::CommandBuffer command_buffer;
 
 	vk::Semaphore swapchain_semaphore;
@@ -39,7 +43,8 @@ struct FrameData
 
 	vk::Fence render_fence;
 
-	Detail::DeletionQueue deletion_queue;
+	DeletionQueue deletion_queue;
+	DescriptorAllocatorGrowable frame_descriptor;
 };
 
 template<size_t N>
@@ -74,7 +79,7 @@ public:
 	VmaAllocator GetAllocator();
 	vk::Device GetDevice();
 
-	Detail::GPUMeshBuffers UploadMesh(std::span<uint32_t> indices, std::span<Detail::Vertex> vertices);
+	GPUMeshBuffers UploadMesh(std::span<uint32_t> indices, std::span<Vertex> vertices);
 
 private:
 	void init();
@@ -121,10 +126,14 @@ private:
 	void create_swapchain(uint32_t width, uint32_t height);
 	void destroy_swapchain();
 
-	Detail::FrameData& get_current_frame() { return m_frames[m_frame_number % FRAME_OVERLAP]; }
+	FrameData& get_current_frame() { return m_frames[m_frame_number % FRAME_OVERLAP]; }
 
-	Detail::AllocatedBuffer create_buffer(size_t alloc_size, vk::BufferUsageFlags usage, VmaMemoryUsage memory_usage);
-	void destroy_buffer(const Detail::AllocatedBuffer& buffer);
+	AllocatedBuffer create_buffer(size_t alloc_size, vk::BufferUsageFlags usage, VmaMemoryUsage memory_usage);
+	void destroy_buffer(const AllocatedBuffer& buffer);
+
+	AllocatedImage create_image(vk::Extent3D size, vk::Format format, vk::ImageUsageFlags usage, bool mipmapped = false);
+	AllocatedImage create_image(void* data, vk::Extent3D size, vk::Format format, vk::ImageUsageFlags usage, bool mipmapped = false);
+	void destroy_image(const AllocatedImage& img);
 
 
 private: 
@@ -136,28 +145,31 @@ private:
 	vkutil::SwapchainBundle    m_swapchain;
 	vk::DebugUtilsMessengerEXT m_debug_messenger;
 
-	Detail::FrameData m_frames[FRAME_OVERLAP];
+	FrameData m_frames[FRAME_OVERLAP];
 
 	// queue
 	vkutil::QueueBundle m_graphics_queue;
 	vkutil::QueueBundle m_present_queue;
 
 	// make deletions easier
-	Detail::DeletionQueue m_deletion_queue;
+	DeletionQueue m_deletion_queue;
 
 	// memory allocator
 	VmaAllocator m_allocator{ nullptr };
 
 	// image to send to swapchain
-	Detail::AllocatedImage m_draw_image;
-	Detail::AllocatedImage m_depth_image;
+	AllocatedImage m_draw_image;
+	AllocatedImage m_depth_image;
 	vk::Extent2D           m_draw_extent;
 	float m_render_scale = 1.0f;
 
 	// descriptors for compute shaders
-	Detail::DescriptorAllocator m_descriptor_allocator;
+	DescriptorAllocatorGrowable m_descriptor_allocator;
 	vk::DescriptorSet           m_draw_image_descriptors;
 	vk::DescriptorSetLayout     m_draw_image_descriptor_layout;
+	vk::DescriptorSetLayout     m_scene_data_descriptor_layout;
+
+	GPUSceneData m_scene_data;
 
 	vk::PipelineLayout m_gradient_pipeline_layout;
 
@@ -182,7 +194,7 @@ private:
 	vk::CommandBuffer m_imm_command_buffer;
 	vk::CommandPool   m_imm_command_pool;
 
-	std::vector<Detail::ComputeEffect> m_background_effects;
+	std::vector<ComputeEffect> m_background_effects;
 	int m_current_background_effect{ 0 };
 
 };

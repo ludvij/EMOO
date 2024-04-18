@@ -65,7 +65,6 @@ int main()
 #else
 #include <iostream>
 #include "Renderer/Engine.hpp"
-#include "NesEmu.hpp"
 
 using Ui::Engine;
 

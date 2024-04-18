@@ -13,6 +13,7 @@
 
 #include <vulkan/vulkan.hpp>
 #include <vulkan/vulkan_to_string.hpp>
+#include <vulkan/vk_enum_string_helper.h>
 
 #include <vma/vk_mem_alloc.h>
 
@@ -20,14 +21,35 @@
 #include <glm/vec4.hpp>
 
 
-#define VK_CHECK(err) \
-do { \
-	if (err != vk::Result::eSuccess) \
-	{ \
-		std::cerr << "Detected Vulkan error: " << vk::to_string(err) << '\n'; \
-		throw std::runtime_error(vk::to_string(err)); \
-	} \
-} while (0) 
+//#define VK_CHECK(x) \
+//do { \
+//	if (err != vk::Result::eSuccess) \
+//	{ \
+//		std::cerr << "Detected Vulkan error: " << vk::to_string(err) << '\n'; \
+//		throw std::runtime_error(vk::to_string(err)); \
+//	} \
+//} while (0) 
+#ifdef GRAPHICS_DEBUG
+constexpr void VK_CHECK(vk::Result res)
+{
+	if (res != vk::Result::eSuccess) 
+	{ 
+		std::cerr << "Detected Vulkan error: " << vk::to_string(res) << '\n'; 
+		throw std::runtime_error(vk::to_string(res)); 
+	} 
+}
+
+constexpr void VK_CHECK(VkResult res)
+{
+	if (res != 0) 
+	{ 
+		std::cerr << "Detected Vulkan error: " << string_VkResult(res) << '\n'; 
+		throw std::runtime_error(string_VkResult(res)); 
+	} 
+}
+#else
+#define VK_CHECK(x) x
+#endif
 
 namespace Ui::Detail
 {
@@ -69,6 +91,16 @@ struct GPUDrawPushConstants
 {
 	glm::mat4 world_matrix;
 	vk::DeviceAddress vertex_buffer;
+};
+
+struct GPUSceneData
+{
+	glm::mat4 view;
+	glm::mat4 proj;
+	glm::mat4 viewproj;
+	glm::vec4 ambientcolor;
+	glm::vec4 sunlinghtdirection;
+	glm::vec4 sunlightcolor;
 };
 }
 #endif

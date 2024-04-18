@@ -267,7 +267,7 @@ RECENT REVISION HISTORY:
 // test; if not, the generic C versions are used as a fall-back. On ARM targets,
 // the typical path is to have separate builds for NEON and non-NEON devices
 // (at least this is true for iOS and Android). Therefore, the NEON support is
-// toggled by a build flag: define STBI_NEON to get NEON loops.
+// toggled by a Build flag: define STBI_NEON to get NEON loops.
 //
 // If for some reason you do not want to use any of SIMD code, or if
 // you have issues compiling it, you can disable it entirely by
@@ -716,7 +716,7 @@ typedef unsigned char validate_uint32[sizeof(stbi__uint32)==4 ? 1 : -1];
 // See https://github.com/nothings/stb/issues/81 for more information.
 //
 // So default to no SSE2 on 32-bit MinGW. If you've read this far and added
-// -mstackrealign to your build settings, feel free to #define STBI_MINGW_ENABLE_SSE2.
+// -mstackrealign to your Build settings, feel free to #define STBI_MINGW_ENABLE_SSE2.
 #define STBI_NO_SIMD
 #endif
 
@@ -2003,7 +2003,7 @@ static int stbi__build_huffman(stbi__huffman *h, int *count)
 {
    int i,j,k=0;
    unsigned int code;
-   // build size list for each symbol (from JPEG spec)
+   // Build size list for each symbol (from JPEG spec)
    for (i=0; i < 16; ++i) {
       for (j=0; j < count[i]; ++j) {
          h->size[k++] = (stbi_uc) (i+1);
@@ -2029,7 +2029,7 @@ static int stbi__build_huffman(stbi__huffman *h, int *count)
    }
    h->maxcode[j] = 0xffffffff;
 
-   // build non-spec acceleration table; 255 is flag for not-accelerated
+   // Build non-spec acceleration table; 255 is flag for not-accelerated
    memset(h->fast, 255, 1 << FAST_BITS);
    for (i=0; i < k; ++i) {
       int s = h->size[i];
@@ -2044,7 +2044,7 @@ static int stbi__build_huffman(stbi__huffman *h, int *count)
    return 1;
 }
 
-// build a table that decodes both magnitude and value of small ACs in
+// Build a table that decodes both magnitude and value of small ACs in
 // one go.
 static void stbi__build_fast_ac(stbi__int16 *fast_ac, stbi__huffman *h)
 {
@@ -2156,7 +2156,7 @@ stbi_inline static int stbi__extend_receive(stbi__jpeg *j, int n)
    if (j->code_bits < n) stbi__grow_buffer_unsafe(j);
    if (j->code_bits < n) return 0; // ran out of bits from stream, return 0s intead of continuing
 
-   sgn = j->code_buffer >> 31; // sign bit always in MSB; 0 if MSB clear (positive), 1 if MSB set (negative)
+   sgn = j->code_buffer >> 31; // sign bit always in MSB; 0 if MSB Clear (positive), 1 if MSB set (negative)
    k = stbi_lrot(j->code_buffer, n);
    j->code_buffer = k & ~stbi__bmask[n];
    k &= stbi__bmask[n];
@@ -6009,7 +6009,7 @@ static void *stbi__tga_load(stbi__context *s, int *x, int *y, int *comp, int req
                   raw_data[j] = stbi__get8(s);
                }
             }
-            //   clear the reading flag for the next pixel
+            //   Clear the reading flag for the next pixel
             read_next_pixel = 0;
          } // end of reading a pixel
 
@@ -6037,7 +6037,7 @@ static void *stbi__tga_load(stbi__context *s, int *x, int *y, int *comp, int req
             }
          }
       }
-      //   clear my palette, if I had one
+      //   Clear my palette, if I had one
       if ( tga_palette != NULL )
       {
          STBI_FREE( tga_palette );
@@ -6707,7 +6707,7 @@ static stbi_uc *stbi__process_gif_raster(stbi__context *s, stbi__gif *g)
       g->codes[init_code].suffix = (stbi_uc) init_code;
    }
 
-   // support no starting clear code
+   // support no starting Clear code
    avail = clear+2;
    oldcode = -1;
 
@@ -6726,8 +6726,8 @@ static stbi_uc *stbi__process_gif_raster(stbi__context *s, stbi__gif *g)
          stbi__int32 code = bits & codemask;
          bits >>= codesize;
          valid_bits -= codesize;
-         // @OPTIMIZE: is there some way we can accelerate the non-clear path?
-         if (code == clear) {  // clear code
+         // @OPTIMIZE: is there some way we can accelerate the non-Clear path?
+         if (code == clear) {  // Clear code
             codesize = lzw_cs + 1;
             codemask = (1 << codesize) - 1;
             avail = clear + 2;
@@ -6833,7 +6833,7 @@ static stbi_uc *stbi__gif_load_next(stbi__context *s, stbi__gif *g, int *comp, i
       memcpy( g->background, g->out, 4 * g->w * g->h );
    }
 
-   // clear my history;
+   // Clear my history;
    memset( g->history, 0x00, g->w * g->h );        // pixels that were affected previous frame
 
    for (;;) {
@@ -7113,7 +7113,7 @@ static char *stbi__hdr_gettoken(stbi__context *z, char *buffer)
    while (!stbi__at_eof(z) && c != '\n') {
       buffer[len++] = c;
       if (len == STBI__HDR_BUFLEN-1) {
-         // flush to end of line
+         // Flush to end of line
          while (!stbi__at_eof(z) && stbi__get8(z) != '\n')
             ;
          break;

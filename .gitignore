@@ -12,6 +12,7 @@
 # Binaries
 **/bin
 **.nes
+**.exe
 # Exceptions
 
 !vendor/premake/bin

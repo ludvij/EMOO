@@ -29,7 +29,7 @@ std::optional<std::vector<std::shared_ptr<MeshAsset>>> load_gltf_meshes(Engine* 
 	fastgltf::Asset gltf;
 	fastgltf::Parser parser;
 
-	if ( auto load = parser.loadGltfBinary(&data, path.parent_path(), gltf_options); load )
+	if (auto load = parser.loadGltfBinary(&data, path.parent_path(), gltf_options); load)
 	{
 		gltf = std::move(load.get());
 	}
@@ -43,7 +43,7 @@ std::optional<std::vector<std::shared_ptr<MeshAsset>>> load_gltf_meshes(Engine* 
 	std::vector<uint32_t> indices;
 	std::vector<Detail::Vertex> vertices;
 
-	for ( auto& mesh : gltf.meshes )
+	for (auto& mesh : gltf.meshes)
 	{
 		MeshAsset new_mesh;
 		new_mesh.name = mesh.name;
@@ -51,7 +51,7 @@ std::optional<std::vector<std::shared_ptr<MeshAsset>>> load_gltf_meshes(Engine* 
 		indices.clear();
 		vertices.clear();
 
-		for ( auto&& p : mesh.primitives )
+		for (auto&& p : mesh.primitives)
 		{
 			Detail::GeoSurface surface;
 			surface.start_index = static_cast<uint32_t>( indices.size() );
@@ -92,7 +92,7 @@ std::optional<std::vector<std::shared_ptr<MeshAsset>>> load_gltf_meshes(Engine* 
 
 			// load vertex normals
 			auto normals = p.findAttribute("NORMAL");
-			if ( normals != p.attributes.end() )
+			if (normals != p.attributes.end())
 			{
 				fastgltf::iterateAccessorWithIndex<glm::vec3>(gltf, gltf.accessors[normals->second],
 					[&](glm::vec3 v, size_t index)
@@ -103,7 +103,7 @@ std::optional<std::vector<std::shared_ptr<MeshAsset>>> load_gltf_meshes(Engine* 
 
 			// load vertex colors
 			auto uv = p.findAttribute("TEXCOORD_0");
-			if ( uv != p.attributes.end() )
+			if (uv != p.attributes.end())
 			{
 				fastgltf::iterateAccessorWithIndex<glm::vec2>(gltf, gltf.accessors[uv->second],
 					[&](glm::vec2 v, size_t index)
@@ -115,7 +115,7 @@ std::optional<std::vector<std::shared_ptr<MeshAsset>>> load_gltf_meshes(Engine* 
 
 			// load colors
 			auto color = p.findAttribute("COLOR_0");
-			if ( color != p.attributes.end() )
+			if (color != p.attributes.end())
 			{
 				fastgltf::iterateAccessorWithIndex<glm::vec4>(gltf, gltf.accessors[color->second],
 					[&](glm::vec4 v, size_t index)
@@ -129,9 +129,9 @@ std::optional<std::vector<std::shared_ptr<MeshAsset>>> load_gltf_meshes(Engine* 
 			// display the vertex normals
 		}
 		constexpr bool override_colors = true;
-		if ( override_colors )
+		if (override_colors)
 		{
-			for ( auto& vtx : vertices )
+			for (auto& vtx : vertices)
 			{
 				vtx.color = glm::vec4(vtx.normal, 1.0f);
 			}

@@ -172,6 +172,7 @@ private:
 	vk::DescriptorSet           m_draw_image_descriptors;
 	vk::DescriptorSetLayout     m_draw_image_descriptor_layout;
 	vk::DescriptorSetLayout     m_scene_data_descriptor_layout;
+	vk::DescriptorSetLayout     m_single_image_descriptor_layout;
 
 	GPUSceneData m_scene_data;
 

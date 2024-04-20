@@ -1,7 +1,7 @@
 project "Graphics"
 	kind "ConsoleApp"
 	language "C++"
-	cppdialect "c++20"
+	cppdialect "C++latest"
 	targetdir ("%{wks.location}/bin/" .. outputDir .. "/%{prj.name}")
 	objdir ("%{wks.location}/bin/intermediates/" .. outputDir .. "/%{prj.name}")
 
@@ -82,13 +82,12 @@ project "Graphics"
 
 
 	filter 'files:Shader/*'
-		buildmessage "Compiling %{file.relpath}"
 		buildcommands {
 			'%{VULKAN_SDK}/BIN/glslangValidator -V -o "%{file.directory}/SPIRV/%{file.name}.spv" "%{file.relpath}"'
 		}
 
 		buildoutputs {
-			"%{file.directory}/SPIRV/%{file.basename}.spv"
+			"%{file.directory}/SPIRV/%{file.name}.spv"
 		}
 
 	

@@ -248,33 +248,21 @@ void Engine::draw_geometry(vk::CommandBuffer cmd)
 
 	cmd.setScissor(0, scissor);
 
-	auto gpu_scene_buffer = create_buffer(sizeof(GPUSceneData), vk::BufferUsageFlagBits::eUniformBuffer, VMA_MEMORY_USAGE_CPU_TO_GPU);
 
-	// TODO: cache
-	GPUSceneData* scene_uniform_data = std::bit_cast<GPUSceneData*>( gpu_scene_buffer.allocation->GetMappedData() );
-	*scene_uniform_data = m_scene_data;
+	vk::DescriptorSet image_set = get_current_frame().frame_descriptor.Allocate(m_device, m_single_image_descriptor_layout);
 
-	auto global_descriptor = get_current_frame().frame_descriptor.Allocate(m_device, m_scene_data_descriptor_layout);
+	{
+		auto writer = DescriptorWriter();
+		writer
+			.WriteImage(0, m_error_checkerboard_image.view, m_default_sampler_nearest, vk::ImageLayout::eShaderReadOnlyOptimal, vk::DescriptorType::eCombinedImageSampler)
+			.UpdateSet(m_device, image_set);
+	}
 
-	get_current_frame().deletion_queue.PushFunction([=, this]
-		{
-			destroy_buffer(gpu_scene_buffer);
-		});
-
-
-	DescriptorWriter writer;
-	writer
-		.WriteBuffer(0, gpu_scene_buffer.buffer, sizeof(GPUSceneData), 0, vk::DescriptorType::eUniformBuffer)
-		.UpdateSet(m_device, global_descriptor);
+	cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_mesh_pipeline_layout, 0, image_set, {});
 
 	glm::mat4 view = glm::translate(glm::vec3{ 0, 0, -5 });
 
-	glm::mat4 projection = glm::perspective(
-		glm::radians(70.0f),
-		static_cast<float>( m_draw_extent.width ) / static_cast<float>( m_draw_extent.height ),
-		10000.0f,
-		0.1f
-	);
+	glm::mat4 projection = glm::perspective(glm::radians(70.0f), static_cast<float>( m_draw_extent.width ) / static_cast<float>( m_draw_extent.height ), 10000.0f, 0.1f);
 
 	projection[1][1] *= -1;
 
@@ -288,6 +276,24 @@ void Engine::draw_geometry(vk::CommandBuffer cmd)
 	cmd.bindIndexBuffer(m_test_meshes[2]->mesh_buffers.index_buffer.buffer, 0, vk::IndexType::eUint32);
 
 	cmd.drawIndexed(m_test_meshes[2]->surfaces[0].count, 1, m_test_meshes[2]->surfaces[0].start_index, 0, 0);
+
+	// TODO: cache
+
+	/*auto gpu_scene_buffer = create_buffer(sizeof(GPUSceneData), vk::BufferUsageFlagBits::eUniformBuffer, VMA_MEMORY_USAGE_CPU_TO_GPU);
+	GPUSceneData* scene_uniform_data = std::bit_cast<GPUSceneData*>( gpu_scene_buffer.allocation->GetMappedData() );
+	*scene_uniform_data = m_scene_data;
+
+	auto global_descriptor = get_current_frame().frame_descriptor.Allocate(m_device, m_scene_data_descriptor_layout);
+
+	get_current_frame().deletion_queue.PushFunction([=, this]
+		{
+			destroy_buffer(gpu_scene_buffer);
+		});
+
+
+	DescriptorWriter()
+		.WriteBuffer(0, gpu_scene_buffer.buffer, sizeof(GPUSceneData), 0, vk::DescriptorType::eUniformBuffer)
+		.UpdateSet(m_device, global_descriptor);*/
 
 	cmd.endRendering();
 }
@@ -571,27 +577,40 @@ void Engine::init_sync_structures()
 void Engine::init_descriptors()
 {
 	std::vector<DescriptorAllocatorGrowable::PoolSizeRatio> sizes = {
-		{vk::DescriptorType::eStorageImage, 1}
+		{vk::DescriptorType::eStorageImage,  1},
+		{vk::DescriptorType::eUniformBuffer, 1}
 	};
 	m_descriptor_allocator.Init(m_device, 10, sizes);
 
 
 	// make descriptor set layout for compute draw
 	{
-		m_draw_image_descriptor_layout = DescriptorLayoutBuilder()
+		auto builder = DescriptorLayoutBuilder();
+		m_draw_image_descriptor_layout = builder
 			.AddBinding(0, vk::DescriptorType::eStorageImage)
 			.Build(m_device, vk::ShaderStageFlagBits::eCompute);
 	}
+
 	{
-		m_scene_data_descriptor_layout = DescriptorLayoutBuilder()
+		auto builder = DescriptorLayoutBuilder();
+		m_single_image_descriptor_layout = builder
+			.AddBinding(0, vk::DescriptorType::eCombinedImageSampler)
+			.Build(m_device, vk::ShaderStageFlagBits::eFragment);
+	}
+
+	{
+		auto builder = DescriptorLayoutBuilder();
+		m_scene_data_descriptor_layout = builder
 			.AddBinding(0, vk::DescriptorType::eUniformBuffer)
 			.Build(m_device, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment);
 	}
 
+
 	m_draw_image_descriptors = m_descriptor_allocator.Allocate(m_device, m_draw_image_descriptor_layout);
 
 	{
-		DescriptorWriter()
+		auto writer = DescriptorWriter();
+		writer
 			.WriteImage(0, m_draw_image.view, nullptr, vk::ImageLayout::eGeneral, vk::DescriptorType::eStorageImage)
 			.UpdateSet(m_device, m_draw_image_descriptors);
 	}
@@ -621,6 +640,7 @@ void Engine::init_descriptors()
 			m_descriptor_allocator.DestroyPools(m_device);
 			m_device.destroyDescriptorSetLayout(m_draw_image_descriptor_layout);
 			m_device.destroyDescriptorSetLayout(m_scene_data_descriptor_layout);
+			m_device.destroyDescriptorSetLayout(m_single_image_descriptor_layout);
 		});
 
 }
@@ -682,28 +702,29 @@ void Engine::init_background_pipeline()
 
 void Engine::init_mesh_pipeline()
 {
-	auto frag_module = vkutil::load_shader_module("Shader/SPIRV/colored_triangle.frag.spv", m_device);
+	auto frag_module = vkutil::load_shader_module("Shader/SPIRV/tex_image.frag.spv", m_device);
 	auto vert_module = vkutil::load_shader_module("Shader/SPIRV/colored_triangle_mesh.vert.spv", m_device);
 
+	vk::PushConstantRange buffer_range;
+	buffer_range.offset = 0;
+	buffer_range.size = sizeof(GPUDrawPushConstants);
+	buffer_range.stageFlags = vk::ShaderStageFlagBits::eVertex;
+
 	auto pipeline_layout_info = vkinit::pipeline_layout_create_info();
-
-	vk::PushConstantRange buffer_range(vk::ShaderStageFlagBits::eVertex, 0, sizeof(GPUDrawPushConstants));
-
 	pipeline_layout_info.setPushConstantRanges(buffer_range);
+	pipeline_layout_info.setSetLayouts(m_single_image_descriptor_layout);
 
 	m_mesh_pipeline_layout = m_device.createPipelineLayout(pipeline_layout_info);
 
-
-	vkutil::PipelineBuilder builder;
-
-	m_mesh_pipeline = builder
+	m_mesh_pipeline = vkutil::PipelineBuilder()
 		.SetPipelineLayout(m_mesh_pipeline_layout)
 		.SetShaders(vert_module, frag_module)
 		.SetInputTopology(vk::PrimitiveTopology::eTriangleList)
 		.SetPolygonMode(vk::PolygonMode::eFill)
 		.SetCullMode(vk::CullModeFlagBits::eNone, vk::FrontFace::eClockwise)
 		.SetMultisamplingNone()
-		.EnableBlendingAdditive()
+		//.EnableBlendingAdditive()
+		.DisableBlending()
 		.EnableDepthTest(true, vk::CompareOp::eGreaterOrEqual)
 		.SetColorAttachmentFormat(m_draw_image.format)
 		.SetDepthFormat(m_depth_image.format)
@@ -723,9 +744,26 @@ void Engine::init_default_data()
 {
 	m_test_meshes = load_gltf_meshes(this, "assets/basicmesh.glb").value();
 
-	u32 white = 0xFFFFFFFF;
-	u32 grey  = 0xAAAAAAFF;
-	u32 black = 0x000000FF;
+	uint32_t white;
+	uint32_t grey;
+	uint32_t black;
+	uint32_t magenta;
+
+	if constexpr (std::endian::native == std::endian::little)
+	{
+		white   = std::byteswap(0xFFFFFFFF);
+		grey    = std::byteswap(0xAAAAAAFF);
+		black   = std::byteswap(0x000000FF);
+		magenta = std::byteswap(0xFF00FFFF);
+	}
+	else
+	{
+		white   = 0xFFFFFFFF;
+		grey    = 0xAAAAAAFF;
+		black   = 0x000000FF;
+		magenta = 0xFF00FFFF;
+	}
+
 
 	m_white_image = create_image(
 		std::bit_cast<void*>( &white ), { 1, 1, 1 }, vk::Format::eR8G8B8A8Unorm, vk::ImageUsageFlagBits::eSampled);
@@ -734,9 +772,7 @@ void Engine::init_default_data()
 	m_black_image = create_image(
 		std::bit_cast<void*>( &black ), { 1, 1, 1 }, vk::Format::eR8G8B8A8Unorm, vk::ImageUsageFlagBits::eSampled);
 
-	// checkered image
-	u32 magenta = 0xFF00FFFF;
-	std::array<u32, 16 * 16> pixels;
+	std::array<uint32_t, 16 * 16> pixels;
 	for (size_t x = 0; x < 16; x++)
 	{
 		for (size_t y = 0; y < 16; y++)
@@ -748,15 +784,20 @@ void Engine::init_default_data()
 	m_error_checkerboard_image = create_image(
 		pixels.data(), { 16, 16, 1 }, vk::Format::eR8G8B8A8Unorm, vk::ImageUsageFlagBits::eSampled);
 
-	vk::SamplerCreateInfo sampler_info;
 
-	sampler_info.minFilter = vk::Filter::eNearest;
-	sampler_info.magFilter = vk::Filter::eNearest;
-	m_default_sampler_nearest = m_device.createSampler(sampler_info);
+	{
+		vk::SamplerCreateInfo sampler_info;
+		sampler_info.minFilter = vk::Filter::eNearest;
+		sampler_info.magFilter = vk::Filter::eNearest;
+		m_default_sampler_nearest = m_device.createSampler(sampler_info);
+	}
 
-	sampler_info.minFilter = vk::Filter::eLinear;
-	sampler_info.magFilter = vk::Filter::eLinear;
-	m_default_sampler_linear = m_device.createSampler(sampler_info);
+	{
+		vk::SamplerCreateInfo sampler_info;
+		sampler_info.minFilter = vk::Filter::eLinear;
+		sampler_info.magFilter = vk::Filter::eLinear;
+		m_default_sampler_linear = m_device.createSampler(sampler_info);
+	}
 
 	m_deletion_queue.PushFunction([&]()
 		{
@@ -844,8 +885,8 @@ void Engine::destroy_buffer(const AllocatedBuffer& buffer)
 AllocatedImage Engine::create_image(vk::Extent3D size, vk::Format format, vk::ImageUsageFlags usage, bool mipmapped)
 {
 	AllocatedImage image;
-	image.extent = size;
 	image.format = format;
+	image.extent = size;
 
 	VkImageCreateInfo img_info = vkinit::image_create_info(format, usage, size);
 	if (mipmapped)
@@ -858,14 +899,7 @@ AllocatedImage Engine::create_image(vk::Extent3D size, vk::Format format, vk::Im
 	alloc_info.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 	alloc_info.requiredFlags = static_cast<VkMemoryPropertyFlags>( vk::MemoryPropertyFlagBits::eDeviceLocal );
 
-	VK_CHECK(vmaCreateImage(
-		m_allocator,
-		&img_info,
-		&alloc_info,
-		std::bit_cast<VkImage*>( &image.image ),
-		&image.allocation,
-		nullptr
-	));
+	VK_CHECK(vmaCreateImage(m_allocator, &img_info, &alloc_info, std::bit_cast<VkImage*>( &image.image ), &image.allocation, nullptr));
 
 	vk::ImageAspectFlags aspect_flags = vk::ImageAspectFlagBits::eColor;
 	if (format == vk::Format::eD32Sfloat)
@@ -890,6 +924,8 @@ AllocatedImage Engine::create_image(void* data, vk::Extent3D size, vk::Format fo
 		VMA_MEMORY_USAGE_CPU_TO_GPU
 	);
 
+	memcpy(upload_buffer.info.pMappedData, data, data_size);
+
 	AllocatedImage image = create_image(
 		size,
 		format,
@@ -901,12 +937,18 @@ AllocatedImage Engine::create_image(void* data, vk::Extent3D size, vk::Format fo
 		{
 			vkutil::transition_image(cmd, image.image, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);
 
-			vk::BufferImageCopy copy_region(
-				0, 0, 0,
-				{ vk::ImageAspectFlagBits::eColor,0,0,1 },
-				{},
-				size
-			);
+			vk::BufferImageCopy copy_region;
+			copy_region.bufferOffset = 0;
+			copy_region.bufferRowLength = 0;
+			copy_region.bufferImageHeight = 0;
+
+			copy_region.imageSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+			copy_region.imageSubresource.mipLevel = 0;
+			copy_region.imageSubresource.baseArrayLayer = 0;
+			copy_region.imageSubresource.layerCount = 1;
+
+			copy_region.imageExtent = size;
+
 			cmd.copyBufferToImage(upload_buffer.buffer, image.image, vk::ImageLayout::eTransferDstOptimal, copy_region);
 
 			vkutil::transition_image(cmd, image.image, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);

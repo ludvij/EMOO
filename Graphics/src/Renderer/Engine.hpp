@@ -118,7 +118,6 @@ private:
 
 	void init_pipelines();
 
-	void init_background_pipeline();
 	void init_mesh_pipeline();
 
 	void init_default_data();
@@ -176,7 +175,6 @@ private:
 
 	GPUSceneData m_scene_data;
 
-	vk::PipelineLayout m_gradient_pipeline_layout;
 
 
 	vk::PipelineLayout m_mesh_pipeline_layout;
@@ -207,8 +205,6 @@ private:
 	vk::CommandBuffer m_imm_command_buffer;
 	vk::CommandPool   m_imm_command_pool;
 
-	std::vector<ComputeEffect> m_background_effects;
-	int m_current_background_effect{ 0 };
 
 };
 

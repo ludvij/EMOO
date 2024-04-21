@@ -2,61 +2,61 @@
 #if 0
 #include "Application.hpp"
 #include <imgui.h>
-int main() 
+int main()
 {
 	Ui::Application* app = new Ui::Application();
 	app->SetMenuCallback([app]()
-	{
-		if (ImGui::BeginMenu("File"))
 		{
-			if (ImGui::MenuItem("Load ROM"))
+			if (ImGui::BeginMenu("File"))
 			{
-				// TODO:
+				if (ImGui::MenuItem("Load ROM"))
+				{
+					// TODO:
+				}
+				if (ImGui::MenuItem("Reset"))
+				{
+					app->GetConsole().Reset();
+				}
+				if (ImGui::MenuItem("Exit"))
+				{
+					app->Close();
+				}
+				ImGui::EndMenu();
 			}
-			if (ImGui::MenuItem("Reset"))
+			if (ImGui::BeginMenu("Config"))
 			{
-				app->GetConsole().Reset();
+				if (ImGui::MenuItem("Load Palette"))
+				{
+					// TODO:
+				}
+				ImGui::EndMenu();
+
 			}
-			if (ImGui::MenuItem("Exit"))
+			if (ImGui::BeginMenu("Debug"))
 			{
-				app->Close();
+				if (ImGui::MenuItem("Show Memory"))
+				{
+					// TODO:
+				}
+				if (ImGui::MenuItem("Show Debugger"))
+				{
+					// TODO:
+				}
+				if (ImGui::MenuItem("Show CPU state"))
+				{
+					// TODO:
+				}
+				if (ImGui::MenuItem("Show PPU state"))
+				{
+					// TODO:
+				}
+				if (ImGui::MenuItem("Show APU state"))
+				{
+					// TODO:
+				}
+				ImGui::EndMenu();
 			}
-			ImGui::EndMenu();
-		}
-		if (ImGui::BeginMenu("Config"))
-		{
-			if (ImGui::MenuItem("Load Palette"))
-			{
-				// TODO:
-			}
-			ImGui::EndMenu();
-			
-		}
-		if (ImGui::BeginMenu("Debug"))
-		{
-			if (ImGui::MenuItem("Show Memory"))
-			{
-				// TODO:
-			}
-			if (ImGui::MenuItem("Show Debugger"))
-			{
-				// TODO:
-			}
-			if (ImGui::MenuItem("Show CPU state"))
-			{
-				// TODO:
-			}
-			if (ImGui::MenuItem("Show PPU state"))
-			{
-				// TODO:
-			}
-			if (ImGui::MenuItem("Show APU state"))
-			{
-				// TODO:
-			}
-			ImGui::EndMenu();
-		}
-	});
+		});
 	app->Run();
 	delete app;
 

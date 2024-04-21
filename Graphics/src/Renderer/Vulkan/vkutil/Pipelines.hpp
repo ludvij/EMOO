@@ -10,6 +10,7 @@ namespace Ui::vkutil
 {
 
 vk::ShaderModule load_shader_module(const char* filepath, vk::Device device);
+vk::ShaderModule load_shader_module(const std::span<uint32_t> code, vk::Device device);
 
 class PipelineBuilder
 {

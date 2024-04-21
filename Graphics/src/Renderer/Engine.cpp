@@ -17,6 +17,8 @@
 #define VMA_IMPLEMENTATION
 #include <vma/vk_mem_alloc.h>
 
+#include "../Shader/embed/vert_shader.embed"
+#include "../Shader/embed/frag_shader.embed"
 
 #include <imgui.h>
 #include <backends/imgui_impl_sdl2.h>
@@ -134,8 +136,6 @@ void Engine::draw()
 		vk::ImageLayout::eGeneral
 	);
 
-
-
 	draw_background(cmd);
 
 	vkutil::transition_image(
@@ -217,16 +217,12 @@ void Engine::draw()
 
 void Engine::draw_background(vk::CommandBuffer cmd)
 {
-	ComputeEffect& effect = m_background_effects[m_current_background_effect];
+	constexpr vk::ImageSubresourceRange image_range(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1);
 
-	cmd.bindPipeline(vk::PipelineBindPoint::eCompute, effect.pipeline);
-
-	cmd.bindDescriptorSets(vk::PipelineBindPoint::eCompute, m_gradient_pipeline_layout, 0, m_draw_image_descriptors, nullptr);
-
-	cmd.pushConstants(m_gradient_pipeline_layout, vk::ShaderStageFlagBits::eCompute, 0, sizeof(effect.data), &effect.data);
-
-	cmd.dispatch(static_cast<u32>( std::ceil(m_draw_extent.width / 16.0) ), static_cast<u32>( std::ceil(m_draw_extent.height / 16.0) ), 1);
+	vk::ClearColorValue color(40.0f / 255.0f, 44.0f / 255.0f, 52.0f / 255.0f, 0.0f);
+	cmd.clearColorImage(m_draw_image.image, vk::ImageLayout::eGeneral, color, image_range);
 }
+
 
 void Engine::draw_geometry(vk::CommandBuffer cmd)
 {
@@ -365,16 +361,28 @@ void Engine::Run()
 		if (ImGui::Begin("background"))
 		{
 			ImGui::SliderFloat("Render scale", &m_render_scale, 0.3f, 1.0f);
-			ComputeEffect& selected = m_background_effects[m_current_background_effect];
+			ImVec2 vMin = ImGui::GetWindowContentRegionMin();
+			ImVec2 vMax = ImGui::GetWindowContentRegionMax();
 
-			ImGui::Text("Selected effect: ", selected.name);
-			ImGui::SliderInt("Effect index", &m_current_background_effect, 0, static_cast<u32>( m_background_effects.size() - 1 ));
+			vMin.x += ImGui::GetWindowPos().x;
+			vMin.y += ImGui::GetWindowPos().y;
+			vMax.x += ImGui::GetWindowPos().x;
+			vMax.y += ImGui::GetWindowPos().y;
 
-			ImGui::InputFloat4("data[0]", std::bit_cast<float*>( &selected.data.data[0] ));
-			ImGui::InputFloat4("data[1]", std::bit_cast<float*>( &selected.data.data[1] ));
-			ImGui::InputFloat4("data[2]", std::bit_cast<float*>( &selected.data.data[2] ));
-			ImGui::InputFloat4("data[3]", std::bit_cast<float*>( &selected.data.data[3] ));
-
+			if (ImGui::BeginTable("Coordinates", 2))
+			{
+				ImGui::TableNextRow();
+				ImGui::TableNextColumn();
+				ImGui::Text("x0: %f", vMin.x);
+				ImGui::TableNextColumn();
+				ImGui::Text("y0: %f", vMin.y);
+				ImGui::TableNextRow();
+				ImGui::TableNextColumn();
+				ImGui::Text("x1: %f", vMax.x);
+				ImGui::TableNextColumn();
+				ImGui::Text("y1: %f", vMax.y);
+				ImGui::EndTable();
+			}
 		}
 		ImGui::End();
 
@@ -647,63 +655,12 @@ void Engine::init_descriptors()
 
 void Engine::init_pipelines()
 {
-	init_background_pipeline();
-
 	init_mesh_pipeline();
 }
-
-void Engine::init_background_pipeline()
-{
-	vk::PushConstantRange push_constants(vk::ShaderStageFlagBits::eCompute, 0, sizeof(ComputePushConstants<4>));
-	vk::PipelineLayoutCreateInfo compute_layout({}, m_draw_image_descriptor_layout, push_constants);
-
-	m_gradient_pipeline_layout = m_device.createPipelineLayout(compute_layout);
-
-	auto gradient_shader = vkutil::load_shader_module("Shader/SPIRV/gradient_color.comp.spv", m_device);
-
-	vk::PipelineShaderStageCreateInfo stage_info({}, vk::ShaderStageFlagBits::eCompute, gradient_shader, "main");
-
-	vk::ComputePipelineCreateInfo compute_info({}, stage_info, m_gradient_pipeline_layout);
-
-	ComputeEffect gradient;
-	gradient.layout = m_gradient_pipeline_layout;
-	gradient.name = "gradient";
-	gradient.data = { {glm::vec4(1,0,0,1), glm::vec4(0,0,1,1)} };
-
-	VK_CHECK(m_device.createComputePipelines(VK_NULL_HANDLE, 1, &compute_info, nullptr, &gradient.pipeline));
-
-
-	auto sky_shader = vkutil::load_shader_module("Shader/SPIRV/sky.comp.spv", m_device);
-	compute_info.stage.module = sky_shader;
-
-	ComputeEffect sky;
-	sky.layout = m_gradient_pipeline_layout;
-	sky.name = "sky";
-	sky.data = { {glm::vec4(0.1, 0.2, 0.4, 0.97)} };
-
-	VK_CHECK(m_device.createComputePipelines(VK_NULL_HANDLE, 1, &compute_info, nullptr, &sky.pipeline));
-
-
-	m_background_effects.push_back(gradient);
-	m_background_effects.push_back(sky);
-
-	m_device.destroyShaderModule(gradient_shader);
-	m_device.destroyShaderModule(sky_shader);
-
-	m_deletion_queue.PushFunction([&]()
-		{
-			m_device.destroyPipelineLayout(m_gradient_pipeline_layout);
-			for (const auto& effect : m_background_effects)
-			{
-				m_device.destroyPipeline(effect.pipeline);
-			}
-		});
-}
-
 void Engine::init_mesh_pipeline()
 {
-	auto frag_module = vkutil::load_shader_module("Shader/SPIRV/tex_image.frag.spv", m_device);
-	auto vert_module = vkutil::load_shader_module("Shader/SPIRV/colored_triangle_mesh.vert.spv", m_device);
+	auto frag_module = vkutil::load_shader_module(sg_embed_frag_shader, m_device);
+	auto vert_module = vkutil::load_shader_module(sg_embed_vert_shader, m_device);
 
 	vk::PushConstantRange buffer_range;
 	buffer_range.offset = 0;

@@ -2,6 +2,8 @@ project "NesEmu"
 	kind "StaticLib"
 	language "C++"
 	cppdialect "c++20"
+	staticruntime "on"
+	
 	targetdir ("%{wks.location}/bin/" .. outputDir .. "/%{prj.name}")
 	objdir ("%{wks.location}/bin/intermediates/" .. outputDir .. "/%{prj.name}")
 

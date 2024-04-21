@@ -18,6 +18,15 @@ vk::ShaderModule load_shader_module(const char* filepath, vk::Device device)
 	return module;
 }
 
+vk::ShaderModule load_shader_module(const std::span<uint32_t> code, vk::Device device)
+{
+	vk::ShaderModuleCreateInfo info({}, code);
+
+	vk::ShaderModule module = device.createShaderModule(info);
+
+	return module;
+}
+
 PipelineBuilder::PipelineBuilder()
 {
 	Clear();

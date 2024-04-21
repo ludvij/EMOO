@@ -2,6 +2,7 @@ project "Graphics"
 	kind "ConsoleApp"
 	language "C++"
 	cppdialect "C++latest"
+	staticruntime "on"
 	targetdir ("%{wks.location}/bin/" .. outputDir .. "/%{prj.name}")
 	objdir ("%{wks.location}/bin/intermediates/" .. outputDir .. "/%{prj.name}")
 
@@ -20,11 +21,12 @@ project "Graphics"
 		"Shader/**.comp",
 		"Shader/**.frag",
 		"Shader/**.vert",
+		"Shader/**.embed"
 	}
 
 	flags {
-		"FatalWarnings"
 	}
+
 
 	-- pchheader "pch.hpp"
 	-- pchsource "src/pch.cpp"
@@ -48,7 +50,7 @@ project "Graphics"
 		"NesEmu",
 		"fastgltf",
 		"%{Library.sdl2}",
-		"%{Library.Vulkan}"
+		"%{Library.Vulkan}",
 	}
 
 	defines {
@@ -62,6 +64,7 @@ project "Graphics"
 			"NES_EMU_PLATFORM_WINDOWS",
 			"WIN32",
 		}
+		
 	
 
 	filter "configurations:Debug"
@@ -70,11 +73,18 @@ project "Graphics"
 		}
 		runtime "debug"
 		symbols "On"
+
+		links {
+			"%{Library.freetype_d}",
+		}
 	
 	filter "configurations:Release"
 		defines { 
 			"GRAPHICS_NDEBUG",
 			"NDEBUG"
+		}
+		links {
+			"%{Library.freetype_r}",
 		}
 
 		runtime "release"
@@ -83,7 +93,7 @@ project "Graphics"
 
 	filter 'files:Shader/*'
 		buildcommands {
-			'%{VULKAN_SDK}/BIN/glslangValidator -V -o "%{file.directory}/SPIRV/%{file.name}.spv" "%{file.relpath}"'
+			'%{VULKAN_SDK}/BIN/glslangValidator -V -o "%{file.directory}/SPIRV/%{file.name}.spv" "%{file.relpath}"',
 		}
 
 		buildoutputs {

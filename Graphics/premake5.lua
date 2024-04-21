@@ -48,7 +48,6 @@ project "Graphics"
 	links {
 		"ImGui",
 		"NesEmu",
-		"fastgltf",
 		"%{Library.sdl2}",
 		"%{Library.Vulkan}",
 	}
@@ -76,6 +75,7 @@ project "Graphics"
 
 		links {
 			"%{Library.freetype_d}",
+			"%{Library.fastgltf_d}",
 		}
 	
 	filter "configurations:Release"
@@ -85,6 +85,7 @@ project "Graphics"
 		}
 		links {
 			"%{Library.freetype_r}",
+			"%{Library.fastgltf_r}",
 		}
 
 		runtime "release"

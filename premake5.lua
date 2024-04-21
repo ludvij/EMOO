@@ -20,7 +20,6 @@ include "dependencies.lua"
 group "Dependencies"
 	include "vendor/premake"
 	include "vendor/imgui"
-	include "vendor/fastgltf"
 group ""
 
 

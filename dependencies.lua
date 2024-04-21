@@ -21,6 +21,8 @@ LibraryDir["gtest_debug"]   = "%{wks.location}/NesEmu/vendor/gtest/lib/debug"
 LibraryDir["gtest_release"] = "%{wks.location}/NesEmu/vendor/gtest/lib/release"
 LibraryDir["freetype_r"]    = "%{wks.location}/vendor/freetype/lib/release"
 LibraryDir["freetype_d"]    = "%{wks.location}/vendor/freetype/lib/debug"
+LibraryDir["fastgltf_r"]    = "%{wks.location}/vendor/fastgltf/lib/release"
+LibraryDir["fastgltf_d"]    = "%{wks.location}/vendor/fastgltf/lib/debug"
 
 Library = {}
 Library["Vulkan"]        = "%{LibraryDir.VulkanSDK}/vulkan-1.lib"
@@ -29,6 +31,7 @@ Library["gtest_debug"]   = "%{LibraryDir.gtest_debug}/googletest"
 Library["gtest_release"] = "%{LibraryDir.gtest_release}/googletest"
 Library["freetype_r"]    = "%{LibraryDir.freetype_r}/freetype"
 Library["freetype_d"]    = "%{LibraryDir.freetype_d}/freetype"
-
+Library["fastgltf_r"]    = "%{LibraryDir.fastgltf_r}/fastgltf"
+Library["fastgltf_d"]    = "%{LibraryDir.fastgltf_d}/fastgltf"
 
 

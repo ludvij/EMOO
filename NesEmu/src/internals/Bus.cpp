@@ -4,9 +4,9 @@
 namespace Emu
 {
 
-constexpr auto TranslateMirroredAddress = [](const u16 addr, const u16 size, const u16 offset=0) -> u16
-{ 
-	return (addr - offset) % (size - 1); 
+static constexpr auto TranslateMirroredAddress(const u16 addr, const u16 size, const u16 offset=0) -> u16
+{
+	return ( addr - offset ) % ( size - 1 );
 };
 
 u8 Bus::Read(const u16 addr) const

@@ -21,6 +21,7 @@ project "Graphics"
 		"Shader/**.comp",
 		"Shader/**.frag",
 		"Shader/**.vert",
+		"Shader/**.glsl",
 		"Shader/**.embed"
 	}
 
@@ -37,9 +38,7 @@ project "Graphics"
 		"%{IncludeDir.imgui}",
 		"%{IncludeDir.VulkanSDK}",
 		"%{IncludeDir.glm}",
-		"%{IncludeDir.stb_image}",
 		"%{IncludeDir.NesEmu}",
-		"%{IncludeDir.fastgltf}",
 		"%{IncludeDir.lud_utils}",
 		"%{IncludeDir.vk_bootrstrap}",
 	}
@@ -54,7 +53,8 @@ project "Graphics"
 
 	defines {
 		"SDL_MAIN_HANDLED",
-		"GLM_FORCE_DEPTH_ZERO_TO_ONE"
+		"GLM_FORCE_DEPTH_ZERO_TO_ONE",
+		-- "GLM_FORCE_DEFAULT_ALIGNED_GENTYPES"
 	}
 
 	filter "system:windows"
@@ -75,7 +75,6 @@ project "Graphics"
 
 		links {
 			"%{Library.freetype_d}",
-			"%{Library.fastgltf_d}",
 		}
 	
 	filter "configurations:Release"
@@ -85,14 +84,13 @@ project "Graphics"
 		}
 		links {
 			"%{Library.freetype_r}",
-			"%{Library.fastgltf_r}",
 		}
 
 		runtime "release"
 		optimize "On"
 
 
-	filter 'files:Shader/*'
+	filter 'files:Shader/*.vert or Shader/*.frag or Shader/*.comp' 
 		buildcommands {
 			'%{VULKAN_SDK}/BIN/glslangValidator -V -o "%{file.directory}/SPIRV/%{file.name}.spv" "%{file.relpath}"',
 		}
@@ -100,5 +98,6 @@ project "Graphics"
 		buildoutputs {
 			"%{file.directory}/SPIRV/%{file.name}.spv"
 		}
+
 
 	

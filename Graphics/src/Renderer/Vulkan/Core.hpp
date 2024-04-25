@@ -69,8 +69,16 @@ struct AllocatedBuffer
 	VmaAllocation     allocation{ nullptr };
 	VmaAllocationInfo info{};
 
-};
+	operator vk::Buffer()
+	{
+		return buffer;
+	}
 
+};
+// setted up this way because alignment
+// pos is 12 bytes, and vec3 needs 16, so
+// we interleave uv_x that is 4 and we have 16 bytes prior
+// to normal, we do the same with normal and uv_y to align color
 struct Vertex
 {
 	glm::vec3 position;
@@ -85,6 +93,7 @@ struct GPUMeshBuffers
 	AllocatedBuffer   index_buffer;
 	AllocatedBuffer   vertex_buffer;
 	vk::DeviceAddress address{};
+
 };
 
 struct GPUDrawPushConstants

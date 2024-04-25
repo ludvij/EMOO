@@ -55,7 +55,7 @@ project "NesEmu"
 		runtime "debug"
 		symbols "On"
 		links {
-			-- "%{Library.gtest_debug}"
+			-- "%{Library.gtest_d}"
 		}
 
 	filter "configurations:Release"
@@ -63,7 +63,7 @@ project "NesEmu"
 			"NES_EMU_NDEBUG" 
 		}
 		links {
-			-- "%{Library.gtest_release}"
+			-- "%{Library.gtest_r}"
 		}
 		runtime "release"
 		symbols "Off"

@@ -264,7 +264,7 @@ void PPU::load_palette(const char* src)
 		std::throw_with_nested(std::runtime_error("File not found"));
 	}
 #endif // NES_EMU_DEBUG
-	file.read(std::bit_cast<char*>(m_palette.data()), sizeof(m_palette));
+	file.read(std::bit_cast<char*>(m_palette.data()), sizeof m_palette);
 }
 
 

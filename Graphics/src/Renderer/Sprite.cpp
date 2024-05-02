@@ -1,0 +1,19 @@
+#include "Sprite.hpp"
+
+#include "RendererAPI.hpp"
+
+namespace Ui
+{
+Sprite::Sprite(Rect pos, float z_index, ITexture* texture, TextureWindow texture_window)
+	: rect(pos)
+	, z_index(z_index)
+	, m_texture(texture)
+	, texture_window(texture_window)
+{
+
+}
+void Sprite::Draw() const
+{
+	Renderer::DrawSprite(*this);
+}
+}

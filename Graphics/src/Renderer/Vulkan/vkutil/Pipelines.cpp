@@ -3,7 +3,7 @@
 #define LUD_SLURPER_IMPLEMENTATION
 #include <lud_slurper.hpp>
 
-#include "../Initializers.hpp"
+#include "Initializers.hpp"
 
 namespace Ui::vkutil
 {
@@ -18,9 +18,11 @@ vk::ShaderModule load_shader_module(const char* filepath, vk::Device device)
 	return module;
 }
 
-vk::ShaderModule load_shader_module(const std::span<uint32_t> code, vk::Device device)
+vk::ShaderModule load_shader_module(const uint32_t* code, const size_t code_size, vk::Device device)
 {
-	vk::ShaderModuleCreateInfo info({}, code);
+	vk::ShaderModuleCreateInfo info = vk::ShaderModuleCreateInfo()
+		.setPCode(code)
+		.setCodeSize(code_size);
 
 	vk::ShaderModule module = device.createShaderModule(info);
 

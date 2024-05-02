@@ -1,7 +1,7 @@
 
 from sys import argv, byteorder
 from ctypes import sizeof, c_uint32
-
+from os.path import basename
 
 
 
@@ -24,10 +24,11 @@ def main():
 		fmt_data += v
 		if i < len(data) - 1:
 			fmt_data += ', '
-
+	name = '_'.join(basename(argv[1]).split('.')[:-1])
 	fmt = f"""
-#include<array>
-static std::array<uint32_t, {size}> {argv[2]} = {{
+#include <cstdint>
+extern const size_t sg_embed_{name}_size = {size * 4};
+extern const uint32_t sg_embed_{name}[] = {{
 {fmt_data}
 }};
 """

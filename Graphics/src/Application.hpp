@@ -1,13 +1,12 @@
 #ifndef GRAPHICS_APPLICATION_HEADER
 #define GRAPHICS_APPLICATION_HEADER
 
-#include <string>
+#include "Components/IComponent.hpp"
+#include "Window/Window.hpp"
 #include <functional>
 #include <memory>
-#include <unordered_map>
 #include <NesEmu.hpp>
-#include "Components/IComponent.hpp"
-
+#include <string>
 
 struct SDL_Window;
 
@@ -33,12 +32,18 @@ public:
 
 	static Application& Get();
 
-	Emu::Console& GetConsole() { return m_console; }
+	Emu::Console& GetConsole()
+	{
+		return m_console;
+	}
 
-	void SetMenuCallback(const std::function<void()>& menubar_callback) { m_menuCallback = menubar_callback; }
+	void SetMenuCallback(const std::function<void()>& menubar_callback)
+	{
+		m_menuCallback = menubar_callback;
+	}
 
 	template<typename T>
-	void AddComponent() requires(std::derived_from<T, IComponent>)
+	void AddComponent() requires( std::derived_from<T, IComponent> )
 	{
 		m_components.emplace_back(std::make_shared<T>())->OnCreate();
 	}
@@ -54,16 +59,17 @@ private:
 
 
 private:
-	bool m_is_running = false;
+	bool m_should_quit = false;
+	bool m_stop_rendering = false;
 	Configuration m_config;
-	SDL_Window* m_window = nullptr;
 
 	Emu::Console m_console;
 
 	std::vector<std::shared_ptr<IComponent>> m_components;
 	std::function<void()> m_menuCallback;
 
-	std::unordered_map<const char*, ImFont*> m_fonts;
+	IWindow* m_window;
+
 };
 
 }

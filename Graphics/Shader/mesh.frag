@@ -6,8 +6,8 @@
 
 
 //shader input
-layout (location = 0) in vec3 inColor;
-layout (location = 1) in vec2 inUV;
+layout (location = 0) in vec4 inColor;
+layout (location = 1) in vec2 inTexCoords;
 //output write
 layout (location = 0) out vec4 outFragColor;
 
@@ -15,5 +15,12 @@ layout (location = 0) out vec4 outFragColor;
 
 void main() 
 {
-	outFragColor = texture(displayTexture,inUV);
+	if (inTexCoords.x < 0 && inTexCoords.y < 0)
+	{
+		outFragColor = inColor;
+	}
+	else
+	{
+		outFragColor = texture(displayTexture, inTexCoords);
+	}
 }

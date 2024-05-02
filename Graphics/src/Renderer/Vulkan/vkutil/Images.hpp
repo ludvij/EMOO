@@ -3,7 +3,7 @@
 
 #include <vulkan/vulkan.hpp>
 
-#include "Renderer/Vulkan/Initializers.hpp"
+#include "Initializers.hpp"
 
 namespace Ui::vkutil
 {

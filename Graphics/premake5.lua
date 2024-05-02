@@ -22,7 +22,6 @@ project "Graphics"
 		"Shader/**.frag",
 		"Shader/**.vert",
 		"Shader/**.glsl",
-		"Shader/**.embed"
 	}
 
 	flags {
@@ -53,8 +52,8 @@ project "Graphics"
 
 	defines {
 		"SDL_MAIN_HANDLED",
+		"GLM_ENABLE_EXPERIMENTAL",
 		"GLM_FORCE_DEPTH_ZERO_TO_ONE",
-		-- "GLM_FORCE_DEFAULT_ALIGNED_GENTYPES"
 	}
 
 	filter "system:windows"
@@ -93,11 +92,13 @@ project "Graphics"
 	filter 'files:Shader/*.vert or Shader/*.frag or Shader/*.comp' 
 		buildcommands {
 			'%{VULKAN_SDK}/BIN/glslangValidator -V -o "%{file.directory}/SPIRV/%{file.name}.spv" "%{file.relpath}"',
+			'"%{wks.location}/utility/spv_to_embed.py" "%{file.directory}/SPIRV/%{file.name}.spv" > "%{file.directory}/embed/%{file.name}.cpp"',
 		}
 
 		buildoutputs {
-			"%{file.directory}/SPIRV/%{file.name}.spv"
+			"%{file.directory}/embed/%{file.name}.cpp",
 		}
+
 
 
 	

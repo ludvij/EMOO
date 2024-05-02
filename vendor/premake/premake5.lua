@@ -11,7 +11,7 @@ project "Premake"
 	}
 
 	postbuildmessage "Regenerating project files with Premake5!"
-	postbuildcommands
-	{
-		"\"%{prj.location}bin/premake5\" %{_ACTION} --file=\"%{wks.location}premake5.lua\""
+	postbuildcommands {
+		'"%{prj.location}bin/premake5" %{_ACTION} --file="%{wks.location}premake5.lua"',
+		'py "%{prj.location}/custom/add_output_type.py" "%{wks.location}/Graphics/Graphics.vcxproj"'
 	}

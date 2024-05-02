@@ -1,17 +1,13 @@
 #ifndef GRAPHICS_ENGINE_HEADER
 #define GRAPHICS_ENGINE_HEADER
 
+#include "BatchRenderer.hpp"
 #include "Core.hpp"
-
+#include "Renderer/RendererAPI.hpp"
+#include "vkutil/Descriptors.hpp"
 #include "vkutil/Images.hpp"
 #include "vkutil/Pipelines.hpp"
 #include "vkutil/Types.hpp"
-
-
-#include "Descriptors.hpp"
-
-#include "Renderer/RendererAPI.hpp"
-
 
 struct SDL_Window;
 
@@ -45,7 +41,7 @@ struct FrameData
 	vk::Fence render_fence;
 
 	DeletionQueue deletion_queue;
-	DescriptorAllocatorGrowable frame_descriptor;
+	vkutil::DescriptorAllocatorGrowable frame_descriptor;
 };
 
 struct SceneData
@@ -61,50 +57,61 @@ constexpr u32 FRAME_OVERLAP = 2;
 class Engine
 {
 public:
+
 	static Engine& Get();
-	Engine();
 	~Engine();
 
-	void Run();
+	void Init(IWindow* window, bool use_imgui=true);
+	void Draw();
+	void Resize();
+	void RequestResize();
 
-	VmaAllocator GetAllocator();
-	vk::Device GetDevice();
 
-	void CreateSquare(const Rect& bounds);
 
+	Detail::AllocatedImage CreateImage(vk::Extent3D size, vk::Format format, vk::ImageUsageFlags usage, bool mipmapped = false);
+	Detail::AllocatedImage CreateImage(void* data, vk::Extent3D size, vk::Format format, vk::ImageUsageFlags usage, bool mipmapped = false);
+	void DestroyImage(const Detail::AllocatedImage& img);
+	void SetImageData(Detail::AllocatedImage image, void* data);
+
+	Detail::AllocatedBuffer CreateBuffer(size_t alloc_size, vk::BufferUsageFlags usage, VmaMemoryUsage memory_usage);
+	void DestroyBuffer(const Detail::AllocatedBuffer& buffer);
+
+
+	void SubmitDrawRect(std::span<Detail::Vertex> vertices);
+
+
+	vk::Device GetDevice() const
+	{
+		return m_device;
+	}
+
+	VmaAllocator GetAllocator() const
+	{
+		return m_allocator;
+	}
 
 
 
 private:
-	void init();
+	Engine() = default;
 	void cleanup();
 
-	void draw();
 
-	void draw_background(vk::CommandBuffer cmd);
+	void draw_background(vk::CommandBuffer cmd) const;
 
 	void draw_geometry(vk::CommandBuffer cmd);
 
-	void resize_swapchain();
 
 	Detail::GPUMeshBuffers upload_mesh(std::span<u32> indices, std::span<Detail::Vertex> vertices);
 
-	void build_emulator_screen();
-	void resize_emulator_screen();
-	Rect get_emulator_screen_bounds(int w, int h) const;
 
 private:
 
 	bool m_initialised{ false };
 	u32 m_frame_number{ 0 };
-	bool m_stop_rendering{ false };
-	vk::Extent2D m_window_extent{ 1700, 900 };
+	vk::Extent2D m_window_extent;
 
-	SDL_Window* m_window{ nullptr };
-
-
-	bool m_resize_requested{ false };
-
+	IWindow* m_window{ nullptr };
 
 private:
 
@@ -129,12 +136,8 @@ private:
 		return m_frames[m_frame_number % FRAME_OVERLAP];
 	}
 
-	Detail::AllocatedBuffer create_buffer(size_t alloc_size, vk::BufferUsageFlags usage, VmaMemoryUsage memory_usage);
-	void destroy_buffer(const Detail::AllocatedBuffer& buffer);
 
-	Detail::AllocatedImage create_image(vk::Extent3D size, vk::Format format, vk::ImageUsageFlags usage, bool mipmapped = false);
-	Detail::AllocatedImage create_image(void* data, vk::Extent3D size, vk::Format format, vk::ImageUsageFlags usage, bool mipmapped = false);
-	void destroy_image(const Detail::AllocatedImage& img);
+
 
 
 private:
@@ -146,12 +149,13 @@ private:
 	vkutil::SwapchainBundle    m_swapchain;
 	vk::DebugUtilsMessengerEXT m_debug_messenger;
 
+	bool m_resize_requested = false;
+
 
 	Detail::FrameData m_frames[FRAME_OVERLAP];
 
 	// queue
 	vkutil::QueueBundle m_graphics_queue;
-	vkutil::QueueBundle m_present_queue;
 
 	// make deletions easier
 	Detail::DeletionQueue m_deletion_queue;
@@ -163,15 +167,10 @@ private:
 	Detail::AllocatedImage m_draw_image;
 	Detail::AllocatedImage m_depth_image;
 	vk::Extent2D           m_draw_extent;
-	float m_render_scale = 1.0f;
 
 	// descriptors for compute shaders
-	Detail::DescriptorAllocatorGrowable m_descriptor_allocator;
+	vkutil::DescriptorAllocatorGrowable m_descriptor_allocator;
 	vk::DescriptorSetLayout     m_single_image_descriptor_layout;
-
-
-	Detail::GPUMeshBuffers m_rectangle;
-
 
 
 	vk::PipelineLayout m_mesh_pipeline_layout;
@@ -182,13 +181,15 @@ private:
 
 	vk::Sampler m_default_sampler_nearest;
 
-	Detail::SceneData m_scene_data;
+	Detail::SceneData m_scene_data{};
+
+public:
+	void ImmediateSubmit(std::function<void(vk::CommandBuffer cmd)>&& function);
 
 private:
 
 	void init_imgui();
 
-	void immediate_submit(std::function<void(vk::CommandBuffer cmd)>&& function);
 
 	void draw_imgui(vk::CommandBuffer cmd, vk::ImageView view);
 
@@ -199,10 +200,11 @@ private:
 	vk::CommandBuffer m_imm_command_buffer;
 	vk::CommandPool   m_imm_command_pool;
 
+	bool m_use_imgui = true;
+
 private:
 
-	//std::deque<Quad> m_quad_list;
-
+	BatchRenderer* m_batcher{ nullptr };
 };
 
 }

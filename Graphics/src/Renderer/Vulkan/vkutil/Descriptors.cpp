@@ -1,11 +1,10 @@
 #include "Descriptors.hpp"
-#include "Engine.hpp"
 
-namespace Ui::Detail
+namespace Ui::vkutil
 {
-DescriptorLayoutBuilder& DescriptorLayoutBuilder::AddBinding(uint32_t binding, vk::DescriptorType type)
+DescriptorLayoutBuilder& DescriptorLayoutBuilder::AddBinding(uint32_t binding, vk::DescriptorType type, uint32_t count /*=1*/)
 {
-	vk::DescriptorSetLayoutBinding newbind(binding, type, 1);
+	vk::DescriptorSetLayoutBinding newbind(binding, type, count);
 
 	bindings.push_back(newbind);
 
@@ -142,7 +141,7 @@ vk::DescriptorPool DescriptorAllocatorGrowable::create_pool(vk::Device device, u
 
 	return new_pool;
 }
-DescriptorWriter& DescriptorWriter::WriteImage(int binding, vk::ImageView view, vk::Sampler sampler, vk::ImageLayout layout, vk::DescriptorType type)
+DescriptorWriter& DescriptorWriter::WriteImage(int binding, vk::ImageView view, vk::Sampler sampler, vk::ImageLayout layout, vk::DescriptorType type, uint32_t count/*=1*/)
 {
 	vk::DescriptorImageInfo& info = image_infos.emplace_back(vk::DescriptorImageInfo{ sampler, view, layout });
 
@@ -150,7 +149,7 @@ DescriptorWriter& DescriptorWriter::WriteImage(int binding, vk::ImageView view, 
 
 	write.dstBinding = binding;
 	write.dstSet = nullptr;
-	write.descriptorCount = 1;
+	write.descriptorCount = count;
 	write.descriptorType = type;
 	write.pImageInfo = &info;
 
@@ -159,14 +158,14 @@ DescriptorWriter& DescriptorWriter::WriteImage(int binding, vk::ImageView view, 
 	return *this;
 
 }
-DescriptorWriter& DescriptorWriter::WriteBuffer(int binding, vk::Buffer buffer, size_t size, size_t offset, vk::DescriptorType type)
+DescriptorWriter& DescriptorWriter::WriteBuffer(int binding, vk::Buffer buffer, size_t size, size_t offset, vk::DescriptorType type, uint32_t count/*=1*/)
 {
 	vk::DescriptorBufferInfo& info = buffer_infos.emplace_back(vk::DescriptorBufferInfo{ buffer, offset, size });
 
 	vk::WriteDescriptorSet write;
 	write.dstBinding = binding;
 	write.dstSet = nullptr;
-	write.descriptorCount = 1;
+	write.descriptorCount = count;
 	write.descriptorType = type;
 	write.pBufferInfo = &info;
 

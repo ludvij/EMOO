@@ -1,4 +1,6 @@
-workspace "TFG"
+include "dependencies.lua"
+
+workspace "TFG"	
 	architecture "x86_64"
 	startproject "Graphics"
 
@@ -14,7 +16,6 @@ workspace "TFG"
 outputDir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 
-include "dependencies.lua"
 
 
 group "Dependencies"

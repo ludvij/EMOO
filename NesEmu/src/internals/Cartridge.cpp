@@ -16,7 +16,7 @@ Cartridge::Cartridge(const std::string& filePath)
 	{
 		std::throw_with_nested(std::runtime_error("File not found"));
 	}
-	inputFile.read(std::bit_cast<char*>(&m_header), sizeof(m_header));
+	inputFile.read(std::bit_cast<char*>(&m_header), sizeof m_header);
 
 
 	// validate header

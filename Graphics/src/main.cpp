@@ -64,17 +64,17 @@ int main()
 }
 #else
 #include <iostream>
-#include "Renderer/Vulkan/Engine.hpp"
+#include "Application.hpp"
 
-using Ui::Engine;
+using Ui::Application;
 
 int main()
 {
-	Engine* engine = new Engine();
+	Application* application= new Application();
 
-	engine->Run();
+	application->Run();
 
-	delete engine;
+	delete application;
 }
 
 #endif

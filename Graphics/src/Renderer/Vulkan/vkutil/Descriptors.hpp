@@ -5,12 +5,12 @@
 #include <vector>
 #include <vulkan/vulkan.hpp>
 
-namespace Ui::Detail
+namespace Ui::vkutil
 {
 class DescriptorLayoutBuilder
 {
 public:
-	DescriptorLayoutBuilder& AddBinding(uint32_t binding, vk::DescriptorType type);
+	DescriptorLayoutBuilder& AddBinding(uint32_t binding, vk::DescriptorType type, uint32_t count=1);
 	void Clear();
 	vk::DescriptorSetLayout Build(vk::Device device, vk::ShaderStageFlags shader_stages);
 private:
@@ -47,8 +47,8 @@ class DescriptorWriter
 {
 public:
 
-	DescriptorWriter& WriteImage(int binding, vk::ImageView view, vk::Sampler sampler, vk::ImageLayout layout, vk::DescriptorType type);
-	DescriptorWriter& WriteBuffer(int binding, vk::Buffer buffer, size_t size, size_t offset, vk::DescriptorType type);
+	DescriptorWriter& WriteImage(int binding, vk::ImageView view, vk::Sampler sampler, vk::ImageLayout layout, vk::DescriptorType type, uint32_t count=1);
+	DescriptorWriter& WriteBuffer(int binding, vk::Buffer buffer, size_t size, size_t offset, vk::DescriptorType type, uint32_t count=1);
 
 	void Clear();
 	void UpdateSet(vk::Device device, vk::DescriptorSet set);

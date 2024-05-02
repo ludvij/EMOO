@@ -30,6 +30,7 @@ struct SwapchainBundle
 	vk::Format format{ vk::Format::eUndefined };
 	vk::Extent2D extent;
 
+
 	std::vector<ImageFrame> frames;
 
 	operator vk::SwapchainKHR()

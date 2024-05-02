@@ -75,17 +75,12 @@ struct AllocatedBuffer
 	}
 
 };
-// setted up this way because alignment
-// pos is 12 bytes, and vec3 needs 16, so
-// we interleave uv_x that is 4 and we have 16 bytes prior
-// to normal, we do the same with normal and uv_y to align color
+
 struct Vertex
 {
-	glm::vec3 position;
-	float uv_x;
-	glm::vec3 normal;
-	float uv_y;
-	glm::vec4 color;
+	alignas( 16 ) glm::vec4 color;
+	alignas( 16 ) glm::vec3 position;
+	alignas( 8 ) glm::vec2 tex_coords;
 };
 
 struct GPUMeshBuffers

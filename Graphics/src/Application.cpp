@@ -12,7 +12,6 @@
 #include "Renderer/RendererAPI.hpp"
 #include "Window/SDL/SDLWindow.hpp"	
 
-
 namespace Ui
 {
 Application* s_instance;
@@ -21,7 +20,7 @@ Application::Application(const Configuration& config)
 	: m_config(config)
 	, m_console(Emu::NTSC)
 {
-	m_window = new SDLWindow(m_config.w, m_config.h);
+	m_window = new SDLWindow(m_config.name, m_config.w, m_config.h);
 	s_instance = this;
 	init();
 }
@@ -62,82 +61,129 @@ void Application::Close()
 
 void Application::main_loop()
 {
-	SDL_Event event;
 	while (!m_should_quit)
 	{
-		while (SDL_PollEvent(&event) != 0)
-		{
-			if (event.type == SDL_QUIT)
-				m_should_quit = true;
-
-			if (event.type == SDL_WINDOWEVENT)
-			{
-				if (event.window.event == SDL_WINDOWEVENT_RESIZED)
-				{
-					Renderer::RequestResize();
-				}
-				if (event.window.event == SDL_WINDOWEVENT_MINIMIZED)
-				{
-					m_stop_rendering = true;
-				}
-				if (event.window.event == SDL_WINDOWEVENT_RESTORED)
-				{
-					m_stop_rendering = false;
-				}
-				if (event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == m_window->GetWindowID())
-				{
-					m_should_quit = true;
-				}
-			}
-			ImGui_ImplSDL2_ProcessEvent(&event);
-		}
-
+		event_loop();
 
 		if (m_stop_rendering)
 		{
-			// slow loop
 			continue;
 		}
 		Renderer::Resize();
 
-		ImGui_ImplVulkan_NewFrame();
-		ImGui_ImplSDL2_NewFrame();
+		update();
 
-		ImGui::NewFrame();
+		draw_ui();
+		draw_application();
+	}
+}
+void Application::event_loop()
+{
+	SDL_Event event;
+	while (SDL_PollEvent(&event) != 0)
+	{
+		if (event.type == SDL_QUIT)
+			m_should_quit = true;
 
-		if (ImGui::Begin("Position"))
+		if (event.type == SDL_WINDOWEVENT)
 		{
-			auto [w, h] = m_window->GetDimensions();
-
-			if (ImGui::BeginTable("Window size", 2))
+			if (event.window.event == SDL_WINDOWEVENT_RESIZED)
 			{
-				ImGui::TableNextRow();
-				ImGui::TableNextColumn();
-				ImGui::Text("w: %d", w);
-				ImGui::TableNextColumn();
-				ImGui::Text("h: %d", h);
-
-				ImGui::EndTable();
+				Renderer::RequestResize();
+				m_resize_emu_screen = true;
+			}
+			if (event.window.event == SDL_WINDOWEVENT_MINIMIZED)
+			{
+				m_stop_rendering = true;
+			}
+			if (event.window.event == SDL_WINDOWEVENT_RESTORED)
+			{
+				m_stop_rendering = false;
+			}
+			if (event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == m_window->GetWindowID())
+			{
+				m_should_quit = true;
 			}
 		}
-		ImGui::End();
-
-		ImGui::Render();
-
-		Sprite test({ 10.0f, 10.0f, 200.0f, 200.0f }, 0.0f);
-
-		test.Draw();
-
-		Renderer::Draw();
-
-		// Update and Render additional Platform Windows
-		if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-		{
-			ImGui::UpdatePlatformWindows();
-			ImGui::RenderPlatformWindowsDefault();
-		}
-
+		ImGui_ImplSDL2_ProcessEvent(&event);
 	}
+}
+void Application::draw_ui()
+{
+	ImGui_ImplVulkan_NewFrame();
+	ImGui_ImplSDL2_NewFrame();
+
+	ImGui::NewFrame();
+
+	if (ImGui::BeginMainMenuBar())
+	{
+		if (ImGui::BeginMenu("File"))
+		{
+			if (ImGui::MenuItem("Load ROM"))
+			{
+				// TODO:
+			}
+			if (ImGui::MenuItem("Reset"))
+			{
+			}
+			if (ImGui::MenuItem("Exit"))
+			{
+			}
+			ImGui::EndMenu();
+		}
+		ImGui::EndMainMenuBar();
+	}
+
+	ImGui::Render();
+	// Update and Render additional Platform Windows
+	if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+	{
+		ImGui::UpdatePlatformWindows();
+		ImGui::RenderPlatformWindowsDefault();
+	}
+}
+void Application::draw_application()
+{
+	m_emu_screen.Draw();
+
+	Renderer::Draw();
+}
+void Application::update()
+{
+	if (!m_resize_emu_screen)
+	{
+		return;
+	}
+
+	m_resize_emu_screen = false;
+	constexpr float menu_bar_height = 26;
+
+	const auto [window_width, window_height] = m_window->GetDimensions();
+	const float w = static_cast<float>( window_width );
+	// taking into account menu bar
+	const float h = static_cast<float>( window_height - menu_bar_height );
+
+	const float nes_aspect_ratio = m_console.GetConfig().width / m_console.GetConfig().height;
+
+	Rect new_bounds;
+	// NES resolution is not 1 so i have to check window resolution against nes resolution in order to 
+	// check if width or height should be used for calculations
+	if (w / h > nes_aspect_ratio)
+	{
+		new_bounds.w = h * nes_aspect_ratio;
+		new_bounds.h = h;
+		new_bounds.x = w / 2.0f - new_bounds.w / 2.0f;
+		new_bounds.y = menu_bar_height;
+	}
+	else
+	{
+		new_bounds.w = w;
+		new_bounds.h = w / nes_aspect_ratio;
+		new_bounds.x = 0;
+		new_bounds.y = h / 2.0f - new_bounds.h / 2.0f + menu_bar_height;
+	}
+
+	m_emu_screen.rect = new_bounds;
 }
 }
 

@@ -13,6 +13,7 @@
 
 #include <lud_assert.hpp>
 
+#include <print>
 #include <SDL.h>
 #include <SDL_vulkan.h>
 
@@ -34,6 +35,9 @@ extern const uint32_t sg_embed_mesh_vert[];
 
 namespace Ui
 {
+
+constexpr uint32_t UNIFORM_BINDING = 0;
+constexpr uint32_t SAMPLER_BINDING = 1;
 
 using namespace Detail;
 
@@ -78,7 +82,6 @@ void Engine::Init(IWindow* window, bool use_imgui)
 
 	m_initialised = true;
 }
-
 
 void Engine::Draw()
 {
@@ -307,14 +310,27 @@ void Engine::init_vulkan()
 	m_surface = m_window->CreateVulkanSurface(m_instance);
 
 	// vulkan 1.3 features
-	vk::PhysicalDeviceVulkan13Features features_13{};
-	features_13.dynamicRendering = vk::True;
-	features_13.synchronization2 = vk::True;
+	auto features_13 = vk::PhysicalDeviceVulkan13Features()
+		.setDynamicRendering(vk::True)
+		.setSynchronization2(vk::True);
 	// vulkan 1.2 features
-	vk::PhysicalDeviceVulkan12Features features_12{};
-	features_12.bufferDeviceAddress = vk::True;
-	features_12.descriptorIndexing = vk::True;
-
+	auto features_12 = vk::PhysicalDeviceVulkan12Features()
+		.setDescriptorIndexing(vk::True)
+		.setBufferDeviceAddress(vk::True)
+		// non sized array
+		.setRuntimeDescriptorArray(vk::True)
+		// non bound descriptor sets
+		.setDescriptorBindingPartiallyBound(vk::True)
+		// uniform array indexing
+		// (#extension GL_EXT_nonuniform_qualifier : require)
+		.setShaderStorageBufferArrayNonUniformIndexing(vk::True)
+		.setShaderSampledImageArrayNonUniformIndexing(vk::True)
+		.setShaderStorageImageArrayNonUniformIndexing(vk::True)
+		// update commandbuffer used the bindDescriptorSet
+		//.setDescriptorBindingStorageBufferUpdateAfterBind(vk::True)
+		.setDescriptorBindingSampledImageUpdateAfterBind(vk::True)
+		//.setDescriptorBindingStorageImageUpdateAfterBind(vk::True)
+		;
 	vk::PhysicalDeviceFeatures features{};
 
 
@@ -456,29 +472,24 @@ void Engine::init_sync_structures()
 
 void Engine::init_descriptors()
 {
-	std::vector<vkutil::DescriptorAllocatorGrowable::PoolSizeRatio> sizes = {
-		{vk::DescriptorType::eStorageImage,  1},
-		{vk::DescriptorType::eUniformBuffer, 1}
-	};
-	m_descriptor_allocator.Init(m_device, 10, sizes);
-
+	const uint32_t sampler_count = m_physical_device.getProperties().limits.maxDescriptorSetSampledImages;
 
 	m_single_image_descriptor_layout = vkutil::DescriptorLayoutBuilder()
-		.AddBinding(0, vk::DescriptorType::eUniformBuffer)
-		.AddBinding(1, vk::DescriptorType::eCombinedImageSampler)
-		.Build(m_device, vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eVertex);
+		.SetBindless(vk::DescriptorType::eCombinedImageSampler)
+		.AddBinding(UNIFORM_BINDING, vk::DescriptorType::eUniformBuffer, 1)
+		.AddBinding(SAMPLER_BINDING, vk::DescriptorType::eCombinedImageSampler, sampler_count)
+		.Build(m_device, vk::ShaderStageFlagBits::eAll);
+
 
 	for (int i = 0; i < FRAME_OVERLAP; i++)
 	{
 		std::vector<vkutil::DescriptorAllocatorGrowable::PoolSizeRatio> frame_sizes = {
-			{vk::DescriptorType::eStorageImage,         3},
-			{vk::DescriptorType::eStorageBuffer,        3},
-			{vk::DescriptorType::eUniformBuffer,        3},
-			{vk::DescriptorType::eCombinedImageSampler, 4}
+			{vk::DescriptorType::eUniformBuffer,        1 },
+			{vk::DescriptorType::eCombinedImageSampler, static_cast<float>( sampler_count )}
 		};
 
 		m_frames[i].frame_descriptor = vkutil::DescriptorAllocatorGrowable{};
-		m_frames[i].frame_descriptor.Init(m_device, 1000, frame_sizes);
+		m_frames[i].frame_descriptor.Init(m_device, 1, frame_sizes);
 
 		m_deletion_queue.PushFunction([&, i]()
 			{
@@ -490,7 +501,6 @@ void Engine::init_descriptors()
 
 	m_deletion_queue.PushFunction([&]()
 		{
-			m_descriptor_allocator.DestroyPools(m_device);
 			m_device.destroyDescriptorSetLayout(m_single_image_descriptor_layout);
 		});
 

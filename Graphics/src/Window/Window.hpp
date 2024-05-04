@@ -14,9 +14,7 @@ struct WindowExtent
 class IWindow
 {
 public:
-	virtual ~IWindow()
-	{
-	};
+	virtual ~IWindow() = default;
 
 	virtual WindowExtent GetDimensions() const = 0;
 	virtual void GetDimensions(int* w, int* h) const = 0;

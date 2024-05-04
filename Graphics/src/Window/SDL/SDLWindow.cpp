@@ -11,7 +11,7 @@ namespace Ui
 {
 
 
-SDLWindow::SDLWindow(int w, int h)
+SDLWindow::SDLWindow(const std::string& title, int w, int h)
 {
 	SDL_Init(SDL_INIT_VIDEO);
 
@@ -21,7 +21,7 @@ SDLWindow::SDLWindow(int w, int h)
 		);
 
 	m_window = SDL_CreateWindow(
-		"Vulkan engine",
+		title.c_str(),
 		SDL_WINDOWPOS_CENTERED,
 		SDL_WINDOWPOS_CENTERED,
 		w,

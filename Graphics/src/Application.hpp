@@ -2,6 +2,7 @@
 #define GRAPHICS_APPLICATION_HEADER
 
 #include "Components/IComponent.hpp"
+#include "Renderer/Sprite.hpp"
 #include "Window/Window.hpp"
 #include <functional>
 #include <memory>
@@ -10,15 +11,13 @@
 
 struct SDL_Window;
 
-struct ImFont;
-
 
 namespace Ui
 {
 struct Configuration
 {
 	std::string name = "TFG application";
-	uint32_t w = 1600;
+	uint32_t w = 900;
 	uint32_t h = 900;
 };
 
@@ -57,10 +56,16 @@ private:
 
 	void main_loop();
 
+	void event_loop();
+
+	void draw_ui();
+	void draw_application();
+	void update();
+
 
 private:
-	bool m_should_quit = false;
-	bool m_stop_rendering = false;
+	bool m_should_quit{ false };
+	bool m_stop_rendering{ false };
 	Configuration m_config;
 
 	Emu::Console m_console;
@@ -69,6 +74,9 @@ private:
 	std::function<void()> m_menuCallback;
 
 	IWindow* m_window;
+
+	Sprite m_emu_screen;
+	bool m_resize_emu_screen{ true };
 
 };
 

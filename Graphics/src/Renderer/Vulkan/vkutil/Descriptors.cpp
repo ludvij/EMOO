@@ -11,19 +11,45 @@ DescriptorLayoutBuilder& DescriptorLayoutBuilder::AddBinding(uint32_t binding, v
 	return *this;
 }
 
+DescriptorLayoutBuilder& DescriptorLayoutBuilder::SetBindless(vk::ArrayProxy<vk::DescriptorType> descriptors)
+{
+	std::copy(descriptors.begin(), descriptors.end(), std::back_inserter(bindless));
+
+	return *this;
+}
+
 void DescriptorLayoutBuilder::Clear()
 {
 	bindings.clear();
+	bindless.clear();
 }
 
-vk::DescriptorSetLayout DescriptorLayoutBuilder::Build(vk::Device device, vk::ShaderStageFlags shaders_tages)
+vk::DescriptorSetLayout DescriptorLayoutBuilder::Build(vk::Device device, vk::ShaderStageFlags shader_stages)
 {
+	vk::DescriptorSetLayoutBindingFlagsCreateInfo flags_info;
+	std::vector<vk::DescriptorBindingFlags> binding_flags;
 	for (auto& b : bindings)
 	{
-		b.stageFlags |= shaders_tages;
+		if (std::ranges::find(bindless, b.descriptorType) != bindless.end())
+		{
+			binding_flags.push_back(vk::DescriptorBindingFlagBits::ePartiallyBound | vk::DescriptorBindingFlagBits::eUpdateAfterBind);
+		}
+		else
+		{
+			binding_flags.emplace_back();
+		}
+		b.stageFlags |= shader_stages;
 	}
 
-	vk::DescriptorSetLayoutCreateInfo info({}, bindings);
+	vk::DescriptorSetLayoutCreateInfo info;
+	info.setBindings(bindings);
+
+	if (!bindings.empty())
+	{
+		flags_info.setBindingFlags(binding_flags);
+		info.setFlags(vk::DescriptorSetLayoutCreateFlagBits::eUpdateAfterBindPool);
+		info.setPNext(&flags_info);
+	}
 
 	vk::DescriptorSetLayout set = device.createDescriptorSetLayout(info);
 
@@ -34,10 +60,8 @@ void DescriptorAllocatorGrowable::Init(vk::Device device, uint32_t initial_sets,
 {
 	ratios.clear();
 
-	for (const auto& r : pool_ratios)
-	{
-		ratios.push_back(r);
-	}
+	std::copy(pool_ratios.begin(), pool_ratios.end(), std::back_inserter(ratios));
+
 
 	auto new_pool = create_pool(device, initial_sets, pool_ratios);
 
@@ -134,7 +158,7 @@ vk::DescriptorPool DescriptorAllocatorGrowable::create_pool(vk::Device device, u
 		pool_sizes.push_back(vk::DescriptorPoolSize(ratio.type, static_cast<uint32_t>( ratio.ratio * set_count )));
 	}
 
-	vk::DescriptorPoolCreateInfo pool_info({}, set_count, pool_sizes);
+	vk::DescriptorPoolCreateInfo pool_info(vk::DescriptorPoolCreateFlagBits::eUpdateAfterBind, set_count, pool_sizes);
 
 	vk::DescriptorPool new_pool = device.createDescriptorPool(pool_info);
 

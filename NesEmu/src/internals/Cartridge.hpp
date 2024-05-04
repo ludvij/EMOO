@@ -3,22 +3,26 @@
 
 #include "Core.hpp"
 
+#include "mappers/Mapper.hpp"
 #include <array>
-#include <string_view>
-#include <vector>
 #include <memory>
 #include <optional>
-#include "mappers/Mapper.hpp"
+#include <string_view>
+#include <vector>
 
 namespace Emu
 {
+class Bus;
 
 class Cartridge
 {
 public:
 	explicit Cartridge(const std::string& filePath);
 
-	void ConnectBus(Bus* bus) { m_bus = bus; }
+	void ConnectBus(Bus* bus)
+	{
+		m_bus = bus;
+	}
 
 	std::optional<u8> CpuRead(u16 addr) const;
 	bool CpuWrite(u16 addr, u8 val);
@@ -42,7 +46,7 @@ public:
 		u8 tv2;
 		u8 unused[5];
 	};
-	
+
 	enum class Mirroring
 	{
 		Vertical,
@@ -51,10 +55,13 @@ public:
 		//FourScreen,
 		//ThreeScreenVertical
 	};
-	Mirroring GetMirroring() const { return m_mirroring; }
-	
+	Mirroring GetMirroring() const
+	{
+		return m_mirroring;
+	}
 
-	
+
+
 private:
 
 

@@ -11,10 +11,12 @@ class DescriptorLayoutBuilder
 {
 public:
 	DescriptorLayoutBuilder& AddBinding(uint32_t binding, vk::DescriptorType type, uint32_t count=1);
+	DescriptorLayoutBuilder& SetBindless(vk::ArrayProxy<vk::DescriptorType> descriptors);
 	void Clear();
 	vk::DescriptorSetLayout Build(vk::Device device, vk::ShaderStageFlags shader_stages);
 private:
 	std::vector<vk::DescriptorSetLayoutBinding> bindings;
+	std::vector<vk::DescriptorType> bindless;
 };
 
 class DescriptorAllocatorGrowable

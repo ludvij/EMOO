@@ -2,6 +2,7 @@
 #define  GRAPHICS_WINDOW_SDL_WINDOW_HEADER
 
 #include "Window/Window.hpp"
+#include <string_view>
 
 struct SDL_Window;
 namespace Ui
@@ -10,7 +11,7 @@ class SDLWindow : public IWindow
 {
 	using NativeType = SDL_Window;
 public:
-	SDLWindow(int w, int h);
+	SDLWindow(const std::string& title, int w, int h);
 	virtual ~SDLWindow() override;
 
 	virtual WindowExtent GetDimensions() const override;

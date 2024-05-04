@@ -4,10 +4,10 @@
 
 namespace Ui
 {
-Sprite::Sprite(Rect pos, float z_index, ITexture* texture, TextureWindow texture_window)
+Sprite::Sprite(Rect pos, float z_index, uint32_t slot, TextureWindow texture_window)
 	: rect(pos)
 	, z_index(z_index)
-	, m_texture(texture)
+	, slot(slot)
 	, texture_window(texture_window)
 {
 

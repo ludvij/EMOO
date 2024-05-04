@@ -168,9 +168,7 @@ private:
 	Detail::AllocatedImage m_depth_image;
 	vk::Extent2D           m_draw_extent;
 
-	// descriptors for compute shaders
-	vkutil::DescriptorAllocatorGrowable m_descriptor_allocator;
-	vk::DescriptorSetLayout     m_single_image_descriptor_layout;
+	vk::DescriptorSetLayout m_single_image_descriptor_layout;
 
 
 	vk::PipelineLayout m_mesh_pipeline_layout;

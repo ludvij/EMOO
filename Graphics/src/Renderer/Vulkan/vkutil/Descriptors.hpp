@@ -50,6 +50,7 @@ class DescriptorWriter
 public:
 
 	DescriptorWriter& WriteImage(int binding, vk::ImageView view, vk::Sampler sampler, vk::ImageLayout layout, vk::DescriptorType type, uint32_t count=1);
+	DescriptorWriter& WriteImageBindless(int binding, vk::ImageView view, vk::Sampler sampler, vk::ImageLayout layout, vk::DescriptorType type, uint32_t index, uint32_t count=1);
 	DescriptorWriter& WriteBuffer(int binding, vk::Buffer buffer, size_t size, size_t offset, vk::DescriptorType type, uint32_t count=1);
 
 	void Clear();

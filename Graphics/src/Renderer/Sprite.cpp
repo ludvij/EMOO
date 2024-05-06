@@ -4,14 +4,21 @@
 
 namespace Ui
 {
-Sprite::Sprite(Rect pos, float z_index, uint32_t slot, TextureWindow texture_window)
+Sprite::Sprite(Rect pos, float z_index, ITexture* texture, TextureWindow texture_window)
 	: rect(pos)
 	, z_index(z_index)
-	, slot(slot)
+	, texture(texture)
 	, texture_window(texture_window)
 {
 
 }
+
+void Sprite::SetTexture(ITexture* texture, TextureWindow texture_window)
+{
+	this->texture = texture;
+	this->texture_window = texture_window;
+}
+
 void Sprite::Draw() const
 {
 	Renderer::DrawSprite(*this);

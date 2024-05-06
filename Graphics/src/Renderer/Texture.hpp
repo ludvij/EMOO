@@ -1,6 +1,8 @@
 #ifndef GRAPHICS_RENDERER_TEXTURE_HEADER
 #define GRAPHICS_RENDERER_TEXTURE_HEADER
 
+#include <cstdint>
+
 namespace Ui
 {
 

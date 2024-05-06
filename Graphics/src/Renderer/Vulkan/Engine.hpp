@@ -66,6 +66,8 @@ public:
 	void Resize();
 	void RequestResize();
 
+	void AddTextureToBatcher(VulkanTexture* texture);
+	void RemoveTextureFromBatcher(VulkanTexture* texture);
 
 
 	Detail::AllocatedImage CreateImage(vk::Extent3D size, vk::Format format, vk::ImageUsageFlags usage, bool mipmapped = false);
@@ -168,14 +170,11 @@ private:
 	Detail::AllocatedImage m_depth_image;
 	vk::Extent2D           m_draw_extent;
 
-	vk::DescriptorSetLayout m_single_image_descriptor_layout;
+	vk::DescriptorSetLayout m_bindless_image_descriptor_layout;
 
 
 	vk::PipelineLayout m_mesh_pipeline_layout;
 	vk::Pipeline       m_mesh_pipeline;
-
-
-	Detail::AllocatedImage m_error_checkerboard_image;
 
 	vk::Sampler m_default_sampler_nearest;
 
@@ -203,6 +202,7 @@ private:
 private:
 
 	BatchRenderer* m_batcher{ nullptr };
+	friend class BatchRenderer;
 };
 
 }

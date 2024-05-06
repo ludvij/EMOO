@@ -14,8 +14,8 @@ public:
 
 	virtual void SetData(void* data) override;
 
-private:
-	Detail::AllocatedImage m_image;
+	Detail::AllocatedImage image;
+	uint32_t id{ 0 };
 };
 }
 

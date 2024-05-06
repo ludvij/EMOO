@@ -4,6 +4,8 @@
 
 #include "Core.hpp"
 #include "Renderer/RendererAPI.hpp"
+#include "vkutil/Descriptors.hpp"
+#include "VulkanTexture.hpp"
 
 namespace Ui
 {
@@ -15,7 +17,12 @@ public:
 
 	void StartBatch();
 	void Add(std::span<Detail::Vertex> vertices);
+
+	void PrepareDescriptor(int binding, vkutil::DescriptorWriter& dw) const;
 	void Draw(vk::CommandBuffer cmd);
+
+	void AddTexture(VulkanTexture* texture);
+	void RemoveTexture(VulkanTexture* texture);
 
 	void Flush();
 
@@ -33,11 +40,9 @@ public:
 		return m_batch_buffers.address;
 	}
 
-private:
 
 public:
 	constexpr static size_t MAX_SPRITE_AMOUNT = 2000;
-	constexpr static float GROWTH_FACTOR = 1.50f;
 private:
 	Detail::GPUMeshBuffers m_batch_buffers;
 
@@ -45,6 +50,13 @@ private:
 
 	std::vector<Detail::Vertex> m_vertices;
 	std::vector<uint32_t> m_indices;
+
+	std::deque<uint32_t> m_ready_texture_slots;
+	// texture 0 is missing texture 
+	uint32_t m_texture_slots{ 0 };
+
+	vk::DescriptorSetLayout m_descriptor;
+	std::list<VulkanTexture*> m_textures;
 
 };
 }

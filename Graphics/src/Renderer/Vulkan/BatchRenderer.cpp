@@ -1,5 +1,7 @@
 #include "BatchRenderer.hpp"
 #include "Engine.hpp"
+#include "vkutil/Descriptors.hpp"
+
 #include <algorithm>
 #include <utility>
 
@@ -68,6 +70,14 @@ void Ui::BatchRenderer::Add(std::span<Detail::Vertex> vertices)
 	m_sprite_count++;
 }
 
+void Ui::BatchRenderer::PrepareDescriptor(const int binding, vkutil::DescriptorWriter& dw) const
+{
+	for (const auto& t : m_textures)
+	{
+		dw.WriteImageBindless(binding, t->image.view, Engine::Get().m_default_sampler_nearest, vk::ImageLayout::eShaderReadOnlyOptimal, vk::DescriptorType::eCombinedImageSampler, t->id);
+	}
+}
+
 void Ui::BatchRenderer::Draw(vk::CommandBuffer cmd)
 {
 
@@ -78,6 +88,27 @@ void Ui::BatchRenderer::Draw(vk::CommandBuffer cmd)
 	cmd.drawIndexed(GetIndexCount(), 1, 0, 0, 0);
 
 	Flush();
+}
+
+void Ui::BatchRenderer::AddTexture(VulkanTexture* texture)
+{
+	if (m_ready_texture_slots.empty())
+	{
+		texture->id = m_texture_slots++;
+	}
+	else
+	{
+		texture->id = m_ready_texture_slots.front(); m_ready_texture_slots.pop_front();
+	}
+
+	m_textures.push_back(texture);
+
+}
+
+void Ui::BatchRenderer::RemoveTexture(VulkanTexture* texture)
+{
+	m_ready_texture_slots.push_back(texture->id);
+	m_textures.remove(texture);
 }
 
 

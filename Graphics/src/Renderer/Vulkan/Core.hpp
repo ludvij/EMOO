@@ -78,9 +78,9 @@ struct AllocatedBuffer
 
 struct Vertex
 {
-	alignas( 16 ) glm::vec4 color;
 	alignas( 16 ) glm::vec3 position;
 	alignas( 8 ) glm::vec2 tex_coords;
+	int32_t textureId{ -1 };
 };
 
 struct GPUMeshBuffers

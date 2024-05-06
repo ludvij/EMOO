@@ -43,6 +43,11 @@ public:
 		return m_conf;
 	}
 
+	u32* OutputScreen() const
+	{
+		return m_ppu.GetScreen();
+	};
+
 private:
 	// Bus components
 	CPU m_cpu;

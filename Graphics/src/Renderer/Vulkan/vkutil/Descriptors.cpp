@@ -182,6 +182,23 @@ DescriptorWriter& DescriptorWriter::WriteImage(int binding, vk::ImageView view, 
 	return *this;
 
 }
+DescriptorWriter& DescriptorWriter::WriteImageBindless(int binding, vk::ImageView view, vk::Sampler sampler, vk::ImageLayout layout, vk::DescriptorType type, uint32_t index, uint32_t count)
+{
+	vk::DescriptorImageInfo& info = image_infos.emplace_back(vk::DescriptorImageInfo{ sampler, view, layout });
+
+	vk::WriteDescriptorSet write = vk::WriteDescriptorSet()
+		.setDstBinding(binding)
+		.setDescriptorCount(count)
+		.setDescriptorType(type)
+		.setDstArrayElement(index)
+		.setImageInfo(info);
+
+	writes.push_back(write);
+
+
+	return *this;
+}
+
 DescriptorWriter& DescriptorWriter::WriteBuffer(int binding, vk::Buffer buffer, size_t size, size_t offset, vk::DescriptorType type, uint32_t count/*=1*/)
 {
 	vk::DescriptorBufferInfo& info = buffer_infos.emplace_back(vk::DescriptorBufferInfo{ buffer, offset, size });
@@ -207,7 +224,7 @@ void DescriptorWriter::UpdateSet(vk::Device device, vk::DescriptorSet set)
 {
 	for (auto& write : writes)
 	{
-		write.dstSet = set;
+		write.setDstSet(set);
 	}
 
 	device.updateDescriptorSets(writes, {});

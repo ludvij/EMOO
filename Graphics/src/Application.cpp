@@ -12,6 +12,8 @@
 #include "Renderer/RendererAPI.hpp"
 #include "Window/SDL/SDLWindow.hpp"	
 
+#include "Renderer/Vulkan/VulkanTexture.hpp"
+
 namespace Ui
 {
 Application* s_instance;
@@ -23,6 +25,11 @@ Application::Application(const Configuration& config)
 	m_window = new SDLWindow(m_config.name, m_config.w, m_config.h);
 	s_instance = this;
 	init();
+	m_texel_data = Renderer::CreateTexture(
+		static_cast<uint32_t>( m_console.GetConfig().width ),
+		static_cast<uint32_t>( m_console.GetConfig().height )
+	);
+	m_emu_screen.SetTexture(m_texel_data);
 }
 
 Application::~Application()
@@ -40,11 +47,11 @@ Application& Application::Get()
 void Application::init()
 {
 	Renderer::Init(m_window, true);
-
 }
 
 void Application::shutdown()
 {
+	delete m_texel_data;
 	delete m_window;
 }
 
@@ -150,6 +157,7 @@ void Application::draw_application()
 }
 void Application::update()
 {
+	m_texel_data->SetData(m_console.OutputScreen());
 	if (!m_resize_emu_screen)
 	{
 		return;

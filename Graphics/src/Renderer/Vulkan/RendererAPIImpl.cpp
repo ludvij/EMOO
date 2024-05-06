@@ -47,17 +47,33 @@ void DrawSprite(const Sprite& sprite)
 	vertices[2].position = { x + w, y + h, z_index };
 	vertices[3].position = { x,     y + h, z_index };
 
-	vertices[0].tex_coords = { /*-1, -1*/ tx0, ty0 };
-	vertices[1].tex_coords = { /*-1, -1*/ tx1, ty0 };
-	vertices[2].tex_coords = { /*-1, -1*/ tx1, ty1 };
-	vertices[3].tex_coords = { /*-1, -1*/ tx0, ty1 };
+	vertices[0].tex_coords = { tx0, ty0 };
+	vertices[1].tex_coords = { tx1, ty0 };
+	vertices[2].tex_coords = { tx1, ty1 };
+	vertices[3].tex_coords = { tx0, ty1 };
 
-	vertices[0].color = { 1.0f, 0.0f, 1.0f, 1.0f };
-	vertices[1].color = { 1.0f, 1.0f, 0.0f, 1.0f };
-	vertices[2].color = { 1.0f, 0.0f, 1.0f, 1.0f };
-	vertices[3].color = { 0.0f, 1.0f, 1.0f, 1.0f };
+	if (sprite.texture)
+	{
+		VulkanTexture* tex = reinterpret_cast<VulkanTexture*>( sprite.texture );
+		vertices[0].textureId = tex->id;
+		vertices[1].textureId = tex->id;
+		vertices[2].textureId = tex->id;
+		vertices[3].textureId = tex->id;
+	}
 
 	Engine::Get().SubmitDrawRect(vertices);
 }
+
+ITexture* CreateTexture(uint32_t w, uint32_t h)
+{
+	return new VulkanTexture(w, h);
+}
+
+ITexture* CreateTexture(uint32_t w, uint32_t h, void* data)
+{
+	return new VulkanTexture(w, h, data);
+}
+
+
 
 }

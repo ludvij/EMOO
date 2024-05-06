@@ -75,6 +75,7 @@ private:
 
 	IWindow* m_window;
 
+	ITexture* m_texel_data{ nullptr };
 	Sprite m_emu_screen;
 	bool m_resize_emu_screen{ true };
 

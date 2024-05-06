@@ -237,12 +237,12 @@ void Engine::draw_geometry(vk::CommandBuffer cmd)
 	AllocatedBuffer scene_buffer = CreateBuffer(sizeof m_scene_data, vk::BufferUsageFlagBits::eUniformBuffer, VMA_MEMORY_USAGE_CPU_TO_GPU);
 	vmaCopyMemoryToAllocation(m_allocator, &m_scene_data, scene_buffer.allocation, 0, sizeof m_scene_data);
 
-	vk::DescriptorSet image_set = get_current_frame().frame_descriptor.Allocate(m_device, m_single_image_descriptor_layout);
+	vk::DescriptorSet image_set = get_current_frame().frame_descriptor.Allocate(m_device, m_bindless_image_descriptor_layout);
 
-	vkutil::DescriptorWriter()
-		.WriteBuffer(0, scene_buffer.buffer, sizeof m_scene_data, 0, vk::DescriptorType::eUniformBuffer)
-		.WriteImage(1, m_error_checkerboard_image.view, m_default_sampler_nearest, vk::ImageLayout::eShaderReadOnlyOptimal, vk::DescriptorType::eCombinedImageSampler)
-		.UpdateSet(m_device, image_set);
+	vkutil::DescriptorWriter writer;
+	writer.WriteBuffer(UNIFORM_BINDING, scene_buffer.buffer, sizeof m_scene_data, 0, vk::DescriptorType::eUniformBuffer);
+	m_batcher->PrepareDescriptor(SAMPLER_BINDING, writer);
+	writer.UpdateSet(m_device, image_set);
 
 	cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_mesh_pipeline_layout, 0, image_set, {});
 
@@ -290,6 +290,16 @@ void Engine::RequestResize()
 	m_resize_requested = true;
 }
 
+void Engine::AddTextureToBatcher(VulkanTexture* texture)
+{
+	m_batcher->AddTexture(texture);
+}
+
+void Engine::RemoveTextureFromBatcher(VulkanTexture* texture)
+{
+	m_batcher->RemoveTexture(texture);
+}
+
 void Engine::init_vulkan()
 {
 	vkb::InstanceBuilder builder;
@@ -321,15 +331,15 @@ void Engine::init_vulkan()
 		.setRuntimeDescriptorArray(vk::True)
 		// non bound descriptor sets
 		.setDescriptorBindingPartiallyBound(vk::True)
-		// uniform array indexing
-		// (#extension GL_EXT_nonuniform_qualifier : require)
-		.setShaderStorageBufferArrayNonUniformIndexing(vk::True)
-		.setShaderSampledImageArrayNonUniformIndexing(vk::True)
-		.setShaderStorageImageArrayNonUniformIndexing(vk::True)
-		// update commandbuffer used the bindDescriptorSet
+		// STORAGE BUFFERS
 		//.setDescriptorBindingStorageBufferUpdateAfterBind(vk::True)
+		//.setShaderStorageBufferArrayNonUniformIndexing(vk::True)
+		// SAMPLED IMAGES
+		.setShaderSampledImageArrayNonUniformIndexing(vk::True)
 		.setDescriptorBindingSampledImageUpdateAfterBind(vk::True)
+		// STORAGE IMAGES
 		//.setDescriptorBindingStorageImageUpdateAfterBind(vk::True)
+		//.setShaderStorageImageArrayNonUniformIndexing(vk::True)
 		;
 	vk::PhysicalDeviceFeatures features{};
 
@@ -472,12 +482,13 @@ void Engine::init_sync_structures()
 
 void Engine::init_descriptors()
 {
+	[[maybe_unused]]
 	const uint32_t sampler_count = m_physical_device.getProperties().limits.maxDescriptorSetSampledImages;
 
-	m_single_image_descriptor_layout = vkutil::DescriptorLayoutBuilder()
+	m_bindless_image_descriptor_layout = vkutil::DescriptorLayoutBuilder()
 		.SetBindless(vk::DescriptorType::eCombinedImageSampler)
 		.AddBinding(UNIFORM_BINDING, vk::DescriptorType::eUniformBuffer, 1)
-		.AddBinding(SAMPLER_BINDING, vk::DescriptorType::eCombinedImageSampler, sampler_count)
+		.AddBinding(SAMPLER_BINDING, vk::DescriptorType::eCombinedImageSampler, 32)
 		.Build(m_device, vk::ShaderStageFlagBits::eAll);
 
 
@@ -485,11 +496,11 @@ void Engine::init_descriptors()
 	{
 		std::vector<vkutil::DescriptorAllocatorGrowable::PoolSizeRatio> frame_sizes = {
 			{vk::DescriptorType::eUniformBuffer,        1 },
-			{vk::DescriptorType::eCombinedImageSampler, static_cast<float>( sampler_count )}
+			{vk::DescriptorType::eCombinedImageSampler, 32}
 		};
 
 		m_frames[i].frame_descriptor = vkutil::DescriptorAllocatorGrowable{};
-		m_frames[i].frame_descriptor.Init(m_device, 1, frame_sizes);
+		m_frames[i].frame_descriptor.Init(m_device, 2, frame_sizes);
 
 		m_deletion_queue.PushFunction([&, i]()
 			{
@@ -501,7 +512,7 @@ void Engine::init_descriptors()
 
 	m_deletion_queue.PushFunction([&]()
 		{
-			m_device.destroyDescriptorSetLayout(m_single_image_descriptor_layout);
+			m_device.destroyDescriptorSetLayout(m_bindless_image_descriptor_layout);
 		});
 
 }
@@ -524,7 +535,7 @@ void Engine::init_mesh_pipeline()
 
 	vk::PipelineLayoutCreateInfo pipeline_layout_info = vkinit::pipeline_layout_create_info()
 		.setPushConstantRanges(buffer_range)
-		.setSetLayouts(m_single_image_descriptor_layout);
+		.setSetLayouts(m_bindless_image_descriptor_layout);
 
 	m_mesh_pipeline_layout = m_device.createPipelineLayout(pipeline_layout_info);
 
@@ -535,8 +546,8 @@ void Engine::init_mesh_pipeline()
 		.SetPolygonMode(vk::PolygonMode::eFill)
 		.SetCullMode(vk::CullModeFlagBits::eNone, vk::FrontFace::eClockwise)
 		.SetMultisamplingNone()
-		//.EnableBlendingAdditive()
-		.DisableBlending()
+		.EnableBlendingAlphablend()
+		//.DisableBlending()
 		.EnableDepthTest(true, vk::CompareOp::eGreaterOrEqual)
 		.SetColorAttachmentFormat(m_draw_image.format)
 		.SetDepthFormat(m_depth_image.format)
@@ -554,35 +565,6 @@ void Engine::init_mesh_pipeline()
 
 void Engine::init_default_data()
 {
-
-	uint32_t black;
-	uint32_t magenta;
-
-	if constexpr (std::endian::native == std::endian::little)
-	{
-		black   = 0xFF000000;
-		magenta = 0xFFFF00FF;
-	}
-	else
-	{
-		black   = 0x000000FF;
-		magenta = 0xFF00FFFF;
-	}
-
-
-	std::array<uint32_t, 16 * 16> pixels;
-	for (size_t x = 0; x < 16; x++)
-	{
-		for (size_t y = 0; y < 16; y++)
-		{
-			pixels[y * 16 + x] = ( ( x % 2 ) ^ ( y % 2 ) ) ? magenta : black;
-		}
-	}
-
-	m_error_checkerboard_image = CreateImage(
-		pixels.data(), { 16, 16, 1 }, vk::Format::eR8G8B8A8Unorm, vk::ImageUsageFlagBits::eSampled);
-
-
 	auto sampler_info = vk::SamplerCreateInfo()
 		.setMinFilter(vk::Filter::eNearest)
 		.setMagFilter(vk::Filter::eNearest)
@@ -600,7 +582,6 @@ void Engine::init_default_data()
 	m_deletion_queue.PushFunction([&]()
 		{
 			m_device.destroySampler(m_default_sampler_nearest);
-			DestroyImage(m_error_checkerboard_image);
 		});
 
 }
@@ -972,7 +953,6 @@ void Engine::draw_imgui(vk::CommandBuffer cmd, vk::ImageView view)
 
 	cmd.endRendering();
 }
-
 
 void Engine::cleanup()
 {

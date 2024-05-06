@@ -14,7 +14,7 @@ Console::Console(Configuration conf = NTSC)
 
 void Console::Step()
 {
-	if (m_masterClock % m_conf.CpuClockDivisor == 0) 
+	if (m_masterClock % m_conf.CpuClockDivisor == 0)
 	{
 		m_cpu.Step();
 	}
@@ -30,7 +30,7 @@ void Console::Reset()
 #ifdef NES_EMU_DEBUG
 	std::cout << "Resetting emulator\n";
 #endif // NES_EMU_DEBUG
-	if (m_cartridge) 
+	if (m_cartridge)
 	{
 		m_cpu.Reset();
 		m_ppu.Reset();

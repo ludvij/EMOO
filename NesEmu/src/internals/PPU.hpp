@@ -1,11 +1,11 @@
 #ifndef EMU_PPU_HEADER
 #define EMU_PPU_HEADER
 
-#include "Core.hpp"
 #include "Cartridge.hpp"
+#include "Core.hpp"
 #include "utils/Unreachable.hpp"
-#include <span>
 #include <array>
+#include <span>
 
 
 namespace Emu
@@ -14,7 +14,8 @@ namespace Emu
 constexpr u32 NTSC_FRAMERATE = 60;
 constexpr u32 PAL_FRAMERATE = 50;
 
-struct Color {
+struct Color
+{
 	u8 R;
 	u8 G;
 	u8 B;
@@ -24,9 +25,13 @@ class PPU
 {
 public:
 	PPU(Configuration conf);
+	~PPU();
 	void Step();
 
-	void ConnectCartridge(const std::shared_ptr<Cartridge>& cartridge) { m_cartridge = cartridge; }
+	void ConnectCartridge(const std::shared_ptr<Cartridge>& cartridge)
+	{
+		m_cartridge = cartridge;
+	}
 
 	void Reset();
 
@@ -34,10 +39,24 @@ public:
 	u8 CpuRead(u16 addr);
 	void CpuWrite(u16 addr, u8 val);
 
-	u8  X() const { return m_x; }
-	u8  W() const { return m_w; }
-	u16 V() const { return m_v; }
-	u16 T() const { return m_t; }
+	u8  X() const
+	{
+		return m_x;
+	}
+	u8  W() const
+	{
+		return m_w;
+	}
+	u16 V() const
+	{
+		return m_v;
+	}
+	u16 T() const
+	{
+		return m_t;
+	}
+
+	u32* GetScreen() const;
 
 private:
 
@@ -47,7 +66,10 @@ private:
 	void write_ppu_scroll(u8 val);
 
 	// quick hack to easily implement mirrorings
-	enum class MirrorName { A, B, C, D };
+	enum class MirrorName
+	{
+		A, B, C, D
+	};
 	template<MirrorName m1, MirrorName m2, MirrorName m3, MirrorName m4>
 	u8 nametableMirroringRead(u16 addr);
 	template<MirrorName m1, MirrorName m2, MirrorName m3, MirrorName m4>
@@ -55,15 +77,11 @@ private:
 
 	void load_palette(const char* src);
 
-	// gets called after each frame
-	void SetRenderCallback(std::function<void(std::span<Color, 256 * 240>)> callback) { m_callback = callback; }
-
 
 private:
-	std::array<Color, 256 * 240> m_screen;
+	u32* m_screen;
 	std::shared_ptr<Cartridge> m_cartridge;
 
-	std::function<void(std::span<Color, 256 * 240>)> m_callback;
 
 	// MMIO registers
 	u8 m_ppu_ctrl = 0b0000'0000;
@@ -78,7 +96,7 @@ private:
 	u8 m_oam_dma = 0;
 
 	u8 m_data_buffer = 0;
-									     
+
 	constexpr static u16 PPU_CTRL_ADDR   = 0x2000;
 	constexpr static u16 PPU_MASK_ADDR   = 0x2001;
 	constexpr static u16 PPU_STATUS_ADDR = 0x2002;
@@ -135,7 +153,7 @@ private:
 	//https://www.nesdev.org/wiki/PPU_palettes#2C02
 	//TODO: add palette file handling instead of static array
 	std::array<Color, 0x40> m_palette;
-        // this was lifted from one lone coder
+	// this was lifted from one lone coder
 	struct OAM_Data
 	{
 		u8 y;

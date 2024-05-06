@@ -4,14 +4,13 @@
 
 #include "input_structures.glsl"
 
-layout (location = 0) out vec4 outColor;
-layout (location = 1) out vec2 outTexCoords;
+layout (location = 0) out vec2 outTexCoords;
+layout (location = 1) flat out int textureID;
 
-struct Vertex {
-
-	vec4 color;
+struct Vertex { 
 	vec3 position;
 	vec2 tex_coords;
+	int textureID;
 };  
 
 layout(buffer_reference, std430) readonly buffer VertexBuffer{ 
@@ -35,6 +34,6 @@ void main()
 	//output data
 	gl_Position = sceneData.view * sceneData.proj * PushConstants.model * vec4(v.position, 1.0f);
 
-	outColor = v.color;
 	outTexCoords = v.tex_coords;
+	textureID = v.textureID;
 }

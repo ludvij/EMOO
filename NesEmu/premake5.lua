@@ -1,7 +1,7 @@
 project "NesEmu"
 	kind "StaticLib"
 	language "C++"
-	cppdialect "c++20"
+	cppdialect "C++latest"
 	staticruntime "on"
 	
 	targetdir ("%{wks.location}/bin/" .. outputDir .. "/%{prj.name}")

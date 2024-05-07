@@ -9,12 +9,11 @@ PPU::PPU(Configuration conf)
 {
 	load_palette(conf.palette_src);
 	const size_t size = static_cast<size_t>( conf.width * conf.height );
-	m_screen = new u32[size];
-	std::fill_n(m_screen, size, 0xFF000000);
+	m_screen.resize(size);
+	std::ranges::fill(m_screen, 0xFF000000);
 }
 PPU::~PPU()
 {
-	delete[] m_screen;
 }
 void PPU::Step()
 {
@@ -51,6 +50,7 @@ void PPU::Reset()
 	m_w = 0;
 	m_data_buffer = 0;
 	m_ppu_status = 0;
+
 }
 
 u8 PPU::CpuRead(const u16 addr)
@@ -124,9 +124,9 @@ void PPU::CpuWrite(const u16 addr, const u8 val)
 	}
 }
 
-u32* PPU::GetScreen() const
+u32* PPU::GetScreen()
 {
-	return m_screen;
+	return m_screen.data();
 }
 
 u8 PPU::memory_read(const u16 addr)

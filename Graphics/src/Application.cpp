@@ -2,6 +2,7 @@
 
 #include <functional>
 #include <iostream>
+#include <print>
 #include <vector>
 
 #include <backends/imgui_impl_sdl2.h>
@@ -13,6 +14,8 @@
 #include "Window/SDL/SDLWindow.hpp"	
 
 #include "Renderer/Vulkan/VulkanTexture.hpp"
+#include <pfd/portable_file_dialogs.h>
+
 
 namespace Ui
 {
@@ -129,12 +132,24 @@ void Application::draw_ui()
 			if (ImGui::MenuItem("Load ROM"))
 			{
 				// TODO:
+				auto f = pfd::open_file("Chose ROM File", pfd::path::home(),
+					{
+						"Rom Files (.nes, .ines)", "*.nes",
+							"All files", "*"
+					});
+
+				if (!f.result().empty())
+				{
+					m_console.LoadCartridge(f.result()[0]);
+				}
 			}
 			if (ImGui::MenuItem("Reset"))
 			{
+				m_console.Reset();
 			}
 			if (ImGui::MenuItem("Exit"))
 			{
+				Close();
 			}
 			ImGui::EndMenu();
 		}

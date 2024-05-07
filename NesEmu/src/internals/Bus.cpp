@@ -54,4 +54,8 @@ void Bus::Write(const u16 addr, const u8 val)
 	}
 }
 
+void Bus::Reset()
+{
+}
+
 }

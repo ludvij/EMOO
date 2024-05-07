@@ -9,11 +9,7 @@ project "NesEmu-test"
 
 	files { 
 		"src/**.hpp", 
-		"src/**.cpp",
-		-- "test/**.cpp",
-		-- "test/**.hpp",
-
-		"%{IncludeDir.ctre}/**.hpp",
+		"src/**.cpp"
 	}
 
 	flags {
@@ -35,18 +31,6 @@ project "NesEmu-test"
 		defines {
 			"NES_EMU_PLATFORM_WINDOWS"
 		}
-	
-	postbuildcommands {
-		-- "{COPYDIR} %[palettes] %[../Graphics/Palettes]"
-	}
-	
-	
--- Uncomment to disable tests
-
-
-	-- defines {
-	-- 	"NES_EMU_TEST"
-	-- }
 	
 
 	filter "configurations:Debug"

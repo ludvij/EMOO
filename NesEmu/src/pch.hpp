@@ -5,9 +5,9 @@
 #include <cstdint>
 
 // containers
-#include <vector>
 #include <array>
 #include <memory>
+#include <vector>
 
 // algos
 #include <algorithm>
@@ -15,9 +15,10 @@
 #include <math.h>
 
 // io
+#include <fstream>
 #include <iostream>
 #include <ostream>
-#include <fstream>
+#include <print>
 
 // other
 #include <exception>
@@ -26,8 +27,8 @@
 #include "NesEmu.hpp"
 
 // utils
-#include <optional>
-#include <bit>
 #include "utils/Unreachable.hpp"
+#include <bit>
+#include <optional>
 
 #endif

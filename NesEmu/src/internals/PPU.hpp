@@ -11,9 +11,6 @@
 namespace Emu
 {
 
-constexpr u32 NTSC_FRAMERATE = 60;
-constexpr u32 PAL_FRAMERATE = 50;
-
 struct Color
 {
 	u8 R;
@@ -28,7 +25,7 @@ public:
 	~PPU();
 	void Step();
 
-	void ConnectCartridge(const std::shared_ptr<Cartridge>& cartridge)
+	void ConnectCartridge(Cartridge* cartridge)
 	{
 		m_cartridge = cartridge;
 	}
@@ -56,7 +53,7 @@ public:
 		return m_t;
 	}
 
-	u32* GetScreen() const;
+	u32* GetScreen();
 	bool IsFrameDone() const
 	{
 		return m_frame_done;
@@ -83,8 +80,8 @@ private:
 
 
 private:
-	u32* m_screen;
-	std::shared_ptr<Cartridge> m_cartridge;
+	std::vector<u32> m_screen;
+	Cartridge* m_cartridge;
 
 
 	// MMIO registers

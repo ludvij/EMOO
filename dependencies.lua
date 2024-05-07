@@ -1,17 +1,17 @@
 VULKAN_SDK = os.getenv("VULKAN_SDK")
 
 IncludeDir = {}
-IncludeDir["VulkanSDK"]        = "%{wks.location}/%{VULKAN_SDK}/Include"
-IncludeDir["glm"]              = "%{wks.location}/%{VULKAN_SDK}/Include"
-IncludeDir["imgui"]            = "%{wks.location}/vendor/ImGui"
-IncludeDir["lud_utils"]        = "%{wks.location}/vendor/lud_utils"
-IncludeDir["sdl2"]             = "%{wks.location}/Graphics/vendor/sdl2/include"
-IncludeDir["vk_bootrstrap"]    = "%{wks.location}/Graphics/vendor/vk_bootstrap"
-IncludeDir["NesEmu"]           = "%{wks.location}/NesEmu/src"
-IncludeDir["ctre"]             = "%{wks.location}/NesEmu/vendor/ctre/include"
-IncludeDir["gtest"]            = "%{wks.location}/NesEmu/vendor/gtest/include"
-IncludeDir["freetype"]         = "%{wks.location}/vendor/freetype/include"
-IncludeDir["nativeFileDialog"] = "%{wks.location}/vendor/nativefiledialog/src/include"
+IncludeDir["VulkanSDK"]     = "%{wks.location}/%{VULKAN_SDK}/Include"
+IncludeDir["glm"]           = "%{wks.location}/%{VULKAN_SDK}/Include"
+IncludeDir["imgui"]         = "%{wks.location}/vendor/ImGui"
+IncludeDir["lud_utils"]     = "%{wks.location}/vendor/lud_utils"
+IncludeDir["sdl2"]          = "%{wks.location}/Graphics/vendor/sdl2/include"
+IncludeDir["vk_bootrstrap"] = "%{wks.location}/Graphics/vendor/vk_bootstrap"
+IncludeDir["pfd"]           = "%{wks.location}/Graphics/vendor/pfd/include"
+IncludeDir["NesEmu"]        = "%{wks.location}/NesEmu/src"
+IncludeDir["ctre"]          = "%{wks.location}/NesEmu/vendor/ctre/include"
+IncludeDir["gtest"]         = "%{wks.location}/NesEmu/vendor/gtest/include"
+IncludeDir["freetype"]      = "%{wks.location}/vendor/freetype/include"
 
 LibraryDir = {}
 LibraryDir["VulkanSDK"]  = "%{wks.location}/%{VULKAN_SDK}/Lib"

@@ -1,80 +1,38 @@
 
-#if 0
 #include "Application.hpp"
-#include <imgui.h>
-int main()
-{
-	Ui::Application* app = new Ui::Application();
-	app->SetMenuCallback([app]()
-		{
-			if (ImGui::BeginMenu("File"))
-			{
-				if (ImGui::MenuItem("Load ROM"))
-				{
-					// TODO:
-				}
-				if (ImGui::MenuItem("Reset"))
-				{
-					app->GetConsole().Reset();
-				}
-				if (ImGui::MenuItem("Exit"))
-				{
-					app->Close();
-				}
-				ImGui::EndMenu();
-			}
-			if (ImGui::BeginMenu("Config"))
-			{
-				if (ImGui::MenuItem("Load Palette"))
-				{
-					// TODO:
-				}
-				ImGui::EndMenu();
-
-			}
-			if (ImGui::BeginMenu("Debug"))
-			{
-				if (ImGui::MenuItem("Show Memory"))
-				{
-					// TODO:
-				}
-				if (ImGui::MenuItem("Show Debugger"))
-				{
-					// TODO:
-				}
-				if (ImGui::MenuItem("Show CPU state"))
-				{
-					// TODO:
-				}
-				if (ImGui::MenuItem("Show PPU state"))
-				{
-					// TODO:
-				}
-				if (ImGui::MenuItem("Show APU state"))
-				{
-					// TODO:
-				}
-				ImGui::EndMenu();
-			}
-		});
-	app->Run();
-	delete app;
-
-	return 0;
-}
-#else
 #include <iostream>
-#include "Application.hpp"
 
 using Ui::Application;
 
-int main()
+namespace Ui
 {
-	Application* application= new Application();
+int Main(int argc, char** argv)
+{
+	Application* application = new Application();
 
 	application->Run();
 
 	delete application;
+
+	return 0;
+}
+}
+
+
+#if defined(GRAPHICS_NDEBUG) && defined(NES_EMU_PLATFORM_WINDOWS)
+
+#include <Windows.h>
+
+int APIENTRY WinMain(_In_ HINSTANCE hInst, _In_opt_ HINSTANCE hInstPrev, _In_ PSTR cmdline, _In_ int cmdshow)
+{
+	return Ui::Main(__argc, __argv);
+}
+
+#else
+
+int main(int argc, char** argv)
+{
+	return Ui::Main(argc, argv);
 }
 
 #endif

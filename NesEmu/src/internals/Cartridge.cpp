@@ -8,6 +8,7 @@ namespace Emu
 
 Cartridge::Cartridge(const std::string& filePath)
 	: m_valid(false)
+	, m_file_path(filePath)
 {
 	std::ifstream inputFile;
 	inputFile.open(filePath, std::ios::binary);
@@ -16,7 +17,7 @@ Cartridge::Cartridge(const std::string& filePath)
 	{
 		std::throw_with_nested(std::runtime_error("File not found"));
 	}
-	inputFile.read(std::bit_cast<char*>(&m_header), sizeof m_header);
+	inputFile.read(std::bit_cast<char*>( &m_header ), sizeof m_header);
 
 
 	// validate header
@@ -28,13 +29,13 @@ Cartridge::Cartridge(const std::string& filePath)
 	}
 
 	// prg rom is in 16 kiB chunks
-	m_prgRom.resize(static_cast<size_t>(m_header.prgRomChunks) * 16384);
-	inputFile.read(std::bit_cast<char*>(m_prgRom.data()), static_cast<size_t>(m_prgRom.size()));
+	m_prgRom.resize(static_cast<size_t>( m_header.prgRomChunks ) * 16384);
+	inputFile.read(std::bit_cast<char*>( m_prgRom.data() ), static_cast<size_t>( m_prgRom.size() ));
 	// chr rom is in 8 kib chunks
-	m_chrRom.resize(static_cast<size_t>(m_header.chrRomChunks) * 8192);
-	inputFile.read(std::bit_cast<char*>(m_chrRom.data()), static_cast<size_t>(m_chrRom.size()));
+	m_chrRom.resize(static_cast<size_t>( m_header.chrRomChunks ) * 8192);
+	inputFile.read(std::bit_cast<char*>( m_chrRom.data() ), static_cast<size_t>( m_chrRom.size() ));
 
-	m_mapperNumber = (m_header.mapper2 & 0xf0) | (m_header.mapper1 >> 4);
+	m_mapperNumber = ( m_header.mapper2 & 0xf0 ) | ( m_header.mapper1 >> 4 );
 	m_mirroring = m_header.mapper1 & 0b1 ? Mirroring::Vertical : Mirroring::Horizontal;
 
 
@@ -49,15 +50,29 @@ Cartridge::Cartridge(const std::string& filePath)
 
 	inputFile.close();
 	m_valid = true;
+	std::println(
+		"Loaded ROM [{:s}]\n  Mapper:\n    [{:s} : {:d}]\n  Chunks:\n    [PGR : {:d}]\n    [CHR : {:d}]\n  Mirorring:\n    [{:s}]",
+		filePath,
+		m_mapper->GetName(),
+		m_mapperNumber,
+		m_header.prgRomChunks,
+		m_header.chrRomChunks,
+		to_string(m_mirroring)
+	);
+}
+
+Cartridge::~Cartridge()
+{
+	std::println("  Unloaded ROM [{:s}]", m_file_path);
 }
 
 std::optional<u8> Cartridge::CpuRead(u16 addr) const
 {
-	if (const auto mappedAddr = m_mapper->CpuMapRead(addr); mappedAddr) 
+	if (const auto mappedAddr = m_mapper->CpuMapRead(addr); mappedAddr)
 	{
 		return m_prgRom[*mappedAddr];
-	} 
-	else 
+	}
+	else
 	{
 		return std::nullopt;
 	}
@@ -66,12 +81,12 @@ std::optional<u8> Cartridge::CpuRead(u16 addr) const
 
 bool Cartridge::CpuWrite(u16 addr, u8 val)
 {
-	if (const auto mappedAddr = m_mapper->PpuMapWrite(addr); mappedAddr) 
+	if (const auto mappedAddr = m_mapper->PpuMapWrite(addr); mappedAddr)
 	{
 		m_prgRom[*mappedAddr] = val;
 		return true;
-	} 
-	else 
+	}
+	else
 	{
 		return false;
 	}
@@ -79,11 +94,11 @@ bool Cartridge::CpuWrite(u16 addr, u8 val)
 
 std::optional<u8> Cartridge::PpuRead(u16 addr) const
 {
-	if (const auto mappedAddr = m_mapper->PpuMapRead(addr); mappedAddr) 
+	if (const auto mappedAddr = m_mapper->PpuMapRead(addr); mappedAddr)
 	{
 		return m_prgRom[*mappedAddr];
-	} 
-	else 
+	}
+	else
 	{
 		return std::nullopt;
 	}
@@ -91,14 +106,23 @@ std::optional<u8> Cartridge::PpuRead(u16 addr) const
 
 bool Cartridge::PpuWrite(u16 addr, u8 val)
 {
-	if (const auto mappedAddr = m_mapper->PpuMapRead(addr); mappedAddr) 
+	if (const auto mappedAddr = m_mapper->PpuMapRead(addr); mappedAddr)
 	{
 		m_chrRom[*mappedAddr] = val;
 		return true;
-	} 
-	else 
+	}
+	else
 	{
 		return false;
+	}
+}
+std::string Cartridge::to_string(Mirroring mirroring)
+{
+	switch (mirroring)
+	{
+	case Emu::Cartridge::Mirroring::Vertical:   return "VERTICAL";
+	case Emu::Cartridge::Mirroring::Horizontal: return "HORIZONTAL";
+	default:                                    return "??????????";
 	}
 }
 }

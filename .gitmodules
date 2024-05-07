@@ -5,6 +5,4 @@
 	path = vendor/imgui
 	url = git@github.com:ludvij/imgui.git
 	branch = docking
-[submodule "vendor/nativefiledialog"]
-	path = vendor/nativefiledialog
-	url = git@github.com:mlabbe/nativefiledialog.git
+	

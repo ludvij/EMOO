@@ -18,6 +18,7 @@ class Console
 {
 public:
 	Console(Configuration conf);
+	~Console();
 
 	void Step();
 
@@ -45,7 +46,7 @@ public:
 		return m_conf;
 	}
 
-	u32* OutputScreen() const
+	u32* OutputScreen()
 	{
 		return m_ppu.GetScreen();
 	};
@@ -58,7 +59,7 @@ private:
 
 	u32 m_masterClock = 0;
 
-	std::shared_ptr<Cartridge> m_cartridge;
+	std::unique_ptr<Cartridge> m_cartridge;
 
 	// configuration struct containing platform related info (ntsc, pal)
 	Configuration m_conf;

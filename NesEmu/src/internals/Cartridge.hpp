@@ -18,6 +18,7 @@ class Cartridge
 {
 public:
 	explicit Cartridge(const std::string& filePath);
+	~Cartridge();
 
 	void ConnectBus(Bus* bus)
 	{
@@ -55,6 +56,7 @@ public:
 		//FourScreen,
 		//ThreeScreenVertical
 	};
+	std::string to_string(Mirroring mirroring);
 	Mirroring GetMirroring() const
 	{
 		return m_mirroring;
@@ -79,6 +81,8 @@ private:
 
 	std::vector<u8> m_prgRom;
 	std::vector<u8> m_chrRom;
+
+	std::string m_file_path;
 };
 }
 

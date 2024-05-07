@@ -1,6 +1,8 @@
 
 Shader/SPIRV
 Shader/embed
+**.spv
+**.aps
 
 
 imgui.ini

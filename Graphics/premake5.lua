@@ -22,6 +22,8 @@ project "Graphics"
 		"Shader/**.frag",
 		"Shader/**.vert",
 		"Shader/**.glsl",
+
+		"assets/resource.rc"
 	}
 
 	flags {
@@ -40,6 +42,8 @@ project "Graphics"
 		"%{IncludeDir.NesEmu}",
 		"%{IncludeDir.lud_utils}",
 		"%{IncludeDir.vk_bootrstrap}",
+		"%{IncludeDir.nativeFileDialog}",
+		"%{IncludeDir.pfd}",
 	}
 
 
@@ -77,12 +81,14 @@ project "Graphics"
 		}
 	
 	filter "configurations:Release"
+		kind "WindowedApp"
 		defines { 
 			"GRAPHICS_NDEBUG",
 			"NDEBUG"
 		}
 		links {
 			"%{Library.freetype_r}",
+
 		}
 
 		runtime "release"

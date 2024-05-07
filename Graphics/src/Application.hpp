@@ -63,6 +63,9 @@ private:
 	void update();
 
 
+	void resize_emu_screen();
+
+
 private:
 	bool m_should_quit{ false };
 	bool m_stop_rendering{ false };

@@ -26,6 +26,8 @@ public:
 
 	void LoadCartridge(const std::string& filepath);
 
+	bool RunFrame();
+
 	CPU& GetCpu()
 	{
 		return m_cpu;

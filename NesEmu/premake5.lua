@@ -10,8 +10,6 @@ project "NesEmu"
 	files { 
 		"src/**.hpp", 
 		"src/**.cpp",
-		-- "test/**.cpp",
-		-- "test/**.hpp",
 
 		"%{IncludeDir.ctre}/**.hpp",
 	}
@@ -26,7 +24,6 @@ project "NesEmu"
 	includedirs {
 		"src",
 		"%{IncludeDir.ctre}",
-		"%{IncludeDir.gtest}",
 	}
 
 	filter "system:windows"
@@ -40,13 +37,6 @@ project "NesEmu"
 	}
 	
 	
--- Uncomment to disable tests
-
-
-	-- defines {
-	-- 	"NES_EMU_TEST"
-	-- }
-	
 
 	filter "configurations:Debug"
 		defines { 
@@ -54,17 +44,12 @@ project "NesEmu"
 		}
 		runtime "debug"
 		symbols "On"
-		links {
-			-- "%{Library.gtest_d}"
-		}
 
 	filter "configurations:Release"
 		defines { 
 			"NES_EMU_NDEBUG" 
 		}
-		links {
-			-- "%{Library.gtest_r}"
-		}
 		runtime "release"
 		symbols "Off"
 		optimize "On"
+

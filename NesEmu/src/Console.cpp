@@ -27,9 +27,6 @@ void Console::Step()
 
 void Console::Reset()
 {
-#ifdef NES_EMU_DEBUG
-	std::cout << "Resetting emulator\n";
-#endif // NES_EMU_DEBUG
 	if (m_cartridge)
 	{
 		m_cpu.Reset();
@@ -43,6 +40,19 @@ void Console::LoadCartridge(const std::string& filepath)
 	m_cartridge->ConnectBus(&m_bus);
 	m_bus.ConnectCartridge(m_cartridge);
 	m_ppu.ConnectCartridge(m_cartridge);
+}
+
+bool Console::RunFrame()
+{
+	if (!m_cartridge)
+	{
+		return false;
+	}
+	while (!m_ppu.IsFrameDone())
+	{
+		Step();
+	}
+	return true;
 }
 
 }

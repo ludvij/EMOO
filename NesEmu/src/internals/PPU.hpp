@@ -57,6 +57,10 @@ public:
 	}
 
 	u32* GetScreen() const;
+	bool IsFrameDone() const
+	{
+		return m_frame_done;
+	};
 
 private:
 
@@ -131,6 +135,8 @@ private:
 
 	u32 m_cycles = 0;
 	u32 m_scanlines = 0;
+
+	bool m_frame_done = true;
 
 
 	// 2 nametables

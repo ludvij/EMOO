@@ -157,13 +157,18 @@ void Application::draw_application()
 }
 void Application::update()
 {
-	m_texel_data->SetData(m_console.OutputScreen());
-	if (!m_resize_emu_screen)
+	if (m_console.RunFrame())
 	{
-		return;
 	}
-
-	m_resize_emu_screen = false;
+	m_texel_data->SetData(m_console.OutputScreen());
+	if (m_resize_emu_screen)
+	{
+		m_resize_emu_screen = false;
+		resize_emu_screen();
+	}
+}
+void Application::resize_emu_screen()
+{
 	constexpr float menu_bar_height = 26;
 
 	const auto [window_width, window_height] = m_window->GetDimensions();

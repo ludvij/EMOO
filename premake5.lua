@@ -23,6 +23,10 @@ group "Dependencies"
 	include "vendor/imgui"
 group ""
 
+group "Test"
+	include "NesEmu/test"
+group ""
+
 
 
 include "Graphics"

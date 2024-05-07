@@ -9,6 +9,6 @@ struct Rect
 	float w;
 	float h;
 };
-	
+
 }
 #endif//!GRAPHICS_PRIMITIVES_HEADER

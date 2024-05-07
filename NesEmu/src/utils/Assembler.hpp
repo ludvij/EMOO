@@ -1,11 +1,12 @@
 ﻿#ifndef A6502_TOY_ASSEMBLER
 #define A6502_TOY_ASSEMBLER
 
-#include <string_view>
-#include <optional>
-#include <unordered_map>
-#include <ranges>
+#include <algorithm>
 #include <cstdint>
+#include <optional>
+#include <ranges>
+#include <string_view>
+#include <unordered_map>
 
 #include <ctre/ctre.hpp>
 
@@ -27,7 +28,8 @@ struct AddressingMode
 	std::optional<uint8_t> hi;
 };
 template <class T>
-concept MemoryAccessor = requires(T bus) {
+concept MemoryAccessor = requires( T bus )
+{
 	{
 		bus.Read(std::declval<uint16_t>())
 	} -> std::same_as<uint8_t>;
@@ -40,7 +42,7 @@ template <MemoryAccessor Bus>
 class Assembler
 {
 public:
-	void Link(Bus *bus)
+	void Link(Bus* bus)
 	{
 		m_bus = bus;
 	}
@@ -52,10 +54,10 @@ public:
 		m_bus = nullptr;
 	}
 
-	void Assemble(const std::string &code)
+	void Assemble(const std::string& code)
 	{
 		const auto lines = splittrim(code, "\n");
-		for (const auto &line : lines)
+		for (const auto& line : lines)
 		{
 			// split into instruction and addressing
 			const auto parts = splittrim(upper(line), " ");
@@ -70,7 +72,7 @@ private:
 	{
 		for (size_t i = 0; i < m_assembly.size(); ++i)
 		{
-			m_bus->Write(static_cast<uint16_t>(i), m_assembly[i]);
+			m_bus->Write(static_cast<uint16_t>( i ), m_assembly[i]);
 		}
 
 		for (auto [addr, val] : m_directAccess)
@@ -78,7 +80,7 @@ private:
 			m_bus->Write(addr, val);
 		}
 	}
-	void _assemble(const std::vector<std::string> &parts)
+	void _assemble(const std::vector<std::string>& parts)
 	{
 		const std::string instr = parts[0];
 		// can't += string view
@@ -137,12 +139,14 @@ private:
 	std::string upper(std::string s) const noexcept
 	{
 		const auto isupper = [](unsigned char c) -> unsigned char
-		{ return std::toupper(c); };
+			{
+				return std::toupper(c);
+			};
 		std::transform(s.begin(), s.end(), s.begin(), isupper);
 		return s;
 	}
 
-	AddressingMode parse(const std::string &text)
+	AddressingMode parse(const std::string& text)
 	{
 		AddressingMode a;
 		std::optional<uint16_t> temp = std::nullopt;
@@ -261,7 +265,7 @@ private:
 		else if (temp && nbytes == 2)
 		{
 			a.lo = *temp & 0x00ff;
-			a.hi = (*temp & 0xff00) >> 8;
+			a.hi = ( *temp & 0xff00 ) >> 8;
 		}
 		else if (!temp)
 		{
@@ -270,14 +274,16 @@ private:
 		return a;
 	}
 
-	std::vector<std::string> splittrim(std::string s, const std::string_view &delim) const noexcept
+	std::vector<std::string> splittrim(std::string s, const std::string_view& delim) const noexcept
 	{
 		std::vector<std::string> res;
 		const auto nospace = [](unsigned char c) -> unsigned char
-		{ return !std::isspace(c); };
+			{
+				return !std::isspace(c);
+			};
 
 		size_t pos;
-		while ((pos = s.find(delim)) != std::string::npos)
+		while (( pos = s.find(delim) ) != std::string::npos)
 		{
 			std::string token = s.substr(0, pos);
 			token.erase(std::ranges::find_if(token | std::views::reverse, nospace).base(), token.end());
@@ -298,7 +304,7 @@ private:
 		return res;
 	}
 
-	std::optional<uint16_t> decode(const std::string &num, const std::string_view &encoding) const
+	std::optional<uint16_t> decode(const std::string& num, const std::string_view& encoding) const
 	{
 		if (encoding == "$" && ishexadecimal(num))
 		{
@@ -312,28 +318,28 @@ private:
 		return std::nullopt;
 	}
 
-	bool isdecimal(const std::string_view &s) const noexcept
+	bool isdecimal(const std::string_view& s) const noexcept
 	{
 		const auto isinvalid = [](unsigned char c) -> unsigned char
-		{
-			return !(std::isdigit(c) || c == '-');
-		};
+			{
+				return !( std::isdigit(c) || c == '-' );
+			};
 		return std::ranges::count_if(s, isinvalid) == 0;
 	}
 
-	bool ishexadecimal(const std::string_view &s) const noexcept
+	bool ishexadecimal(const std::string_view& s) const noexcept
 	{
 		const auto isinvalid = [](unsigned char c) -> unsigned char
-		{
-			return !(std::isdigit(c) || (c >= 'A' && c <= 'F'));
-		};
+			{
+				return !( std::isdigit(c) || ( c >= 'A' && c <= 'F' ) );
+			};
 		return std::ranges::count_if(s, isinvalid) == 0;
 	}
 
 private:
 	std::vector<uint8_t> m_assembly;
 	std::unordered_map<uint16_t, uint8_t> m_directAccess;
-	Bus *m_bus = nullptr;
+	Bus* m_bus = nullptr;
 	// C++17 my saviour
 	static inline std::unordered_map<std::string_view, std::unordered_map<std::string_view, uint8_t>> s_instrData = {
 		{"ADC", {{"IMM", 0x69}, {"ZPI", 0x65}, {"ZPX", 0x75}, {"ABS", 0x6d}, {"ABX", 0x7d}, {"ABY", 0x79}, {"INX", 0x61}, {"INY", 0x71}}},

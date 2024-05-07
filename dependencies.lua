@@ -1,16 +1,17 @@
 VULKAN_SDK = os.getenv("VULKAN_SDK")
 
 IncludeDir = {}
-IncludeDir["VulkanSDK"]     = "%{wks.location}/%{VULKAN_SDK}/Include"
-IncludeDir["glm"]           = "%{wks.location}/%{VULKAN_SDK}/Include"
-IncludeDir["imgui"]         = "%{wks.location}/vendor/ImGui"
-IncludeDir["lud_utils"]     = "%{wks.location}/vendor/lud_utils"
-IncludeDir["sdl2"]          = "%{wks.location}/Graphics/vendor/sdl2/include"
-IncludeDir["vk_bootrstrap"] = "%{wks.location}/Graphics/vendor/vk_bootstrap"
-IncludeDir["NesEmu"]        = "%{wks.location}/NesEmu/src"
-IncludeDir["ctre"]          = "%{wks.location}/NesEmu/vendor/ctre/include"
-IncludeDir["gtest"]         = "%{wks.location}/NesEmu/vendor/gtest/include"
-IncludeDir["freetype"]      = "%{wks.location}/vendor/freetype/include"
+IncludeDir["VulkanSDK"]        = "%{wks.location}/%{VULKAN_SDK}/Include"
+IncludeDir["glm"]              = "%{wks.location}/%{VULKAN_SDK}/Include"
+IncludeDir["imgui"]            = "%{wks.location}/vendor/ImGui"
+IncludeDir["lud_utils"]        = "%{wks.location}/vendor/lud_utils"
+IncludeDir["sdl2"]             = "%{wks.location}/Graphics/vendor/sdl2/include"
+IncludeDir["vk_bootrstrap"]    = "%{wks.location}/Graphics/vendor/vk_bootstrap"
+IncludeDir["NesEmu"]           = "%{wks.location}/NesEmu/src"
+IncludeDir["ctre"]             = "%{wks.location}/NesEmu/vendor/ctre/include"
+IncludeDir["gtest"]            = "%{wks.location}/NesEmu/vendor/gtest/include"
+IncludeDir["freetype"]         = "%{wks.location}/vendor/freetype/include"
+IncludeDir["nativeFileDialog"] = "%{wks.location}/vendor/nativefiledialog/src/include"
 
 LibraryDir = {}
 LibraryDir["VulkanSDK"]  = "%{wks.location}/%{VULKAN_SDK}/Lib"
@@ -23,7 +24,7 @@ LibraryDir["freetype_d"] = "%{wks.location}/vendor/freetype/lib/debug"
 Library = {}
 Library["Vulkan"]     = "%{LibraryDir.VulkanSDK}/vulkan-1.lib"
 Library["sdl2"]       = "%{LibraryDir.sdl2}/SDL2"
-Library["gtest_d"]    = "%{LibraryDir.gtest_d}/googletest"
-Library["gtest_r"]    = "%{LibraryDir.gtest_r}/googletest"
+Library["gtest_d"]    = "%{LibraryDir.gtest_d}/gtest"
+Library["gtest_r"]    = "%{LibraryDir.gtest_r}/gtest"
 Library["freetype_r"] = "%{LibraryDir.freetype_r}/freetype"
 Library["freetype_d"] = "%{LibraryDir.freetype_d}/freetype"

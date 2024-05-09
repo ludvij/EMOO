@@ -96,7 +96,7 @@ std::optional<u8> Cartridge::PpuRead(u16 addr) const
 {
 	if (const auto mappedAddr = m_mapper->PpuMapRead(addr); mappedAddr)
 	{
-		return m_prgRom[*mappedAddr];
+		return m_chrRom[*mappedAddr];
 	}
 	else
 	{

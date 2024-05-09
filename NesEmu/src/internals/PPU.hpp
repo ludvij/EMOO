@@ -13,19 +13,31 @@ namespace Emu
 
 struct Color
 {
+	Color() = default;
+	Color(u8 val);
+	Color(u8 R, u8 B, u8 G);
 	u8 R;
 	u8 G;
 	u8 B;
+
+	u32 AsU32() const;
+	operator u32() const
+	{
+		return AsU32();
+	}
 };
 
 class PPU
 {
 public:
+	bool isFrameDone = false;
+	bool nmi = false;
+public:
 	PPU(Configuration conf);
 	~PPU();
 	void Step();
 
-	void ConnectCartridge(Cartridge* cartridge)
+	void ConnectCartridge(std::shared_ptr<Cartridge> cartridge)
 	{
 		m_cartridge = cartridge;
 	}
@@ -54,10 +66,12 @@ public:
 	}
 
 	u32* GetScreen();
-	bool IsFrameDone() const
-	{
-		return m_frame_done;
-	};
+
+	u32* GetPatternTable(const u8 i, const u8 palette);
+	u32* GetPalette();
+	Color GetColorFromPalette(u8 palette, u8 pixel);
+
+
 
 private:
 
@@ -65,6 +79,10 @@ private:
 	void memory_write(u16 addr, u8 val);
 	void write_ppu_addr(u8 val);
 	void write_ppu_scroll(u8 val);
+
+
+
+
 
 	// quick hack to easily implement mirrorings
 	enum class MirrorName
@@ -78,10 +96,12 @@ private:
 
 	void load_palette(const char* src);
 
+	void set_vBlank(bool set);
+
 
 private:
 	std::vector<u32> m_screen;
-	Cartridge* m_cartridge;
+	std::shared_ptr<Cartridge> m_cartridge{ nullptr };
 
 
 	// MMIO registers
@@ -93,7 +113,6 @@ private:
 	u8 m_ppu_scroll_x = 0;
 	u8 m_ppu_scroll_y = 0;
 	//u16 m_ppu_addr    = 0;
-	u8 m_ppu_data = 0;
 	u8 m_oam_dma = 0;
 
 	u8 m_data_buffer = 0;
@@ -131,16 +150,18 @@ private:
 
 
 	u32 m_cycles = 0;
-	u32 m_scanlines = 0;
+	i32 m_scanlines = 0;
 
-	bool m_frame_done = true;
 
 
 	// 2 nametables
 	// other 2 are provided in cartridge
 	std::array<u8, 2000> m_ram{ 0 };
 	// backup if nametables are not handled by the cartridge (unlikely)
-	std::array<u8, 0x2000> m_patternTable{ 0 };
+	std::array<u8, 0x2000> m_pattern_tables;
+	// for debugging purposes
+	std::array<std::array<u32, 2 * 128 * 128>, 2> m_pattern_tables_show{};
+	std::array<u32, 16 * 4> m_palettes_show{};
 	// not configurable palette inner ram
 	// $3F00         -> Universal background color
 	// $3F01 - $3F03 -> Background palette 0
@@ -152,10 +173,13 @@ private:
 	// $3F15 - $3F17 -> Sprite color 1
 	// $3F19 - $3F1B -> Sprite color 2
 	// $3F1D - $3F1F -> Sprite color 3
-	std::array<u8, 0x0020> m_palleteRamIndexes{ 0 };
+	std::array<u8, 0x0020> m_palette_ram_indexes{ 0 };
 	//https://www.nesdev.org/wiki/PPU_palettes#2C02
 	//TODO: add palette file handling instead of static array
 	std::array<Color, 0x40> m_palette;
+
+
+
 	// this was lifted from one lone coder
 	struct OAM_Data
 	{
@@ -216,24 +240,24 @@ inline u8 PPU::nametableMirroringWrite(const u16 addr, const u8 val)
 	}
 	else if (0x0400 <= strippedAddr && strippedAddr <= 0x07FF)
 	{
-		if      constexpr (m1 == MirrorName::A) m_ram[strippedAddr & 0x3FF] = val;
-		else if constexpr (m1 == MirrorName::B) m_ram[strippedAddr & 0x3FF + 0x400] = val;
-		else if constexpr (m1 == MirrorName::C) m_cartridge->PpuWrite(addr, val);
-		else if constexpr (m1 == MirrorName::D) m_cartridge->PpuWrite(addr, val);
+		if      constexpr (m2 == MirrorName::A) m_ram[strippedAddr & 0x3FF] = val;
+		else if constexpr (m2 == MirrorName::B) m_ram[strippedAddr & 0x3FF + 0x400] = val;
+		else if constexpr (m2 == MirrorName::C) m_cartridge->PpuWrite(addr, val);
+		else if constexpr (m2 == MirrorName::D) m_cartridge->PpuWrite(addr, val);
 	}
 	else if (0x0800 <= strippedAddr && strippedAddr <= 0x0BFF)
 	{
-		if      constexpr (m1 == MirrorName::A) m_ram[strippedAddr & 0x3FF] = val;
-		else if constexpr (m1 == MirrorName::B) m_ram[strippedAddr & 0x3FF + 0x400] = val;
-		else if constexpr (m1 == MirrorName::C) m_cartridge->PpuWrite(addr, val);
-		else if constexpr (m1 == MirrorName::D) m_cartridge->PpuWrite(addr, val);
+		if      constexpr (m3 == MirrorName::A) m_ram[strippedAddr & 0x3FF] = val;
+		else if constexpr (m3 == MirrorName::B) m_ram[strippedAddr & 0x3FF + 0x400] = val;
+		else if constexpr (m3 == MirrorName::C) m_cartridge->PpuWrite(addr, val);
+		else if constexpr (m3 == MirrorName::D) m_cartridge->PpuWrite(addr, val);
 	}
 	else if (0x0C00 <= strippedAddr && strippedAddr <= 0x0FFF)
 	{
-		if      constexpr (m1 == MirrorName::A) m_ram[strippedAddr & 0x3FF] = val;
-		else if constexpr (m1 == MirrorName::B) m_ram[strippedAddr & 0x3FF + 0x400] = val;
-		else if constexpr (m1 == MirrorName::C) m_cartridge->PpuWrite(addr, val);
-		else if constexpr (m1 == MirrorName::D) m_cartridge->PpuWrite(addr, val);
+		if      constexpr (m4 == MirrorName::A) m_ram[strippedAddr & 0x3FF] = val;
+		else if constexpr (m4 == MirrorName::B) m_ram[strippedAddr & 0x3FF + 0x400] = val;
+		else if constexpr (m4 == MirrorName::C) m_cartridge->PpuWrite(addr, val);
+		else if constexpr (m4 == MirrorName::D) m_cartridge->PpuWrite(addr, val);
 	}
 	Lud::Unreachable();
 }

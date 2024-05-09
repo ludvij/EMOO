@@ -7,6 +7,7 @@
 // containers
 #include <array>
 #include <memory>
+#include <span>
 #include <vector>
 
 // algos
@@ -30,5 +31,7 @@
 #include "utils/Unreachable.hpp"
 #include <bit>
 #include <optional>
+#include <utility>
+
 
 #endif

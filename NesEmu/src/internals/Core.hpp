@@ -48,7 +48,6 @@ struct Configuration
 	const u32 FrameRate;
 	const float width;
 	const float height;
-	// c++ strings will be my downfall
 	const char* palette_src;
 };
 

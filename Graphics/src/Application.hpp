@@ -4,6 +4,7 @@
 #include "Components/IComponent.hpp"
 #include "Renderer/Sprite.hpp"
 #include "Window/Window.hpp"
+
 #include <functional>
 #include <memory>
 #include <NesEmu.hpp>
@@ -16,8 +17,8 @@ namespace Ui
 {
 struct Configuration
 {
-	std::string name = "TFG application";
-	uint32_t w = 900;
+	std::string name = "EMOO";
+	uint32_t w = 1600;
 	uint32_t h = 900;
 };
 
@@ -62,8 +63,11 @@ private:
 	void draw_application();
 	void update();
 
+	void get_pixel_data();
+
 
 	void resize_emu_screen();
+	void resize_other();
 
 
 private:
@@ -75,12 +79,14 @@ private:
 
 	std::vector<std::shared_ptr<IComponent>> m_components;
 	std::function<void()> m_menuCallback;
+	std::unordered_map<const char*, std::unique_ptr<ITexture>> m_textures;
+	std::unordered_map<const char*, Sprite> m_sprites;
 
 	IWindow* m_window;
 
-	ITexture* m_texel_data{ nullptr };
-	Sprite m_emu_screen;
-	bool m_resize_emu_screen{ true };
+	bool m_resized{ true };
+
+	float m_menu_bar_height{ 26 };
 
 };
 

@@ -51,6 +51,21 @@ public:
 		return m_ppu.GetScreen();
 	};
 
+	u32* OutputPatternTable(u8 i, u8 palette)
+	{
+		return m_ppu.GetPatternTable(i, palette);
+	}
+
+	u32 OutputPaletteColor(u8 i, u8 s)
+	{
+		return m_ppu.GetColorFromPalette(i, s);
+	}
+
+	u32* OutputPalette()
+	{
+		return m_ppu.GetPalette();
+	}
+
 private:
 	// Bus components
 	CPU m_cpu;
@@ -59,7 +74,7 @@ private:
 
 	u32 m_masterClock = 0;
 
-	std::unique_ptr<Cartridge> m_cartridge;
+	std::shared_ptr<Cartridge> m_cartridge;
 
 	// configuration struct containing platform related info (ntsc, pal)
 	Configuration m_conf;

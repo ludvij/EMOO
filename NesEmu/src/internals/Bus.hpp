@@ -22,7 +22,7 @@ public:
 	u8 Read(u16 addr) const;
 	void Write(u16 addr, u8 val);
 
-	void ConnectCartridge(Cartridge* cartridge)
+	void ConnectCartridge(std::shared_ptr<Cartridge> cartridge)
 	{
 		m_cartridge = cartridge;
 	}
@@ -40,7 +40,7 @@ private:
 	// 0x3020 bytes to be exact
 	// std::array<u8, 0x4020> m_memor{0};
 	std::array<u8, 0x800> m_cpuRam{ 0 };
-	Cartridge* m_cartridge{ nullptr };
+	std::shared_ptr<Cartridge> m_cartridge{ nullptr };
 	PPU* m_ppu = nullptr;
 };
 

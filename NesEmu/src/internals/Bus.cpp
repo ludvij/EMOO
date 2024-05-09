@@ -19,12 +19,14 @@ u8 Bus::Read(const u16 addr) const
 	{
 		return m_ppu->CpuRead(addr);
 	}
-	//if (addr >= 0x4000 && addr < 0x4018) // APU and IO functionality
-	//{
-	//}
-	//if (addr >= 0x4018 && addr < 0x4020) // APU and IO functionality Test mode
-	//{
-	//}
+	if (addr >= 0x4000 && addr < 0x4018) // APU and IO functionality
+	{
+		return 0;
+	}
+	if (addr >= 0x4018 && addr < 0x4020) // APU and IO functionality Test mode
+	{
+		return 0;
+	}
 	else // cartridge space
 	{
 		return *m_cartridge->CpuRead(addr);

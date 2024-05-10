@@ -6,12 +6,12 @@
 namespace Emu
 {
 PPU::PPU(Configuration conf)
+	: m_conf(conf)
 {
 	load_palette(conf.palette_src);
 	const size_t size = static_cast<size_t>( conf.width * conf.height );
 	m_screen.resize(size);
 	std::ranges::fill(m_screen, Color(0));
-
 
 }
 PPU::~PPU()
@@ -19,28 +19,103 @@ PPU::~PPU()
 }
 void PPU::Step()
 {
-	if (m_scanlines == -1 && m_cycles == 1)
+	if (m_scanlines >= 0 && m_scanlines < 240 || m_scanlines == 261)
 	{
-		set_vBlank(false);
-	}
-	// entering vBlank when scanline goes out of screen
-	if (m_scanlines == 241 && m_cycles == 1)
-	{
-		set_vBlank(true);
-		// if nmi enabled
-		if (m_ppu_ctrl & 0x80)
+
+		if (m_scanlines == 0 && m_cycles == 0)
 		{
-			nmi = true;
+			m_cycles = 1;
+		}
+		if (m_cycles >= 2 && m_cycles < 256)
+		{
+			update_bg_shifters();
+			preload_tile();
+		}
+		if (m_cycles == 256)
+		{
+			increment_y();
+		}
+		if (m_cycles == 257)
+		{
+			load_bg_shifters();
+			reset_x();
+		}
+		// first two tiles on next scanline
+		if (m_cycles >= 321 && m_cycles < 338)
+		{
+			update_bg_shifters();
+			preload_tile();
+		}
+		// unused NT fetches
+		if (m_cycles == 338 || m_cycles == 340)
+		{
+			m_bg_next_tile_id = memory_read(0x2000 | ( m_v & 0x0FFF ));
+		}
+		// pre render scanline
+		if (m_scanlines == 261)
+		{
+			if (m_cycles == 1)
+			{
+				set_vBlank(false);
+			}
+			if (m_cycles >= 280 && m_cycles < 305)
+			{
+				reset_y();
+			}
 		}
 	}
+	if (m_scanlines == 240)
+	{
+		// post render scanline
+	}
+	// entering vBlank when scanline goes out of screen
+	if (m_scanlines >= 240 && m_scanlines < 261)
+	{
+		if (m_scanlines == 241 && m_cycles == 1)
+		{
+			set_vBlank(true);
+			// if nmi enabled
+			if (m_ppu_ctrl & 0x80)
+			{
+				nmi = true;
+			}
+		}
+	}
+
+
+
+	if (( m_ppu_mask >> 3 ) & 0x01)
+	{
+		const u16 bit_mux = 0x8000 >> m_x;
+
+		const u8 p0_pixel = ( m_bg_shifter_pattern_lo & bit_mux ) > 0;
+		const u8 p1_pixel = ( m_bg_shifter_pattern_hi & bit_mux ) > 0;
+
+		const u8 bg_pixel = ( p1_pixel << 1 ) | p0_pixel;
+
+		const u8 bg_pal0 = ( m_bg_shifter_attrib_lo & bit_mux ) > 0;
+		const u8 bg_pal1 = ( m_bg_shifter_attrib_hi & bit_mux ) > 0;
+
+		const u8 bg_palette = ( bg_pal1 << 1 ) | bg_pal0;
+		const int x = m_cycles - 1;
+		const int y = m_scanlines;
+
+		if (x >= 0 && x < m_conf.width && y >= 0 && y < m_conf.height)
+		{
+			const auto px_pos = static_cast<size_t>( x + y * 256 );
+			m_screen[px_pos] = GetColorFromPalette(bg_palette, bg_pixel);
+
+		}
+	}
+
 	m_cycles++;
 	if (m_cycles >= 341)
 	{
 		m_cycles = 0;
 		m_scanlines++;
-		if (m_scanlines >= 261)
+		if (m_scanlines >= 262)
 		{
-			m_scanlines = -1;
+			m_scanlines = 0;
 			isFrameDone = true;
 		}
 	}
@@ -60,7 +135,18 @@ void PPU::Reset()
 	m_ppu_status = 0;
 	std::fill(m_palette_ram_indexes.begin(), m_palette_ram_indexes.end(), 0);
 
+	m_bg_next_tile_attrib = 0;
+	m_bg_next_tile_hi = 0;
+	m_bg_next_tile_hi = 0;
+	m_bg_next_tile_id = 0;
+
+	m_bg_shifter_attrib_hi = 0;
+	m_bg_shifter_attrib_lo = 0;
+	m_bg_shifter_pattern_hi = 0;
+	m_bg_shifter_pattern_lo = 0;
+
 }
+
 
 u8 PPU::CpuRead(const u16 addr)
 {
@@ -89,7 +175,7 @@ u8 PPU::CpuRead(const u16 addr)
 			data = m_data_buffer;
 		}
 
-		m_v += ( m_ppu_ctrl & 0b0000'0010 ) ? 32 : 1;
+		m_v += ( m_ppu_ctrl & 0x04 ) ? 32 : 1;
 	}
 	else  // cheat so the compiler shuts up
 	{
@@ -104,7 +190,7 @@ void PPU::CpuWrite(const u16 addr, const u8 val)
 	{
 		m_ppu_ctrl = val;
 		// set nametables
-		m_t = ( ( m_ppu_ctrl & 0b0000'0011 ) << 10 ) | ( m_t & 0b1100'1111 );
+		m_t = ( ( static_cast<u16>( m_ppu_ctrl & 0x03 ) ) << 10 ) | ( m_t & ~0x0C00 );
 	}
 	else if (addr == PPU_MASK_ADDR) // mask
 	{
@@ -134,7 +220,7 @@ void PPU::CpuWrite(const u16 addr, const u8 val)
 	else if (addr == PPU_DATA_ADDR)
 	{
 		memory_write(m_v, val);
-		m_v += ( m_ppu_ctrl & 0b0000'0010 ) ? 32 : 1;
+		m_v += ( m_ppu_ctrl & 0x04 ) ? 32 : 1;
 	}
 }
 
@@ -181,11 +267,11 @@ u8 PPU::memory_read(u16 addr)
 	{
 		if (m_cartridge->GetMirroring() == Cartridge::Mirroring::Vertical)
 		{
-			return nametableMirroringRead<MirrorName::A, MirrorName::B, MirrorName::A, MirrorName::B>(addr);
+			return nametable_mirrored_read<MirrorName::A, MirrorName::B, MirrorName::A, MirrorName::B>(addr);
 		}
 		else if (m_cartridge->GetMirroring() == Cartridge::Mirroring::Horizontal)
 		{
-			return nametableMirroringRead<MirrorName::A, MirrorName::A, MirrorName::B, MirrorName::B>(addr);
+			return nametable_mirrored_read<MirrorName::A, MirrorName::A, MirrorName::B, MirrorName::B>(addr);
 		}
 	}
 	else if (0x3F00 <= addr && addr <= 0x3FFF)
@@ -223,11 +309,11 @@ void PPU::memory_write(u16 addr, const u8 val)
 	{
 		if (m_cartridge->GetMirroring() == Cartridge::Mirroring::Vertical)
 		{
-			nametableMirroringWrite<MirrorName::A, MirrorName::B, MirrorName::A, MirrorName::B>(addr, val);
+			nametable_mirrored_write<MirrorName::A, MirrorName::B, MirrorName::A, MirrorName::B>(addr, val);
 		}
 		else if (m_cartridge->GetMirroring() == Cartridge::Mirroring::Horizontal)
 		{
-			nametableMirroringWrite<MirrorName::A, MirrorName::A, MirrorName::B, MirrorName::B>(addr, val);
+			nametable_mirrored_write<MirrorName::A, MirrorName::A, MirrorName::B, MirrorName::B>(addr, val);
 		}
 	}
 	else if (0x3F00 <= addr && addr <= 0x3FFF)
@@ -262,13 +348,6 @@ void PPU::write_ppu_addr(const u8 val)
 	}
 }
 
-// during rendering registers t and v can be seen as
-// yyy NN YYYYY XXXXX
-// ||| || ||||| └┴┴┴┴> corse x scroll
-// ||| || └┴┴┴┴──────> coarse y scroll
-// ||| └┴────────────> nametable select
-// └┴┴───────────────> fine y scroll
-//                     fine x scroll is stored in x register
 void PPU::write_ppu_scroll(const u8 val)
 {
 	if (!m_w)
@@ -290,13 +369,188 @@ void PPU::write_ppu_scroll(const u8 val)
 
 }
 
+void PPU::preload_tile()
+{
+	switch (( m_cycles - 1 ) % 8)
+	{
+	case 0: // tile id
+		load_bg_shifters();
+		m_bg_next_tile_id = memory_read(0x2000 | ( m_v & 0x0FFF ));
+		break;
+	case 2:
+		//        0000 0000 0000 0000
+		// v    = _yyy NNYY YYYX XXXX
+		// 0. 0x23C0                     offsets into range
+		// d   -> 0010 0011 1100 0000 -> 0010 0011 1100 0000
+		// 
+		// 1. v & 0x0C00
+		// v   -> _yyy NNYY YYYX XXXX    puts NN in bits 11 and 12
+		// d   -> 0000 1100 0000 0000 -> 0000 NN00 0000 0000
+		// 
+		// 2. (v >> 4) & 0x38
+		// v   -> _yyy NNYY YYYX XXXX
+		// >>4 -> 0000 _yyy NNYY YYYX    puts hi Y in bits 3 4 5
+		// d   -> 0000 0000 0011 1000 -> 0000 0000 00YY Y000
+		// 
+		// 3. (v >> 2) & 0x07
+		// v   -> _yyy NNYY YYYX XXXX
+		// >>2 -> 00_y yyNN YYYY YXXX    puts hi X in bits 0 1 2
+		// d   -> 0000 0000 0000 0111 -> 0000 0000 0000 0XXX     -> 0010 NN11 11YY YXXX
+		// result 0010 NN11 11YY YXXX
+		// offset into vram, nametable select, attribute offset, hi 3 bits of coarse y, hi 3 bits of coarse x
+		m_bg_next_tile_attrib = memory_read(0x23C0
+			| ( m_v & 0x0C00 )
+			| ( ( m_v >> 4 ) & 0x38 )
+			| ( ( m_v >> 2 ) & 0x07 )
+		);
+		if (( m_v >> 5 ) & 0x0002) m_bg_next_tile_attrib >>= 4;
+		if (( m_v >> 0 ) & 0x0002) m_bg_next_tile_attrib >>= 2;
+		m_bg_next_tile_attrib &= 0x03;
+		break;
+	case 4:
+		m_bg_next_tile_lo = memory_read(0
+			// offset background nametable address
+			+ ( m_ppu_ctrl & 0x10 ? 4096 : 0 )
+			// add tile id * 16
+			+ ( m_bg_next_tile_id * 16 )
+			// add nametable position
+			+ ( ( m_v >> 12 ) & 0x07 )
+		);
+		break;
+	case 6:
+		m_bg_next_tile_hi = memory_read(8
+			+ ( m_ppu_ctrl & 0x10 ? 4096 : 0 )
+			+ ( m_bg_next_tile_id * 16 )
+			+ ( ( m_v >> 12 ) & 0x07 )
+		);
+		break;
+	case 7:
+		increment_x();
+		break;
+	}
+}
+
+void PPU::increment_y()
+{
+	if (!( ( m_ppu_mask >> 3 ) & 0x01 ) && !( ( m_ppu_mask >> 4 ) & 0x01 ))
+	{
+		return;
+	}
+
+	// check if fine y is lower than 7
+	if (( m_v & 0x7000 ) != 0x7000)
+	{
+		// increment fine y
+		m_v += 0x1000;
+	}
+	// fine y is greater than 7, we have to increment coarse y
+	else
+	{
+		// reset fine y
+		m_v &= ~0x7000;
+		// extract coarse y
+		int y = ( m_v & 0x03E0 ) >> 5;
+		// check if coarse y is at the end of nametable
+		if (y == 29)
+		{
+			y = 0;
+			// flip nametable y bit
+			m_v ^= 0x0800;
+		}
+		// in case we are in attribute memory
+		else if (y == 31)
+		{
+			y = 0;
+		}
+		else
+		{
+			y += 1;
+		}
+		// replace coarse y
+		m_v = ( m_v & ~0x03E0 ) | ( y << 5 );
+	}
+}
+
+void PPU::increment_x()
+{
+	// if rendering backgournd or sprites
+	if (!( ( m_ppu_mask >> 3 ) & 0x01 ) && !( ( m_ppu_mask >> 4 ) & 0x01 ))
+	{
+		return;
+	}
+	// nametables are 32x30 (0 index)
+	// so if we are at the border
+	// se have to set it to 0
+
+	if (( m_v & 0x001F ) == 31)
+	{
+		// set coarse x to 0
+		m_v &= ~0x001F;
+		// flip nametable x
+		m_v ^= 0x0400;
+	}
+	else
+	{
+		m_v += 1;
+	}
+}
+
+void PPU::reset_x()
+{
+	// if rendering backgournd or sprites
+	if (!( ( m_ppu_mask >> 3 ) & 0x01 ) && !( ( m_ppu_mask >> 4 ) & 0x01 ))
+	{
+		return;
+	}
+	// v = _yyy NNYY YYYX XXXX
+	// swap nametable x and coarse x
+	m_v = ( m_v & ~0x041F ) | ( m_t & 0x041F );
+}
+
+void PPU::reset_y()
+{
+	// if rendering backgournd or sprites
+	if (!( ( m_ppu_mask >> 3 ) & 0x01 ) && !( ( m_ppu_mask >> 4 ) & 0x01 ))
+	{
+		return;
+	}
+	// v = _yyy NNYY YYYX XXXX
+	// swap nametable y, coarse y and fine y
+	m_v = ( m_v & ~0x7BE0 ) | ( m_t & 0x7BE0 );
+}
+
+void PPU::load_bg_shifters()
+{
+	m_bg_shifter_pattern_lo = ( m_bg_shifter_pattern_lo & 0xFF00 ) | m_bg_next_tile_lo;
+	m_bg_shifter_pattern_hi = ( m_bg_shifter_pattern_hi & 0xFF00 ) | m_bg_next_tile_hi;
+
+	m_bg_shifter_attrib_lo = ( m_bg_shifter_attrib_lo & 0xFF00 ) | ( ( m_bg_next_tile_attrib & 0x01 ) ? 0xFF : 0x00 );
+	m_bg_shifter_attrib_hi = ( m_bg_shifter_attrib_hi & 0xFF00 ) | ( ( m_bg_next_tile_attrib & 0x02 ) ? 0xFF : 0x00 );
+}
+
+void PPU::update_bg_shifters()
+{
+	if (( m_ppu_mask >> 3 ) & 0x01)
+	{
+		m_bg_shifter_pattern_lo <<= 1;
+		m_bg_shifter_pattern_hi <<= 1;
+
+		m_bg_shifter_attrib_lo <<= 1;
+		m_bg_shifter_attrib_hi <<= 1;
+	}
+}
+
+
 Color PPU::GetColorFromPalette(const u8 palette, const u8 pixel)
 {
 	const u16 addr = 0x3F00 + ( palette * 4 ) + pixel;
 
+
 	const u8 val = memory_read(addr) & 0x3F;
 
 	return m_palette[val];
+
+	//return m_palette[m_palette_ram_indexes[static_cast<size_t>( palette * 4 + pixel )]];
 }
 
 u32* PPU::GetPatternTable(const u8 i, const u8 palette)

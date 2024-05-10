@@ -16,6 +16,8 @@ public:
 
 	Detail::AllocatedImage image;
 	uint32_t id{ 0 };
+
+private:
 };
 }
 

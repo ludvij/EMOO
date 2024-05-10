@@ -88,6 +88,8 @@ private:
 
 	float m_menu_bar_height{ 26 };
 
+	uint32_t m_frame_rate{};
+
 };
 
 }

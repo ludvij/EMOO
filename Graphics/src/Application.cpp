@@ -16,6 +16,9 @@
 #include "Renderer/Vulkan/VulkanTexture.hpp"
 #include <pfd/portable_file_dialogs.h>
 
+#include <chrono>
+#include <thread>
+
 
 namespace Ui
 {
@@ -25,11 +28,13 @@ Application::Application(const Configuration& config)
 	: m_config(config)
 	, m_console(Emu::NTSC)
 {
-	m_window = new SDLWindow(m_config.name, m_config.w, m_config.h);
 	s_instance = this;
+	m_window = new SDLWindow(m_config.name, m_config.w, m_config.h);
 	init();
+
 	const auto w = static_cast<uint32_t>( m_console.GetConfig().width );
 	const auto h = static_cast<uint32_t>( m_console.GetConfig().height );
+
 	m_textures["SCREEN"]          = std::unique_ptr<ITexture>(Renderer::CreateTexture(w, h));
 	m_textures["PATTERN_TABLE_0"] = std::unique_ptr<ITexture>(Renderer::CreateTexture(128, 128));
 	m_textures["PATTERN_TABLE_1"] = std::unique_ptr<ITexture>(Renderer::CreateTexture(128, 128));
@@ -37,8 +42,8 @@ Application::Application(const Configuration& config)
 	m_textures["USED_PALETTE"]    = std::unique_ptr<ITexture>(Renderer::CreateTexture(4 * 8, 1));
 
 	m_sprites["SCREEN"]          = Sprite({}, 0, m_textures["SCREEN"].get());
-	m_sprites["PATTERN_TABLE_1"] = Sprite({}, 0, m_textures["PATTERN_TABLE_1"].get());
 	m_sprites["PATTERN_TABLE_0"] = Sprite({}, 0, m_textures["PATTERN_TABLE_0"].get());
+	m_sprites["PATTERN_TABLE_1"] = Sprite({}, 0, m_textures["PATTERN_TABLE_1"].get());
 	m_sprites["PALETTE"]         = Sprite({}, 0, m_textures["PALETTE"].get());
 	m_sprites["USED_PALETTE_0"]  = Sprite({}, 0, m_textures["USED_PALETTE"].get(), { .125 * 0, 0, .125 * 1, 1 });
 	m_sprites["USED_PALETTE_1"]  = Sprite({}, 0, m_textures["USED_PALETTE"].get(), { .125 * 1, 0, .125 * 2, 1 });
@@ -87,6 +92,8 @@ void Application::main_loop()
 {
 	while (!m_should_quit)
 	{
+		const auto start = std::chrono::time_point<std::chrono::steady_clock>(std::chrono::steady_clock::now());
+
 		event_loop();
 
 		if (m_stop_rendering)
@@ -99,6 +106,19 @@ void Application::main_loop()
 
 		draw_ui();
 		draw_application();
+
+		auto end = std::chrono::time_point<std::chrono::steady_clock>(std::chrono::steady_clock::now());
+		auto elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>( end - start ).count();
+
+		const auto ms_per_frame = static_cast<int>( 1000.0f / m_console.GetConfig().FrameRate );
+		if (ms_per_frame > elapsed_time)
+		{
+			std::this_thread::sleep_for(std::chrono::milliseconds(ms_per_frame - elapsed_time));
+		}
+
+		end = std::chrono::time_point<std::chrono::steady_clock>(std::chrono::steady_clock::now());
+		elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>( end - start ).count();
+		m_frame_rate = static_cast<uint32_t>( 1000.0f / elapsed_time );
 	}
 }
 void Application::event_loop()
@@ -168,6 +188,8 @@ void Application::draw_ui()
 			}
 			ImGui::EndMenu();
 		}
+		ImGui::Separator();
+		ImGui::Text("FPS %2d", m_frame_rate);
 		ImGui::EndMainMenuBar();
 	}
 

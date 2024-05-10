@@ -19,6 +19,7 @@ VulkanTexture::VulkanTexture(uint32_t w, uint32_t h, void* data)
 	image = Engine::Get().CreateImage(data, { w, h, 1 }, vk::Format::eR8G8B8A8Unorm,
 		vk::ImageUsageFlagBits::eSampled);
 	Engine::Get().AddTextureToBatcher(this);
+
 }
 
 VulkanTexture::~VulkanTexture()

@@ -594,7 +594,7 @@ void Engine::create_swapchain(u32 width, u32 height)
 	vkb::Swapchain vkb_swapchain = swapchain_builder
 		//.use_default_format_selection()
 		.set_desired_format(vk::SurfaceFormatKHR(m_swapchain.format, vk::ColorSpaceKHR::eSrgbNonlinear))
-		.set_desired_present_mode(static_cast<VkPresentModeKHR>( vk::PresentModeKHR::eFifo ))
+		.set_desired_present_mode(static_cast<VkPresentModeKHR>( vk::PresentModeKHR::eImmediate ))
 		.set_desired_extent(width, height)
 		.add_image_usage_flags(static_cast<VkImageUsageFlagBits>( vk::ImageUsageFlagBits::eTransferDst ))
 		.build()

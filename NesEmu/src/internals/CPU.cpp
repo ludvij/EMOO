@@ -4,23 +4,36 @@
 
 #include "Bus.hpp"
 
+
+
 namespace Emu
 {
+#ifdef TRACE_CPU_EXECUTION
+static std::ofstream file;
+static std::string opcodes = "";
+static u16 pc_copy;
+static std::string instr_eval;
+static std::string flag_state;
+#endif
+
 
 constexpr auto MAKE_WORD = [](const u16 hi, const u16 lo) -> u16
 	{
 		return static_cast<u16>( ( hi << 8 ) ) | lo;
 	};
-
+CPU::~CPU()
+{
+#ifdef TRACE_CPU_EXECUTION
+	file.close();
+#endif // TRACE_CPU_EXECUTION
+}
 CPU::CPU()
 {
+#ifdef TRACE_CPU_EXECUTION
+	file.open("cpu.log");
+#endif
 	// filling the jump table
-	constexpr Instruction invalid = {
-		"___",
-		&CPU::addrIMM,
-		&CPU::XXX,
-		0
-	};
+	Instruction invalid = { "STP", &CPU::addrIMM, &CPU::STP, 0 };
 	std::ranges::fill(m_jumpTable, invalid);
 	// ADC
 	m_jumpTable[0x69] = { "ADC", &CPU::addrIMM, &CPU::ADC, 2 };
@@ -45,7 +58,7 @@ CPU::CPU()
 	m_jumpTable[0x06] = { "ASL", &CPU::addrZPI, &CPU::ASL, 5 };
 	m_jumpTable[0x0E] = { "ASL", &CPU::addrABS, &CPU::ASL, 6 };
 	m_jumpTable[0x16] = { "ASL", &CPU::addrZPX, &CPU::ASL, 6 };
-	m_jumpTable[0x1A] = { "ASL", &CPU::addrABX, &CPU::ASL, 7 };
+	m_jumpTable[0x1E] = { "ASL", &CPU::addrABX, &CPU::ASL, 7 };
 	// BCC
 	m_jumpTable[0x90] = { "BCC", &CPU::addrREL, &CPU::BCC, 2 };
 	// BCS
@@ -148,9 +161,9 @@ CPU::CPU()
 	//LSR
 	m_jumpTable[0x4A] = { "LSR", &CPU::addrACC, &CPU::LSR, 2 };
 	m_jumpTable[0x46] = { "LSR", &CPU::addrZPI, &CPU::LSR, 5 };
-	m_jumpTable[0x4E] = { "LSR", &CPU::addrABS, &CPU::LSR, 6 };
 	m_jumpTable[0x56] = { "LSR", &CPU::addrZPX, &CPU::LSR, 6 };
-	m_jumpTable[0x5A] = { "LSR", &CPU::addrABX, &CPU::LSR, 7 };
+	m_jumpTable[0x4E] = { "LSR", &CPU::addrABS, &CPU::LSR, 6 };
+	m_jumpTable[0x5E] = { "LSR", &CPU::addrABX, &CPU::LSR, 7 };
 	//NOP
 	m_jumpTable[0xEA] = { "NOP", &CPU::addrIMP, &CPU::NOP, 2 };
 	//ORA
@@ -175,13 +188,13 @@ CPU::CPU()
 	m_jumpTable[0x26] = { "ROL", &CPU::addrZPI, &CPU::ROL, 5 };
 	m_jumpTable[0x36] = { "ROL", &CPU::addrZPX, &CPU::ROL, 6 };
 	m_jumpTable[0x2E] = { "ROL", &CPU::addrABS, &CPU::ROL, 6 };
-	m_jumpTable[0x3A] = { "ROL", &CPU::addrABX, &CPU::ROL, 7 };
+	m_jumpTable[0x3E] = { "ROL", &CPU::addrABX, &CPU::ROL, 7 };
 	//ROR
 	m_jumpTable[0x6A] = { "ROR", &CPU::addrACC, &CPU::ROR, 2 };
 	m_jumpTable[0x66] = { "ROR", &CPU::addrZPI, &CPU::ROR, 5 };
 	m_jumpTable[0x76] = { "ROR", &CPU::addrZPX, &CPU::ROR, 6 };
 	m_jumpTable[0x6E] = { "ROR", &CPU::addrABS, &CPU::ROR, 6 };
-	m_jumpTable[0x7A] = { "ROR", &CPU::addrABX, &CPU::ROR, 7 };
+	m_jumpTable[0x7E] = { "ROR", &CPU::addrABX, &CPU::ROR, 7 };
 	// RTI
 	m_jumpTable[0x40] = { "RTI", &CPU::addrIMP, &CPU::RTI, 6 };
 	//RTS
@@ -230,6 +243,114 @@ CPU::CPU()
 	//TYA
 	m_jumpTable[0x98] = { "TYA", &CPU::addrIMP, &CPU::TYA, 2 };
 
+	// illegal opcodes
+	// NOPs
+	// NOP
+	m_jumpTable[0x1A] = { "*NOP", &CPU::addrIMP, &CPU::NOP, 2 };
+	m_jumpTable[0x3A] = { "*NOP", &CPU::addrIMP, &CPU::NOP, 2 };
+	m_jumpTable[0x5A] = { "*NOP", &CPU::addrIMP, &CPU::NOP, 2 };
+	m_jumpTable[0x7A] = { "*NOP", &CPU::addrIMP, &CPU::NOP, 2 };
+	m_jumpTable[0xDA] = { "*NOP", &CPU::addrIMP, &CPU::NOP, 2 };
+	m_jumpTable[0xFA] = { "*NOP", &CPU::addrIMP, &CPU::NOP, 2 };
+	// SKB
+	m_jumpTable[0x80] = { "*NOP", &CPU::addrIMM, &CPU::SKB, 2 };
+	m_jumpTable[0x82] = { "*NOP", &CPU::addrIMM, &CPU::SKB, 2 };
+	m_jumpTable[0x89] = { "*NOP", &CPU::addrIMM, &CPU::SKB, 2 };
+	m_jumpTable[0xC2] = { "*NOP", &CPU::addrIMM, &CPU::SKB, 2 };
+	m_jumpTable[0xE2] = { "*NOP", &CPU::addrIMM, &CPU::SKB, 2 };
+	// IGN
+	m_jumpTable[0x0C] = { "*NOP", &CPU::addrABS, &CPU::IGN, 4 };
+	m_jumpTable[0x1C] = { "*NOP", &CPU::addrABX, &CPU::IGN, 4 };
+	m_jumpTable[0x3C] = { "*NOP", &CPU::addrABX, &CPU::IGN, 4 };
+	m_jumpTable[0x5C] = { "*NOP", &CPU::addrABX, &CPU::IGN, 4 };
+	m_jumpTable[0x7C] = { "*NOP", &CPU::addrABX, &CPU::IGN, 4 };
+	m_jumpTable[0xDC] = { "*NOP", &CPU::addrABX, &CPU::IGN, 4 };
+	m_jumpTable[0xFC] = { "*NOP", &CPU::addrABX, &CPU::IGN, 4 };
+	m_jumpTable[0x04] = { "*NOP", &CPU::addrZPI, &CPU::IGN, 3 };
+	m_jumpTable[0x44] = { "*NOP", &CPU::addrZPI, &CPU::IGN, 3 };
+	m_jumpTable[0x64] = { "*NOP", &CPU::addrZPI, &CPU::IGN, 3 };
+	m_jumpTable[0x14] = { "*NOP", &CPU::addrZPX, &CPU::IGN, 4 };
+	m_jumpTable[0x34] = { "*NOP", &CPU::addrZPX, &CPU::IGN, 4 };
+	m_jumpTable[0x54] = { "*NOP", &CPU::addrZPX, &CPU::IGN, 4 };
+	m_jumpTable[0x74] = { "*NOP", &CPU::addrZPX, &CPU::IGN, 4 };
+	m_jumpTable[0xD4] = { "*NOP", &CPU::addrZPX, &CPU::IGN, 4 };
+	m_jumpTable[0xF4] = { "*NOP", &CPU::addrZPX, &CPU::IGN, 4 };
+
+	// Combined operations
+	// ALR
+	m_jumpTable[0x4B] = { "*ALR", &CPU::addrIMM, &CPU::ALR, 2 };
+	// ANC
+	m_jumpTable[0x0B] = { "*ANC", &CPU::addrIMM, &CPU::ANC, 2 };
+	m_jumpTable[0x2B] = { "*ANC", &CPU::addrIMM, &CPU::ANC, 2 };
+	// ARR
+	m_jumpTable[0x6B] = { "*ARR", &CPU::addrIMM, &CPU::ARR, 2 };
+	// AXS
+	m_jumpTable[0x0B] = { "*AXS", &CPU::addrIMM, &CPU::AXS, 2 };
+	// LAX
+	m_jumpTable[0xA3] = { "*LAX", &CPU::addrINX, &CPU::LAX, 6 };
+	m_jumpTable[0xA7] = { "*LAX", &CPU::addrZPI, &CPU::LAX, 3 };
+	m_jumpTable[0xAF] = { "*LAX", &CPU::addrABS, &CPU::LAX, 4 };
+	m_jumpTable[0xB3] = { "*LAX", &CPU::addrINY, &CPU::LAX, 5 };
+	m_jumpTable[0xB7] = { "*LAX", &CPU::addrZPY, &CPU::LAX, 4 };
+	m_jumpTable[0xBF] = { "*LAX", &CPU::addrABY, &CPU::LAX, 4 };
+	// SAX
+	m_jumpTable[0x83] = { "*SAX", &CPU::addrINX, &CPU::SAX, 6 };
+	m_jumpTable[0x87] = { "*SAX", &CPU::addrZPI, &CPU::SAX, 3 };
+	m_jumpTable[0x8F] = { "*SAX", &CPU::addrABS, &CPU::SAX, 4 };
+	m_jumpTable[0x97] = { "*SAX", &CPU::addrZPY, &CPU::SAX, 4 };
+
+	// duplicates
+	m_jumpTable[0xEB] = { "*SBC", &CPU::addrIMM, &CPU::SBC, 2 };
+
+	// MRW
+	// DCP
+	m_jumpTable[0xC3] = { "*DCP", &CPU::addrINX, &CPU::DCP, 8 };
+	m_jumpTable[0xC7] = { "*DCP", &CPU::addrZPI, &CPU::DCP, 5 };
+	m_jumpTable[0xCF] = { "*DCP", &CPU::addrABS, &CPU::DCP, 6 };
+	m_jumpTable[0xD3] = { "*DCP", &CPU::addrINY, &CPU::DCP, 8 };
+	m_jumpTable[0xD7] = { "*DCP", &CPU::addrZPX, &CPU::DCP, 6 };
+	m_jumpTable[0xDB] = { "*DCP", &CPU::addrABY, &CPU::DCP, 7 };
+	m_jumpTable[0xDF] = { "*DCP", &CPU::addrABX, &CPU::DCP, 7 };
+	// ISC
+	m_jumpTable[0xE3] = { "*ISB", &CPU::addrINX, &CPU::ISC, 8 };
+	m_jumpTable[0xE7] = { "*ISB", &CPU::addrZPI, &CPU::ISC, 5 };
+	m_jumpTable[0xEF] = { "*ISB", &CPU::addrABS, &CPU::ISC, 6 };
+	m_jumpTable[0xF3] = { "*ISB", &CPU::addrINY, &CPU::ISC, 8 };
+	m_jumpTable[0xF7] = { "*ISB", &CPU::addrZPX, &CPU::ISC, 6 };
+	m_jumpTable[0xFB] = { "*ISB", &CPU::addrABY, &CPU::ISC, 7 };
+	m_jumpTable[0xFF] = { "*ISB", &CPU::addrABX, &CPU::ISC, 7 };
+	// SLO
+	m_jumpTable[0x03] = { "*SLO", &CPU::addrINX, &CPU::SLO, 8 };
+	m_jumpTable[0x07] = { "*SLO", &CPU::addrZPI, &CPU::SLO, 5 };
+	m_jumpTable[0x0F] = { "*SLO", &CPU::addrABS, &CPU::SLO, 6 };
+	m_jumpTable[0x13] = { "*SLO", &CPU::addrINY, &CPU::SLO, 8 };
+	m_jumpTable[0x17] = { "*SLO", &CPU::addrZPX, &CPU::SLO, 6 };
+	m_jumpTable[0x1B] = { "*SLO", &CPU::addrABY, &CPU::SLO, 7 };
+	m_jumpTable[0x1F] = { "*SLO", &CPU::addrABX, &CPU::SLO, 7 };
+	// RLA
+	m_jumpTable[0x23] = { "*RLA", &CPU::addrINX, &CPU::RLA, 8 };
+	m_jumpTable[0x27] = { "*RLA", &CPU::addrZPI, &CPU::RLA, 5 };
+	m_jumpTable[0x2F] = { "*RLA", &CPU::addrABS, &CPU::RLA, 6 };
+	m_jumpTable[0x33] = { "*RLA", &CPU::addrINY, &CPU::RLA, 8 };
+	m_jumpTable[0x37] = { "*RLA", &CPU::addrZPX, &CPU::RLA, 6 };
+	m_jumpTable[0x3B] = { "*RLA", &CPU::addrABY, &CPU::RLA, 7 };
+	m_jumpTable[0x3F] = { "*RLA", &CPU::addrABX, &CPU::RLA, 7 };
+	// SRE
+	m_jumpTable[0x43] = { "*SRE", &CPU::addrINX, &CPU::SRE, 8 };
+	m_jumpTable[0x47] = { "*SRE", &CPU::addrZPI, &CPU::SRE, 5 };
+	m_jumpTable[0x4F] = { "*SRE", &CPU::addrABS, &CPU::SRE, 6 };
+	m_jumpTable[0x53] = { "*SRE", &CPU::addrINY, &CPU::SRE, 8 };
+	m_jumpTable[0x57] = { "*SRE", &CPU::addrZPX, &CPU::SRE, 6 };
+	m_jumpTable[0x5B] = { "*SRE", &CPU::addrABY, &CPU::SRE, 7 };
+	m_jumpTable[0x5F] = { "*SRE", &CPU::addrABX, &CPU::SRE, 7 };
+	// RRA
+	m_jumpTable[0x63] = { "*RRA", &CPU::addrINX, &CPU::RRA, 8 };
+	m_jumpTable[0x67] = { "*RRA", &CPU::addrZPI, &CPU::RRA, 5 };
+	m_jumpTable[0x6F] = { "*RRA", &CPU::addrABS, &CPU::RRA, 6 };
+	m_jumpTable[0x73] = { "*RRA", &CPU::addrINY, &CPU::RRA, 8 };
+	m_jumpTable[0x77] = { "*RRA", &CPU::addrZPX, &CPU::RRA, 6 };
+	m_jumpTable[0x7B] = { "*RRA", &CPU::addrABY, &CPU::RRA, 7 };
+	m_jumpTable[0x7F] = { "*RRA", &CPU::addrABX, &CPU::RRA, 7 };
 }
 
 void CPU::Step()
@@ -238,7 +359,13 @@ void CPU::Step()
 	m_oopsCycles = 0;
 	m_canOops = false;
 	m_discard = 0;
-
+#ifdef TRACE_CPU_EXECUTION
+	opcodes = "";
+	instr_eval = "";
+	flag_state = "";
+	pc_copy = m_PC;
+	flag_state = std::format("A:{:02X} X:{:02X} Y:{:02X} P:{:02X} SP:{:02X}", m_A, m_X, m_Y, m_P, m_S);
+#endif
 	if (m_cycles == 0)
 	{
 		m_opcode = readByte();
@@ -255,7 +382,9 @@ void CPU::Step()
 		{
 			m_cycles += m_oopsCycles;
 		}
-
+	#ifdef TRACE_CPU_EXECUTION
+		file << std::format("{:04X}  {:9s}{:>4s} {:29s} {:25s} \n", pc_copy, opcodes, m_currentInstr.name, instr_eval, flag_state);
+	#endif
 	}
 	m_totalCycles++;
 	m_cycles--;
@@ -267,13 +396,14 @@ void CPU::Reset()
 	m_X = 0;
 	m_Y = 0;
 	m_S = 0xFD;
-	m_P = 0x34;
+	m_P = 0x24;
 
 	// 6502 reads memory at $FFFC/D
 	u16 lo = memoryRead(RESET_VECTOR_LO);
 	u16 hi = memoryRead(RESET_VECTOR_HI);
 
 	m_PC = MAKE_WORD(hi, lo);
+	//m_PC = 0xc000;
 
 	// reset utility varibles
 	m_canOops = false;
@@ -291,12 +421,12 @@ void CPU::IRQ()
 	const u8 pcL = m_PC & 0x00ff;
 	const u8 pcH = ( m_PC & 0xff00 ) >> 8;
 
-	stackPush(pcH);
-	stackPush(pcL);
+	push(pcH);
+	push(pcL);
 
 	clearFlag(P_B_FLAG);
 
-	stackPush(m_P);
+	push(m_P);
 
 	setFlag(P_I_FLAG);
 	const u8 irqL = memoryRead(IRQ_VECTOR_LO);
@@ -310,12 +440,12 @@ void CPU::NMI()
 	const u8 pcL = m_PC & 0x00ff;
 	const u8 pcH = ( m_PC & 0xff00 ) >> 8;
 
-	stackPush(pcH);
-	stackPush(pcL);
+	push(pcH);
+	push(pcL);
 
 	clearFlag(P_B_FLAG);
 
-	stackPush(m_P);
+	push(m_P);
 
 	setFlag(P_I_FLAG);
 
@@ -348,6 +478,9 @@ void CPU::memoryWrite(const u16 addr, const u8 val) const
 u8 CPU::readByte()
 {
 	const u8 value = memoryRead(m_PC);
+#ifdef TRACE_CPU_EXECUTION
+	opcodes.append(std::format("{:02X} ", value));
+#endif
 	m_PC++;
 	return value;
 }
@@ -362,6 +495,10 @@ u16 CPU::addrIMP()
 u16 CPU::addrIMM()
 {
 	const u16 addr = m_PC++;
+#ifdef TRACE_CPU_EXECUTION
+	opcodes.append(std::format("{:02X} ", memoryRead(addr)));
+	instr_eval = "#$";
+#endif
 	return addr;
 }
 
@@ -369,23 +506,31 @@ u16 CPU::addrZPI()
 {
 	u16 addr = readByte();
 	addr &= 0x00FF;
-
+#ifdef TRACE_CPU_EXECUTION
+	instr_eval = std::format("${:02X} = ", addr, memoryRead(addr));
+#endif
 	return addr;
 }
 
 u16 CPU::addrZPX()
 {
-	u16 addr = ( readByte() + m_X );
+	const u16 b = readByte();
+	u16 addr = ( b + m_X );
 	addr &= 0x00FF;
-
+#ifdef TRACE_CPU_EXECUTION
+	instr_eval = std::format("${:02X},X @ {:02X} = ", b, addr);
+#endif
 	return addr;
 }
 
 u16 CPU::addrZPY()
 {
-	u16 addr = ( readByte() + m_Y );
+	const u16 b = readByte();
+	u16 addr = ( b + m_Y );
 	addr &= 0x00FF;
-
+#ifdef TRACE_CPU_EXECUTION
+	instr_eval = std::format("${:02X},Y @ {:02X} = ", b, addr);
+#endif
 	return addr;
 }
 
@@ -395,7 +540,17 @@ u16 CPU::addrABS()
 	const u8 lo = readByte();
 	const u8 hi = readByte();
 	const u16 addr = MAKE_WORD(hi, lo);
-
+#ifdef TRACE_CPU_EXECUTION
+	instr_eval = std::format("${:04X}", addr);
+	static std::vector<const char*> n = {
+		"JMP",
+		"JSR"
+	};
+	if (std::ranges::find(n, m_currentInstr.name) == n.end())
+	{
+		instr_eval.append(" = ");
+	}
+#endif
 	return addr;
 }
 
@@ -409,7 +564,9 @@ u16 CPU::addrABX()
 
 	if (( addr & 0xFF00 ) != ( hi << 8 ))
 		m_oopsCycles++;
-
+#ifdef TRACE_CPU_EXECUTION
+	instr_eval = std::format("${:04X},X @ {:04X} = ", static_cast<u16>( addr - m_X ), addr);
+#endif
 	return addr;
 }
 
@@ -426,6 +583,9 @@ u16 CPU::addrABY()
 		m_oopsCycles++;
 	}
 
+#ifdef TRACE_CPU_EXECUTION
+	instr_eval = std::format("${:04X},Y @ {:04X} = ", static_cast<u16>( addr - m_Y ), addr);
+#endif
 	return addr;
 }
 
@@ -441,19 +601,23 @@ u16 CPU::addrIND()
 	// hardware bug
 	if (lo == 0x00FF)
 	{
-		addr = MAKE_WORD(memoryRead(notyet & 0x00FF), memoryRead(notyet));
+		addr = MAKE_WORD(memoryRead(notyet & 0xFF00), memoryRead(notyet));
 	}
 	else
 	{
 		addr = MAKE_WORD(memoryRead(notyet + 1), memoryRead(notyet));
 	}
 
+#ifdef TRACE_CPU_EXECUTION
+	instr_eval = std::format("(${:04X}) = {:04X}", notyet, addr);
+#endif
 	return addr;
 }
 
 u16 CPU::addrINX()
 {
-	const u16 base = readByte() + m_X;
+	const u16 b = readByte();
+	const u16 base = ( b + m_X ) & 0x00FF;
 
 	const u16 lo = memoryRead(( base & 0x00FF ));
 	const u16 hi = memoryRead(( ( base + 1 ) & 0x00FF ));
@@ -461,6 +625,9 @@ u16 CPU::addrINX()
 
 	const u16 addr = MAKE_WORD(hi, lo);
 
+#ifdef TRACE_CPU_EXECUTION
+	instr_eval = std::format("(${:02X},X) @ {:02X} = {:04X} = ", b, base, addr, memoryRead(addr));
+#endif
 	return addr;
 
 }
@@ -469,17 +636,30 @@ u16 CPU::addrINY()
 {
 	const u16 base = readByte();
 
-	const u16 lo = memoryRead(base & 0x00ff);
-	const u16 hi = memoryRead(( base + 1 ) & 0x00ff);
-
-	const u16 addr = MAKE_WORD(hi, lo) + m_Y;
-
-	if (( addr & 0xFF00 ) != ( hi << 8 ))
+	u16 addr;
+	if (base == 0xFF)
+	{
+		const u16 lo = memoryRead(0xFF);
+		const u16 hi = memoryRead(0x00);
+		addr = MAKE_WORD(hi, lo);
+	}
+	else
+	{
+		const u16 lo = memoryRead(base);
+		const u16 hi = memoryRead(base + 1);
+		addr = MAKE_WORD(hi, lo);
+	}
+	if (( ( addr + m_Y ) & 0xFF00 ) != ( addr & 0xFF00 ))
 	{
 		m_oopsCycles++;
 	}
+	const u16 addr_final = addr + m_Y;
 
-	return addr;
+#ifdef TRACE_CPU_EXECUTION
+	instr_eval = std::format("(${:02X}),Y = {:04X} @ {:04X} = ", base, addr, addr_final, base);
+#endif
+
+	return addr_final;
 }
 
 u16 CPU::addrREL()
@@ -496,7 +676,12 @@ u16 CPU::addrREL()
 		offset |= 0xff00;
 	}
 
+
 	const u16 addr = m_PC + offset;
+
+#ifdef TRACE_CPU_EXECUTION
+	instr_eval = std::format("${:04X}", addr);
+#endif
 
 	return addr;
 }
@@ -504,6 +689,9 @@ u16 CPU::addrREL()
 
 u16 CPU::addrACC()
 {
+#ifdef TRACE_CPU_EXECUTION
+	instr_eval = "A";
+#endif
 	return 0;
 }
 
@@ -536,21 +724,13 @@ u16 CPU::addrACC()
 void CPU::ADC(const u16 addr)
 {
 	// hack to get overflow
-	const u16 m = memoryRead(addr);
-	const u16 a = m_A;
-	u16 r = m + a;
-	if (checkFlag(P_C_FLAG))
-	{
-		r += 1;
-	}
-	// if overflow in bit 7 we set carry flag
-	setFlagIf(P_C_FLAG, r > 255);
-	setFlagIf(P_Z_FLAG, ( r & 0x00FF ) == 0);
-	// Here should go something with decimal mode, but is not used, so whatever
-	setFlagIf(P_V_FLAG, ( a ^ r ) & ( m ^ r ) & 0x0080);
-	setFlagIf(P_N_FLAG, r & 0x80);
+	const u8 m = memoryRead(addr);
 
-	m_A = r & 0x00FF;
+	ADD(m);
+
+#ifdef TRACE_CPU_EXECUTION
+	instr_eval.append(std::format("{:02X}", m));
+#endif
 	m_canOops = true;
 }
 
@@ -565,6 +745,10 @@ void CPU::AND(const u16 addr)
 	m_A &= m;
 	setFlagIf(P_Z_FLAG, m_A == 0);
 	setFlagIf(P_N_FLAG, m_A & 0x80);
+
+#ifdef TRACE_CPU_EXECUTION
+	instr_eval.append(std::format("{:02X}", m));
+#endif
 
 	m_canOops = true;
 }
@@ -585,6 +769,9 @@ void CPU::ASL(const u16 addr)
 	else
 	{
 		m = memoryRead(addr);
+	#ifdef TRACE_CPU_EXECUTION
+		instr_eval.append(std::format("{:02X}", m));
+	#endif
 	}
 
 	setFlagIf(P_C_FLAG, m & 0x80);
@@ -637,11 +824,19 @@ void CPU::BIT(const u16 addr)
 {
 	const u8 m = memoryRead(addr);
 
+#ifdef TRACE_CPU_EXECUTION
+	if (addr > 0x00ff)
+		instr_eval = std::format("${:04X} = {:02X}", addr, m);
+	else
+		instr_eval = std::format("${:02X} = {:02X}", addr, m);
+#endif
+
 	m_discard = m_A & m;
 
 	setFlagIf(P_Z_FLAG, m_discard == 0);
 	setFlagIf(P_V_FLAG, m & 0x40);
 	setFlagIf(P_N_FLAG, m & 0x80);
+
 }
 
 /*
@@ -695,10 +890,10 @@ void CPU::BRK(const u16 addr)
 	const u8 pclo = m_PC & 0x00ff;
 	const u8 pchi = ( m_PC & 0xff00 ) >> 8;
 
-	stackPush(pchi);
-	stackPush(pclo);
+	push(pchi);
+	push(pclo);
 
-	stackPush(m_P | P_1_FLAG | P_B_FLAG);
+	push(m_P | P_1_FLAG | P_B_FLAG);
 	setFlag(P_I_FLAG);
 
 	const u8 lo = memoryRead(IRQ_VECTOR_LO);
@@ -769,8 +964,13 @@ void CPU::CMP(const u16 addr)
 	m_discard = m_A - m;
 
 	setFlagIf(P_C_FLAG, m_A >= m);
-	setFlagIf(P_Z_FLAG, m_A == m);
+	setFlagIf(P_Z_FLAG, ( m_discard & 0x00FF ) == 0x000);
 	setFlagIf(P_N_FLAG, m_discard & 0x80);
+
+#ifdef TRACE_CPU_EXECUTION
+	instr_eval.append(std::format("{:02X}", m));
+#endif
+
 
 	m_canOops = true;
 }
@@ -790,6 +990,11 @@ void CPU::CPX(const u16 addr)
 	setFlagIf(P_C_FLAG, m_X >= m);
 	setFlagIf(P_Z_FLAG, m_X == m);
 	setFlagIf(P_N_FLAG, m_discard & 0x80);
+
+#ifdef TRACE_CPU_EXECUTION
+	instr_eval.append(std::format("{:02X}", m));
+#endif
+
 }
 
 /*
@@ -807,6 +1012,10 @@ void CPU::CPY(const u16 addr)
 	setFlagIf(P_C_FLAG, m_Y >= m);
 	setFlagIf(P_Z_FLAG, m_Y == m);
 	setFlagIf(P_N_FLAG, m_discard & 0x80);
+
+#ifdef TRACE_CPU_EXECUTION
+	instr_eval.append(std::format("{:02X}", m));
+#endif
 }
 
 /*
@@ -817,11 +1026,16 @@ void CPU::CPY(const u16 addr)
 void CPU::DEC(const u16 addr)
 {
 	u8 m = memoryRead(addr);
+#ifdef TRACE_CPU_EXECUTION
+	instr_eval.append(std::format("{:02X}", m));
+#endif
 
 	m = ( m - 1 ) & 0x00ff;
 
 	setFlagIf(P_N_FLAG, m & 0x80);
 	setFlagIf(P_Z_FLAG, m == 0);
+
+
 
 	memoryWrite(addr, m);
 }
@@ -866,6 +1080,11 @@ void CPU::EOR(const u16 addr)
 	setFlagIf(P_Z_FLAG, m_A == 0);
 	setFlagIf(P_N_FLAG, m_A & 0x80);
 
+#ifdef TRACE_CPU_EXECUTION
+	instr_eval.append(std::format("{:02X}", m));
+#endif
+
+
 	m_canOops = true;
 }
 
@@ -877,6 +1096,10 @@ void CPU::EOR(const u16 addr)
 void CPU::INC(const u16 addr)
 {
 	u8 m = memoryRead(addr);
+#ifdef TRACE_CPU_EXECUTION
+	instr_eval.append(std::format("{:02X}", m));
+#endif
+
 
 	m = ( m + 1 ) & 0x00ff;
 
@@ -929,11 +1152,8 @@ void CPU::JMP(const u16 addr)
 void CPU::JSR(const u16 addr)
 {
 	const u16 temp = m_PC - 1;
-	const u8 pcL = temp & 0x00ff;
-	const u8 pcH = ( temp & 0xff00 ) >> 8;
 
-	stackPush(pcH);
-	stackPush(pcL);
+	push_word(temp);
 
 	m_PC = addr;
 }
@@ -946,9 +1166,10 @@ void CPU::JSR(const u16 addr)
 void CPU::LDA(const u16 addr)
 {
 	const u8 m = memoryRead(addr);
-
-	transferRegTo(m, m_A);
-
+	set_register(m_A, m);
+#ifdef TRACE_CPU_EXECUTION
+	instr_eval.append(std::format("{:02X}", m));
+#endif
 	m_canOops = true;
 }
 
@@ -962,6 +1183,10 @@ void CPU::LDX(const u16 addr)
 	const u8 m = memoryRead(addr);
 
 	transferRegTo(m, m_X);
+#ifdef TRACE_CPU_EXECUTION
+	instr_eval.append(std::format("{:02X}", m));
+#endif
+
 
 	m_canOops = true;
 }
@@ -976,6 +1201,11 @@ void CPU::LDY(const u16 addr)
 	const u8 m = memoryRead(addr);
 
 	transferRegTo(m, m_Y);
+
+#ifdef TRACE_CPU_EXECUTION
+	instr_eval.append(std::format("{:02X}", m));
+#endif
+
 
 	m_canOops = true;
 }
@@ -995,7 +1225,11 @@ void CPU::LSR(const u16 addr)
 	else
 	{
 		m = memoryRead(addr);
+	#ifdef TRACE_CPU_EXECUTION
+		instr_eval.append(std::format("{:02X}", m));
+	#endif
 	}
+
 
 	setFlagIf(P_C_FLAG, m & 1);
 	m >>= 1;
@@ -1035,6 +1269,10 @@ void CPU::ORA(const u16 addr)
 	setFlagIf(P_Z_FLAG, m_A == 0);
 	setFlagIf(P_N_FLAG, m_A & 0x80);
 
+#ifdef TRACE_CPU_EXECUTION
+	instr_eval.append(std::format("{:02X}", m));
+#endif
+
 	m_canOops = true;
 }
 
@@ -1048,7 +1286,7 @@ void CPU::ORA(const u16 addr)
  */
 void CPU::PHA(const u16 addr)
 {
-	stackPush(m_A);
+	push(m_A);
 }
 
 /*
@@ -1059,7 +1297,7 @@ void CPU::PHA(const u16 addr)
  */
 void CPU::PHP(const u16 addr)
 {
-	stackPush(m_P | P_B_FLAG | P_1_FLAG);
+	push(m_P | P_B_FLAG | P_1_FLAG);
 }
 
 /*
@@ -1069,9 +1307,7 @@ void CPU::PHP(const u16 addr)
  */
 void CPU::PLA(const u16 addr)
 {
-	m_A = stackPop();
-	setFlagIf(P_N_FLAG, m_A & 0x80);
-	setFlagIf(P_Z_FLAG, m_A == 0);
+	set_register(m_A, pop());
 }
 /*
  * Instruction Pull Processor Status
@@ -1079,7 +1315,8 @@ void CPU::PLA(const u16 addr)
  */
 void CPU::PLP(const u16 addr)
 {
-	m_P = stackPop();
+	set_p(pop());
+	setFlag(P_1_FLAG);
 }
 
 
@@ -1100,6 +1337,9 @@ void CPU::ROL(const u16 addr)
 	else
 	{
 		m = memoryRead(addr);
+	#ifdef TRACE_CPU_EXECUTION
+		instr_eval.append(std::format("{:02X}", m));
+	#endif
 	}
 	// we are in 16 bit realm so if we have
 	// 0000 0000 1011 10001
@@ -1145,6 +1385,10 @@ void CPU::ROR(const u16 addr)
 	else
 	{
 		m = memoryRead(addr);
+	#ifdef TRACE_CPU_EXECUTION
+		instr_eval.append(std::format("{:02X}", m));
+	#endif
+
 	}
 
 	// we set bit 8 in case of carry so we can 
@@ -1178,12 +1422,9 @@ void CPU::ROR(const u16 addr)
  */
 void CPU::RTI(u16 addr)
 {
-	m_P = stackPop();
-
-	const u8 pclo = stackPop();
-	const u8 pchi = stackPop();
-
-	m_PC = MAKE_WORD(pchi, pclo);
+	set_p(pop());
+	setFlag(P_1_FLAG);
+	m_PC = pop_word();
 }
 
 /*
@@ -1193,10 +1434,9 @@ void CPU::RTI(u16 addr)
 void CPU::RTS(u16 addr)
 {
 
-	const u8 lo = stackPop();
-	const u8 hi = stackPop();
+	u16 m = pop_word();
 
-	m_PC = MAKE_WORD(hi, lo) + 1;
+	m_PC = m + 1;
 }
 
 /*
@@ -1214,7 +1454,7 @@ void CPU::RTS(u16 addr)
  * anding the two condition will get the result we want
  * then we extract the sign anding with 0x80
  * ┌-------┬---┬-----┬-----┬-----------┐
- * | A M R | V | A^R | M^R | A^R & A^M |
+ * | A M R | V | A^R | M^R | A^R & M^R |
  * ├-------┼---┼-----┼-----┼-----------┤
  * | 0 0 0 | 0 |  0  |  0  |     0     |
  * | 0 0 1 | 1 |  1  |  1  |     1     |
@@ -1228,22 +1468,13 @@ void CPU::RTS(u16 addr)
  */
 void CPU::SBC(const u16 addr)
 {
-	const u16 m = memoryRead(addr);
-	const u16 a = m_A;
+	const u8 m = memoryRead(addr) ^ 0xFF;
+	ADD(m);
 
-	u16 r = a - m;
-	if (!checkFlag(P_C_FLAG))
-	{
-		r = r - 1;
-	}
+#ifdef TRACE_CPU_EXECUTION
+	instr_eval.append(std::format("{:02X}", m ^ 0xFF));
+#endif
 
-	setFlagIf(P_N_FLAG, r & 0x80);
-	setFlagIf(P_Z_FLAG, ( r & 0x00ff ) == 0);
-	setFlagIf(P_V_FLAG, ( a ^ r ) & ( m ^ r ) & 0x0080);
-	// some decimal code should go there but in the nes it is disabled
-	setFlagIf(P_C_FLAG, r & 0x00ff);
-
-	m_A = r & 0x00ff;
 
 	m_canOops = true;
 }
@@ -1278,24 +1509,45 @@ void CPU::SEI(u16 addr)
  */
 void CPU::STA(const u16 addr)
 {
+#ifdef TRACE_CPU_EXECUTION
+	if (addr > 0x00ff)
+		instr_eval.append(std::format("{:02X}", memoryRead(addr)));
+	else
+		instr_eval.append(std::format("{:02X}", memoryRead(addr)));
+#endif
 	memoryWrite(addr, m_A);
+
+
 }
 
 /*
- * Instruction Store Accumulator
+ * Instruction Store Index register X
  * M = X
  */
 void CPU::STX(const u16 addr)
 {
+#ifdef TRACE_CPU_EXECUTION
+	if (addr > 0xff)
+		instr_eval = std::format("${:04X} = {:02X}", addr, memoryRead(addr));
+	else
+		instr_eval.append(std::format("{:02X}", memoryRead(addr)));
+#endif
 	memoryWrite(addr, m_X);
+
 }
 
 /*
- * Instruction Store Accumulator
+ * Instruction Store Index register Y
  * M = Y
  */
 void CPU::STY(const u16 addr)
 {
+#ifdef TRACE_CPU_EXECUTION
+	if (addr > 0x00ff)
+		instr_eval = std::format("${:04X} = {:02X}", addr, memoryRead(addr));
+	else
+		instr_eval.append(std::format("{:02X}", memoryRead(addr)));
+#endif
 	memoryWrite(addr, m_Y);
 
 }
@@ -1307,7 +1559,7 @@ void CPU::STY(const u16 addr)
  */
 void CPU::TAX(const u16 addr)
 {
-	transferRegTo(m_A, m_X);
+	set_register(m_X, m_A);
 }
 
 /*
@@ -1327,7 +1579,7 @@ void CPU::TAY(const u16 addr)
  */
 void CPU::TSX(const u16 addr)
 {
-	transferRegTo(m_S, m_X);
+	set_register(m_X, m_S);
 }
 
 /*
@@ -1337,7 +1589,7 @@ void CPU::TSX(const u16 addr)
  */
 void CPU::TXA(const u16 addr)
 {
-	transferRegTo(m_X, m_A);
+	set_register(m_A, m_X);
 }
 
 /*
@@ -1356,16 +1608,190 @@ void CPU::TXS(const u16 addr)
  */
 void CPU::TYA(const u16 addr)
 {
-	transferRegTo(m_Y, m_A);
+	set_register(m_A, m_Y);
 }
 
-[[noreturn]]
-void CPU::XXX(const u16 addr)
+// Illegal opcode Skip Byte
+void CPU::SKB(const u16 addr)
+{
+	// reads next byte and discards it
+	m_discard = memoryRead(addr);
+#ifdef TRACE_CPU_EXECUTION
+	instr_eval.append(std::format("{:02X}", m_discard));
+#endif
+
+}
+
+// Illegal opcode Skip Word
+void CPU::IGN(const u16 addr)
+{
+	// reads next word and discards it
+	m_discard = memoryRead(addr);
+#ifdef TRACE_CPU_EXECUTION
+	instr_eval.append(std::format("{:02X}", m_discard));
+#endif
+	m_canOops = true;
+}
+
+void CPU::ALR(const u16 addr)
+{
+	AND(addr);
+	setFlagIf(P_C_FLAG, m_A & 0x01);
+	set_register(m_A, m_A >> 1);
+}
+
+void CPU::ANC(const u16 addr)
+{
+	AND(addr);
+	setFlagIf(P_C_FLAG, addr & 0x80);
+}
+
+void CPU::ARR(const u16 addr)
+{
+	AND(addr);
+	// we set bit 8 in case of carry so we can 
+	// store it after shifting
+	set_register(m_A, ( m_A >> 1 ) | ( checkFlag(P_C_FLAG) << 7 ));
+
+}
+
+void CPU::AXS(const u16 addr)
+{
+	m_discard = m_A & m_X;
+	set_register(m_X, m_discard - addr);
+	setFlagIf(P_C_FLAG, m_discard >= m_X);
+}
+
+void CPU::LAX(const u16 addr)
+{
+	LDA(addr);
+	TAX(addr);
+}
+
+void CPU::SAX(const u16 addr)
+{
+	m_discard = m_A & m_X;
+#ifdef TRACE_CPU_EXECUTION
+	instr_eval.append(std::format("{:02X}", memoryRead(addr)));
+#endif
+	memoryWrite(addr, m_discard);
+}
+
+void CPU::DCP(const u16 addr)
+{
+	u8 m = memoryRead(addr);
+	//memoryWrite(addr, m); // dummy read
+#ifdef TRACE_CPU_EXECUTION
+	instr_eval.append(std::format("{:02X}", m));
+#endif
+	m--;
+	m_discard = m_A - m;
+
+	setFlagIf(P_C_FLAG, m_A >= m);
+	setFlagIf(P_Z_FLAG, ( m_discard & 0x00FF ) == 0x000);
+	setFlagIf(P_N_FLAG, m_discard & 0x80);
+
+	memoryWrite(addr, m);
+}
+
+// also known as isb
+void CPU::ISC(const u16 addr)
+{
+	u8 m = memoryRead(addr);
+#ifdef TRACE_CPU_EXECUTION
+	instr_eval.append(std::format("{:02X}", m));
+#endif
+	//memoryWrite(addr, m); // dumy write
+	m++;
+	ADD(m ^ 0xFF);
+	memoryWrite(addr, m);
+}
+
+void CPU::RLA(const u16 addr)
+{
+	u8 m = memoryRead(addr);
+#ifdef TRACE_CPU_EXECUTION
+	instr_eval.append(std::format("{:02X}", m));
+#endif
+
+	//memoryWrite(addr, m); // dumy write
+	bool carry = checkFlag(P_C_FLAG);
+	setFlagIf(P_C_FLAG, m & 0x80);
+	u8 shifted = ( m << 1 ) | ( carry ? 1 : 0 );
+	set_register(m_A, m_A & shifted);
+	memoryWrite(addr, shifted);
+}
+
+void CPU::RRA(const u16 addr)
+{
+	u8 m = memoryRead(addr);
+#ifdef TRACE_CPU_EXECUTION
+	instr_eval.append(std::format("{:02X}", m));
+#endif
+
+	//memoryWrite(addr, m); // dumy write
+	bool carry = checkFlag(P_C_FLAG);
+	setFlagIf(P_C_FLAG, m & 0x01);
+	u8 shifted = ( m >> 1 ) | ( carry << 7 );
+	ADD(shifted);
+	memoryWrite(addr, shifted);
+}
+
+void CPU::SLO(const u16 addr)
+{
+	u8 m = memoryRead(addr);
+#ifdef TRACE_CPU_EXECUTION
+	instr_eval.append(std::format("{:02X}", m));
+#endif
+	//memoryWrite(addr, m); // dummy write
+	setFlagIf(P_C_FLAG, m & 0x80);
+
+	u8 shifted = m << 1;
+	set_register(m_A, m_A | shifted);
+	memoryWrite(addr, shifted);
+}
+
+void CPU::SRE(const u16 addr)
+{
+	// ROL & AND
+	u8 m = memoryRead(addr);
+#ifdef TRACE_CPU_EXECUTION
+	instr_eval.append(std::format("{:02X}", m));
+#endif
+	//memoryWrite(addr, m); // dummy write
+	setFlagIf(P_C_FLAG, m & 0x01);
+
+	u8 shifted = m >> 1;
+	set_register(m_A, m_A ^ shifted);
+	memoryWrite(addr, shifted);
+}
+
+void CPU::ADD(u8 val)
+{
+	const u16 a = m_A;
+
+	u16 r = a + val + static_cast<u16>( checkFlag(P_C_FLAG) );
+
+	setFlagIf(P_N_FLAG, r & 0x80);
+	setFlagIf(P_Z_FLAG, ( r & 0x00ff ) == 0);
+	setFlagIf(P_V_FLAG, ( a ^ r ) & ( val ^ r ) & 0x0080);
+	setFlagIf(P_C_FLAG, r & 0xFF00);
+
+	m_A = r & 0x00ff;
+}
+
+void CPU::STP(const u16 addr)
 {
 	// commit sudoku
 	// 
 	//std::throw_with_nested(std::runtime_error("Illegal instruction"));
-	std::println("Called illegal opcode [{:#02x}] at PC: [{:d}]", m_opcode, m_PC);
+	std::println("Called STP opcode [{:#02x}] at PC: [{:d}]", m_opcode, m_PC);
+#ifdef TRACE_CPU_EXECUTION
+	instr_eval = "";
+#endif // TRACE_CPU_EXECUTION
+
+	m_close_emulator();
+	m_close_application();
 }
 
 void CPU::setFlagIf(const u8 flag, const bool cond)
@@ -1392,7 +1818,7 @@ void CPU::clearFlag(const u8 flag)
 
 bool CPU::checkFlag(const u8 flag) const
 {
-	return m_P & flag ? true : false;
+	return ( m_P & flag ) == flag;
 }
 
 bool CPU::isImplied() const
@@ -1425,30 +1851,49 @@ void CPU::transferRegTo(const u8 from, u8& to)
 	setFlagIf(P_N_FLAG, to & 0x80);
 }
 
-void CPU::stackPush(const u8 val)
+void CPU::push(const u8 val)
 {
 	memoryWrite(STACK_VECTOR + m_S, val);
-	if (m_S == 0)
-	{
-		m_S = 0xFF;
-	}
-	else
-	{
-		m_S--;
-	}
+	m_S = m_S - 1;
 }
 
-u8 CPU::stackPop()
+void CPU::push_word(u16 val)
 {
-	if (m_S == 0xFF)
-	{
-		m_S = 0;
-	}
-	else
-	{
-		m_S++;
-	}
+	push(static_cast<u8>( val >> 8 ));
+	push(static_cast<u8>( val ));
+}
+
+u8 CPU::pop()
+{
+	m_S = m_S + 1;
 	return memoryRead(STACK_VECTOR + m_S);
+}
+
+u16 CPU::pop_word()
+{
+	u8 lo = pop();
+	u8 hi = pop();
+	return lo | hi << 8;
+}
+
+void CPU::set_register(u8& reg, const u8 val)
+{
+	clearFlag(P_Z_FLAG | P_N_FLAG);
+	if (val == 0)
+	{
+		setFlag(P_Z_FLAG);
+	}
+	else if (val & 0x80)
+	{
+		setFlag(P_N_FLAG);
+	}
+	reg = val;
+}
+
+void CPU::set_p(const u8 val)
+{
+	// SET TO CF
+	m_P = val & 0xCF;
 }
 
 }

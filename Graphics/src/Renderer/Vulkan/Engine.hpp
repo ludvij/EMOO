@@ -61,7 +61,9 @@ public:
 	static Engine& Get();
 	~Engine();
 
-	void Init(IWindow* window, bool use_imgui=true);
+	void Init(std::shared_ptr<IWindow> window, bool use_imgui=true);
+	void Cleanup();
+
 	void Draw();
 	void Resize();
 	void RequestResize();
@@ -96,7 +98,6 @@ public:
 
 private:
 	Engine() = default;
-	void cleanup();
 
 
 	void draw_background(vk::CommandBuffer cmd) const;
@@ -113,7 +114,7 @@ private:
 	u32 m_frame_number{ 0 };
 	vk::Extent2D m_window_extent;
 
-	IWindow* m_window{ nullptr };
+	std::shared_ptr<IWindow> m_window{ nullptr };
 
 private:
 

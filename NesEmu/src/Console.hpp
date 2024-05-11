@@ -5,6 +5,7 @@
 
 #include "internals/Bus.hpp"
 #include "internals/CPU.hpp"
+#include "internals/InputDevice.hpp"
 #include "internals/PPU.hpp"
 
 #include <memory>
@@ -66,6 +67,16 @@ public:
 		return m_ppu.GetPalette();
 	}
 
+	Controller& GetController(u8 port)
+	{
+		return m_controller_ports[port];
+	}
+
+	void SetCloseOperation(std::function<void()> fn)
+	{
+		m_cpu.SetCloseCallbackApplication(fn);
+	}
+
 private:
 	// Bus components
 	CPU m_cpu;
@@ -76,8 +87,12 @@ private:
 
 	std::shared_ptr<Cartridge> m_cartridge;
 
+	Controller m_controller_ports[2];
+
 	// configuration struct containing platform related info (ntsc, pal)
 	Configuration m_conf;
+
+	bool m_can_run = true;
 };
 
 }

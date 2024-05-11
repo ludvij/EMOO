@@ -49,10 +49,10 @@ Engine& Engine::Get()
 
 Engine::~Engine()
 {
-	cleanup();
+	Cleanup();
 }
 
-void Engine::Init(IWindow* window, bool use_imgui)
+void Engine::Init(std::shared_ptr<IWindow> window, bool use_imgui)
 {
 	m_use_imgui = use_imgui;
 	m_window = window;
@@ -954,7 +954,7 @@ void Engine::draw_imgui(vk::CommandBuffer cmd, vk::ImageView view)
 	cmd.endRendering();
 }
 
-void Engine::cleanup()
+void Engine::Cleanup()
 {
 	if (!m_initialised) return;
 	// wait for GPU to stop

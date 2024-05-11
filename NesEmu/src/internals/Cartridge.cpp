@@ -45,6 +45,7 @@ Cartridge::Cartridge(const std::string& filePath)
 		m_mapper = std::make_unique<NROM>(m_header.prgRomChunks, m_header.chrRomChunks);
 		break;
 	default:
+		std::println("Mapper [{:d}] Not implemented", m_mapperNumber);
 		std::throw_with_nested(std::runtime_error("Mapper not implemented"));
 	}
 

@@ -33,5 +33,6 @@
 #include <optional>
 #include <utility>
 
+#include <lud_assert.hpp>
 
 #endif

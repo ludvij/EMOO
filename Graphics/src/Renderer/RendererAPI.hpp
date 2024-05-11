@@ -6,10 +6,13 @@
 #include "Sprite.hpp"
 #include "Texture.hpp"
 
+#include <memory>
+
 
 namespace Ui::Renderer
 {
-void Init(IWindow* window, bool use_imgui=true);
+void Init(std::shared_ptr<IWindow> window, bool use_imgui=true);
+void Shutdown();
 void Draw();
 void Resize();
 void RequestResize();

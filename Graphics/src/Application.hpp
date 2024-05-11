@@ -2,6 +2,7 @@
 #define GRAPHICS_APPLICATION_HEADER
 
 #include "Components/IComponent.hpp"
+#include "Input/Input.hpp"
 #include "Renderer/Sprite.hpp"
 #include "Window/Window.hpp"
 
@@ -53,6 +54,7 @@ public:
 
 private:
 	void init();
+	void init_button_mapping();
 	void shutdown();
 
 	void main_loop();
@@ -82,7 +84,8 @@ private:
 	std::unordered_map<const char*, std::unique_ptr<ITexture>> m_textures;
 	std::unordered_map<const char*, Sprite> m_sprites;
 
-	IWindow* m_window;
+	std::unique_ptr<IInput> m_input;
+	std::shared_ptr<IWindow> m_window;
 
 	bool m_resized{ true };
 

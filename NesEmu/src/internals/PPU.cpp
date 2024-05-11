@@ -104,7 +104,6 @@ void PPU::Step()
 		{
 			const auto px_pos = static_cast<size_t>( x + y * 256 );
 			m_screen[px_pos] = GetColorFromPalette(bg_palette, bg_pixel);
-
 		}
 	}
 
@@ -335,14 +334,14 @@ void PPU::write_ppu_addr(const u8 val)
 		// clear hi byte
 		m_t &= 0x00FF;
 		// mirror down hi byte
-		m_t = static_cast<u16>( ( val & 0x3F ) << 8 ) | ( m_t & 0x00FF );
+		m_t = ( ( val & 0x3F ) << 8 ) | ( m_t & 0x00FF );
 		m_w = 1;
 	}
 	else
 	{
 		// clear lo byte
 
-		m_t = static_cast<u16>( m_t & 0xFF00 ) | val;
+		m_t = ( m_t & 0xFF00 ) | val;
 		m_v = m_t;
 		m_w = 0;
 	}
@@ -355,15 +354,15 @@ void PPU::write_ppu_scroll(const u8 val)
 		// store 3 lo bits of val into fine x
 		m_x = val & 0x7;
 		// store 5 hi bits of val into coarse x of t (bits from 0 to 4)
-		m_t = ( val >> 3 ) | ( m_t & 0b111'11'11111'00000 );
+		m_t = ( val >> 3 ) | ( m_t & ~0x001F );
 		m_w = 1;
 	}
 	else
 	{
 		// store 3 lo bits of val into fine y (bits from 12 to 14)
-		m_t = ( ( val & 0x7 ) << 12 ) | ( m_t & 0b000'11'11111'11111 );
+		m_t = ( ( val & 0x7 ) << 12 ) | ( m_t & ~0x7000 );
 		// store 5 hi bits of val into coarse y (bits from 5 to 9)
-		m_t = ( ( val >> 3 ) << 5 ) | ( m_t & 0b111'11'00000'11111 );
+		m_t = ( ( val >> 3 ) << 5 ) | ( m_t & ~0x03E0 );
 		m_w = 0;
 	}
 
@@ -410,7 +409,7 @@ void PPU::preload_tile()
 	case 4:
 		m_bg_next_tile_lo = memory_read(0
 			// offset background nametable address
-			+ ( m_ppu_ctrl & 0x10 ? 4096 : 0 )
+			+ ( ( m_ppu_ctrl & 0x10 ) << 8 )
 			// add tile id * 16
 			+ ( m_bg_next_tile_id * 16 )
 			// add nametable position
@@ -419,7 +418,7 @@ void PPU::preload_tile()
 		break;
 	case 6:
 		m_bg_next_tile_hi = memory_read(8
-			+ ( m_ppu_ctrl & 0x10 ? 4096 : 0 )
+			+ ( ( m_ppu_ctrl & 0x10 ) << 8 )
 			+ ( m_bg_next_tile_id * 16 )
 			+ ( ( m_v >> 12 ) & 0x07 )
 		);

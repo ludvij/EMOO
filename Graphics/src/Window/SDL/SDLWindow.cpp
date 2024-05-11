@@ -33,6 +33,7 @@ SDLWindow::SDLWindow(const std::string& title, int w, int h)
 SDLWindow::~SDLWindow()
 {
 	SDL_DestroyWindow(m_window);
+	SDL_Quit();
 }
 
 WindowExtent SDLWindow::GetDimensions() const

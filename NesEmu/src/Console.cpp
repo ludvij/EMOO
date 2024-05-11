@@ -9,7 +9,13 @@ Console::Console(Configuration conf = NTSC)
 {
 	m_cpu.ConnectBus(&m_bus);
 	m_bus.ConnectPPU(&m_ppu);
+	m_bus.ConnectController(0, &m_controller_ports[0]);
+	m_bus.ConnectController(1, &m_controller_ports[1]);
 	//m_apu.ConnectBus(&m_bus);
+	m_cpu.SetCloseCallbackEmulator([&]()
+		{
+			m_can_run = false;
+		});
 }
 
 Console::~Console()
@@ -17,7 +23,7 @@ Console::~Console()
 }
 
 void Console::Step()
-{
+{//0x0001c608
 	if (m_masterClock % m_conf.CpuClockDivisor == 0)
 	{
 		m_cpu.Step();
@@ -55,7 +61,7 @@ void Console::LoadCartridge(const std::string& filepath)
 
 bool Console::RunFrame()
 {
-	if (!m_cartridge)
+	if (!m_cartridge || !m_can_run)
 	{
 		return false;
 	}

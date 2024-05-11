@@ -18,3 +18,4 @@
 !vendor/premake/bin
 
 Makefile
+**.log

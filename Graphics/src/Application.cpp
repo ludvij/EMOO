@@ -10,6 +10,7 @@
 #include <SDL.h>
 
 #include "Components/IComponent.hpp"
+#include "Input/SDL/SDLInput.hpp"
 #include "Renderer/RendererAPI.hpp"
 #include "Window/SDL/SDLWindow.hpp"	
 
@@ -17,8 +18,8 @@
 #include <pfd/portable_file_dialogs.h>
 
 #include <chrono>
+#include <memory>
 #include <thread>
-
 
 namespace Ui
 {
@@ -29,8 +30,14 @@ Application::Application(const Configuration& config)
 	, m_console(Emu::NTSC)
 {
 	s_instance = this;
-	m_window = new SDLWindow(m_config.name, m_config.w, m_config.h);
+	m_window = std::make_shared<SDLWindow>(m_config.name, m_config.w, m_config.h);
+	m_input = std::make_unique<SDLInput>();
+	init_button_mapping();
 	init();
+	m_console.SetCloseOperation([&]()
+		{
+			Close();
+		});
 
 	const auto w = static_cast<uint32_t>( m_console.GetConfig().width );
 	const auto h = static_cast<uint32_t>( m_console.GetConfig().height );
@@ -53,12 +60,12 @@ Application::Application(const Configuration& config)
 	m_sprites["USED_PALETTE_5"]  = Sprite({}, 0, m_textures["USED_PALETTE"].get(), { .125 * 5, 0, .125 * 6, 1 });
 	m_sprites["USED_PALETTE_6"]  = Sprite({}, 0, m_textures["USED_PALETTE"].get(), { .125 * 6, 0, .125 * 7, 1 });
 	m_sprites["USED_PALETTE_7"]  = Sprite({}, 0, m_textures["USED_PALETTE"].get(), { .125 * 7, 0, .125 * 8, 1 });
+
 }
 
 Application::~Application()
 {
 	shutdown();
-
 	s_instance = nullptr;
 }
 
@@ -72,11 +79,57 @@ void Application::init()
 	Renderer::Init(m_window, true);
 }
 
-void Application::shutdown()
+void Application::init_button_mapping()
 {
-	delete m_window;
+	auto press_a = [&]()
+		{
+			m_console.GetController(0).SetPressed(Emu::Button::A);
+		};
+	auto press_b = [&]()
+		{
+			m_console.GetController(0).SetPressed(Emu::Button::B);
+		};
+	auto press_up = [&]()
+		{
+			m_console.GetController(0).SetPressed(Emu::Button::Up);
+		};
+	auto press_down = [&]()
+		{
+			m_console.GetController(0).SetPressed(Emu::Button::Down);
+		};
+	auto press_left = [&]()
+		{
+			m_console.GetController(0).SetPressed(Emu::Button::Left);
+		};
+	auto press_right = [&]()
+		{
+			m_console.GetController(0).SetPressed(Emu::Button::Right);
+		};
+	auto press_start = [&]()
+		{
+			m_console.GetController(0).SetPressed(Emu::Button::Start);
+		};
+	auto press_select = [&]()
+		{
+			m_console.GetController(0).SetPressed(Emu::Button::Select);
+		};
+	m_input->AddAction(Button::FACE_0, press_a);
+	m_input->AddAction(Button::FACE_1, press_b);
+	m_input->AddAction(Button::FACE_3, press_a);
+	m_input->AddAction(Button::FACE_2, press_b);
+	m_input->AddAction(Button::DPAD_UP, press_up);
+	m_input->AddAction(Button::DPAD_DOWN, press_down);
+	m_input->AddAction(Button::DPAD_LEFT, press_left);
+	m_input->AddAction(Button::DPAD_RIGHT, press_right);
+	m_input->AddAction(Button::START, press_start);
+	m_input->AddAction(Button::SELECT, press_select);
+
 }
 
+void Application::shutdown()
+{
+
+}
 
 void Application::Run()
 {
@@ -101,7 +154,6 @@ void Application::main_loop()
 			continue;
 		}
 		Renderer::Resize();
-
 		update();
 
 		draw_ui();
@@ -151,6 +203,9 @@ void Application::event_loop()
 		}
 		ImGui_ImplSDL2_ProcessEvent(&event);
 	}
+
+	m_input->RunActions();
+
 }
 void Application::draw_ui()
 {

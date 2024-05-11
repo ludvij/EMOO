@@ -51,7 +51,7 @@ struct Configuration
 	const char* palette_src;
 };
 
-inline constexpr Configuration NTSC{ 12, 4, 60, 256.0f, 224.0f, "palettes/NTSC.pal" };
+inline constexpr Configuration NTSC{ 12, 4, 60, 256.0f, 240.0f, "palettes/NTSC.pal" };
 inline constexpr Configuration PAL{ 16, 5, 50, 256.0f, 240.0f, "palettes/PAL.pal" };
 
 /*

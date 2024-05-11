@@ -24,6 +24,8 @@ project "NesEmu"
 	includedirs {
 		"src",
 		"%{IncludeDir.ctre}",
+		"%{IncludeDir.lud_utils}",
+
 	}
 
 	filter "system:windows"

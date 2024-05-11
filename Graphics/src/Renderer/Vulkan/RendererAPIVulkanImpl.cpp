@@ -11,10 +11,17 @@ using Detail::Vertex;
 
 static bool s_initialized = false;
 
-void Init(IWindow* window, bool use_imgui)
+void Init(std::shared_ptr<IWindow> window, bool use_imgui)
 {
 	Engine::Get().Init(window, use_imgui);
 	s_initialized = true;
+}
+
+void Shutdown()
+{
+	Lud::assert::eq(s_initialized, true, "Did you forgot to call to Renderer::Init ?");
+	Engine::Get().Cleanup();
+	s_initialized = false;
 }
 
 void Draw()
@@ -25,17 +32,20 @@ void Draw()
 
 void Resize()
 {
+	Lud::assert::eq(s_initialized, true, "Did you forgot to call to Renderer::Init ?");
 	Engine::Get().Resize();
 }
 
 void RequestResize()
 {
+	Lud::assert::eq(s_initialized, true, "Did you forgot to call to Renderer::Init ?");
 	Engine::Get().Resize();
 }
 
 
 void DrawSprite(const Sprite& sprite)
 {
+	Lud::assert::eq(s_initialized, true, "Did you forgot to call to Renderer::Init ?");
 	std::array<Vertex, 4> vertices;
 
 	const float z_index = sprite.z_index;
@@ -66,11 +76,14 @@ void DrawSprite(const Sprite& sprite)
 
 ITexture* CreateTexture(uint32_t w, uint32_t h)
 {
+	Lud::assert::eq(s_initialized, true, "Did you forgot to call to Renderer::Init ?");
+
 	return new VulkanTexture(w, h);
 }
 
 ITexture* CreateTexture(uint32_t w, uint32_t h, void* data)
 {
+	Lud::assert::eq(s_initialized, true, "Did you forgot to call to Renderer::Init ?");
 	return new VulkanTexture(w, h, data);
 }
 

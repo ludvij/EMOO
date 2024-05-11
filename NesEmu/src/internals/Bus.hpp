@@ -10,6 +10,7 @@
 namespace Emu
 {
 class Cartridge;
+class Controller;
 
 /*
  * This class is an abstraction for the cpu memory, separated from the cpu class
@@ -18,7 +19,6 @@ class Cartridge;
 class Bus
 {
 public:
-
 	u8 Read(u16 addr) const;
 	void Write(u16 addr, u8 val);
 
@@ -29,6 +29,11 @@ public:
 	void ConnectPPU(PPU* ppu)
 	{
 		m_ppu = ppu;
+	}
+
+	void ConnectController(u8 port, Controller* controller)
+	{
+		m_controller[port] = controller;
 	}
 
 	void Reset();
@@ -42,6 +47,8 @@ private:
 	std::array<u8, 0x800> m_cpuRam{ 0 };
 	std::shared_ptr<Cartridge> m_cartridge{ nullptr };
 	PPU* m_ppu = nullptr;
+
+	Controller* m_controller[2] = { nullptr, nullptr };
 };
 
 }

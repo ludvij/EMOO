@@ -31,12 +31,10 @@ std::optional<u16> NROM::CpuMapRead(const u16 addr) const
 	// out of range
 	if (addr < 0x8000)
 	{
-
 		return std::nullopt;
 	}
 	if (m_prgBanks == 1)
 	{
-
 		return addr & 0x3FFF;
 	}
 	else

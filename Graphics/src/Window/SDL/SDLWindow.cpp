@@ -1,10 +1,10 @@
 #include "SDLWindow.hpp"
 
 
-#include <backends/imgui_impl_sdl2.h>
+#include <backends/imgui_impl_sdl3.h>
 #include <backends/imgui_impl_vulkan.h>
-#include <SDL.h>
-#include <SDL_vulkan.h>
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_vulkan.h>
 #include <vulkan/vulkan.h>
 
 namespace Ui
@@ -22,8 +22,6 @@ SDLWindow::SDLWindow(const std::string& title, int w, int h)
 
 	m_window = SDL_CreateWindow(
 		title.c_str(),
-		SDL_WINDOWPOS_CENTERED,
-		SDL_WINDOWPOS_CENTERED,
 		w,
 		h,
 		window_flags
@@ -46,14 +44,14 @@ WindowExtent SDLWindow::GetDimensions() const
 
 void SDLWindow::GetDimensions(int* w, int* h) const
 {
-	SDL_Vulkan_GetDrawableSize(m_window, w, h);
+	SDL_GetWindowSize(m_window, w, h);
 }
 
 
 VkSurfaceKHR SDLWindow::CreateVulkanSurface(VkInstance instance)
 {
 	VkSurfaceKHR surface;
-	SDL_Vulkan_CreateSurface(m_window, instance, &surface);
+	SDL_Vulkan_CreateSurface(m_window, instance, NULL, &surface);
 	return surface;
 }
 
@@ -64,6 +62,6 @@ uint32_t SDLWindow::GetWindowID()
 }
 void SDLWindow::InitImguiForVulkan()
 {
-	ImGui_ImplSDL2_InitForVulkan(m_window);
+	ImGui_ImplSDL3_InitForVulkan(m_window);
 }
 }

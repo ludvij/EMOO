@@ -13,7 +13,6 @@ project "Graphics"
 
 		"%{IncludeDir.vk_bootrstrap}/**.cpp",
 		"%{IncludeDir.vk_bootrstrap}/**.h",
-		"%{IncludeDir.stb_image}/**.h",
 		"%{IncludeDir.lud_utils}/**.hpp",
 
 		"src/**.embed",
@@ -35,7 +34,7 @@ project "Graphics"
 
 	includedirs {
 		"src",
-		"%{IncludeDir.sdl2}",
+		"%{IncludeDir.sdl3}",
 		"%{IncludeDir.imgui}",
 		"%{IncludeDir.VulkanSDK}",
 		"%{IncludeDir.glm}",
@@ -50,8 +49,12 @@ project "Graphics"
 	links {
 		"ImGui",
 		"NesEmu",
-		"%{Library.sdl2}",
 		"%{Library.Vulkan}",
+		-- sdl complains
+		"winmm",
+		"setupapi",
+		"version",
+		"Imm32"
 	}
 
 	defines {
@@ -78,6 +81,7 @@ project "Graphics"
 
 		links {
 			"%{Library.freetype_d}",
+			"%{Library.sdl3_d}",
 		}
 	
 	filter "configurations:Release"
@@ -88,6 +92,7 @@ project "Graphics"
 		}
 		links {
 			"%{Library.freetype_r}",
+			"%{Library.sdl3_r}",
 
 		}
 

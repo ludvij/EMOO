@@ -3,7 +3,7 @@
 #include <chrono>
 #include <thread>
 
-#include <backends/imgui_impl_sdl2.h>
+#include <backends/imgui_impl_sdl3.h>
 #include <backends/imgui_impl_vulkan.h>
 #include <imgui.h>
 
@@ -14,8 +14,8 @@
 #include <lud_assert.hpp>
 
 #include <print>
-#include <SDL.h>
-#include <SDL_vulkan.h>
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_vulkan.h>
 
 #include <vkBootstrap.h>
 #define VMA_IMPLEMENTATION
@@ -909,7 +909,7 @@ void Engine::init_imgui()
 	m_deletion_queue.PushFunction([=]()
 		{
 			ImGui_ImplVulkan_Shutdown();
-			ImGui_ImplSDL2_Shutdown();
+			ImGui_ImplSDL3_Shutdown();
 			ImGui::DestroyContext();
 			m_device.destroyDescriptorPool(imgui_pool);
 		});

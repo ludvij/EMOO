@@ -5,9 +5,9 @@
 #include <print>
 #include <vector>
 
-#include <backends/imgui_impl_sdl2.h>
+#include <backends/imgui_impl_sdl3.h>
 #include <backends/imgui_impl_vulkan.h>
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 #include "Components/IComponent.hpp"
 #include "Input/SDL/SDLInput.hpp"
@@ -181,30 +181,29 @@ void Application::event_loop()
 	SDL_Event event;
 	while (SDL_PollEvent(&event) != 0)
 	{
-		if (event.type == SDL_QUIT)
+		if (event.type == SDL_EVENT_QUIT)
 			m_should_quit = true;
 
-		if (event.type == SDL_WINDOWEVENT)
+
+		if (event.window.type == SDL_EVENT_WINDOW_RESIZED)
 		{
-			if (event.window.event == SDL_WINDOWEVENT_RESIZED)
-			{
-				Renderer::RequestResize();
-				m_resized = true;
-			}
-			if (event.window.event == SDL_WINDOWEVENT_MINIMIZED)
-			{
-				m_stop_rendering = true;
-			}
-			if (event.window.event == SDL_WINDOWEVENT_RESTORED)
-			{
-				m_stop_rendering = false;
-			}
-			if (event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == m_window->GetWindowID())
-			{
-				m_should_quit = true;
-			}
+			Renderer::RequestResize();
+			m_resized = true;
 		}
-		ImGui_ImplSDL2_ProcessEvent(&event);
+		if (event.window.type == SDL_EVENT_WINDOW_MINIMIZED)
+		{
+			m_stop_rendering = true;
+		}
+		if (event.window.type == SDL_EVENT_WINDOW_RESTORED)
+		{
+			m_stop_rendering = false;
+		}
+		if (event.window.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED && event.window.windowID == m_window->GetWindowID())
+		{
+			m_should_quit = true;
+		}
+
+		ImGui_ImplSDL3_ProcessEvent(&event);
 	}
 
 	m_input->RunActions();
@@ -213,7 +212,7 @@ void Application::event_loop()
 void Application::draw_ui()
 {
 	ImGui_ImplVulkan_NewFrame();
-	ImGui_ImplSDL2_NewFrame();
+	ImGui_ImplSDL3_NewFrame();
 
 	ImGui::NewFrame();
 

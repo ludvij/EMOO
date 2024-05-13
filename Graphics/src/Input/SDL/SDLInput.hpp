@@ -1,7 +1,7 @@
 #ifndef GRAPHICS_SDL_INPUT_HEADER
 #define GRAPHICS_SDL_INPUT_HEADER
 #include "Input/Input.hpp"
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 namespace Ui
 {
@@ -14,7 +14,7 @@ public:
 	bool GetButton(Button b) override;
 
 private:
-	SDL_GameController* m_controller{ nullptr };
+	SDL_Gamepad* m_controller{ nullptr };
 };
 }
 #endif GRAPHICS_SDL_INPUT_HEADER

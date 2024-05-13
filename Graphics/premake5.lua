@@ -61,6 +61,7 @@ project "Graphics"
 		"SDL_MAIN_HANDLED",
 		"GLM_ENABLE_EXPERIMENTAL",
 		"GLM_FORCE_DEPTH_ZERO_TO_ONE",
+		"SPECTRUM_USE_DARK_THEME"
 	}
 
 	filter "system:windows"

@@ -26,6 +26,15 @@ public:
 
 private:
 	NativeType* m_window;
+
+	// Inherited via IWindow
+	void ShutdownImgui() override;
+
+	// Inherited via IWindow
+	void ProcessEvent(void* event) override;
+
+	// Inherited via IWindow
+	void BeginImGuiFrame() override;
 };
 }
 #endif //!GRAPHICS_WINDOW_SDL_WINDOW_HEADER

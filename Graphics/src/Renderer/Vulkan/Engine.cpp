@@ -3,7 +3,6 @@
 #include <chrono>
 #include <thread>
 
-#include <backends/imgui_impl_sdl3.h>
 #include <backends/imgui_impl_vulkan.h>
 #include <imgui.h>
 
@@ -14,12 +13,11 @@
 #include <lud_assert.hpp>
 
 #include <print>
-#include <SDL3/SDL.h>
-#include <SDL3/SDL_vulkan.h>
 
 #include <vkBootstrap.h>
 #define VMA_IMPLEMENTATION
 #include <vma/vk_mem_alloc.h>
+
 
 // Shader code
 extern const size_t sg_embed_mesh_frag_size;
@@ -869,7 +867,7 @@ void Engine::init_imgui()
 	ImGui::StyleColorsDark();
 	//ImGui::StyleColorsLight();
 
-	 // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
+	// When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
 	ImGuiStyle& style = ImGui::GetStyle();
 	if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 	{
@@ -909,7 +907,7 @@ void Engine::init_imgui()
 	m_deletion_queue.PushFunction([=]()
 		{
 			ImGui_ImplVulkan_Shutdown();
-			ImGui_ImplSDL3_Shutdown();
+			m_window->ShutdownImgui();
 			ImGui::DestroyContext();
 			m_device.destroyDescriptorPool(imgui_pool);
 		});

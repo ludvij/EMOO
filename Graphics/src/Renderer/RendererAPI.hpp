@@ -23,5 +23,7 @@ void DrawSprite(const Sprite& sprite);
 ITexture* CreateTexture(uint32_t w, uint32_t h);
 // user needs to delete texture manually
 ITexture* CreateTexture(uint32_t w, uint32_t h, void* data);
+
+void BeginImGuiFrame();
 }
 #endif //! GRAPHICS_RENDERER_API_HEADER

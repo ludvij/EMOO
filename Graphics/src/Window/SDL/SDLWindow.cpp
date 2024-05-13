@@ -7,6 +7,9 @@
 #include <SDL3/SDL_vulkan.h>
 #include <vulkan/vulkan.h>
 
+#include <bit>
+#include <cstdint>
+
 namespace Ui
 {
 
@@ -63,5 +66,17 @@ uint32_t SDLWindow::GetWindowID()
 void SDLWindow::InitImguiForVulkan()
 {
 	ImGui_ImplSDL3_InitForVulkan(m_window);
+}
+void SDLWindow::ShutdownImgui()
+{
+	ImGui_ImplSDL3_Shutdown();
+}
+void SDLWindow::ProcessEvent(void* event)
+{
+	ImGui_ImplSDL3_ProcessEvent(static_cast<SDL_Event*>( event ));
+}
+void SDLWindow::BeginImGuiFrame()
+{
+	ImGui_ImplSDL3_NewFrame();
 }
 }

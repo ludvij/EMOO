@@ -2,6 +2,8 @@
 #include "Renderer/RendererAPI.hpp"
 #include "VulkanTexture.hpp"
 
+#include <backends/imgui_impl_vulkan.h>
+
 #include <lud_assert.hpp>
 
 namespace Ui::Renderer
@@ -85,6 +87,11 @@ ITexture* CreateTexture(uint32_t w, uint32_t h, void* data)
 {
 	Lud::assert::eq(s_initialized, true, "Did you forgot to call to Renderer::Init ?");
 	return new VulkanTexture(w, h, data);
+}
+
+void BeginImGuiFrame()
+{
+	ImGui_ImplVulkan_NewFrame();
 }
 
 

@@ -5,7 +5,6 @@
 #include <print>
 #include <vector>
 
-#include <backends/imgui_impl_sdl3.h>
 #include <backends/imgui_impl_vulkan.h>
 #include <SDL3/SDL.h>
 
@@ -47,8 +46,8 @@ Application::Application(const Configuration& config)
 	m_textures["USED_PALETTE"]   = std::unique_ptr<ITexture>(Renderer::CreateTexture(4 * 8, 1));
 
 	m_sprites["SCREEN"]          = Sprite({}, 0, m_textures["SCREEN"].get());
-	m_sprites["PATTERN_TABLE_0"] = Sprite({}, 0, m_textures["PATTERN_TABLES"].get(), { 0, 0, .5, 1 });
-	m_sprites["PATTERN_TABLE_1"] = Sprite({}, 0, m_textures["PATTERN_TABLES"].get(), { .5 * 1, 0, 1, 1 });
+	m_sprites["PATTERN_TABLE_0"] = Sprite({}, 0, m_textures["PATTERN_TABLES"].get(), { .5 * 0, 0, .5 * 1, 1 });
+	m_sprites["PATTERN_TABLE_1"] = Sprite({}, 0, m_textures["PATTERN_TABLES"].get(), { .5 * 1, 0, .5 * 2, 1 });
 	m_sprites["USED_PALETTE_0"]  = Sprite({}, 0, m_textures["USED_PALETTE"].get(), { .125 * 0, 0, .125 * 1, 1 });
 	m_sprites["USED_PALETTE_1"]  = Sprite({}, 0, m_textures["USED_PALETTE"].get(), { .125 * 1, 0, .125 * 2, 1 });
 	m_sprites["USED_PALETTE_2"]  = Sprite({}, 0, m_textures["USED_PALETTE"].get(), { .125 * 2, 0, .125 * 3, 1 });
@@ -202,8 +201,7 @@ void Application::event_loop()
 		{
 			m_should_quit = true;
 		}
-
-		ImGui_ImplSDL3_ProcessEvent(&event);
+		m_window->ProcessEvent(&event);
 	}
 
 	m_input->RunActions();
@@ -211,14 +209,14 @@ void Application::event_loop()
 }
 void Application::draw_ui()
 {
-	ImGui_ImplVulkan_NewFrame();
-	ImGui_ImplSDL3_NewFrame();
+	m_window->BeginImGuiFrame();
+	Renderer::BeginImGuiFrame();
 
 	ImGui::NewFrame();
 
 	if (ImGui::BeginMainMenuBar())
 	{
-		m_menu_bar_height= ImGui::GetWindowSize().y;
+		m_menu_bar_height = ImGui::GetWindowSize().y;
 		if (ImGui::BeginMenu("File"))
 		{
 			if (ImGui::MenuItem("Load ROM"))

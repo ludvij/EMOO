@@ -23,7 +23,13 @@ public:
 
 	virtual uint32_t GetWindowID() = 0;
 
+	// imgui functions
 	virtual void InitImguiForVulkan() = 0;
+	virtual void ShutdownImgui() = 0;
+
+	virtual void BeginImGuiFrame() = 0;
+
+	virtual void ProcessEvent(void* event) = 0;
 };
 }
 

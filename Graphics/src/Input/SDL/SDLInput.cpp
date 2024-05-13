@@ -10,10 +10,10 @@ static SDL_GameControllerButton get_sdl_equivalent(Button b)
 {
 	switch (b)
 	{
-	case Ui::Button::FACE_0:     return SDL_GameControllerButton::SDL_CONTROLLER_BUTTON_A;
-	case Ui::Button::FACE_1:     return SDL_GameControllerButton::SDL_CONTROLLER_BUTTON_B;
-	case Ui::Button::FACE_2:     return SDL_GameControllerButton::SDL_CONTROLLER_BUTTON_Y;
-	case Ui::Button::FACE_3:     return SDL_GameControllerButton::SDL_CONTROLLER_BUTTON_X;
+	case Ui::Button::FACE_DOWN:     return SDL_GameControllerButton::SDL_CONTROLLER_BUTTON_A;
+	case Ui::Button::FACE_LEFT:     return SDL_GameControllerButton::SDL_CONTROLLER_BUTTON_B;
+	case Ui::Button::FACE_UP:     return SDL_GameControllerButton::SDL_CONTROLLER_BUTTON_Y;
+	case Ui::Button::FACE_RIGHT:     return SDL_GameControllerButton::SDL_CONTROLLER_BUTTON_X;
 	case Ui::Button::DPAD_UP:    return SDL_GameControllerButton::SDL_CONTROLLER_BUTTON_DPAD_UP;
 	case Ui::Button::DPAD_DOWN:  return SDL_GameControllerButton::SDL_CONTROLLER_BUTTON_DPAD_DOWN;
 	case Ui::Button::DPAD_LEFT:  return SDL_GameControllerButton::SDL_CONTROLLER_BUTTON_DPAD_LEFT;

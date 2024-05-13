@@ -740,14 +740,14 @@ void Engine::DestroyImage(const AllocatedImage& img)
 
 void Engine::SetImageData(Detail::AllocatedImage image, void* data)
 {
-	size_t data_size = static_cast<size_t>( image.extent.depth * image.extent.width * image.extent.height ) * 4;
+	size_t data_size = static_cast<size_t>( image.extent.depth * image.extent.width * image.extent.height ) * sizeof u32;
 	AllocatedBuffer upload_buffer = CreateBuffer(
 		data_size,
 		vk::BufferUsageFlagBits::eTransferSrc,
 		VMA_MEMORY_USAGE_CPU_TO_GPU
 	);
 
-	memcpy(upload_buffer.info.pMappedData, data, data_size);
+	vmaCopyMemoryToAllocation(m_allocator, data, upload_buffer.allocation, 0, data_size);
 
 	ImmediateSubmit([&](vk::CommandBuffer cmd)
 		{

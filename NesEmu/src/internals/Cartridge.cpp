@@ -29,10 +29,10 @@ Cartridge::Cartridge(const std::string& filePath)
 	}
 
 	// prg rom is in 16 kiB chunks
-	m_prgRom.resize(static_cast<size_t>( m_header.prgRomChunks ) * 16384);
+	m_prgRom.resize(static_cast<size_t>( m_header.prgRomChunks ) * 0x4000);
 	inputFile.read(std::bit_cast<char*>( m_prgRom.data() ), static_cast<size_t>( m_prgRom.size() ));
 	// chr rom is in 8 kib chunks
-	m_chrRom.resize(static_cast<size_t>( m_header.chrRomChunks ) * 8192);
+	m_chrRom.resize(static_cast<size_t>( m_header.chrRomChunks ) * 0x2000);
 	inputFile.read(std::bit_cast<char*>( m_chrRom.data() ), static_cast<size_t>( m_chrRom.size() ));
 
 	m_mapperNumber = ( m_header.mapper2 & 0xf0 ) | ( m_header.mapper1 >> 4 );

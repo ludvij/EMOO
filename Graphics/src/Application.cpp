@@ -42,16 +42,13 @@ Application::Application(const Configuration& config)
 	const auto w = static_cast<uint32_t>( m_console.GetConfig().width );
 	const auto h = static_cast<uint32_t>( m_console.GetConfig().height );
 
-	m_textures["SCREEN"]          = std::unique_ptr<ITexture>(Renderer::CreateTexture(w, h));
-	m_textures["PATTERN_TABLE_0"] = std::unique_ptr<ITexture>(Renderer::CreateTexture(128, 128));
-	m_textures["PATTERN_TABLE_1"] = std::unique_ptr<ITexture>(Renderer::CreateTexture(128, 128));
-	m_textures["PALETTE"]         = std::unique_ptr<ITexture>(Renderer::CreateTexture(16, 4));
-	m_textures["USED_PALETTE"]    = std::unique_ptr<ITexture>(Renderer::CreateTexture(4 * 8, 1));
+	m_textures["SCREEN"]         = std::unique_ptr<ITexture>(Renderer::CreateTexture(w, h));
+	m_textures["PATTERN_TABLES"] = std::unique_ptr<ITexture>(Renderer::CreateTexture(256, 128));
+	m_textures["USED_PALETTE"]   = std::unique_ptr<ITexture>(Renderer::CreateTexture(4 * 8, 1));
 
 	m_sprites["SCREEN"]          = Sprite({}, 0, m_textures["SCREEN"].get());
-	m_sprites["PATTERN_TABLE_0"] = Sprite({}, 0, m_textures["PATTERN_TABLE_0"].get());
-	m_sprites["PATTERN_TABLE_1"] = Sprite({}, 0, m_textures["PATTERN_TABLE_1"].get());
-	m_sprites["PALETTE"]         = Sprite({}, 0, m_textures["PALETTE"].get());
+	m_sprites["PATTERN_TABLE_0"] = Sprite({}, 0, m_textures["PATTERN_TABLES"].get(), { 0, 0, .5, 1 });
+	m_sprites["PATTERN_TABLE_1"] = Sprite({}, 0, m_textures["PATTERN_TABLES"].get(), { .5 * 1, 0, 1, 1 });
 	m_sprites["USED_PALETTE_0"]  = Sprite({}, 0, m_textures["USED_PALETTE"].get(), { .125 * 0, 0, .125 * 1, 1 });
 	m_sprites["USED_PALETTE_1"]  = Sprite({}, 0, m_textures["USED_PALETTE"].get(), { .125 * 1, 0, .125 * 2, 1 });
 	m_sprites["USED_PALETTE_2"]  = Sprite({}, 0, m_textures["USED_PALETTE"].get(), { .125 * 2, 0, .125 * 3, 1 });
@@ -113,10 +110,10 @@ void Application::init_button_mapping()
 		{
 			m_console.GetController(0).SetPressed(Emu::Button::Select);
 		};
-	m_input->AddAction(Button::FACE_0, press_a);
-	m_input->AddAction(Button::FACE_1, press_b);
-	m_input->AddAction(Button::FACE_3, press_a);
-	m_input->AddAction(Button::FACE_2, press_b);
+	m_input->AddAction(Button::FACE_DOWN, press_a);
+	m_input->AddAction(Button::FACE_LEFT, press_b);
+	m_input->AddAction(Button::FACE_RIGHT, press_a);
+	m_input->AddAction(Button::FACE_UP, press_b);
 	m_input->AddAction(Button::DPAD_UP, press_up);
 	m_input->AddAction(Button::DPAD_DOWN, press_down);
 	m_input->AddAction(Button::DPAD_LEFT, press_left);
@@ -140,7 +137,7 @@ void Application::Close()
 {
 	m_should_quit = true;
 }
-
+static std::deque<uint32_t> m_frame_times;
 void Application::main_loop()
 {
 	while (!m_should_quit)
@@ -159,18 +156,24 @@ void Application::main_loop()
 		draw_ui();
 		draw_application();
 
-		auto end = std::chrono::time_point<std::chrono::steady_clock>(std::chrono::steady_clock::now());
+		/*auto end = std::chrono::time_point<std::chrono::steady_clock>(std::chrono::steady_clock::now());
 		auto elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>( end - start ).count();
 
 		const auto ms_per_frame = static_cast<int>( 1000.0f / m_console.GetConfig().FrameRate );
 		if (ms_per_frame > elapsed_time)
 		{
 			std::this_thread::sleep_for(std::chrono::milliseconds(ms_per_frame - elapsed_time));
-		}
+		}*/
 
-		end = std::chrono::time_point<std::chrono::steady_clock>(std::chrono::steady_clock::now());
-		elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>( end - start ).count();
-		m_frame_rate = static_cast<uint32_t>( 1000.0f / elapsed_time );
+		auto end = std::chrono::time_point<std::chrono::steady_clock>(std::chrono::steady_clock::now());
+		auto elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>( end - start ).count();
+		auto frames = static_cast<uint32_t>( 1000.0f / elapsed_time );
+		m_frame_times.push_back(frames);
+		if (m_frame_times.size() > 16)
+		{
+			m_frame_times.pop_front();
+		}
+		m_frame_rate = static_cast<uint32_t>( std::ranges::fold_right(m_frame_times, 0, std::plus<>()) / m_frame_times.size() );
 	}
 }
 void Application::event_loop()
@@ -283,9 +286,7 @@ void Application::get_pixel_data()
 {
 	m_textures["SCREEN"]->SetData(m_console.OutputScreen());
 
-	m_textures["PALETTE"]->SetData(m_console.OutputPalette());
-	m_textures["PATTERN_TABLE_0"]->SetData(m_console.OutputPatternTable(0, 0));
-	m_textures["PATTERN_TABLE_1"]->SetData(m_console.OutputPatternTable(1, 0));
+	m_textures["PATTERN_TABLES"]->SetData(m_console.OutputPatternTable(0));
 
 	std::array<u32, 4 * 8> pal;
 	for (uint8_t p = 0; p < 8; p++)
@@ -345,7 +346,6 @@ void Application::resize_other()
 		Rect new_bounds = { nes_bounds.w + padding, m_menu_bar_height + padding, pattern_w, pattern_w };
 		m_sprites["PATTERN_TABLE_0"].rect = { new_bounds.x + ( new_bounds.w + padding ) * 0, new_bounds.y, new_bounds.w, new_bounds.h };
 		m_sprites["PATTERN_TABLE_1"].rect = { new_bounds.x + ( new_bounds.w + padding ) * 1, new_bounds.y, new_bounds.w, new_bounds.h };
-		m_sprites["PALETTE"].rect = { nes_bounds.w + padding, m_menu_bar_height + h - palette_h - padding, palette_w, palette_h };
 
 		const float pal_w = ( ( pattern_w * 2 + padding ) - padding * 7 ) / 8.0f;
 		const float pal_h = pal_w / 4.0f;
@@ -362,7 +362,6 @@ void Application::resize_other()
 	{
 		m_sprites["PATTERN_TABLE_0"].rect = {};
 		m_sprites["PATTERN_TABLE_1"].rect = {};
-		m_sprites["PALETTE"].rect = {};
 		m_sprites["USED_PALETTE_0"].rect = {};
 		m_sprites["USED_PALETTE_1"].rect = {};
 		m_sprites["USED_PALETTE_2"].rect = {};

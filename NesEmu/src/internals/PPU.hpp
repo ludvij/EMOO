@@ -69,7 +69,7 @@ public:
 
 	u32* GetScreen();
 
-	u32* GetPatternTable(const u8 i, const u8 palette);
+	u32* GetPatternTable(const u8 palette);
 	u32* GetPalette();
 	Color GetColorFromPalette(u8 palette, u8 pixel);
 
@@ -113,7 +113,7 @@ private:
 
 private:
 	// for debugging purposes
-	std::array<std::array<u32, 2 * 128 * 128>, 2> m_pattern_tables_show{};
+	std::array<u32, 256 * 128> m_pattern_tables_show{};
 	// backup if nametables are not handled by the cartridge (unlikely)
 	std::array<u8, 0x2000> m_pattern_tables;
 	// 2 nametables

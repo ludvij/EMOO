@@ -52,9 +52,9 @@ public:
 		return m_ppu.GetScreen();
 	};
 
-	u32* OutputPatternTable(u8 i, u8 palette)
+	u32* OutputPatternTable(u8 palette)
 	{
-		return m_ppu.GetPatternTable(i, palette);
+		return m_ppu.GetPatternTable(palette);
 	}
 
 	u32 OutputPaletteColor(u8 i, u8 s)
@@ -81,6 +81,7 @@ private:
 	// Bus components
 	CPU m_cpu;
 	PPU m_ppu;
+	APU m_apu;
 	Bus m_bus;
 
 	u32 m_masterClock = 0;

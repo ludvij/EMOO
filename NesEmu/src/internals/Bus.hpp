@@ -1,6 +1,7 @@
 ﻿#ifndef EMU_BUS_HEADER
 #define EMU_BUS_HEADER
 
+#include "APU.hpp"
 #include "Core.hpp"
 #include "PPU.hpp"
 
@@ -31,6 +32,11 @@ public:
 		m_ppu = ppu;
 	}
 
+	void ConnectAPU(APU* apu)
+	{
+		m_apu = apu;
+	}
+
 	void ConnectController(u8 port, Controller* controller)
 	{
 		m_controller[port] = controller;
@@ -47,6 +53,7 @@ private:
 	std::array<u8, 0x800> m_cpuRam{ 0 };
 	std::shared_ptr<Cartridge> m_cartridge{ nullptr };
 	PPU* m_ppu = nullptr;
+	APU* m_apu = nullptr;
 
 	Controller* m_controller[2] = { nullptr, nullptr };
 };

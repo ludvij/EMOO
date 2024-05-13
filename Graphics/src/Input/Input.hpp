@@ -8,14 +8,10 @@ namespace Ui
 {
 enum class Button
 {
-	// A
-	FACE_0,
-	// B
-	FACE_1,
-	// X
-	FACE_2,
-	// Y
-	FACE_3,
+	FACE_DOWN,
+	FACE_LEFT,
+	FACE_UP,
+	FACE_RIGHT,
 	DPAD_UP,
 	DPAD_DOWN,
 	DPAD_LEFT,

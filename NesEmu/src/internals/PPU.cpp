@@ -26,28 +26,28 @@ void PPU::Step()
 		{
 			m_cycles = 1;
 		}
-		if (m_cycles >= 2 && m_cycles < 256)
+		else if (m_cycles >= 2 && m_cycles < 256)
 		{
 			update_bg_shifters();
 			preload_tile();
 		}
-		if (m_cycles == 256)
+		else if (m_cycles == 256)
 		{
 			increment_y();
 		}
-		if (m_cycles == 257)
+		else if (m_cycles == 257)
 		{
 			load_bg_shifters();
 			reset_x();
 		}
 		// first two tiles on next scanline
-		if (m_cycles >= 321 && m_cycles < 338)
+		else if (m_cycles >= 321 && m_cycles < 338)
 		{
 			update_bg_shifters();
 			preload_tile();
 		}
 		// unused NT fetches
-		if (m_cycles == 338 || m_cycles == 340)
+		else if (m_cycles == 338 || m_cycles == 340)
 		{
 			m_bg_next_tile_id = memory_read(0x2000 | ( m_v & 0x0FFF ));
 		}
@@ -64,12 +64,12 @@ void PPU::Step()
 			}
 		}
 	}
-	if (m_scanlines == 240)
+	else if (m_scanlines == 240)
 	{
 		// post render scanline
 	}
 	// entering vBlank when scanline goes out of screen
-	if (m_scanlines >= 240 && m_scanlines < 261)
+	else if (m_scanlines >= 241 && m_scanlines < 261)
 	{
 		if (m_scanlines == 241 && m_cycles == 1)
 		{
@@ -102,7 +102,7 @@ void PPU::Step()
 
 		if (x >= 0 && x < m_conf.width && y >= 0 && y < m_conf.height)
 		{
-			const auto px_pos = static_cast<size_t>( x + y * 256 );
+			const auto px_pos = static_cast<size_t>( x + y * m_conf.width );
 			m_screen[px_pos] = GetColorFromPalette(bg_palette, bg_pixel);
 		}
 	}
@@ -246,7 +246,7 @@ u8 PPU::memory_read(u16 addr)
 			return m_pattern_tables[addr];
 		}
 	}
-	else if (0x1000 <= addr && addr <= 0x1FFF) // pattern table 1
+	else if (addr <= 0x1FFF) // pattern table 1
 	{
 		if (!m_cartridge)
 		{
@@ -262,7 +262,7 @@ u8 PPU::memory_read(u16 addr)
 		}
 	}
 	// https://www.nesdev.org/wiki/Mirroring#Nametable_Mirroring
-	else if (0x2000 <= addr && addr <= 0x3EFF)
+	else if (addr <= 0x3EFF)
 	{
 		if (m_cartridge->GetMirroring() == Cartridge::Mirroring::Vertical)
 		{
@@ -273,14 +273,14 @@ u8 PPU::memory_read(u16 addr)
 			return nametable_mirrored_read<MirrorName::A, MirrorName::A, MirrorName::B, MirrorName::B>(addr);
 		}
 	}
-	else if (0x3F00 <= addr && addr <= 0x3FFF)
+	else if (addr <= 0x3FFF)
 	{
 		//https://www.nesdev.org/wiki/PPU_palettes#Memory_Map
 		u16 strippedAddr = addr & 0x001F;
 		if (strippedAddr == 0x0010) strippedAddr = 0x0000;
-		if (strippedAddr == 0x0014) strippedAddr = 0x0004;
-		if (strippedAddr == 0x0018) strippedAddr = 0x0008;
-		if (strippedAddr == 0x001C) strippedAddr = 0x000C;
+		else if (strippedAddr == 0x0014) strippedAddr = 0x0004;
+		else if (strippedAddr == 0x0018) strippedAddr = 0x0008;
+		else if (strippedAddr == 0x001C) strippedAddr = 0x000C;
 		return m_palette_ram_indexes[strippedAddr];
 	}
 	Lud::Unreachable();
@@ -296,7 +296,7 @@ void PPU::memory_write(u16 addr, const u8 val)
 			m_pattern_tables[addr] = val;
 		}
 	}
-	else if (0x1000 <= addr && addr <= 0x1FFF) // pattern table 1
+	else if (addr <= 0x1FFF) // pattern table 1
 	{
 		if (m_cartridge && !m_cartridge->PpuWrite(addr, val))
 		{
@@ -304,7 +304,7 @@ void PPU::memory_write(u16 addr, const u8 val)
 		}
 	}
 	// https://www.nesdev.org/wiki/Mirroring#Nametable_Mirroring
-	else if (0x2000 <= addr && addr <= 0x3EFF)
+	else if (addr <= 0x3EFF)
 	{
 		if (m_cartridge->GetMirroring() == Cartridge::Mirroring::Vertical)
 		{
@@ -315,14 +315,14 @@ void PPU::memory_write(u16 addr, const u8 val)
 			nametable_mirrored_write<MirrorName::A, MirrorName::A, MirrorName::B, MirrorName::B>(addr, val);
 		}
 	}
-	else if (0x3F00 <= addr && addr <= 0x3FFF)
+	else if (addr <= 0x3FFF)
 	{
 		//https://www.nesdev.org/wiki/PPU_palettes#Memory_Map
 		u16 strippedAddr = addr & 0x001F;
 		if (strippedAddr == 0x0010) strippedAddr = 0x0000;
-		if (strippedAddr == 0x0014) strippedAddr = 0x0004;
-		if (strippedAddr == 0x0018) strippedAddr = 0x0008;
-		if (strippedAddr == 0x001C) strippedAddr = 0x000C;
+		else if (strippedAddr == 0x0014) strippedAddr = 0x0004;
+		else if (strippedAddr == 0x0018) strippedAddr = 0x0008;
+		else if (strippedAddr == 0x001C) strippedAddr = 0x000C;
 		m_palette_ram_indexes[strippedAddr] = val;
 	}
 }
@@ -463,7 +463,7 @@ void PPU::increment_y()
 		}
 		else
 		{
-			y += 1;
+			y++;
 		}
 		// replace coarse y
 		m_v = ( m_v & ~0x03E0 ) | ( y << 5 );
@@ -484,13 +484,12 @@ void PPU::increment_x()
 	if (( m_v & 0x001F ) == 31)
 	{
 		// set coarse x to 0
-		m_v &= ~0x001F;
 		// flip nametable x
-		m_v ^= 0x0400;
+		m_v = ( m_v & ~0x001F ) ^ 0x0400;
 	}
 	else
 	{
-		m_v += 1;
+		m_v++;;
 	}
 }
 
@@ -552,38 +551,43 @@ Color PPU::GetColorFromPalette(const u8 palette, const u8 pixel)
 	//return m_palette[m_palette_ram_indexes[static_cast<size_t>( palette * 4 + pixel )]];
 }
 
-u32* PPU::GetPatternTable(const u8 i, const u8 palette)
+u32* PPU::GetPatternTable(const u8 palette)
 {
-	for (u16 y = 0; y < 16; y++)
+	for (int i = 0; i < 2; i++)
 	{
-		for (u16 x = 0; x < 16; x++)
+		for (u16 y = 0; y < 16; y++)
 		{
-			// y * 256 + x * 16 == y * 16 * 16 + x * 16
-			//                     y * 16 * 16 + x * 16 == (y * 16 + x) * 16
-			u16 offset = y * 256 + x * 16;
-
-			for (u16 row = 0; row < 8; row++)
+			for (u16 x = 0; x < 16; x++)
 			{
-				u8 tile_lo = memory_read(i * 0x1000 + offset + row + 0);
-				u8 tile_hi = memory_read(i * 0x1000 + offset + row + 8);
+				// y * 256 + x * 16 == y * 16 * 16 + x * 16
+				//                     y * 16 * 16 + x * 16 == (y * 16 + x) * 16
+				u16 offset = y * 256 + x * 16;
 
-				for (u16 col = 0; col < 8; col++)
+				for (u16 row = 0; row < 8; row++)
 				{
-					// can be either 00,01,10,11
-					// 00 is background/transparent
-					// else is color index
-					u8 pixel = ( tile_lo & 0x01 ) + ( tile_hi & 0x01 );
-					tile_hi >>= 1;
-					tile_lo >>= 1;
+					u8 tile_lo = memory_read(i * 0x1000 + offset + row + 0);
+					u8 tile_hi = memory_read(i * 0x1000 + offset + row + 8);
 
-					const u16 pattern_x = x * 8 + ( 7 - col );
-					const u16 pattern_y = y * 8 + row;
-					m_pattern_tables_show[i][static_cast<size_t>( pattern_x + pattern_y * 128 )] = GetColorFromPalette(palette, pixel);
+					for (u16 col = 0; col < 8; col++)
+					{
+						// can be either 00,01,10,11
+						// 00 is background/transparent
+						// else is color index
+						u8 pixel = ( tile_lo & 0x01 ) + ( tile_hi & 0x01 );
+						tile_hi >>= 1;
+						tile_lo >>= 1;
+
+						const u16 pattern_x = x * 8 + ( 7 - col );
+						const u16 pattern_y = y * 8 + row;
+						const size_t pos = static_cast<size_t>( i * 128 + pattern_x + pattern_y * 256 );
+						m_pattern_tables_show[pos] = GetColorFromPalette(palette, pixel);
+					}
 				}
 			}
 		}
 	}
-	return m_pattern_tables_show[i].data();
+
+	return m_pattern_tables_show.data();
 }
 
 u32* PPU::GetPalette()

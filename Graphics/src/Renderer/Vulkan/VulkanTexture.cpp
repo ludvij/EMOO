@@ -1,11 +1,15 @@
 #include "Engine.hpp"
 #include "VulkanTexture.hpp"
+
+#include "backends/imgui_impl_vulkan.h"
+
+
 #include <print>
 namespace Ui
 {
 
 
-VulkanTexture::VulkanTexture(uint32_t w, uint32_t h)
+VulkanBindlessTexture::VulkanBindlessTexture(uint32_t w, uint32_t h)
 	: ITexture(w, h)
 {
 	image = Engine::Get().CreateImage({ w, h, 1 }, vk::Format::eR8G8B8A8Unorm,
@@ -13,7 +17,7 @@ VulkanTexture::VulkanTexture(uint32_t w, uint32_t h)
 	Engine::Get().AddTextureToBatcher(this);
 }
 
-VulkanTexture::VulkanTexture(uint32_t w, uint32_t h, void* data)
+VulkanBindlessTexture::VulkanBindlessTexture(uint32_t w, uint32_t h, void* data)
 	: ITexture(w, h)
 {
 	image = Engine::Get().CreateImage(data, { w, h, 1 }, vk::Format::eR8G8B8A8Unorm,
@@ -22,15 +26,65 @@ VulkanTexture::VulkanTexture(uint32_t w, uint32_t h, void* data)
 
 }
 
-VulkanTexture::~VulkanTexture()
+VulkanBindlessTexture::~VulkanBindlessTexture()
 {
 	Engine::Get().RemoveTextureFromBatcher(this);
 	Engine::Get().DestroyImage(image);
 }
 
-void VulkanTexture::SetData(void* data)
+void VulkanBindlessTexture::SetData(void* data)
 {
 	Engine::Get().SetImageData(image, data);
 }
+
+VulkanImGuiTexture::VulkanImGuiTexture(uint32_t w, uint32_t h)
+	: ITexture(w, h)
+{
+	image = Engine::Get().CreateImage({ w, h, 1 }, vk::Format::eR8G8B8A8Unorm, vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferDst);
+	// TODO: not use this please
+	descriptor_set = ImGui_ImplVulkan_AddTexture(
+		Engine::Get().GetSampler(),
+		image.view,
+		static_cast<VkImageLayout>( vk::ImageLayout::eShaderReadOnlyOptimal )
+	);
+
+	Engine::Get().ImmediateSubmit([&](vk::CommandBuffer cmd)
+		{
+			vkutil::transition_image(cmd, image.image, vk::ImageLayout::eUndefined, vk::ImageLayout::eShaderReadOnlyOptimal);
+		});
+
+}
+
+VulkanImGuiTexture::VulkanImGuiTexture(uint32_t w, uint32_t h, void* data)
+	: ITexture(w, h)
+{
+	image = Engine::Get().CreateImage(data, { w, h, 1 }, vk::Format::eR8G8B8A8Unorm, vk::ImageUsageFlagBits::eTransferDst);
+	// TODO: not use this please
+	descriptor_set = ImGui_ImplVulkan_AddTexture(
+		Engine::Get().GetSampler(),
+		image.view,
+		static_cast<VkImageLayout>( vk::ImageLayout::eShaderReadOnlyOptimal )
+	);
+
+	Engine::Get().ImmediateSubmit([&](vk::CommandBuffer cmd)
+		{
+			vkutil::transition_image(cmd, image.image, vk::ImageLayout::eUndefined, vk::ImageLayout::eShaderReadOnlyOptimal);
+		});
+
+}
+
+VulkanImGuiTexture::~VulkanImGuiTexture()
+{
+	Engine::Get().GetDevice().waitIdle();
+
+	Engine::Get().DestroyImage(image);
+	ImGui_ImplVulkan_RemoveTexture(descriptor_set);
+}
+
+void VulkanImGuiTexture::SetData(void* data)
+{
+	Engine::Get().SetImageData(image, data);
+}
+
 
 }

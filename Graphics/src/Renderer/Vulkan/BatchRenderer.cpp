@@ -90,7 +90,7 @@ void Ui::BatchRenderer::Draw(vk::CommandBuffer cmd)
 	Flush();
 }
 
-void Ui::BatchRenderer::AddTexture(VulkanTexture* texture)
+void Ui::BatchRenderer::AddTexture(VulkanBindlessTexture* texture)
 {
 	if (m_ready_texture_slots.empty())
 	{
@@ -105,7 +105,7 @@ void Ui::BatchRenderer::AddTexture(VulkanTexture* texture)
 
 }
 
-void Ui::BatchRenderer::RemoveTexture(VulkanTexture* texture)
+void Ui::BatchRenderer::RemoveTexture(VulkanBindlessTexture* texture)
 {
 	m_ready_texture_slots.push_back(texture->id);
 	m_textures.remove(texture);

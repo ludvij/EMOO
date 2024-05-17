@@ -5,8 +5,8 @@
 #include "Core.hpp"
 #include "utils/Unreachable.hpp"
 #include <array>
+#include <bit>
 #include <span>
-
 
 namespace Emu
 {
@@ -28,15 +28,45 @@ struct Color
 	}
 };
 
+// ordered as they appear in NES memory
+struct ObjectAttributeEntry
+{
+	// Y pos of sprite
+	u8 y;
+	// ID of tile from pattern
+	u8 id;
+	// color flags and such
+	u8 attribute;
+	// X pos of sprite
+	u8 x;
+};
+
 class PPU
 {
-public:
-	bool isFrameDone = false;
-	bool nmi = false;
 public:
 	PPU(Configuration conf);
 	~PPU();
 	void Step();
+
+	bool IsFrameDone() const;
+	void SetFrameDone(bool set);
+
+	bool IsNMI() const;
+	void SetNMI(bool set);
+
+	bool IsDMATransfer() const;
+	bool IsDMADummy() const;
+	void SetDMADummy(bool set);
+	void SetDMAData(u8 val);
+	u16 GetDMAAddr() const;
+
+
+	ObjectAttributeEntry GetOAMEntry(size_t entry) const;
+
+
+
+	bool HasUpdatedPatternTables();
+	bool HasUpdatedPalettes();
 
 	void ConnectCartridge(std::shared_ptr<Cartridge> cartridge)
 	{
@@ -49,6 +79,8 @@ public:
 	// not const some reads modify data
 	u8 CpuRead(u16 addr);
 	void CpuWrite(u16 addr, u8 val);
+
+	void DMA();
 
 	u8  X() const
 	{
@@ -94,7 +126,9 @@ private:
 	void update_bg_shifters();
 
 
-
+	bool can_show_background() const;
+	bool can_show_sprites() const;
+	bool can_show_background_or_sprites() const;
 
 	// quick hack to easily implement mirrorings
 	enum class MirrorName
@@ -106,7 +140,7 @@ private:
 	template<MirrorName m1, MirrorName m2, MirrorName m3, MirrorName m4>
 	void nametable_mirrored_write(u16 addr, u8 val);
 
-	void load_palette(const char* src);
+	void load_palette();
 
 	void set_vBlank(bool set);
 
@@ -151,10 +185,10 @@ private:
 	Configuration m_conf;
 
 	// MMIO registers
-	u8 m_ppu_ctrl = 0b0000'0000;
-	u8 m_ppu_mask = 0b0000'0000;
+	u8 m_ppu_ctrl   = 0b0000'0000;
+	u8 m_ppu_mask   = 0b0000'0000;
 	u8 m_ppu_status = 0b1010'0000; // power up state +0+x xxxx
-	u8 m_oam_addr = 0;
+	u8 m_oam_addr   = 0;
 	//u8 m_oam_data     = 0;
 	//u16 m_ppu_addr    = 0;
 	u8 m_oam_dma = 0;
@@ -169,6 +203,7 @@ private:
 	constexpr static u16 PPU_SCROLL_ADDR = 0x2005;
 	constexpr static u16 PPU_ADDR_ADDR   = 0x2006;
 	constexpr static u16 PPU_DATA_ADDR   = 0x2007;
+
 	constexpr static u16 OAM_DMA_ADDR    = 0x4014;
 
 	// └┴ ─│
@@ -204,14 +239,9 @@ private:
 	i32 m_scanlines = 0;
 
 	// this was lifted from one lone coder
-	struct OAM_Data
-	{
-		u8 y;
-		u8 id;
-		u8 attribute;
-		u8 x;
-	} OAM[64] = { 0 };
-	u8* m_oam_data = (u8*)OAM;
+	ObjectAttributeEntry m_OAM[64];
+	// ptr to oam so we can access it byte by byte
+	u8* m_oam_data = reinterpret_cast<u8*>( m_OAM );
 
 	u8 m_bg_next_tile_id{ 0x00 };
 	u8 m_bg_next_tile_attrib{ 0x00 };
@@ -222,6 +252,21 @@ private:
 	u16 m_bg_shifter_pattern_hi{ 0x0000 };
 	u16 m_bg_shifter_attrib_lo{ 0x0000 };
 	u16 m_bg_shifter_attrib_hi{ 0x0000 };
+
+	bool m_updated_patterns{ true };
+	bool m_updated_palettes{ true };
+
+	u8 m_dma_page = 0x00;
+	u8 m_dma_addr = 0x00;
+	u8 m_dma_data = 0x00;
+
+	bool m_dma_transfer = false;
+	bool m_dma_dummy = true;
+
+	bool m_nmi = false;
+
+	bool m_frame_done = false;
+
 };
 
 template <PPU::MirrorName m1, PPU::MirrorName m2, PPU::MirrorName m3, PPU::MirrorName m4>

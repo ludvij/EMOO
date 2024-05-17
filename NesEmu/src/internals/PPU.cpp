@@ -1,17 +1,20 @@
 #include "pch.hpp"
 
+#include "palettes/Default.hpp"
 #include "PPU.hpp"
-
 
 namespace Emu
 {
 PPU::PPU(Configuration conf)
 	: m_conf(conf)
 {
-	load_palette(conf.palette_src);
+	load_palette();
 	const size_t size = static_cast<size_t>( conf.width * conf.height );
 	m_screen.resize(size);
-	std::ranges::fill(m_screen, Color(0));
+	std::ranges::fill(m_palette_ram_indexes, Color(0, 0, 0));
+	std::ranges::fill(m_screen, Color(0, 0, 0));
+	std::memset(m_OAM, 0, 64 * sizeof ObjectAttributeEntry);
+
 
 }
 PPU::~PPU()
@@ -26,7 +29,7 @@ void PPU::Step()
 		{
 			m_cycles = 1;
 		}
-		else if (m_cycles >= 2 && m_cycles < 256)
+		else if (( m_cycles >= 2 && m_cycles < 256 ) || ( m_cycles >= 321 && m_cycles < 338 ))
 		{
 			update_bg_shifters();
 			preload_tile();
@@ -41,11 +44,6 @@ void PPU::Step()
 			reset_x();
 		}
 		// first two tiles on next scanline
-		else if (m_cycles >= 321 && m_cycles < 338)
-		{
-			update_bg_shifters();
-			preload_tile();
-		}
 		// unused NT fetches
 		else if (m_cycles == 338 || m_cycles == 340)
 		{
@@ -77,31 +75,31 @@ void PPU::Step()
 			// if nmi enabled
 			if (m_ppu_ctrl & 0x80)
 			{
-				nmi = true;
+				m_nmi = true;
 			}
 		}
 	}
 
 
-
-	if (( m_ppu_mask >> 3 ) & 0x01)
+	const int x = m_cycles - 1;
+	const int y = m_scanlines;
+	if (x >= 0 && x < m_conf.width && y >= 0 && y < m_conf.height)
 	{
-		const u16 bit_mux = 0x8000 >> m_x;
-
-		const u8 p0_pixel = ( m_bg_shifter_pattern_lo & bit_mux ) > 0;
-		const u8 p1_pixel = ( m_bg_shifter_pattern_hi & bit_mux ) > 0;
-
-		const u8 bg_pixel = ( p1_pixel << 1 ) | p0_pixel;
-
-		const u8 bg_pal0 = ( m_bg_shifter_attrib_lo & bit_mux ) > 0;
-		const u8 bg_pal1 = ( m_bg_shifter_attrib_hi & bit_mux ) > 0;
-
-		const u8 bg_palette = ( bg_pal1 << 1 ) | bg_pal0;
-		const int x = m_cycles - 1;
-		const int y = m_scanlines;
-
-		if (x >= 0 && x < m_conf.width && y >= 0 && y < m_conf.height)
+		if (( m_ppu_mask >> 3 ) & 0x01)
 		{
+			const u16 bit_mux = 0x8000 >> m_x;
+
+			const u8 p0_pixel = ( m_bg_shifter_pattern_lo & bit_mux ) > 0;
+			const u8 p1_pixel = ( m_bg_shifter_pattern_hi & bit_mux ) > 0;
+
+			const u8 bg_pixel = ( p1_pixel << 1 ) | p0_pixel;
+
+			const u8 bg_pal0 = ( m_bg_shifter_attrib_lo & bit_mux ) > 0;
+			const u8 bg_pal1 = ( m_bg_shifter_attrib_hi & bit_mux ) > 0;
+
+			const u8 bg_palette = ( bg_pal1 << 1 ) | bg_pal0;
+
+
 			const auto px_pos = static_cast<size_t>( x + y * m_conf.width );
 			m_screen[px_pos] = GetColorFromPalette(bg_palette, bg_pixel);
 		}
@@ -115,9 +113,74 @@ void PPU::Step()
 		if (m_scanlines >= 262)
 		{
 			m_scanlines = 0;
-			isFrameDone = true;
+			m_frame_done = true;
 		}
 	}
+}
+
+bool PPU::IsFrameDone() const
+{
+	return m_frame_done;
+}
+
+void PPU::SetFrameDone(bool set)
+{
+	m_frame_done = set;
+}
+
+bool PPU::IsNMI() const
+{
+	return m_nmi;
+}
+
+void PPU::SetNMI(bool set)
+{
+	m_nmi = set;
+}
+
+bool PPU::IsDMATransfer() const
+{
+	return m_dma_transfer;
+}
+
+bool PPU::IsDMADummy() const
+{
+	return m_dma_dummy;
+}
+
+void PPU::SetDMADummy(bool set)
+{
+	m_dma_dummy = set;
+}
+
+void PPU::SetDMAData(u8 val)
+{
+	m_dma_data = val;
+}
+
+u16 PPU::GetDMAAddr() const
+{
+	return static_cast<u16>( ( m_dma_page << 8 ) | m_dma_addr );
+}
+
+ObjectAttributeEntry PPU::GetOAMEntry(size_t entry) const
+{
+	return m_OAM[entry];
+}
+
+
+bool PPU::HasUpdatedPatternTables()
+{
+	const bool copy = m_updated_patterns;
+	m_updated_patterns = false;
+	return copy;
+}
+
+bool PPU::HasUpdatedPalettes()
+{
+	const bool copy = m_updated_palettes;
+	m_updated_palettes = false;
+	return copy;
 }
 
 void PPU::Reset()
@@ -132,7 +195,10 @@ void PPU::Reset()
 	m_w = 0;
 	m_data_buffer = 0;
 	m_ppu_status = 0;
-	std::fill(m_palette_ram_indexes.begin(), m_palette_ram_indexes.end(), 0);
+
+	std::ranges::fill(m_palette_ram_indexes, Color(0, 0, 0));
+	std::ranges::fill(m_screen, Color(0, 0, 0));
+	std::memset(m_OAM, 0, 64);
 
 	m_bg_next_tile_attrib = 0;
 	m_bg_next_tile_hi = 0;
@@ -143,6 +209,13 @@ void PPU::Reset()
 	m_bg_shifter_attrib_lo = 0;
 	m_bg_shifter_pattern_hi = 0;
 	m_bg_shifter_pattern_lo = 0;
+
+	m_dma_addr = 0;
+	m_dma_data = 0;
+	m_dma_page = 0;
+	m_dma_dummy = true;
+	m_dma_transfer = false;
+	m_nmi = false;
 
 }
 
@@ -205,7 +278,6 @@ void PPU::CpuWrite(const u16 addr, const u8 val)
 		{
 			m_oam_data[m_oam_addr] = val;
 			m_oam_addr++;
-
 		}
 	}
 	else if (addr == PPU_SCROLL_ADDR) // ppu scroll
@@ -220,6 +292,24 @@ void PPU::CpuWrite(const u16 addr, const u8 val)
 	{
 		memory_write(m_v, val);
 		m_v += ( m_ppu_ctrl & 0x04 ) ? 32 : 1;
+	}
+	else if (addr == OAM_DMA_ADDR)
+	{
+		m_dma_transfer = true;
+		m_dma_page = val;
+		m_dma_addr = 0x00;
+	}
+}
+
+void PPU::DMA()
+{
+	m_oam_data[m_dma_addr] = m_dma_data;
+	// unsigned integer overflow is defined behaviour
+	m_dma_addr++;
+	if (m_dma_addr == 0x00)
+	{
+		m_dma_dummy = true;
+		m_dma_transfer = false;
 	}
 }
 
@@ -291,6 +381,7 @@ void PPU::memory_write(u16 addr, const u8 val)
 	addr &= 0x3FFF;
 	if (addr <= 0x0FFF) // pattern table 0
 	{
+		m_updated_patterns = true;
 		if (m_cartridge && !m_cartridge->PpuWrite(addr, val))
 		{
 			m_pattern_tables[addr] = val;
@@ -298,6 +389,7 @@ void PPU::memory_write(u16 addr, const u8 val)
 	}
 	else if (addr <= 0x1FFF) // pattern table 1
 	{
+		m_updated_patterns = true;
 		if (m_cartridge && !m_cartridge->PpuWrite(addr, val))
 		{
 			m_pattern_tables[addr] = val;
@@ -317,6 +409,7 @@ void PPU::memory_write(u16 addr, const u8 val)
 	}
 	else if (addr <= 0x3FFF)
 	{
+		m_updated_palettes = true;
 		//https://www.nesdev.org/wiki/PPU_palettes#Memory_Map
 		u16 strippedAddr = addr & 0x001F;
 		if (strippedAddr == 0x0010) strippedAddr = 0x0000;
@@ -431,7 +524,7 @@ void PPU::preload_tile()
 
 void PPU::increment_y()
 {
-	if (!( ( m_ppu_mask >> 3 ) & 0x01 ) && !( ( m_ppu_mask >> 4 ) & 0x01 ))
+	if (!can_show_background_or_sprites())
 	{
 		return;
 	}
@@ -473,7 +566,7 @@ void PPU::increment_y()
 void PPU::increment_x()
 {
 	// if rendering backgournd or sprites
-	if (!( ( m_ppu_mask >> 3 ) & 0x01 ) && !( ( m_ppu_mask >> 4 ) & 0x01 ))
+	if (!can_show_background_or_sprites())
 	{
 		return;
 	}
@@ -496,7 +589,7 @@ void PPU::increment_x()
 void PPU::reset_x()
 {
 	// if rendering backgournd or sprites
-	if (!( ( m_ppu_mask >> 3 ) & 0x01 ) && !( ( m_ppu_mask >> 4 ) & 0x01 ))
+	if (!can_show_background_or_sprites())
 	{
 		return;
 	}
@@ -508,7 +601,7 @@ void PPU::reset_x()
 void PPU::reset_y()
 {
 	// if rendering backgournd or sprites
-	if (!( ( m_ppu_mask >> 3 ) & 0x01 ) && !( ( m_ppu_mask >> 4 ) & 0x01 ))
+	if (!can_show_background_or_sprites())
 	{
 		return;
 	}
@@ -528,7 +621,7 @@ void PPU::load_bg_shifters()
 
 void PPU::update_bg_shifters()
 {
-	if (( m_ppu_mask >> 3 ) & 0x01)
+	if (can_show_background())
 	{
 		m_bg_shifter_pattern_lo <<= 1;
 		m_bg_shifter_pattern_hi <<= 1;
@@ -536,6 +629,24 @@ void PPU::update_bg_shifters()
 		m_bg_shifter_attrib_lo <<= 1;
 		m_bg_shifter_attrib_hi <<= 1;
 	}
+}
+
+bool PPU::can_show_background() const
+{
+	return m_ppu_mask & 0x08;
+}
+
+bool PPU::can_show_sprites() const
+{
+	return m_ppu_mask & 0x10;
+}
+// 0 0 -> 0 ~ 1
+// 1 0 -> 1 ~ 0
+// 0 1 -> 1 ~ 0
+// 1 1 -> 1 ~ 0
+bool PPU::can_show_background_or_sprites() const
+{
+	return m_ppu_mask & 0x18;
 }
 
 
@@ -573,7 +684,7 @@ u32* PPU::GetPatternTable(const u8 palette)
 						// can be either 00,01,10,11
 						// 00 is background/transparent
 						// else is color index
-						u8 pixel = ( tile_lo & 0x01 ) + ( tile_hi & 0x01 );
+						u8 pixel = ( ( tile_lo & 0x01 ) << 1 ) | ( tile_hi & 0x01 );
 						tile_hi >>= 1;
 						tile_lo >>= 1;
 
@@ -592,24 +703,14 @@ u32* PPU::GetPatternTable(const u8 palette)
 
 u32* PPU::GetPalette()
 {
-	for (size_t i = 0; i < m_palette.size(); i++)
-	{
-		m_palettes_show[i] = m_palette[i];
-	}
+	std::memcpy(m_palettes_show.data(), m_palette.data(), sizeof m_palette);
+
 	return m_palettes_show.data();
 }
 
-void PPU::load_palette(const char* src)
+void PPU::load_palette()
 {
-	std::ifstream file(src);
-	// TODO: add more sophisticated handling
-#ifdef NES_EMU_DEBUG
-	if (!file.is_open())
-	{
-		std::throw_with_nested(std::runtime_error("File not found"));
-	}
-#endif // NES_EMU_DEBUG
-	file.read(std::bit_cast<char*>( m_palette.data() ), sizeof m_palette);
+	std::memcpy(m_palette.data(), palettes_NTSC_pal, palettes_NTSC_pal_len);
 }
 
 void PPU::set_vBlank(bool set)

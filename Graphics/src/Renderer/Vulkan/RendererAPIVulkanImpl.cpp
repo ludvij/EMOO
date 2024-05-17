@@ -3,6 +3,7 @@
 #include "VulkanTexture.hpp"
 
 #include <backends/imgui_impl_vulkan.h>
+#include <imgui.h>
 
 #include <lud_assert.hpp>
 
@@ -66,7 +67,7 @@ void DrawSprite(const Sprite& sprite)
 
 	if (sprite.texture)
 	{
-		VulkanTexture* tex = std::bit_cast<VulkanTexture*>( sprite.texture );
+		VulkanBindlessTexture* tex = std::bit_cast<VulkanBindlessTexture*>( sprite.texture );
 		vertices[0].textureId = tex->id;
 		vertices[1].textureId = tex->id;
 		vertices[2].textureId = tex->id;
@@ -76,17 +77,17 @@ void DrawSprite(const Sprite& sprite)
 	Engine::Get().SubmitDrawRect(vertices);
 }
 
-ITexture* CreateTexture(uint32_t w, uint32_t h)
+ITexture* CreateBindlessTexture(uint32_t w, uint32_t h)
 {
 	Lud::assert::eq(s_initialized, true, "Did you forgot to call to Renderer::Init ?");
 
-	return new VulkanTexture(w, h);
+	return new VulkanBindlessTexture(w, h);
 }
 
-ITexture* CreateTexture(uint32_t w, uint32_t h, void* data)
+ITexture* CreateBindlessTexture(uint32_t w, uint32_t h, void* data)
 {
 	Lud::assert::eq(s_initialized, true, "Did you forgot to call to Renderer::Init ?");
-	return new VulkanTexture(w, h, data);
+	return new VulkanBindlessTexture(w, h, data);
 }
 
 void BeginImGuiFrame()
@@ -95,5 +96,22 @@ void BeginImGuiFrame()
 }
 
 
+ITexture* CreateImGuiTexture(uint32_t w, uint32_t h)
+{
+	Lud::assert::eq(s_initialized, true, "Did you forgot to call to Renderer::Init ?");
+	return new VulkanImGuiTexture(w, h);
+}
+
+ITexture* CreateImGuiTexture(uint32_t w, uint32_t h, void* data)
+{
+	Lud::assert::eq(s_initialized, true, "Did you forgot to call to Renderer::Init ?");
+	return new VulkanImGuiTexture(w, h, data);
+}
+
+ImTextureID TextureAsImgui(ITexture* texture)
+{
+	auto v_tex = std::bit_cast<VulkanImGuiTexture*>( texture );
+	return v_tex->AsImTexture();
+}
 
 }

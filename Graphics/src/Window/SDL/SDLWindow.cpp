@@ -67,11 +67,11 @@ void SDLWindow::InitImguiForVulkan()
 {
 	ImGui_ImplSDL3_InitForVulkan(m_window);
 }
-void SDLWindow::ShutdownImgui()
+void SDLWindow::ShutdownImGuiWindow()
 {
 	ImGui_ImplSDL3_Shutdown();
 }
-void SDLWindow::ProcessEvent(void* event)
+void SDLWindow::ProcessEventForImGui(void* event)
 {
 	ImGui_ImplSDL3_ProcessEvent(static_cast<SDL_Event*>( event ));
 }

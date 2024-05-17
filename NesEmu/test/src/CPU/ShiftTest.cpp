@@ -17,8 +17,8 @@ TEST_F(TestShift, ASL)
 	clearCycles(2);
 
 	ASSERT_EQ(console.GetCpu().A(), 0x80 + 26);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::P_C_FLAG);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::P_N_FLAG);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::C);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::N);
 }
 
 
@@ -33,8 +33,8 @@ TEST_F(TestShift, ASL_WRITE_MEMORY)
 	ASSERT_NO_THROW(clearCycles());
 
 	ASSERT_EQ(console.GetBus().Read(2), 0x80 + 26);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::P_C_FLAG);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::P_N_FLAG);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::C);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::N);
 }
 
 TEST_F(TestShift, LSR)
@@ -48,8 +48,8 @@ TEST_F(TestShift, LSR)
 	ASSERT_NO_THROW(clearCycles());
 
 	ASSERT_EQ(console.GetCpu().A(), 0);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::P_C_FLAG);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::P_Z_FLAG);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::C);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::Z);
 }
 
 TEST_F(TestShift, ROL)
@@ -63,8 +63,8 @@ TEST_F(TestShift, ROL)
 	ASSERT_NO_THROW(clearCycles());
 
 	ASSERT_EQ(console.GetCpu().A(), 0x82);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::P_C_FLAG);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::P_N_FLAG);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::C);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::N);
 
 }
 
@@ -75,11 +75,11 @@ TEST_F(TestShift, ROR)
 	)");
 
 	console.GetCpu().SetA(0x81);
-	console.GetCpu().SetP(Emu::P_C_FLAG);
+	console.GetCpu().SetP(Emu::Flag::C);
 
 	ASSERT_NO_THROW(clearCycles());
 
 	ASSERT_EQ(console.GetCpu().A(), 0x40 + 0x80);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::P_C_FLAG);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::P_N_FLAG);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::C);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::N);
 }

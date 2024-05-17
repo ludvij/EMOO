@@ -25,11 +25,11 @@ public:
 
 	// imgui functions
 	virtual void InitImguiForVulkan() = 0;
-	virtual void ShutdownImgui() = 0;
+	virtual void ShutdownImGuiWindow() = 0;
 
 	virtual void BeginImGuiFrame() = 0;
 
-	virtual void ProcessEvent(void* event) = 0;
+	virtual void ProcessEventForImGui(void* event) = 0;
 };
 }
 

@@ -4,6 +4,8 @@
 #include <functional>
 #include <unordered_map>
 
+#include <print>
+
 namespace Ui
 {
 enum class Button
@@ -26,6 +28,29 @@ enum class Button
 	L3,
 	MISC,
 };
+
+inline auto GetButtonName(Button b)
+{
+	switch (b)
+	{
+	case Ui::Button::FACE_DOWN:  return "FACE_DOWN";
+	case Ui::Button::FACE_LEFT:  return "FACE_LEFT";
+	case Ui::Button::FACE_UP:    return "FACE_UP";
+	case Ui::Button::FACE_RIGHT: return "FACE_RIGHT";
+	case Ui::Button::DPAD_UP:    return "DPAD_UP";
+	case Ui::Button::DPAD_DOWN:  return "DPAD_DOWN";
+	case Ui::Button::DPAD_LEFT:  return "DPAD_LEFT";
+	case Ui::Button::DPAD_RIGHT: return "DPAD_RIGHT";
+	case Ui::Button::START:      return "START";
+	case Ui::Button::SELECT:     return "SELECT";
+	case Ui::Button::R1:         return "R1";
+	case Ui::Button::R3:         return "R3";
+	case Ui::Button::L1:         return "L1";
+	case Ui::Button::L3:         return "L3";
+	case Ui::Button::MISC:       return "MISC";
+	default:                     return "INVALID";
+	}
+}
 
 class IInput
 {
@@ -53,7 +78,6 @@ public:
 		{
 			return;
 		}
-
 		for (const auto& action : m_actions[b])
 		{
 			action();

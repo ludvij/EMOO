@@ -19,14 +19,14 @@ TEST_F(TestStack, TSX)
 	clearCycles(2);
 
 	ASSERT_EQ(console.GetCpu().X(), 0x80);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::P_N_FLAG);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::N);
 
 	console.GetCpu().SetS(0);
 
 	clearCycles(2);
 
 	ASSERT_EQ(console.GetCpu().X(), 0x00);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::P_Z_FLAG);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::Z);
 }
 
 TEST_F(TestStack, TXS)
@@ -66,13 +66,13 @@ TEST_F(TestStack, STACK_PUSH)
 	ASSERT_EQ(console.GetBus().Read(0x0100 + console.GetCpu().S() + 1), 12);
 	ASSERT_EQ(console.GetCpu().S() + 1, base);
 	clearCycles(3);
-	ASSERT_EQ(console.GetBus().Read(0x0100 + console.GetCpu().S() + 1), 23 | Emu::P_B_FLAG | Emu::P_1_FLAG);
+	ASSERT_EQ(console.GetBus().Read(0x0100 + console.GetCpu().S() + 1), 23 | Emu::Flag::B | Emu::Flag::U);
 	ASSERT_EQ(console.GetCpu().S() + 2, base);
 	clearCycles(3);
 	ASSERT_EQ(console.GetBus().Read(0x0100 + console.GetCpu().S() + 1), 12);
 	ASSERT_EQ(console.GetCpu().S() + 3, base);
 	clearCycles(3);
-	ASSERT_EQ(console.GetBus().Read(0x0100 + console.GetCpu().S() + 1), 23 | Emu::P_B_FLAG | Emu::P_1_FLAG);
+	ASSERT_EQ(console.GetBus().Read(0x0100 + console.GetCpu().S() + 1), 23 | Emu::Flag::B | Emu::Flag::U);
 	ASSERT_EQ(console.GetCpu().S() + 4, base);
 }
 
@@ -107,24 +107,24 @@ TEST_F(TestStack, STACK_POP)
 	// 0x80, 12, 0x23, -
 	ASSERT_EQ(0, console.GetCpu().A());
 	ASSERT_EQ(static_cast<Emu::u8>( console.GetCpu().S() - 1 ), base);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::P_Z_FLAG);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::Z);
 
 	clearCycles(4);
 	// 12, 0x23, -
 	ASSERT_EQ(0x80, console.GetCpu().A());
 	ASSERT_EQ(static_cast<Emu::u8>( console.GetCpu().S() - 2 ), base);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::P_N_FLAG);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::N);
 
 
 	clearCycles(4);
 	// 0x23, -
-	ASSERT_EQ(12 | Emu::P_1_FLAG | Emu::P_B_FLAG, console.GetCpu().P());
+	ASSERT_EQ(12 | Emu::Flag::U, console.GetCpu().P());
 	ASSERT_EQ(static_cast<Emu::u8>( console.GetCpu().S() - 3 ), base);
 
 
 	clearCycles(4);
 	// -
-	ASSERT_EQ(0x23 | Emu::P_1_FLAG | Emu::P_B_FLAG, console.GetCpu().P());
+	ASSERT_EQ(0x23 | Emu::Flag::U, console.GetCpu().P());
 	ASSERT_EQ(static_cast<Emu::u8>( console.GetCpu().S() - 4 ), base);
 
 }

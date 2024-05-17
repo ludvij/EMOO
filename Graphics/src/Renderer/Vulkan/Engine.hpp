@@ -9,11 +9,14 @@
 #include "vkutil/Pipelines.hpp"
 #include "vkutil/Types.hpp"
 
+#include "UUID/UUID.hpp"
+
 struct SDL_Window;
 
 namespace Ui
 {
 
+class VulkanImGuiTexture;
 namespace Detail
 {
 
@@ -25,9 +28,9 @@ public:
 
 	void Flush();
 
+
 private:
 	std::deque<std::function<void()>> deletors;
-
 };
 
 struct FrameData
@@ -68,8 +71,8 @@ public:
 	void Resize();
 	void RequestResize();
 
-	void AddTextureToBatcher(VulkanTexture* texture);
-	void RemoveTextureFromBatcher(VulkanTexture* texture);
+	void AddTextureToBatcher(VulkanBindlessTexture* texture);
+	void RemoveTextureFromBatcher(VulkanBindlessTexture* texture);
 
 
 	Detail::AllocatedImage CreateImage(vk::Extent3D size, vk::Format format, vk::ImageUsageFlags usage, bool mipmapped = false);
@@ -92,6 +95,11 @@ public:
 	VmaAllocator GetAllocator() const
 	{
 		return m_allocator;
+	}
+
+	vk::Sampler GetSampler() const
+	{
+		return m_default_sampler_nearest;
 	}
 
 
@@ -204,6 +212,7 @@ private:
 
 	BatchRenderer* m_batcher{ nullptr };
 	friend class BatchRenderer;
+	friend class VulkanImGuiTexture;
 };
 
 }

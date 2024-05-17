@@ -22,12 +22,12 @@ TEST_F(TestIncrementDecrement, INC)
 	clearCycles(2); // ldx
 	clearCycles(5); // inc zpi
 	ASSERT_EQ(console.GetBus().Read(0x23), 0x80);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::P_N_FLAG);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::N);
 	clearCycles(6); // inc zpx
 	ASSERT_EQ(console.GetBus().Read(0x24), 0xff);
 	clearCycles(6); // inc abs
 	ASSERT_EQ(console.GetBus().Read(0x24), 0);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::P_Z_FLAG);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::Z);
 	clearCycles(7); // inc abx
 	ASSERT_EQ(console.GetBus().Read(0x24), 1);
 }
@@ -45,13 +45,13 @@ TEST_F(TestIncrementDecrement, INX)
 	clearCycles(2); // ldx
 	clearCycles(2); // inx
 	ASSERT_EQ(console.GetCpu().X(), 0x80);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::P_N_FLAG);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::N);
 	clearCycles(2); // ldx
 	clearCycles(2); // inx
 	ASSERT_EQ(console.GetCpu().X(), 0xff);
 	clearCycles(2); // inx
 	ASSERT_EQ(console.GetCpu().X(), 0);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::P_Z_FLAG);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::Z);
 }
 
 TEST_F(TestIncrementDecrement, INY)
@@ -67,13 +67,13 @@ TEST_F(TestIncrementDecrement, INY)
 	clearCycles(2); // ldy
 	clearCycles(2); // iny
 	ASSERT_EQ(console.GetCpu().Y(), 0x80);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::P_N_FLAG);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::N);
 	clearCycles(2); // ldy
 	clearCycles(2); // iny
 	ASSERT_EQ(console.GetCpu().Y(), 0xff);
 	clearCycles(2); // iny
 	ASSERT_EQ(console.GetCpu().Y(), 0);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::P_Z_FLAG);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::Z);
 }
 
 TEST_F(TestIncrementDecrement, DEC)
@@ -92,10 +92,10 @@ TEST_F(TestIncrementDecrement, DEC)
 	clearCycles(2); // ldx
 	clearCycles(5); // dec zpi
 	ASSERT_EQ(console.GetBus().Read(0x23), 0x80);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::P_N_FLAG);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::N);
 	clearCycles(6); // dec zpx
 	ASSERT_EQ(console.GetBus().Read(0x24), 0);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::P_Z_FLAG);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::Z);
 	clearCycles(6); // dec abs
 	ASSERT_EQ(console.GetBus().Read(0x24), 0xff);
 	clearCycles(7); // dec abx
@@ -115,11 +115,11 @@ TEST_F(TestIncrementDecrement, DEX)
 	clearCycles(2); // ldx
 	clearCycles(2); // dex
 	ASSERT_EQ(console.GetCpu().X(), 0x80);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::P_N_FLAG);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::N);
 	clearCycles(2); // ldx
 	clearCycles(2); // dex
 	ASSERT_EQ(console.GetCpu().X(), 0);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::P_Z_FLAG);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::Z);
 	clearCycles(2); // dex
 	ASSERT_EQ(console.GetCpu().X(), 0xff);
 }
@@ -137,11 +137,11 @@ TEST_F(TestIncrementDecrement, DEY)
 	clearCycles(2); // ldy
 	clearCycles(2); // dey
 	ASSERT_EQ(console.GetCpu().Y(), 0x80);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::P_N_FLAG);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::N);
 	clearCycles(2); // ldy
 	clearCycles(2); // dey
 	ASSERT_EQ(console.GetCpu().Y(), 0);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::P_Z_FLAG);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::Z);
 	clearCycles(2); // dey
 	ASSERT_EQ(console.GetCpu().Y(), 0xff);
 }

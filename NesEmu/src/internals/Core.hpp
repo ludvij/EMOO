@@ -43,16 +43,15 @@ using u64 = uint64_t;
 
 struct Configuration
 {
-	const u32 CpuClockDivisor;
-	const u32 PpuClockDivisor;
-	const u32 FrameRate;
-	const float width;
-	const float height;
-	const char* palette_src;
+	u32 CpuClockDivisor;
+	u32 PpuClockDivisor;
+	u32 FrameRate;
+	float width;
+	float height;
 };
 
-inline constexpr Configuration NTSC{ 12, 4, 60, 256.0f, 240.0f, "palettes/NTSC.pal" };
-inline constexpr Configuration PAL{ 16, 5, 50, 256.0f, 240.0f, "palettes/PAL.pal" };
+inline constexpr Configuration NTSC{ 12, 4, 60, 256.0f, 240.0f };
+inline constexpr Configuration PAL{ 16, 5, 50, 256.0f, 240.0f };
 
 /*
 * Master clock of the nes

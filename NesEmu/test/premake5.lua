@@ -21,6 +21,7 @@ project "NesEmu-test"
 		"%{IncludeDir.ctre}",
 		"%{IncludeDir.gtest}",
 		"%{IncludeDir.NesEmu}",
+		"%{IncludeDir.lud_utils}",
 	}
 	links {
 		"NesEmu"

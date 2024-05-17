@@ -28,10 +28,10 @@ private:
 	NativeType* m_window;
 
 	// Inherited via IWindow
-	void ShutdownImgui() override;
+	void ShutdownImGuiWindow() override;
 
 	// Inherited via IWindow
-	void ProcessEvent(void* event) override;
+	void ProcessEventForImGui(void* event) override;
 
 	// Inherited via IWindow
 	void BeginImGuiFrame() override;

@@ -20,13 +20,13 @@ TEST_F(TestRegTransfer, TAX)
 	clearCycles(2);
 
 	ASSERT_EQ(console.GetCpu().X(), 0x80);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::P_N_FLAG);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::N);
 
 	console.GetCpu().SetA(0);
 
 	clearCycles(2);
 	ASSERT_EQ(console.GetCpu().X(), 0);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::P_Z_FLAG);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::Z);
 }
 
 TEST_F(TestRegTransfer, TAY)
@@ -41,13 +41,13 @@ TEST_F(TestRegTransfer, TAY)
 	clearCycles(2);
 
 	ASSERT_EQ(console.GetCpu().Y(), 0x80);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::P_N_FLAG);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::N);
 
 	console.GetCpu().SetA(0);
 
 	clearCycles(2);
 	ASSERT_EQ(console.GetCpu().Y(), 0);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::P_Z_FLAG);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::Z);
 }
 
 TEST_F(TestRegTransfer, TXA)
@@ -62,13 +62,13 @@ TEST_F(TestRegTransfer, TXA)
 	clearCycles(2);
 
 	ASSERT_EQ(console.GetCpu().A(), 0x80);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::P_N_FLAG);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::N);
 
 	console.GetCpu().SetX(0);
 
 	clearCycles(2);
 	ASSERT_EQ(console.GetCpu().A(), 0);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::P_Z_FLAG);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::Z);
 }
 
 TEST_F(TestRegTransfer, TYA)
@@ -83,11 +83,11 @@ TEST_F(TestRegTransfer, TYA)
 	clearCycles(2);
 
 	ASSERT_EQ(console.GetCpu().A(), 0x80);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::P_N_FLAG);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::N);
 
 	console.GetCpu().SetY(0);
 
 	clearCycles(2);
 	ASSERT_EQ(console.GetCpu().A(), 0);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::P_Z_FLAG);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::Z);
 }

@@ -1,15 +1,29 @@
 #ifndef GRAPHICS_ICOMPONENT_HEADER
 #define GRAPHICS_ICOMPONENT_HEADER
 
-namespace Ui 
+#include "UUID/UUID.hpp"
+
+namespace Ui::Component
 {
 class IComponent
 {
 public:
 	virtual ~IComponent() = default;
 
-	virtual void OnCreate() {};
-	virtual void OnRender() = 0; 
+	virtual void OnCreate();
+	virtual void OnRender() = 0;
+
+	bool WasRemoved() const;
+
+	friend bool operator==(const IComponent& lhs, const IComponent& rhs);
+	bool operator==(const UUID& id) const;
+
+
+public:
+	uuid_t id;
+protected:
+	bool m_removed{ false };
+
 };
 }
 

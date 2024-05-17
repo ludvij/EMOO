@@ -9,7 +9,7 @@ u8 Bus::Read(const u16 addr) const
 
 	if (addr < 0x2000) // Ram and ram mirrors
 	{
-		return m_cpuRam[addr & 0x07FFF];
+		return m_cpuRam[addr & 0x07FF];
 	}
 	if (addr >= 0x2000 && addr < 0x4000) // PPU registers and mirrors
 	{
@@ -49,7 +49,11 @@ void Bus::Write(const u16 addr, const u8 val)
 	{
 		m_ppu->CpuWrite(addr, val);
 	}
-	if (addr >= 0x4000 && addr < 0x4018) // APU and IO functionality
+	else if (addr == 0x4014) // DMA
+	{
+		m_ppu->CpuWrite(addr, val);
+	}
+	else if (addr >= 0x4000 && addr < 0x4018) // APU and IO functionality
 	{
 		if (addr == 0x4016 || addr == 0x4017) // JOY1 nad JOY2
 		{
@@ -60,12 +64,35 @@ void Bus::Write(const u16 addr, const u8 val)
 			m_apu->CpuWrite(addr, val);
 		}
 	}
-	if (addr >= 0x4018 && addr < 0x4020) // APU and IO functionality Test mode
+	else if (addr >= 0x4018 && addr < 0x4020) // APU and IO functionality Test mode
 	{
 	}
 	else // cartridge space
 	{
 		m_cartridge->CpuWrite(addr, val);
+	}
+}
+
+void Bus::DoDMA(u64 cycles)
+{
+	if (m_ppu->IsDMADummy())
+	{
+		if (cycles % 2 == 1)
+		{
+			m_ppu->SetDMADummy(false);
+		}
+	}
+	else
+	{
+		if (cycles % 2 == 0)
+		{
+			const u8 dma_data = Read(m_ppu->GetDMAAddr());
+			m_ppu->SetDMAData(dma_data);
+		}
+		else
+		{
+			m_ppu->DMA();
+		}
 	}
 }
 

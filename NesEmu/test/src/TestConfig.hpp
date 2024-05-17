@@ -4,6 +4,10 @@
 #include <NesEmu.hpp>
 #include <utils/Assembler.hpp>
 
+#include "ROM/blank.hpp"
+#include "ROM/nestest.hpp"
+#include <lud_assert.hpp>
+
 class TestFixture : public testing::Test
 {
 protected:
@@ -19,11 +23,12 @@ protected:
 	void SetUp() override
 	{
 		// reload Cartridge memory
-		console.LoadCartridge("blank.nes");
+		testing::internal::CaptureStdout();
+		console.LoadCartridgeFromMemory(blank_nes, blank_nes_len);
+		testing::internal::GetCapturedStdout();
 
 
 		// force reset to get the values I want in the registers
-		console.Reset();
 		console.GetBus().Write(0xFFFC, 0);
 		console.GetBus().Write(0xFFFB, 0);
 		// clear startup cycles
@@ -33,6 +38,9 @@ protected:
 	void TearDown() override
 	{
 		asse.Clean();
+		testing::internal::CaptureStdout();
+		console.UnloadCartridge();
+		testing::internal::GetCapturedStdout();
 	}
 
 	void clearCycles(int x = 1)

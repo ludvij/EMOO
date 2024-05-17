@@ -6,7 +6,9 @@
 #include "Sprite.hpp"
 #include "Texture.hpp"
 
+#include <imgui.h>
 #include <memory>
+
 
 
 namespace Ui::Renderer
@@ -20,9 +22,14 @@ void RequestResize();
 void DrawSprite(const Sprite& sprite);
 
 // user needs to delete texture manually
-ITexture* CreateTexture(uint32_t w, uint32_t h);
+ITexture* CreateBindlessTexture(uint32_t w, uint32_t h);
 // user needs to delete texture manually
-ITexture* CreateTexture(uint32_t w, uint32_t h, void* data);
+ITexture* CreateBindlessTexture(uint32_t w, uint32_t h, void* data);
+
+ITexture* CreateImGuiTexture(uint32_t w, uint32_t h);
+ITexture* CreateImGuiTexture(uint32_t w, uint32_t h, void* data);
+
+ImTextureID TextureAsImgui(ITexture* texture);
 
 void BeginImGuiFrame();
 }

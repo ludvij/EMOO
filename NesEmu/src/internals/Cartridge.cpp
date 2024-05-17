@@ -21,19 +21,22 @@ Cartridge::Cartridge(const std::string& filePath)
 
 
 	// validate header
-
+	if (!is_header_valid())
+	{
+		throw std::runtime_error("File is not a valid ROM");
+	}
 	// skip trainer if present
-	if (m_header.mapper1 & 0b100)
+	if (m_header.mapper1 & 0x04)
 	{
 		inputFile.seekg(512, std::ios_base::cur);
 	}
 
 	// prg rom is in 16 kiB chunks
 	m_prgRom.resize(static_cast<size_t>( m_header.prgRomChunks ) * 0x4000);
-	inputFile.read(std::bit_cast<char*>( m_prgRom.data() ), static_cast<size_t>( m_prgRom.size() ));
+	inputFile.read(std::bit_cast<char*>( m_prgRom.data() ), m_prgRom.size() * sizeof u8);
 	// chr rom is in 8 kib chunks
 	m_chrRom.resize(static_cast<size_t>( m_header.chrRomChunks ) * 0x2000);
-	inputFile.read(std::bit_cast<char*>( m_chrRom.data() ), static_cast<size_t>( m_chrRom.size() ));
+	inputFile.read(std::bit_cast<char*>( m_chrRom.data() ), m_chrRom.size() * sizeof u8);
 
 	m_mapperNumber = ( m_header.mapper2 & 0xf0 ) | ( m_header.mapper1 >> 4 );
 	m_mirroring = m_header.mapper1 & 0b1 ? Mirroring::Vertical : Mirroring::Horizontal;
@@ -54,6 +57,65 @@ Cartridge::Cartridge(const std::string& filePath)
 	std::println(
 		"Loaded ROM [{:s}]\n  Mapper:\n    [{:s} : {:d}]\n  Chunks:\n    [PGR : {:d}]\n    [CHR : {:d}]\n  Mirorring:\n    [{:s}]",
 		filePath,
+		m_mapper->GetName(),
+		m_mapperNumber,
+		m_header.prgRomChunks,
+		m_header.chrRomChunks,
+		to_string(m_mirroring)
+	);
+}
+
+Cartridge::Cartridge(const u8* data, const size_t size)
+	: m_valid(false)
+	, m_file_path("Reading from memory")
+{
+	const u8* ptr_data = data;
+	size_t offset = 0;
+	std::memcpy(&m_header, ptr_data, sizeof iNesHeader);
+	offset += sizeof iNesHeader;
+	ptr_data = data + offset;
+
+	// validate header
+	if (!is_header_valid())
+	{
+		throw std::runtime_error("File is not a valid ROM");
+	}
+
+	// skip trainer if present
+	if (m_header.mapper1 & 0b100)
+	{
+		offset += 512;
+		ptr_data = data + offset;
+
+	}
+
+	// prg rom is in 16 kiB chunks
+	m_prgRom.resize(static_cast<size_t>( m_header.prgRomChunks ) * 0x4000);
+	std::memcpy(std::bit_cast<char*>( m_prgRom.data() ), ptr_data, m_prgRom.size() * sizeof u8);
+	// chr rom is in 8 kib chunks
+	offset += m_prgRom.size() * sizeof u8;
+	ptr_data = data + offset;
+	m_chrRom.resize(static_cast<size_t>( m_header.chrRomChunks ) * 0x2000);
+	std::memcpy(std::bit_cast<char*>( m_chrRom.data() ), ptr_data, m_chrRom.size() * sizeof u8);
+
+	m_mapperNumber = ( m_header.mapper2 & 0xf0 ) | ( m_header.mapper1 >> 4 );
+	m_mirroring = m_header.mapper1 & 0b1 ? Mirroring::Vertical : Mirroring::Horizontal;
+
+
+	switch (m_mapperNumber)
+	{
+	case 0:
+		m_mapper = std::make_unique<NROM>(m_header.prgRomChunks, m_header.chrRomChunks);
+		break;
+	default:
+		std::println("Mapper [{:d}] Not implemented", m_mapperNumber);
+		std::throw_with_nested(std::runtime_error("Mapper not implemented"));
+	}
+
+	m_valid = true;
+	std::println(
+		"Loaded ROM [{:s}]\n  Mapper:\n    [{:s} : {:d}]\n  Chunks:\n    [PGR : {:d}]\n    [CHR : {:d}]\n  Mirorring:\n    [{:s}]",
+		m_file_path,
 		m_mapper->GetName(),
 		m_mapperNumber,
 		m_header.prgRomChunks,
@@ -125,5 +187,9 @@ std::string Cartridge::to_string(Mirroring mirroring)
 	case Emu::Cartridge::Mirroring::Horizontal: return "HORIZONTAL";
 	default:                                    return "??????????";
 	}
+}
+bool Cartridge::is_header_valid() const
+{
+	return strncmp(m_header.name, "NES\x1A", 4) == 0;
 }
 }

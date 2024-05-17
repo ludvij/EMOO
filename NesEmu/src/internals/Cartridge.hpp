@@ -18,6 +18,7 @@ class Cartridge
 {
 public:
 	explicit Cartridge(const std::string& filePath);
+	explicit Cartridge(const u8* data, size_t size);
 	~Cartridge();
 
 	void ConnectBus(Bus* bus)
@@ -66,6 +67,7 @@ public:
 
 private:
 
+	bool is_header_valid() const;
 
 private:
 

@@ -66,7 +66,7 @@ TEST_F(TestSystemFunction, BRK)
 
 	clearCycles(7);
 
-	ASSERT_EQ(p | Emu::P_B_FLAG | Emu::P_1_FLAG, console.GetBus().Read(0x01fb));
+	ASSERT_EQ(p | Emu::Flag::B | Emu::Flag::U, console.GetBus().Read(0x01fb));
 	const Emu::u8 lo = console.GetBus().Read(0x01fc);
 	const Emu::u8 hi = console.GetBus().Read(0x01fd);
 	ASSERT_EQ(pc + 2, static_cast<Emu::u16>( hi << 8 ) | lo);
@@ -87,6 +87,6 @@ TEST_F(TestSystemFunction, RTI)
 	console.GetCpu().SetPC(2);
 	clearCycles(6);
 
-	ASSERT_EQ(p | Emu::P_B_FLAG | Emu::P_1_FLAG, console.GetCpu().P());
+	ASSERT_EQ(p | Emu::Flag::U, console.GetCpu().P());
 	ASSERT_EQ(pc + 2, console.GetCpu().PC());
 }

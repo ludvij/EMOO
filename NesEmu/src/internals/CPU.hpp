@@ -14,7 +14,7 @@
 namespace Emu
 {
 /*
- * Processor status (m_S) flags
+ * Processor status (m_P) flags
  * 7654 3210
  * NV1B DIZC
  * ││││ │││└>  Carry flag
@@ -26,14 +26,18 @@ namespace Emu
  * │└───────> oVerflow flag
  * └────────>  Negative flag
  */
-constexpr u8 P_C_FLAG = 0b0000'0001;
-constexpr u8 P_Z_FLAG = 0b0000'0010;
-constexpr u8 P_I_FLAG = 0b0000'0100;
-constexpr u8 P_D_FLAG = 0b0000'1000;
-constexpr u8 P_B_FLAG = 0b0001'0000;
-constexpr u8 P_1_FLAG = 0b0010'0000;
-constexpr u8 P_V_FLAG = 0b0100'0000;
-constexpr u8 P_N_FLAG = 0b1000'0000;
+
+enum Flag : u8
+{
+	C = 0x01,
+	Z = 0x02,
+	I = 0x04,
+	D = 0x08,
+	B = 0x10,
+	U = 0x20,
+	V = 0x40,
+	N = 0x80,
+};
 
 
 class Bus;
@@ -48,41 +52,29 @@ public:  // Public functions
 		m_bus = bus;
 	}
 
-	void SetCloseCallbackApplication(std::function<void()> fn)
-	{
-		m_close_application = fn;
-	};
-
-	void SetCloseCallbackEmulator(std::function<void()> fn)
-	{
-		m_close_emulator = fn;
-	};
-
-
-
 	void Step();
 
 	void Reset();
 	void IRQ();
 	void NMI();
 
-	u8 A()   const
+	u8 A() const
 	{
 		return m_A;
 	}
-	u8 X()   const
+	u8 X() const
 	{
 		return m_X;
 	}
-	u8 Y()   const
+	u8 Y() const
 	{
 		return m_Y;
 	}
-	u8 S()   const
+	u8 S() const
 	{
 		return m_S;
 	}
-	u8 P()   const
+	u8 P() const
 	{
 		return m_P;
 	}
@@ -273,10 +265,10 @@ private: // private functions
 	void STP(u16 addr);
 
 	// some helper functions
-	void setFlagIf(u8 flag, bool cond);
-	void setFlag(u8 flag);
-	void clearFlag(u8 flag);
-	bool checkFlag(u8 flag) const;
+	void setFlagIf(Flag flag, bool cond);
+	void setFlag(Flag flag);
+	void clearFlag(Flag flag);
+	bool checkFlag(Flag flag) const;
 	bool isImplied() const;
 
 	void branchIfCond(u16 addr, bool cond);
@@ -297,9 +289,6 @@ private: // private members
 	u32 m_oopsCycles = 0;
 	u32 m_totalCycles = 0;
 	bool m_canOops = false;
-
-	std::function<void()> m_close_application;
-	std::function<void()> m_close_emulator;
 
 
 	/*

@@ -75,7 +75,9 @@ project "Graphics"
 
 	filter "configurations:Debug"
 		defines { 
-			"GRAPHICS_DEBUG" 
+			"GRAPHICS_DEBUG",
+			"TRACE_UUID_LIFETIMES",
+			"GRAPHICS_SHOW_FPS"
 		}
 		runtime "debug"
 		symbols "On"

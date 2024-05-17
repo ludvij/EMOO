@@ -13,10 +13,6 @@ Console::Console(Configuration conf = NTSC)
 	m_bus.ConnectController(0, &m_controller_ports[0]);
 	m_bus.ConnectController(1, &m_controller_ports[1]);
 	//m_apu.ConnectBus(&m_bus);
-	m_cpu.SetCloseCallbackEmulator([&]()
-		{
-			m_can_run = false;
-		});
 }
 
 Console::~Console()
@@ -27,16 +23,25 @@ void Console::Step()
 {
 	if (m_masterClock % m_conf.CpuClockDivisor == 0)
 	{
-		m_cpu.Step();
+		if (m_ppu.IsDMATransfer())
+		{
+			m_bus.DoDMA(m_registered_cpu_cycles);
+		}
+		else
+		{
+			m_cpu.Step();
+		}
+		m_registered_cpu_cycles++;
 	}
 	if (m_masterClock % m_conf.PpuClockDivisor == 0)
 	{
 		m_ppu.Step();
+		m_registered_ppu_cycles++;
 	}
 
-	if (m_ppu.nmi)
+	if (m_ppu.IsNMI())
 	{
-		m_ppu.nmi = false;
+		m_ppu.SetNMI(false);
 		m_cpu.NMI();
 	}
 	m_masterClock++;
@@ -44,10 +49,14 @@ void Console::Step()
 
 void Console::Reset()
 {
-	std::println("Resetting emulator");
+	if (!m_cartridge)
+	{
+		return;
+	}
 	m_cpu.Reset();
 	m_ppu.Reset();
 	m_bus.Reset();
+	m_apu.Reset();
 	m_masterClock = 0;
 }
 
@@ -60,17 +69,34 @@ void Console::LoadCartridge(const std::string& filepath)
 	Reset();
 }
 
+void Console::LoadCartridgeFromMemory(const u8* data, const size_t size)
+{
+	m_cartridge = std::make_shared<Cartridge>(data, size);
+	m_cartridge->ConnectBus(&m_bus);
+	m_bus.ConnectCartridge(m_cartridge);
+	m_ppu.ConnectCartridge(m_cartridge);
+	Reset();
+}
+
+void Console::UnloadCartridge()
+{
+	Reset();
+	m_cartridge = nullptr;
+	m_bus.ConnectCartridge(nullptr);
+	m_ppu.ConnectCartridge(nullptr);
+}
+
 bool Console::RunFrame()
 {
-	if (!m_cartridge || !m_can_run)
+	if (!m_cartridge)
 	{
 		return false;
 	}
-	while (!m_ppu.isFrameDone)
+	while (!m_ppu.IsFrameDone())
 	{
 		Step();
 	}
-	m_ppu.isFrameDone = false;
+	m_ppu.SetFrameDone(false);
 	return true;
 }
 

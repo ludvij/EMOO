@@ -32,6 +32,8 @@ public:
 		m_ppu = ppu;
 	}
 
+	void DoDMA(u64 cycles);
+
 	void ConnectAPU(APU* apu)
 	{
 		m_apu = apu;

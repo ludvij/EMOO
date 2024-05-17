@@ -27,6 +27,9 @@ public:
 	void Reset();
 
 	void LoadCartridge(const std::string& filepath);
+	void LoadCartridgeFromMemory(const u8* data, size_t size);
+
+	void UnloadCartridge();
 
 	bool RunFrame();
 
@@ -52,6 +55,16 @@ public:
 		return m_ppu.GetScreen();
 	};
 
+	bool HasUpdatedPatternTables()
+	{
+		return m_ppu.HasUpdatedPatternTables();
+	}
+
+	bool HasUpdatedPalettes()
+	{
+		return m_ppu.HasUpdatedPalettes();
+	}
+
 	u32* OutputPatternTable(u8 palette)
 	{
 		return m_ppu.GetPatternTable(palette);
@@ -72,11 +85,6 @@ public:
 		return m_controller_ports[port];
 	}
 
-	void SetCloseOperation(std::function<void()> fn)
-	{
-		m_cpu.SetCloseCallbackApplication(fn);
-	}
-
 private:
 	// Bus components
 	CPU m_cpu;
@@ -84,7 +92,7 @@ private:
 	APU m_apu;
 	Bus m_bus;
 
-	u32 m_masterClock = 0;
+	u64 m_masterClock = 0;
 
 	std::shared_ptr<Cartridge> m_cartridge;
 
@@ -93,7 +101,9 @@ private:
 	// configuration struct containing platform related info (ntsc, pal)
 	Configuration m_conf;
 
-	bool m_can_run = true;
+	u64 m_registered_cpu_cycles = 0;
+	u64 m_registered_ppu_cycles = 0;
+
 };
 
 }

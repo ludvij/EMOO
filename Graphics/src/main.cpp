@@ -4,12 +4,13 @@
 
 using Ui::Application;
 
+
+
 namespace Ui
 {
 int Main(int argc, char** argv)
 {
 	Application* application = new Application();
-
 	application->Run();
 
 	delete application;
@@ -29,6 +30,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInst, _In_opt_ HINSTANCE hInstPrev, _In_ PS
 }
 
 #else
+
 
 int main(int argc, char** argv)
 {

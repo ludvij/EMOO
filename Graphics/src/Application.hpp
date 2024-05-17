@@ -33,25 +33,29 @@ public:
 
 	static Application& Get();
 
+	static void SetUpdate(bool set);
+
 	Emu::Console& GetConsole()
 	{
 		return m_console;
 	}
 
-	void SetMenuCallback(const std::function<void()>& menubar_callback)
+	template<typename T, class... Args>
+	void AddComponent(Args... args) requires( std::derived_from<T, Component::IComponent> )
 	{
-		m_menuCallback = menubar_callback;
+		m_components.emplace_back(std::make_shared<T>(std::forward<Args>(args)...))->OnCreate();
 	}
 
-	template<typename T>
-	void AddComponent() requires( std::derived_from<T, IComponent> )
+	void AddComponent(const std::shared_ptr<Component::IComponent>& component)
 	{
-		m_components.emplace_back(std::make_shared<T>())->OnCreate();
+		m_components.emplace_back(component);
+		component->OnCreate();
 	}
 
 	void Run();
 	void Close();
 
+	void RestartEmulator();
 private:
 	void init();
 	void init_button_mapping();
@@ -62,14 +66,18 @@ private:
 	void event_loop();
 
 	void draw_ui();
+	void draw_dockspace();
+	// can't offload this to an component without making 5 quintillion callbacks
+	void draw_menu_bar();
 	void draw_application();
 	void update();
+
+	void clear_deleted_components();
 
 	void get_pixel_data();
 
 
 	void resize_emu_screen();
-	void resize_other();
 
 
 private:
@@ -79,8 +87,8 @@ private:
 
 	Emu::Console m_console;
 
-	std::vector<std::shared_ptr<IComponent>> m_components;
-	std::function<void()> m_menuCallback;
+	std::list<std::shared_ptr<Component::IComponent>> m_components;
+
 	std::unordered_map<const char*, std::unique_ptr<ITexture>> m_textures;
 	std::unordered_map<const char*, Sprite> m_sprites;
 
@@ -90,9 +98,13 @@ private:
 	bool m_resized{ true };
 
 	float m_menu_bar_height{ 26 };
+	bool m_can_update{ true };
 
-	uint32_t m_frame_rate{};
+	float m_avail_x{ 0 };
+	float m_avail_y{ 0 };
 
+	float m_screen_w{ 0 };
+	float m_screen_h{ 0 };
 };
 
 }

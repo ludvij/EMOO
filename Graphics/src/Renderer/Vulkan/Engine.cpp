@@ -256,7 +256,7 @@ void Engine::draw_geometry(vk::CommandBuffer cmd)
 
 	cmd.endRendering();
 
-	m_deletion_queue.PushFunction([=, this]()
+	get_current_frame().deletion_queue.PushFunction([=, this]()
 		{
 			DestroyBuffer(scene_buffer);
 		});
@@ -288,12 +288,12 @@ void Engine::RequestResize()
 	m_resize_requested = true;
 }
 
-void Engine::AddTextureToBatcher(VulkanTexture* texture)
+void Engine::AddTextureToBatcher(VulkanBindlessTexture* texture)
 {
 	m_batcher->AddTexture(texture);
 }
 
-void Engine::RemoveTextureFromBatcher(VulkanTexture* texture)
+void Engine::RemoveTextureFromBatcher(VulkanBindlessTexture* texture)
 {
 	m_batcher->RemoveTexture(texture);
 }
@@ -301,12 +301,14 @@ void Engine::RemoveTextureFromBatcher(VulkanTexture* texture)
 void Engine::init_vulkan()
 {
 	vkb::InstanceBuilder builder;
-
 	vkb::Instance vkb_inst = builder.set_app_name("NES Emulator")
 	#ifdef GRAPHICS_DEBUG
 		.request_validation_layers(true)
 		.use_default_debug_messenger()
 	#endif // GRAPHICS_DEBUG
+	#if defined (GRAPHICS_DEBUG) || defined(GRAPHICS_SHOW_FPS)
+		.enable_layer("VK_LAYER_LUNARG_monitor")
+	#endif
 		.require_api_version(1, 3, 0)
 		.build()
 		.value();
@@ -730,6 +732,7 @@ AllocatedImage Engine::CreateImage(void* data, vk::Extent3D size, vk::Format for
 	return image;
 }
 
+
 void Engine::DestroyImage(const AllocatedImage& img)
 {
 	m_device.destroyImageView(img.view);
@@ -907,7 +910,7 @@ void Engine::init_imgui()
 	m_deletion_queue.PushFunction([=]()
 		{
 			ImGui_ImplVulkan_Shutdown();
-			m_window->ShutdownImgui();
+			m_window->ShutdownImGuiWindow();
 			ImGui::DestroyContext();
 			m_device.destroyDescriptorPool(imgui_pool);
 		});

@@ -21,8 +21,8 @@ public:
 	void PrepareDescriptor(int binding, vkutil::DescriptorWriter& dw) const;
 	void Draw(vk::CommandBuffer cmd);
 
-	void AddTexture(VulkanTexture* texture);
-	void RemoveTexture(VulkanTexture* texture);
+	void AddTexture(VulkanBindlessTexture* texture);
+	void RemoveTexture(VulkanBindlessTexture* texture);
 
 	void Flush();
 
@@ -56,7 +56,7 @@ private:
 	uint32_t m_texture_slots{ 0 };
 
 	vk::DescriptorSetLayout m_descriptor;
-	std::list<VulkanTexture*> m_textures;
+	std::list<VulkanBindlessTexture*> m_textures;
 
 };
 }

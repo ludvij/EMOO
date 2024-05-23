@@ -12,17 +12,16 @@ public:
 
 	virtual void OnCreate();
 	virtual void OnRender() = 0;
-
-	bool WasRemoved() const;
+	virtual void OnUpdate();
 
 	friend bool operator==(const IComponent& lhs, const IComponent& rhs);
 	bool operator==(const UUID& id) const;
 
 
 public:
-	uuid_t id;
+	UUID id;
+	bool removed{ false };
 protected:
-	bool m_removed{ false };
 
 };
 }

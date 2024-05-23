@@ -10,7 +10,9 @@ class UUID
 {
 public:
 	UUID();
+	UUID(const UUID& id);
 	~UUID();
+
 
 	std::strong_ordering operator<=>(const UUID& other) const = default;
 
@@ -23,5 +25,7 @@ private:
 
 using uuid_t = UUID;
 }
+
+
 
 #endif

@@ -10,6 +10,12 @@
 #include <string_view>
 #include <vector>
 
+namespace A6502
+{
+class Disassembler;
+}
+
+
 namespace Emu
 {
 class Bus;
@@ -85,6 +91,8 @@ private:
 	std::vector<u8> m_chrRom;
 
 	std::string m_file_path;
+
+	friend class A6502::Disassembler;
 };
 }
 

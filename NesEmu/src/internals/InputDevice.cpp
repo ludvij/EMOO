@@ -16,16 +16,21 @@ u8 Controller::Read()
 	return res;
 }
 
+u8 Controller::Peek() const
+{
+	return m_status;
+}
+
 void Controller::SetPressed(Button button)
 {
-	data |= 1 << std::to_underlying(button);
+	data |= button;
 }
 
 void Controller::SetPressed(std::span<Button> buttons)
 {
 	for (const auto& button : buttons)
 	{
-		data |= 1 << std::to_underlying(button);
+		data |= button;
 	}
 }
 }

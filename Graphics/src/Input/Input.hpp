@@ -58,38 +58,15 @@ public:
 	virtual ~IInput() = default;
 	virtual bool GetButton(Button b) = 0;
 
-	void ClearActions(Button button)
-	{
-		m_actions[button].clear();
-	}
-	void ClearActions()
-	{
-		m_actions.clear();
-	}
+	void ClearActions(Button button);
+	void ClearActions();
 
-	void AddAction(Button b, const std::function<void()>& action)
-	{
-		m_actions[b].push_back(action);
-	}
+	void AddAction(Button b, const std::function<void()>& action);
 
-	void RunActions(Button b)
-	{
-		if (!GetButton(b))
-		{
-			return;
-		}
-		for (const auto& action : m_actions[b])
-		{
-			action();
-		}
-	}
-	void RunActions()
-	{
-		for (const auto& [k, v] : m_actions)
-		{
-			RunActions(k);
-		}
-	}
+	void RunActions(Button b);
+	void RunActions();
+
+	virtual void ProcessEvents(void* event) = 0;
 
 protected:
 	std::unordered_map<Button, std::deque<std::function<void()>>> m_actions;

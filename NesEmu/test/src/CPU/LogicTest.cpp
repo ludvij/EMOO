@@ -21,7 +21,7 @@ TEST_F(TestLogic, AND)
 	clearCycles(2);
 
 	ASSERT_EQ(console.GetCpu().A(), 0);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::Z);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::Z);
 
 
 	console.GetCpu().SetA(0x80);
@@ -29,8 +29,8 @@ TEST_F(TestLogic, AND)
 	clearCycles(2);
 
 	ASSERT_EQ(console.GetCpu().A(), 0x80);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::N);
-	ASSERT_FALSE(console.GetCpu().P() & Emu::Flag::Z);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::N);
+	ASSERT_FALSE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::Z);
 }
 
 TEST_F(TestLogic, EOR)
@@ -44,13 +44,13 @@ TEST_F(TestLogic, EOR)
 	clearCycles(2);
 
 	ASSERT_EQ(console.GetCpu().A(), 0x80);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::N);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::N);
 
 	clearCycles(2);
 
 	ASSERT_EQ(console.GetCpu().A(), 0);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::Z);
-	ASSERT_FALSE(console.GetCpu().P() & Emu::Flag::N);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::Z);
+	ASSERT_FALSE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::N);
 
 }
 
@@ -64,14 +64,14 @@ TEST_F(TestLogic, ORA)
 	clearCycles(2);
 
 	ASSERT_EQ(console.GetCpu().A(), 0x81);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::N);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::N);
 
 	console.GetCpu().SetA(0);
 	clearCycles(2);
 
 	ASSERT_EQ(console.GetCpu().A(), 0);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::Z);
-	ASSERT_FALSE(console.GetCpu().P() & Emu::Flag::N);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::Z);
+	ASSERT_FALSE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::N);
 }
 
 TEST_F(TestLogic, BIT)
@@ -83,9 +83,9 @@ TEST_F(TestLogic, BIT)
 
 	clearCycles();
 
-	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::Z);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::V);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::N);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::Z);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::V);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::N);
 
 }
 

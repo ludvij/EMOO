@@ -33,12 +33,9 @@ public:
 
 	static Application& Get();
 
-	static void SetUpdate(bool set);
+	static Emu::Console& GetConsole();
 
-	Emu::Console& GetConsole()
-	{
-		return m_console;
-	}
+	static void SetUpdate(bool set);
 
 	template<typename T, class... Args>
 	void AddComponent(Args... args) requires( std::derived_from<T, Component::IComponent> )
@@ -46,11 +43,9 @@ public:
 		m_components.emplace_back(std::make_shared<T>(std::forward<Args>(args)...))->OnCreate();
 	}
 
-	void AddComponent(const std::shared_ptr<Component::IComponent>& component)
-	{
-		m_components.emplace_back(component);
-		component->OnCreate();
-	}
+	void AddComponent(const std::shared_ptr<Component::IComponent>& component);
+
+	void RemoveComponent(const UUID& id);
 
 	void Run();
 	void Close();
@@ -88,9 +83,11 @@ private:
 	Emu::Console m_console;
 
 	std::list<std::shared_ptr<Component::IComponent>> m_components;
+	// this only exists so I can forbid recreation of some components
+	std::unordered_map<const char*, UUID> m_component_ids;
 
-	std::unordered_map<const char*, std::unique_ptr<ITexture>> m_textures;
-	std::unordered_map<const char*, Sprite> m_sprites;
+	ITexture* m_screen;
+	Sprite m_screen_sprite;
 
 	std::unique_ptr<IInput> m_input;
 	std::shared_ptr<IWindow> m_window;

@@ -15,12 +15,12 @@ TEST_F(TestSystemFunction, NOP)
 		nop
 	)");
 
-	const Emu::u8 a = console.GetCpu().A();
-	const Emu::u8 x = console.GetCpu().X();
-	const Emu::u8 y = console.GetCpu().Y();
-	const Emu::u8 s = console.GetCpu().S();
-	const Emu::u8 p = console.GetCpu().P();
-	const Emu::u16 pc = console.GetCpu().PC();
+	const u8 a = console.GetCpu().A();
+	const u8 x = console.GetCpu().X();
+	const u8 y = console.GetCpu().Y();
+	const u8 s = console.GetCpu().S();
+	const u8 p = console.GetCpu().P();
+	const u16 pc = console.GetCpu().PC();
 
 	clearCycles(2);
 	ASSERT_EQ(a, console.GetCpu().A());
@@ -61,15 +61,15 @@ TEST_F(TestSystemFunction, BRK)
 		brk
 	)");
 
-	const Emu::u16 pc = console.GetCpu().PC();
-	const Emu::u8 p = console.GetCpu().P();
+	const u16 pc = console.GetCpu().PC();
+	const u8 p = console.GetCpu().P();
 
 	clearCycles(7);
 
-	ASSERT_EQ(p | Emu::Flag::B | Emu::Flag::U, console.GetBus().Read(0x01fb));
-	const Emu::u8 lo = console.GetBus().Read(0x01fc);
-	const Emu::u8 hi = console.GetBus().Read(0x01fd);
-	ASSERT_EQ(pc + 2, static_cast<Emu::u16>( hi << 8 ) | lo);
+	ASSERT_EQ(p | Emu::ProcessorStatus::Flags::B | Emu::ProcessorStatus::Flags::U, console.GetBus().Read(0x01fb));
+	const u8 lo = console.GetBus().Read(0x01fc);
+	const u8 hi = console.GetBus().Read(0x01fd);
+	ASSERT_EQ(pc + 2, static_cast<u16>( hi << 8 ) | lo);
 }
 
 TEST_F(TestSystemFunction, RTI)
@@ -79,14 +79,14 @@ TEST_F(TestSystemFunction, RTI)
 		rti
 	)");
 
-	const Emu::u16 pc = console.GetCpu().PC();
-	const Emu::u8 p = console.GetCpu().P();
+	const u16 pc = console.GetCpu().PC();
+	const u8 p = console.GetCpu().P();
 
 	clearCycles(7);
 	// imaginary interrupt
 	console.GetCpu().SetPC(2);
 	clearCycles(6);
 
-	ASSERT_EQ(p | Emu::Flag::U, console.GetCpu().P());
+	ASSERT_EQ(p | Emu::ProcessorStatus::Flags::U, console.GetCpu().P());
 	ASSERT_EQ(pc + 2, console.GetCpu().PC());
 }

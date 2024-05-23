@@ -25,7 +25,7 @@ void Console::Step()
 	{
 		if (m_ppu.IsDMATransfer())
 		{
-			m_bus.DoDMA(m_registered_cpu_cycles);
+			m_bus.DMA(m_registered_cpu_cycles);
 		}
 		else
 		{
@@ -58,6 +58,8 @@ void Console::Reset()
 	m_bus.Reset();
 	m_apu.Reset();
 	m_masterClock = 0;
+	m_registered_cpu_cycles = 0;
+	m_registered_ppu_cycles = 0;
 }
 
 void Console::LoadCartridge(const std::string& filepath)

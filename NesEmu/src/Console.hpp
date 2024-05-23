@@ -65,11 +65,6 @@ public:
 		return m_ppu.HasUpdatedPalettes();
 	}
 
-	u32* OutputPatternTable(u8 palette)
-	{
-		return m_ppu.GetPatternTable(palette);
-	}
-
 	u32 OutputPaletteColor(u8 i, u8 s)
 	{
 		return m_ppu.GetColorFromPalette(i, s);

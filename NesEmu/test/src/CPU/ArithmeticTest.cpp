@@ -18,7 +18,7 @@ TEST_F(TestArithmetic, ADC_IMM_N)
 	clearCycles();
 
 	ASSERT_EQ(console.GetCpu().A(), 0x80 + 10);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::N);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::N);
 }
 
 TEST_F(TestArithmetic, ADC_ZPI_C)
@@ -32,7 +32,7 @@ TEST_F(TestArithmetic, ADC_ZPI_C)
 	clearCycles();
 
 	ASSERT_EQ(console.GetCpu().A(), 0);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::C);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::C);
 }
 
 TEST_F(TestArithmetic, ADC_ZPX_Z)
@@ -47,7 +47,7 @@ TEST_F(TestArithmetic, ADC_ZPX_Z)
 	clearCycles();
 
 	ASSERT_EQ(console.GetCpu().A(), 0);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::Z);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::Z);
 }
 
 TEST_F(TestArithmetic, ADC_ABS_C)
@@ -57,13 +57,13 @@ TEST_F(TestArithmetic, ADC_ABS_C)
 		&3 13
 	)");
 
-	console.GetCpu().SetP(Emu::Flag::C);
+	console.GetCpu().SetP(Emu::ProcessorStatus::Flags::C);
 	console.GetCpu().SetA(12);
 
 	clearCycles();
 
 	ASSERT_EQ(console.GetCpu().A(), 26);
-	ASSERT_FALSE(console.GetCpu().P() & Emu::Flag::C);
+	ASSERT_FALSE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::C);
 }
 
 TEST_F(TestArithmetic, ADC_ABX_OOPS)
@@ -77,7 +77,7 @@ TEST_F(TestArithmetic, ADC_ABX_OOPS)
 	console.GetBus().Write(2, 0x00);
 	console.GetBus().Write(0x0100, 13);
 
-	console.GetCpu().SetP(Emu::Flag::C);
+	console.GetCpu().SetP(Emu::ProcessorStatus::Flags::C);
 	console.GetCpu().SetA(12);
 	console.GetCpu().SetX(1);
 
@@ -95,7 +95,7 @@ TEST_F(TestArithmetic, ADC_ABY_OOPS)
 		&$0100 13
 	)");
 
-	console.GetCpu().SetP(Emu::Flag::C);
+	console.GetCpu().SetP(Emu::ProcessorStatus::Flags::C);
 	console.GetCpu().SetA(12);
 	console.GetCpu().SetY(1);
 
@@ -175,12 +175,12 @@ TEST_F(TestArithmetic, ADC_V)
 	clearCycles(2 + 2 + 2);
 
 	ASSERT_EQ(console.GetCpu().A(), 128);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::V);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::V);
 
 	clearCycles(2 + 2 + 2);
 
 	ASSERT_EQ(console.GetCpu().A(), 0);
-	ASSERT_FALSE(console.GetCpu().P() & Emu::Flag::V);
+	ASSERT_FALSE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::V);
 }
 
 
@@ -206,19 +206,19 @@ TEST_F(TestArithmetic, SBC)
 
 	clearCycles(2 + 2 + 2);
 	ASSERT_EQ(console.GetCpu().A(), 13);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::C);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::C);
 
 	clearCycles(2 + 2 + 2);
 	ASSERT_EQ(console.GetCpu().A(), 0x80);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::N);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::N);
 
 	clearCycles(2 + 2 + 2);
 	ASSERT_EQ(console.GetCpu().A(), 0);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::Z);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::Z);
 
 	clearCycles(2 + 2 + 2);
 	ASSERT_EQ(console.GetCpu().A(), 0xff); // -1 in signed 8 bits is 0xff
-	//ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::V);
+	//ASSERT_TRUE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::V);
 }
 
 TEST_F(TestArithmetic, CMP)
@@ -235,13 +235,13 @@ TEST_F(TestArithmetic, CMP)
 	)");
 
 	clearCycles(2 + 2);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::C);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::C);
 
 	clearCycles(2 + 2);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::Z);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::Z);
 
 	clearCycles(2 + 2);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::N);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::N);
 }
 
 TEST_F(TestArithmetic, CPX)
@@ -258,13 +258,13 @@ TEST_F(TestArithmetic, CPX)
 	)");
 
 	clearCycles(2 + 2);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::C);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::C);
 
 	clearCycles(2 + 2);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::Z);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::Z);
 
 	clearCycles(2 + 2);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::N);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::N);
 }
 
 TEST_F(TestArithmetic, CPY)
@@ -281,13 +281,13 @@ TEST_F(TestArithmetic, CPY)
 	)");
 
 	clearCycles(2 + 2);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::C);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::C);
 
 	clearCycles(2 + 2);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::Z);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::Z);
 
 	clearCycles(2 + 2);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::N);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::N);
 }
 
 TEST_F(TestArithmetic, BIT)
@@ -304,10 +304,10 @@ TEST_F(TestArithmetic, BIT)
 	)");
 
 	clearCycles(2 + 3);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::Z);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::V);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::Z);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::V);
 
 	clearCycles(2 + 3);
-	ASSERT_FALSE(console.GetCpu().P() & Emu::Flag::Z);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::N);
+	ASSERT_FALSE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::Z);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::N);
 }

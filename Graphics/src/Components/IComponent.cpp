@@ -2,20 +2,22 @@
 
 namespace Ui::Component
 {
-bool operator==(const IComponent& lhs, const IComponent& rhs)
-{
-	return lhs.id == rhs.id;
-}
 
 
 void IComponent::OnCreate()
 {
 }
 
-bool IComponent::WasRemoved() const
+void IComponent::OnUpdate()
 {
-	return m_removed;
 }
+
+bool operator==(const IComponent& lhs, const IComponent& rhs)
+{
+	return lhs.id == rhs.id;
+}
+
+
 bool IComponent::operator==(const UUID& id) const
 {
 	return this->id == id;

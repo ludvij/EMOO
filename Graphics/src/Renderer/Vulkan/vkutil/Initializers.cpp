@@ -114,7 +114,7 @@ vk::RenderingAttachmentInfo attachment_info(vk::ImageView view, vk::ClearValue* 
 	info.loadOp = clear ? vk::AttachmentLoadOp::eClear : vk::AttachmentLoadOp::eLoad;
 	info.storeOp = vk::AttachmentStoreOp::eStore;
 
-	if ( clear != nullptr )
+	if (clear != nullptr)
 	{
 		info.clearValue = *clear;
 	}

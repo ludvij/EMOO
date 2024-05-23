@@ -8,6 +8,11 @@
 #include <array>
 #include <memory>
 
+namespace A6502
+{
+class Disassembler;
+}
+
 namespace Emu
 {
 class Cartridge;
@@ -21,6 +26,7 @@ class Bus
 {
 public:
 	u8 Read(u16 addr) const;
+	u8 Peek(u16 addr) const;
 	void Write(u16 addr, u8 val);
 
 	void ConnectCartridge(std::shared_ptr<Cartridge> cartridge)
@@ -32,7 +38,7 @@ public:
 		m_ppu = ppu;
 	}
 
-	void DoDMA(u64 cycles);
+	void DMA(u64 cycles);
 
 	void ConnectAPU(APU* apu)
 	{
@@ -58,6 +64,8 @@ private:
 	APU* m_apu = nullptr;
 
 	Controller* m_controller[2] = { nullptr, nullptr };
+
+	friend class A6502::Disassembler;
 };
 
 }

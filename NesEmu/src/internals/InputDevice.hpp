@@ -6,16 +6,16 @@
 namespace Emu
 {
 
-enum class Button : u8
+enum Button : u8
 {
-	A      = 7,
-	B      = 6,
-	Select = 5,
-	Start  = 4,
-	Up     = 3,
-	Down   = 2,
-	Left   = 1,
-	Right  = 0,
+	A      = 0x80,
+	B      = 0x40,
+	Select = 0x20,
+	Start  = 0x10,
+	Up     = 0x08,
+	Down   = 0x04,
+	Left   = 0x02,
+	Right  = 0x01,
 };
 class Controller
 {
@@ -25,6 +25,7 @@ public:
 public:
 	void Write();
 	u8 Read();
+	u8 Peek() const;
 
 	void SetPressed(Button button);
 	void SetPressed(std::span<Button> buttons);

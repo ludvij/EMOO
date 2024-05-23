@@ -27,7 +27,10 @@ namespace Emu
  * └────────>  Negative flag
  */
 
-enum Flag : u8
+namespace ProcessorStatus
+{
+
+enum Flags : u8
 {
 	C = 0x01,
 	Z = 0x02,
@@ -38,6 +41,7 @@ enum Flag : u8
 	V = 0x40,
 	N = 0x80,
 };
+}
 
 
 class Bus;
@@ -110,7 +114,7 @@ public:  // Public functions
 
 	u32 GetCycles()      const
 	{
-		return m_cycles;
+		return m_cycle;
 	}
 	u32 GetTotalCycles() const
 	{
@@ -265,10 +269,10 @@ private: // private functions
 	void STP(u16 addr);
 
 	// some helper functions
-	void setFlagIf(Flag flag, bool cond);
-	void setFlag(Flag flag);
-	void clearFlag(Flag flag);
-	bool checkFlag(Flag flag) const;
+	void setFlagIf(u8 flag, bool cond);
+	void setFlag(u8 flag);
+	void clearFlag(u8 flag);
+	bool checkFlag(u8 flag) const;
 	bool isImplied() const;
 
 	void branchIfCond(u16 addr, bool cond);
@@ -285,7 +289,7 @@ private: // private functions
 private: // private members
 	Bus* m_bus = nullptr;
 
-	u32 m_cycles = 0;
+	u32 m_cycle = 0;
 	u32 m_oopsCycles = 0;
 	u32 m_totalCycles = 0;
 	bool m_canOops = false;
@@ -297,7 +301,7 @@ private: // private members
 	* Each element contains the following:
 	*	an addrMode that acts as the addressing mode used in the instruction
 	*	an exec that acts as the operation itself
-	*	and the number of m_cycles the operation will take
+	*	and the number of m_cycle the operation will take
 	*/
 	typedef u16(CPU::* addressingMode)( );
 	typedef void ( CPU::* execution )( u16 );

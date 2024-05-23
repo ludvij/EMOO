@@ -8,9 +8,6 @@
 * It will also contain macros for logs and platform specific copde in case it's needed
 */
 
-
-namespace Emu
-{
 /*
 * Some type definitions to make the code easier to read
 * since using uint8_t or unsigned char each time I want
@@ -28,6 +25,10 @@ using i32 =  int32_t;
 using u32 = uint32_t;
 using i64 =  int64_t;
 using u64 = uint64_t;
+
+namespace Emu
+{
+
 
 /*
 * NTSC color subcarrier frequency

@@ -16,6 +16,7 @@
 #include <math.h>
 
 // io
+#include <format>
 #include <fstream>
 #include <iostream>
 #include <ostream>

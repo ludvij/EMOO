@@ -41,6 +41,66 @@ struct ObjectAttributeEntry
 	u8 x;
 };
 
+namespace Status
+{
+
+enum Flags : u8
+{
+	SPRITE_OVERFLOW = 0x20,
+	SPRITE_0_HIT    = 0x40,
+	VERTICAL_BLANK  = 0x80,
+	ALL             = 0xE0,
+};
+}
+namespace Control
+{
+enum Flags : u8
+{
+	NAMETABLE_BASE_ADDR     = 0x03,
+	VRAM_INCREMENT          = 0x04,
+	SPRITE_PATTERN_8_ADDR   = 0x08,
+	BACKGROUND_PATTERN_ADDR = 0x10,
+	SPRITE_SIZE_SELECT      = 0x20,
+	PPU_MASTER_SELECT       = 0x40,
+	GENERATE_NMI            = 0x80,
+	ALL                     = 0xFF,
+};
+}
+namespace Mask
+{
+enum Flags : u8
+{
+	GRAYSCALE            = 0x01,
+	SHOW_LEFT_BACKGROUND = 0x02,
+	SHOW_LEFT_SPRITE     = 0x04,
+	SHOW_BACKGROUND      = 0x08,
+	SHOW_SPRITES         = 0x10,
+	EMPHASIZE_RED        = 0x20,
+	EMPHASIZE_GREEN      = 0x40,
+	EMPHASIZE_BLUE       = 0x80,
+	ALL                  = 0xFF,
+};
+
+}
+
+// helper so I don't have to write the same 3 functions 12 times
+struct RegisterFlags
+{
+	RegisterFlags(u8 val) : reg(val)
+	{
+	}
+	operator u8() const
+	{
+		return reg;
+	}
+	bool is_flag_set(u8 flags) const;
+	void set_flags(u8 flags, bool set=true);
+
+	u8 operator | (u8 flags) const;
+
+	u8 reg;
+};
+
 class PPU
 {
 public:
@@ -78,6 +138,7 @@ public:
 
 	// not const some reads modify data
 	u8 CpuRead(u16 addr);
+	u8 CpuPeek(u16 addr) const;
 	void CpuWrite(u16 addr, u8 val);
 
 	void DMA();
@@ -101,7 +162,7 @@ public:
 
 	u32* GetScreen();
 
-	u32* GetPatternTable(const u8 palette);
+	u32* GetPatternTable(u8 idx, u8 palette);
 	u32* GetPalette();
 	Color GetColorFromPalette(u8 palette, u8 pixel);
 
@@ -109,10 +170,11 @@ public:
 
 private:
 
-	u8 memory_read(u16 addr);
+	u8 memory_read(u16 addr) const;
 	void memory_write(u16 addr, u8 val);
 	void write_ppu_addr(u8 val);
 	void write_ppu_scroll(u8 val);
+
 
 	void preload_tile();
 
@@ -125,10 +187,20 @@ private:
 	void load_bg_shifters();
 	void update_bg_shifters();
 
+	u8 get_vram_increment_mode() const;
+	u8 get_sprite_y_size() const;
 
 	bool can_show_background() const;
 	bool can_show_sprites() const;
 	bool can_show_background_or_sprites() const;
+
+	u32 read_palette_ram_indexes(u16 addr) const;
+	void write_palette_ram_indexes(u16 addr, u8 val);
+
+
+	u32 get_color_for_pixel();
+
+	void draw_pixel();
 
 	// quick hack to easily implement mirrorings
 	enum class MirrorName
@@ -136,26 +208,29 @@ private:
 		A, B, C, D
 	};
 	template<MirrorName m1, MirrorName m2, MirrorName m3, MirrorName m4>
-	u8 nametable_mirrored_read(u16 addr);
+	u8 nametable_mirrored_read(u16 addr) const;
 	template<MirrorName m1, MirrorName m2, MirrorName m3, MirrorName m4>
 	void nametable_mirrored_write(u16 addr, u8 val);
 
 	void load_palette();
 
-	void set_vBlank(bool set);
+	void spirte_evaluation();
+
+	bool is_rendering_enabled();
 
 
 private:
 	// for debugging purposes
-	std::array<u32, 256 * 128> m_pattern_tables_show{};
+	u32* m_pattern_tables_show{};
 	// backup if nametables are not handled by the cartridge (unlikely)
-	std::array<u8, 0x2000> m_pattern_tables;
+	std::array<u8, 0x2000> m_pattern_tables{};
+
 	// 2 nametables
 	// other 2 are provided in cartridge
-	std::array<u8, 2048> m_ram{ 0 };
+	std::array<u8, 2048> m_ram{};
 	std::array<u32, 16 * 4> m_palettes_show{};
 
-	std::vector<u32> m_screen;
+	u32* m_screen{};
 
 	std::array<Color, 0x40> m_palette;
 
@@ -176,7 +251,7 @@ private:
 	// $3F19 - $3F1B -> Sprite color 2
 	// $3F1C         -> Mirror of unused color 2
 	// $3F1D - $3F1F -> Sprite color 3
-	std::array<u8, 0x0020> m_palette_ram_indexes{ 0 };
+	std::array<u8, 0x0020> m_palette_ram_indexes{};
 	//https://www.nesdev.org/wiki/PPU_palettes#2C02
 	//TODO: add palette file handling instead of static array
 
@@ -185,9 +260,9 @@ private:
 	Configuration m_conf;
 
 	// MMIO registers
-	u8 m_ppu_ctrl   = 0b0000'0000;
-	u8 m_ppu_mask   = 0b0000'0000;
-	u8 m_ppu_status = 0b1010'0000; // power up state +0+x xxxx
+	RegisterFlags m_ppu_ctrl   = 0b0000'0000;
+	RegisterFlags m_ppu_mask   = 0b0000'0000;
+	RegisterFlags m_ppu_status = 0b1010'0000; // power up state +0+x xxxx
 	u8 m_oam_addr   = 0;
 	//u8 m_oam_data     = 0;
 	//u16 m_ppu_addr    = 0;
@@ -235,42 +310,58 @@ private:
 	u8 m_w = 0;
 
 
-	u32 m_cycles = 0;
-	i32 m_scanlines = 0;
+	u32 m_cycle = 0;
+	i32 m_scanline = 0;
 
 	// this was lifted from one lone coder
 	ObjectAttributeEntry m_OAM[64];
 	// ptr to oam so we can access it byte by byte
 	u8* m_oam_data = reinterpret_cast<u8*>( m_OAM );
 
-	u8 m_bg_next_tile_id{ 0x00 };
-	u8 m_bg_next_tile_attrib{ 0x00 };
-	u8 m_bg_next_tile_lo{ 0x00 };
-	u8 m_bg_next_tile_hi{ 0x00 };
+	u8 m_oam_n{ 0 };
+	u8 m_oam_m{ 0 };
+	bool m_oam_sprite_bounded{ false };
+	bool m_oam_keep_copying{ false };
+	bool m_added_sprite_0{ false };
+
+	u8 m_current_sprite_count{ 0x00 };
+
+	std::array<u8, 32> m_secondary_OAM;
+	u8 m_secondary_oam_addr{ 0 };
+	u8 m_secondary_oam_val{ 0 };
+	u8 m_oam_copy_buffer{ 0 };
 
 	u16 m_bg_shifter_pattern_lo{ 0x0000 };
 	u16 m_bg_shifter_pattern_hi{ 0x0000 };
 	u16 m_bg_shifter_attrib_lo{ 0x0000 };
 	u16 m_bg_shifter_attrib_hi{ 0x0000 };
 
+	u16 m_bg_next_tile_addr{ 0x00 };
+	u8 m_bg_next_tile_attrib{ 0x00 };
+	u8 m_bg_next_tile_id{ 0x00 };
+	u8 m_bg_next_tile_lo{ 0x00 };
+	u8 m_bg_next_tile_hi{ 0x00 };
+
+	u8 m_dma_page{ 0x00 };
+	u8 m_dma_addr{ 0x00 };
+	u8 m_dma_data{ 0x00 };
+
 	bool m_updated_patterns{ true };
 	bool m_updated_palettes{ true };
 
-	u8 m_dma_page = 0x00;
-	u8 m_dma_addr = 0x00;
-	u8 m_dma_data = 0x00;
+	bool m_dma_transfer{ false };
+	bool m_dma_dummy{ true };
 
-	bool m_dma_transfer = false;
-	bool m_dma_dummy = true;
+	bool m_frame_done{ false };
 
-	bool m_nmi = false;
+	bool m_nmi{ false };
 
-	bool m_frame_done = false;
+	u32 m_frames{ 0 };
 
 };
 
 template <PPU::MirrorName m1, PPU::MirrorName m2, PPU::MirrorName m3, PPU::MirrorName m4>
-u8 PPU::nametable_mirrored_read(const u16 addr)
+u8 PPU::nametable_mirrored_read(const u16 addr) const
 {
 	// remove top 4 bits to access proper mirroring
 	const u16 stripped_addr = addr & 0x0FFF;

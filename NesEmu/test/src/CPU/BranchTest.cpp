@@ -34,7 +34,7 @@ TEST_F(TestBranch, BCC_BRANCH)
 
 TEST_F(TestBranch, BCC_NOBRANCH)
 {
-	console.GetCpu().SetP(Emu::Flag::C);
+	console.GetCpu().SetP(Emu::ProcessorStatus::Flags::C);
 	asse.Assemble(R"(
 		bcc 2
 	)");
@@ -48,7 +48,7 @@ TEST_F(TestBranch, BCC_NOBRANCH)
 
 TEST_F(TestBranch, BCS_BRANCH)
 {
-	console.GetCpu().SetP(Emu::Flag::C);
+	console.GetCpu().SetP(Emu::ProcessorStatus::Flags::C);
 	asse.Assemble(R"(
 		bcs 2
 	)");
@@ -75,7 +75,7 @@ TEST_F(TestBranch, BCS_NOBRANCH)
 
 TEST_F(TestBranch, BEQ_BRANCH)
 {
-	console.GetCpu().SetP(Emu::Flag::Z);
+	console.GetCpu().SetP(Emu::ProcessorStatus::Flags::Z);
 	asse.Assemble(R"(
 			beq 2
 		)");
@@ -102,7 +102,7 @@ TEST_F(TestBranch, BEQ_NOBRANCH)
 
 TEST_F(TestBranch, BMI_BRANCH)
 {
-	console.GetCpu().SetP(Emu::Flag::N);
+	console.GetCpu().SetP(Emu::ProcessorStatus::Flags::N);
 	asse.Assemble(R"(
 			bmi 2
 		)");
@@ -142,7 +142,7 @@ TEST_F(TestBranch, BNE_BRANCH)
 
 TEST_F(TestBranch, BNE_NOBRANCH)
 {
-	console.GetCpu().SetP(Emu::Flag::Z);
+	console.GetCpu().SetP(Emu::ProcessorStatus::Flags::Z);
 	asse.Assemble(R"(
 			bne 2
 		)");
@@ -169,7 +169,7 @@ TEST_F(TestBranch, BPL_BRANCH)
 
 TEST_F(TestBranch, BPL_NOBRANCH)
 {
-	console.GetCpu().SetP(Emu::Flag::N);
+	console.GetCpu().SetP(Emu::ProcessorStatus::Flags::N);
 	asse.Assemble(R"(
 			bpl 2
 		)");
@@ -195,7 +195,7 @@ TEST_F(TestBranch, BVC_BRANCH)
 
 TEST_F(TestBranch, BVC_NOBRANCH)
 {
-	console.GetCpu().SetP(Emu::Flag::V);
+	console.GetCpu().SetP(Emu::ProcessorStatus::Flags::V);
 	asse.Assemble(R"(
 			bvc 2
 		)");
@@ -209,7 +209,7 @@ TEST_F(TestBranch, BVC_NOBRANCH)
 
 TEST_F(TestBranch, BVS_BRANCH)
 {
-	console.GetCpu().SetP(Emu::Flag::V);
+	console.GetCpu().SetP(Emu::ProcessorStatus::Flags::V);
 	asse.Assemble(R"(
 			bvs 2
 		)");

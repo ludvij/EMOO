@@ -10,110 +10,121 @@ PPU::PPU(Configuration conf)
 {
 	load_palette();
 	const size_t size = static_cast<size_t>( conf.width * conf.height );
-	m_screen.resize(size);
-	std::ranges::fill(m_palette_ram_indexes, Color(0, 0, 0));
-	std::ranges::fill(m_screen, Color(0, 0, 0));
-	std::memset(m_OAM, 0, 64 * sizeof ObjectAttributeEntry);
+	m_screen = new u32[256 * 240];
+	m_pattern_tables_show = new u32[128 * 128 * 2];
+	std::fill_n(m_screen, 256 * 240, Color(0, 0, 0));
+	std::fill_n(m_pattern_tables_show, 128 * 128 * 2, Color(0, 0, 0));
+	//std::memset(m_OAM, 0, 64 * sizeof ObjectAttributeEntry);
 
 
 }
 PPU::~PPU()
 {
+	delete[] m_screen;
+	delete[] m_pattern_tables_show;
 }
 void PPU::Step()
 {
-	if (m_scanlines >= 0 && m_scanlines < 240 || m_scanlines == 261)
+	m_cycle++;
+	// visible scanlines
+	if (m_scanline >= 0 && m_scanline < 240)
 	{
-
-		if (m_scanlines == 0 && m_cycles == 0)
+		if (m_cycle >= 1 && m_cycle < 257)
 		{
-			m_cycles = 1;
+			update_bg_shifters();
+			preload_tile();
+			spirte_evaluation();
+
+			draw_pixel();
+			if (m_cycle == 256)
+			{
+				increment_y();
+			}
 		}
-		else if (( m_cycles >= 2 && m_cycles < 256 ) || ( m_cycles >= 321 && m_cycles < 338 ))
+		else if (m_cycle >= 257 && m_cycle < 321)
+		{
+			m_oam_addr = 0;
+			if (m_cycle == 257)
+			{
+				load_bg_shifters();
+				reset_x();
+			}
+		}
+		else if (m_cycle >= 321 && m_cycle < 338)
 		{
 			update_bg_shifters();
 			preload_tile();
 		}
-		else if (m_cycles == 256)
-		{
-			increment_y();
-		}
-		else if (m_cycles == 257)
-		{
-			load_bg_shifters();
-			reset_x();
-		}
 		// first two tiles on next scanline
 		// unused NT fetches
-		else if (m_cycles == 338 || m_cycles == 340)
+		else if (m_cycle == 338 || m_cycle == 340)
 		{
 			m_bg_next_tile_id = memory_read(0x2000 | ( m_v & 0x0FFF ));
 		}
-		// pre render scanline
-		if (m_scanlines == 261)
+	}
+	// post render scanline, idle
+	else if (m_scanline == 240)
+	{
+	}
+	// entering vBlank when scanline goes out of screen
+	else if (m_scanline == 241 && m_cycle == 1)
+	{
+		m_ppu_status.set_flags(Status::Flags::VERTICAL_BLANK, true);
+		if (m_ppu_ctrl.is_flag_set(Control::Flags::GENERATE_NMI))
 		{
-			if (m_cycles == 1)
+			m_nmi = true;
+		}
+	}
+	else if (m_scanline == 261)
+	{
+		if (m_cycle == 1)
+		{
+			m_ppu_status.set_flags(Status::Flags::VERTICAL_BLANK, false);
+			m_ppu_status.set_flags(Status::Flags::SPRITE_0_HIT, false);
+		}
+		if (m_cycle >= 1 && m_cycle < 257)
+		{
+			update_bg_shifters();
+			preload_tile();
+			if (m_cycle == 256)
 			{
-				set_vBlank(false);
+				increment_y();
 			}
-			if (m_cycles >= 280 && m_cycles < 305)
+		}
+		else if (m_cycle >= 257 && m_cycle < 321)
+		{
+			m_oam_addr = 0;
+			if (m_cycle == 257)
+			{
+				load_bg_shifters();
+				reset_x();
+			}
+			else if (m_cycle >= 280 && m_cycle < 305)
 			{
 				reset_y();
 			}
 		}
-	}
-	else if (m_scanlines == 240)
-	{
-		// post render scanline
-	}
-	// entering vBlank when scanline goes out of screen
-	else if (m_scanlines >= 241 && m_scanlines < 261)
-	{
-		if (m_scanlines == 241 && m_cycles == 1)
+		else if (m_cycle >= 321 && m_cycle < 338)
 		{
-			set_vBlank(true);
-			// if nmi enabled
-			if (m_ppu_ctrl & 0x80)
-			{
-				m_nmi = true;
-			}
+			update_bg_shifters();
+			preload_tile();
+		}
+		//For odd frames, the cycle at the end of the scanline is skipped (this is done internally by jumping directly from (339,261) to (0,0)
+		if (m_cycle == 339 && m_frames & 0x01)
+		{
+			m_cycle++;
 		}
 	}
 
-
-	const int x = m_cycles - 1;
-	const int y = m_scanlines;
-	if (x >= 0 && x < m_conf.width && y >= 0 && y < m_conf.height)
+	if (m_cycle >= 340)
 	{
-		if (( m_ppu_mask >> 3 ) & 0x01)
+		m_cycle = 0;
+		m_scanline++;
+		if (m_scanline >= 262)
 		{
-			const u16 bit_mux = 0x8000 >> m_x;
-
-			const u8 p0_pixel = ( m_bg_shifter_pattern_lo & bit_mux ) > 0;
-			const u8 p1_pixel = ( m_bg_shifter_pattern_hi & bit_mux ) > 0;
-
-			const u8 bg_pixel = ( p1_pixel << 1 ) | p0_pixel;
-
-			const u8 bg_pal0 = ( m_bg_shifter_attrib_lo & bit_mux ) > 0;
-			const u8 bg_pal1 = ( m_bg_shifter_attrib_hi & bit_mux ) > 0;
-
-			const u8 bg_palette = ( bg_pal1 << 1 ) | bg_pal0;
-
-
-			const auto px_pos = static_cast<size_t>( x + y * m_conf.width );
-			m_screen[px_pos] = GetColorFromPalette(bg_palette, bg_pixel);
-		}
-	}
-
-	m_cycles++;
-	if (m_cycles >= 341)
-	{
-		m_cycles = 0;
-		m_scanlines++;
-		if (m_scanlines >= 262)
-		{
-			m_scanlines = 0;
+			m_scanline = 0;
 			m_frame_done = true;
+			m_frames++;
 		}
 	}
 }
@@ -187,8 +198,8 @@ void PPU::Reset()
 {
 	m_ppu_ctrl = 0;
 	m_ppu_mask = 0;
-	m_scanlines = 0;
-	m_cycles = 0;
+	m_scanline = 0;
+	m_cycle = 0;
 	m_x = 0;
 	m_v = 0;
 	m_t = 0;
@@ -197,8 +208,7 @@ void PPU::Reset()
 	m_ppu_status = 0;
 
 	std::ranges::fill(m_palette_ram_indexes, Color(0, 0, 0));
-	std::ranges::fill(m_screen, Color(0, 0, 0));
-	std::memset(m_OAM, 0, 64);
+	std::fill_n(m_screen, 256 * 240, Color(0, 0, 0));
 
 	m_bg_next_tile_attrib = 0;
 	m_bg_next_tile_hi = 0;
@@ -217,8 +227,22 @@ void PPU::Reset()
 	m_dma_transfer = false;
 	m_nmi = false;
 
-}
+	m_oam_addr = 0;
+	m_oam_copy_buffer = 0;
+	m_oam_keep_copying = false;
+	m_oam_sprite_bounded = false;
+	m_oam_n = 0;
+	m_oam_m = 0;
+	m_oam_dma = 0;
+	m_secondary_oam_addr = 0;
+	m_secondary_oam_val = 0;
+	m_current_sprite_count = 0;
 
+	std::ranges::fill(m_secondary_OAM, 0);
+	std::memset(m_OAM, 0, 64);
+
+
+}
 
 u8 PPU::CpuRead(const u16 addr)
 {
@@ -226,9 +250,9 @@ u8 PPU::CpuRead(const u16 addr)
 	if (addr == PPU_STATUS_ADDR) // status
 	{
 		// takes 3 hi bits from status and the next is stale ppu bus contents
-		data = ( m_ppu_status & 0xE0 ) | ( m_data_buffer & 0x1F );
+		data = ( m_ppu_status & Status::Flags::ALL ) | ( m_data_buffer & 0x1F );
 		// Reading the status register will clear bit 7 and also the address latch used by PPUSCROLL and PPUADDR.
-		set_vBlank(false);
+		m_ppu_status.set_flags(Status::Flags::VERTICAL_BLANK, false);
 		m_w = 0;
 	}
 	// https://www.nesdev.org/wiki/PPU_registers#Data_($2007)_%3C%3E_read/write
@@ -247,11 +271,32 @@ u8 PPU::CpuRead(const u16 addr)
 			data = m_data_buffer;
 		}
 
-		m_v += ( m_ppu_ctrl & 0x04 ) ? 32 : 1;
+		m_v += get_vram_increment_mode();
 	}
 	else  // cheat so the compiler shuts up
 	{
 		Lud::Unreachable();
+	}
+	return data;
+}
+
+u8 PPU::CpuPeek(u16 addr) const
+{
+	u8 data = 0;
+	if (addr == PPU_STATUS_ADDR) // status
+	{
+		// takes 3 hi bits from status and the next is stale ppu bus contents
+		data = ( m_ppu_status & Status::Flags::ALL ) | ( m_data_buffer & 0x1F );
+		// Reading the status register will clear bit 7 and also the address latch used by PPUSCROLL and PPUADDR.
+	}
+	// https://www.nesdev.org/wiki/PPU_registers#Data_($2007)_%3C%3E_read/write
+	else if (addr == OAM_DATA_ADDR) // oam data
+	{
+		data = m_oam_data[addr];
+	}
+	else if (addr == PPU_DATA_ADDR)
+	{
+		data = memory_read(m_v);
 	}
 	return data;
 }
@@ -262,7 +307,7 @@ void PPU::CpuWrite(const u16 addr, const u8 val)
 	{
 		m_ppu_ctrl = val;
 		// set nametables
-		m_t = ( ( static_cast<u16>( m_ppu_ctrl & 0x03 ) ) << 10 ) | ( m_t & ~0x0C00 );
+		m_t = ( ( m_ppu_ctrl & Control::Flags::NAMETABLE_BASE_ADDR ) << 10 ) | ( m_t & ~0x0C00 );
 	}
 	else if (addr == PPU_MASK_ADDR) // mask
 	{
@@ -274,7 +319,7 @@ void PPU::CpuWrite(const u16 addr, const u8 val)
 	}
 	else if (addr == OAM_DATA_ADDR)
 	{
-		if (m_scanlines > 239)
+		if (m_scanline > 239)
 		{
 			m_oam_data[m_oam_addr] = val;
 			m_oam_addr++;
@@ -291,7 +336,7 @@ void PPU::CpuWrite(const u16 addr, const u8 val)
 	else if (addr == PPU_DATA_ADDR)
 	{
 		memory_write(m_v, val);
-		m_v += ( m_ppu_ctrl & 0x04 ) ? 32 : 1;
+		m_v += get_vram_increment_mode();
 	}
 	else if (addr == OAM_DMA_ADDR)
 	{
@@ -315,10 +360,10 @@ void PPU::DMA()
 
 u32* PPU::GetScreen()
 {
-	return m_screen.data();
+	return m_screen;
 }
 
-u8 PPU::memory_read(u16 addr)
+u8 PPU::memory_read(u16 addr) const
 {
 	addr &= 0x3FFF;
 	if (addr <= 0x0FFF) // pattern table 0
@@ -365,13 +410,7 @@ u8 PPU::memory_read(u16 addr)
 	}
 	else if (addr <= 0x3FFF)
 	{
-		//https://www.nesdev.org/wiki/PPU_palettes#Memory_Map
-		u16 strippedAddr = addr & 0x001F;
-		if (strippedAddr == 0x0010) strippedAddr = 0x0000;
-		else if (strippedAddr == 0x0014) strippedAddr = 0x0004;
-		else if (strippedAddr == 0x0018) strippedAddr = 0x0008;
-		else if (strippedAddr == 0x001C) strippedAddr = 0x000C;
-		return m_palette_ram_indexes[strippedAddr];
+		return read_palette_ram_indexes(addr);
 	}
 	Lud::Unreachable();
 }
@@ -410,13 +449,7 @@ void PPU::memory_write(u16 addr, const u8 val)
 	else if (addr <= 0x3FFF)
 	{
 		m_updated_palettes = true;
-		//https://www.nesdev.org/wiki/PPU_palettes#Memory_Map
-		u16 strippedAddr = addr & 0x001F;
-		if (strippedAddr == 0x0010) strippedAddr = 0x0000;
-		else if (strippedAddr == 0x0014) strippedAddr = 0x0004;
-		else if (strippedAddr == 0x0018) strippedAddr = 0x0008;
-		else if (strippedAddr == 0x001C) strippedAddr = 0x000C;
-		m_palette_ram_indexes[strippedAddr] = val;
+		write_palette_ram_indexes(addr, val);
 	}
 }
 
@@ -461,9 +494,145 @@ void PPU::write_ppu_scroll(const u8 val)
 
 }
 
+
+void PPU::spirte_evaluation()
+{
+	// secondary OAM clear
+	if (m_cycle < 65)
+	{
+		// it's literally faster to do this every frame instead of cheking for even frames
+		m_oam_copy_buffer = 0xFF;
+		m_secondary_OAM[static_cast<size_t>( ( m_cycle - 1 ) >> 1 )] = m_oam_copy_buffer;
+	}
+	// sprite evaluation for next scanline
+	else if (m_cycle < 257)
+	{
+		if (m_cycle == 65)
+		{
+			// clear flag thingy
+			m_added_sprite_0 = false;
+			m_oam_keep_copying = true;
+			m_oam_sprite_bounded = false;
+
+			m_secondary_oam_addr = 0;
+			m_current_sprite_count = 0;
+
+			m_oam_n = ( m_oam_addr >> 2 ) & 0x3F;
+			m_oam_m = m_oam_addr & 0x03;
+		}
+		// entering HBlank
+		else if (m_cycle == 256)
+		{
+			m_current_sprite_count = m_secondary_oam_addr >> 2;
+		}
+		if (m_cycle % 2 == 1)
+		{
+			m_oam_copy_buffer = m_oam_data[m_oam_addr];
+		}
+		else
+		{
+			if (m_oam_keep_copying)
+			{
+
+				// let s = m_scanline
+				// let b = m_oam_copy_buffer
+				// y = s - b
+				// to be in range:
+				// 1. y >= 0       => (s - b) >= 0       => s >= b
+				// 2. y <  16 or 8 => (s - b) <  16 or 8 => s <  b + 16 or 8
+				if (!m_oam_sprite_bounded && m_scanline >= m_oam_copy_buffer && m_scanline < m_oam_copy_buffer + get_sprite_y_size())
+				{
+					m_oam_sprite_bounded = true;
+				}
+				if (m_secondary_oam_addr < 32)
+				{
+					m_secondary_OAM[m_secondary_oam_addr] = m_oam_copy_buffer;
+					// copy sprite
+					if (m_oam_sprite_bounded)
+					{
+						m_oam_m++;
+						m_secondary_oam_addr++;
+
+						// checking sprite 0 hits
+						if (m_oam_n == 0)
+						{
+							m_added_sprite_0 = true;
+						}
+
+						// done copying sprite
+						if (( m_secondary_oam_addr & 0x03 ) == 0)
+						{
+							m_oam_sprite_bounded = false;
+							m_oam_m = 0;
+							m_oam_n = ( m_oam_n + 1 ) & 0x3F;
+							if (m_oam_n == 0)
+							{
+								m_oam_keep_copying = false;
+							}
+						}
+					}
+					// not copy sprite
+					else
+					{
+						m_oam_n = ( m_oam_n + 1 ) & 0x3F;
+						if (m_oam_n == 0)
+						{
+							m_oam_keep_copying = false;
+						}
+					}
+				}
+				// more than 8 sprites
+				else
+				{
+					m_oam_copy_buffer = m_secondary_OAM[m_secondary_oam_addr & 0x1F];
+
+					if (m_oam_sprite_bounded)
+					{
+						m_ppu_status.set_flags(Status::Flags::SPRITE_OVERFLOW, true);
+						m_oam_m++;
+						if (m_oam_m == 4)
+						{
+							m_oam_m = 0;
+							m_oam_n = ( m_oam_n + 1 ) & 0x3F;
+						}
+					}
+					// sprite overflow bug
+					else
+					{
+						m_oam_n = ( m_oam_n + 1 ) & 0x3F;
+						m_oam_m = ( m_oam_m + 1 ) & 0x03;
+						if (m_oam_n == 0)
+						{
+							m_oam_keep_copying = false;
+						}
+					}
+				}
+			}
+			else
+			{
+				m_oam_n = ( m_oam_n + 1 ) & 0x3F;
+				// when more than 8 sprites have been found
+				// we read from secondary oam
+				if (m_secondary_oam_addr >= 32)
+				{
+					m_oam_copy_buffer = m_secondary_OAM[m_secondary_oam_addr & 0x1F];
+				}
+
+			}
+			m_oam_addr = m_oam_n * 4 + m_oam_m;
+		}
+
+	}
+}
+
+bool PPU::is_rendering_enabled()
+{
+	return m_ppu_mask.is_flag_set(Mask::Flags::SHOW_BACKGROUND | Mask::Flags::SHOW_SPRITES);
+}
+
 void PPU::preload_tile()
 {
-	switch (( m_cycles - 1 ) % 8)
+	switch (( m_cycle - 1 ) % 8)
 	{
 	case 0: // tile id
 		load_bg_shifters();
@@ -500,21 +669,17 @@ void PPU::preload_tile()
 		m_bg_next_tile_attrib &= 0x03;
 		break;
 	case 4:
-		m_bg_next_tile_lo = memory_read(0
+		m_bg_next_tile_addr = 0
 			// offset background nametable address
-			+ ( ( m_ppu_ctrl & 0x10 ) << 8 )
+			+ ( ( m_ppu_ctrl & Control::Flags::BACKGROUND_PATTERN_ADDR ) << 8 )
 			// add tile id * 16
 			+ ( m_bg_next_tile_id * 16 )
 			// add nametable position
-			+ ( ( m_v >> 12 ) & 0x07 )
-		);
+			+ ( ( m_v >> 12 ) & 0x07 );
+		m_bg_next_tile_lo = memory_read(m_bg_next_tile_addr);
 		break;
 	case 6:
-		m_bg_next_tile_hi = memory_read(8
-			+ ( ( m_ppu_ctrl & 0x10 ) << 8 )
-			+ ( m_bg_next_tile_id * 16 )
-			+ ( ( m_v >> 12 ) & 0x07 )
-		);
+		m_bg_next_tile_hi = memory_read(m_bg_next_tile_addr + 8);
 		break;
 	case 7:
 		increment_x();
@@ -631,14 +796,25 @@ void PPU::update_bg_shifters()
 	}
 }
 
+u8 PPU::get_vram_increment_mode() const
+{
+	return m_ppu_ctrl.is_flag_set(Control::Flags::VRAM_INCREMENT) ? 32 : 1;
+}
+
+u8 PPU::get_sprite_y_size() const
+{
+	return m_ppu_ctrl.is_flag_set(Control::Flags::SPRITE_SIZE_SELECT) ? 16 : 8;
+}
+
+
 bool PPU::can_show_background() const
 {
-	return m_ppu_mask & 0x08;
+	return m_ppu_mask.is_flag_set(Mask::Flags::SHOW_BACKGROUND);
 }
 
 bool PPU::can_show_sprites() const
 {
-	return m_ppu_mask & 0x10;
+	return m_ppu_mask.is_flag_set(Mask::Flags::SHOW_SPRITES);
 }
 // 0 0 -> 0 ~ 1
 // 1 0 -> 1 ~ 0
@@ -646,59 +822,126 @@ bool PPU::can_show_sprites() const
 // 1 1 -> 1 ~ 0
 bool PPU::can_show_background_or_sprites() const
 {
-	return m_ppu_mask & 0x18;
+	return m_ppu_mask.is_flag_set(Mask::Flags::SHOW_SPRITES | Mask::Flags::SHOW_BACKGROUND);
+}
+
+u32 PPU::read_palette_ram_indexes(u16 addr) const
+{
+	addr &= 0x1F;
+	if (addr == 0x10 || addr == 0x14 || addr == 0x18 || addr == 0x1C)
+	{
+		addr &= ~0x10;
+	}
+	return m_palette_ram_indexes[addr];
+}
+
+void PPU::write_palette_ram_indexes(u16 addr, u8 val)
+{
+	addr &= 0x1F;
+	val &= 0x3F;
+	if (addr == 0x00 || addr == 0x10)
+	{
+		m_palette_ram_indexes[0x00] = val;
+		m_palette_ram_indexes[0x10] = val;
+	}
+	else if (addr == 0x04 || addr == 0x14)
+	{
+		m_palette_ram_indexes[0x04] = val;
+		m_palette_ram_indexes[0x14] = val;
+	}
+	else if (addr == 0x08 || addr == 0x18)
+	{
+		m_palette_ram_indexes[0x08] = val;
+		m_palette_ram_indexes[0x18] = val;
+	}
+	else if (addr == 0x0C || addr == 0x1C)
+	{
+		m_palette_ram_indexes[0x0C] = val;
+		m_palette_ram_indexes[0x1C] = val;
+	}
+	else
+	{
+		m_palette_ram_indexes[addr] = val;
+	}
+}
+
+u32 PPU::get_color_for_pixel()
+{
+	u32 color = 0;
+	if (can_show_background())
+	{
+		const u16 bit_mux = 0x8000 >> m_x;
+
+		const u8 p0_pixel = ( m_bg_shifter_pattern_lo & bit_mux ) > 0;
+		const u8 p1_pixel = ( m_bg_shifter_pattern_hi & bit_mux ) > 0;
+
+		const u8 bg_pixel = ( p1_pixel << 1 ) | p0_pixel;
+
+		const u8 bg_pal0 = ( m_bg_shifter_attrib_lo & bit_mux ) > 0;
+		const u8 bg_pal1 = ( m_bg_shifter_attrib_hi & bit_mux ) > 0;
+
+		const u8 bg_palette = ( bg_pal1 << 1 ) | bg_pal0;
+
+
+		color = GetColorFromPalette(bg_palette, bg_pixel);
+	}
+
+	return color;
+}
+
+void PPU::draw_pixel()
+{
+	if (can_show_background_or_sprites() || ( m_v & 0x3F00 ) != 0x3F00)
+	{
+		m_screen[( m_scanline << 8 ) + m_cycle - 1] = get_color_for_pixel();
+	}
+	else
+	{
+		m_screen[( m_scanline << 8 ) + m_cycle - 1] = m_palette_ram_indexes[m_v & 0x1F];
+	}
 }
 
 
 Color PPU::GetColorFromPalette(const u8 palette, const u8 pixel)
 {
-	const u16 addr = 0x3F00 + ( palette * 4 ) + pixel;
-
-
-	const u8 val = memory_read(addr) & 0x3F;
-
-	return m_palette[val];
-
-	//return m_palette[m_palette_ram_indexes[static_cast<size_t>( palette * 4 + pixel )]];
+	return m_palette[m_palette_ram_indexes[static_cast<size_t>( palette * 4 + pixel )]];
 }
 
-u32* PPU::GetPatternTable(const u8 palette)
+
+u32* PPU::GetPatternTable(const u8 idx, const u8 palette)
 {
-	for (int i = 0; i < 2; i++)
+	for (u16 y = 0; y < 16; y++)
 	{
-		for (u16 y = 0; y < 16; y++)
+		for (u16 x = 0; x < 16; x++)
 		{
-			for (u16 x = 0; x < 16; x++)
+			// y * 256 + x * 16 == y * 16 * 16 + x * 16
+			//                     y * 16 * 16 + x * 16 == (y * 16 + x) * 16
+			u16 offset = y * 256 + x * 16;
+
+			for (u16 row = 0; row < 8; row++)
 			{
-				// y * 256 + x * 16 == y * 16 * 16 + x * 16
-				//                     y * 16 * 16 + x * 16 == (y * 16 + x) * 16
-				u16 offset = y * 256 + x * 16;
+				u8 tile_lo = memory_read(idx * 0x1000 + offset + row + 0);
+				u8 tile_hi = memory_read(idx * 0x1000 + offset + row + 8);
 
-				for (u16 row = 0; row < 8; row++)
+				for (u16 col = 0; col < 8; col++)
 				{
-					u8 tile_lo = memory_read(i * 0x1000 + offset + row + 0);
-					u8 tile_hi = memory_read(i * 0x1000 + offset + row + 8);
+					// can be either 00,01,10,11
+					// 00 is background/transparent
+					// else is color index
+					u8 pixel = ( ( tile_lo & 0x01 ) << 1 ) | ( tile_hi & 0x01 );
+					tile_hi >>= 1;
+					tile_lo >>= 1;
 
-					for (u16 col = 0; col < 8; col++)
-					{
-						// can be either 00,01,10,11
-						// 00 is background/transparent
-						// else is color index
-						u8 pixel = ( ( tile_lo & 0x01 ) << 1 ) | ( tile_hi & 0x01 );
-						tile_hi >>= 1;
-						tile_lo >>= 1;
-
-						const u16 pattern_x = x * 8 + ( 7 - col );
-						const u16 pattern_y = y * 8 + row;
-						const size_t pos = static_cast<size_t>( i * 128 + pattern_x + pattern_y * 256 );
-						m_pattern_tables_show[pos] = GetColorFromPalette(palette, pixel);
-					}
+					const u16 pattern_x = x * 8 + ( 7 - col );
+					const u16 pattern_y = y * 8 + row;
+					const size_t pos = static_cast<size_t>( idx * 128 * 128 + pattern_x + pattern_y * 128 );
+					m_pattern_tables_show[pos] = GetColorFromPalette(palette, pixel);
 				}
 			}
 		}
 	}
 
-	return m_pattern_tables_show.data();
+	return m_pattern_tables_show + idx * 128 * 128;
 }
 
 u32* PPU::GetPalette()
@@ -713,31 +956,15 @@ void PPU::load_palette()
 	std::memcpy(m_palette.data(), palettes_NTSC_pal, palettes_NTSC_pal_len);
 }
 
-void PPU::set_vBlank(bool set)
-{
-	if (set)
-	{
-		m_ppu_status |= 0x80;
-	}
-	else
-	{
-		m_ppu_status &= ~0x80;
-	}
-}
 
-
-
-Color::Color(u8 val)
-	: Color(val, val, val)
+Color::Color(u8 val) : Color(val, val, val)
 {
 
 }
 
-Color::Color(u8 R, u8 B, u8 G)
-	: R(R)
-	, G(G)
-	, B(B)
+Color::Color(u8 R, u8 B, u8 G) : R(R), G(G), B(B)
 {
+
 }
 
 u32 Color::AsU32() const
@@ -750,6 +977,28 @@ u32 Color::AsU32() const
 	{
 		return R << 24 | G << 16 | B << 8 | 0xFF;
 	}
+}
+
+bool RegisterFlags::is_flag_set(u8 flags) const
+{
+	return reg & flags;
+}
+
+void RegisterFlags::set_flags(u8 flags, bool set)
+{
+	if (set)
+	{
+		reg |= flags;
+	}
+	else
+	{
+		reg &= ~flags;
+	}
+}
+
+u8 RegisterFlags::operator|(u8 flags) const
+{
+	return reg & flags;
 }
 
 }

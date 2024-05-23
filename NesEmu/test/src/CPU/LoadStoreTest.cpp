@@ -22,12 +22,12 @@ TEST_F(TestLoadStore, LDA)
 	clearCycles(2);
 
 	ASSERT_EQ(console.GetCpu().A(), 0x80);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::N);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::N);
 
 	clearCycles(2);
 
 	ASSERT_EQ(console.GetCpu().A(), 0);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::Z);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::Z);
 }
 
 TEST_F(TestLoadStore, LDX)
@@ -45,12 +45,12 @@ TEST_F(TestLoadStore, LDX)
 	clearCycles(2);
 
 	ASSERT_EQ(console.GetCpu().X(), 0x80);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::N);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::N);
 
 	clearCycles(2);
 
 	ASSERT_EQ(console.GetCpu().X(), 0);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::Z);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::Z);
 }
 
 TEST_F(TestLoadStore, LDY)
@@ -68,12 +68,12 @@ TEST_F(TestLoadStore, LDY)
 	clearCycles(2);
 
 	ASSERT_EQ(console.GetCpu().Y(), 0x80);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::N);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::N);
 
 	clearCycles(2);
 
 	ASSERT_EQ(console.GetCpu().Y(), 0);
-	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::Z);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::Z);
 }
 
 TEST_F(TestLoadStore, STA)

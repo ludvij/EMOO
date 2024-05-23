@@ -366,13 +366,13 @@ void CPU::Step()
 	pc_copy = m_PC;
 	flag_state = std::format("A:{:02X} X:{:02X} Y:{:02X} P:{:02X} SP:{:02X}", m_A, m_X, m_Y, m_P, m_S);
 #endif
-	if (m_cycles == 0)
+	if (m_cycle == 0)
 	{
 		m_opcode = readByte();
 
 		m_currentInstr = m_jumpTable[m_opcode];
 
-		m_cycles = m_currentInstr.cycles;
+		m_cycle = m_currentInstr.cycles;
 		// get address
 		u16 addr = ( this->*m_currentInstr.addrMode )( );
 		// execute instruction
@@ -380,14 +380,14 @@ void CPU::Step()
 
 		if (m_canOops)
 		{
-			m_cycles += m_oopsCycles;
+			m_cycle += m_oopsCycles;
 		}
 	#ifdef TRACE_CPU_EXECUTION
 		file << std::format("{:04X}  {:9s}{:>4s} {:29s} {:25s} \n", pc_copy, opcodes, m_currentInstr.name, instr_eval, flag_state);
 	#endif
 	}
 	m_totalCycles++;
-	m_cycles--;
+	m_cycle--;
 }
 
 void CPU::Reset()
@@ -410,12 +410,12 @@ void CPU::Reset()
 	m_oopsCycles = 0;
 	m_discard = 0;
 	// this takes 8 cycles
-	m_cycles = 8;
+	m_cycle = 8;
 }
 
 void CPU::IRQ()
 {
-	if (checkFlag(Flag::I))
+	if (checkFlag(ProcessorStatus::Flags::I))
 		return;
 
 	const u8 pcL = m_PC & 0x00ff;
@@ -424,11 +424,11 @@ void CPU::IRQ()
 	push(pcH);
 	push(pcL);
 
-	clearFlag(Flag::B);
+	clearFlag(ProcessorStatus::Flags::B);
 
 	push(m_P);
 
-	setFlag(Flag::I);
+	setFlag(ProcessorStatus::Flags::I);
 	const u8 irqL = memoryRead(IRQ_VECTOR_LO);
 	const u8 irqH = memoryRead(IRQ_VECTOR_HI);
 
@@ -443,11 +443,11 @@ void CPU::NMI()
 	push(pcH);
 	push(pcL);
 
-	clearFlag(Flag::B);
+	clearFlag(ProcessorStatus::Flags::B);
 
 	push(m_P);
 
-	setFlag(Flag::I);
+	setFlag(ProcessorStatus::Flags::I);
 
 	const u8 nmiL = memoryRead(NMI_VECTOR_LO);
 	const u8 nmiH = memoryRead(NMI_VECTOR_HI);
@@ -743,8 +743,8 @@ void CPU::AND(const u16 addr)
 {
 	const u8 m = memoryRead(addr);
 	m_A &= m;
-	setFlagIf(Flag::Z, m_A == 0);
-	setFlagIf(Flag::N, m_A & 0x80);
+	setFlagIf(ProcessorStatus::Flags::Z, m_A == 0);
+	setFlagIf(ProcessorStatus::Flags::N, m_A & 0x80);
 
 #ifdef TRACE_CPU_EXECUTION
 	instr_eval.append(std::format("{:02X}", m));
@@ -774,11 +774,11 @@ void CPU::ASL(const u16 addr)
 	#endif
 	}
 
-	setFlagIf(Flag::C, m & 0x80);
+	setFlagIf(ProcessorStatus::Flags::C, m & 0x80);
 	m <<= 1;
 	m &= 0x00FF;
-	setFlagIf(Flag::Z, m == 0);
-	setFlagIf(Flag::N, m & 0x80);
+	setFlagIf(ProcessorStatus::Flags::Z, m == 0);
+	setFlagIf(ProcessorStatus::Flags::N, m & 0x80);
 
 	if (isImplied())
 	{
@@ -796,7 +796,7 @@ void CPU::ASL(const u16 addr)
  */
 void CPU::BCC(const u16 addr)
 {
-	branchIfCond(addr, !checkFlag(Flag::C));
+	branchIfCond(addr, !checkFlag(ProcessorStatus::Flags::C));
 }
 /*
  * Instruction Branch if carry set
@@ -804,7 +804,7 @@ void CPU::BCC(const u16 addr)
  */
 void CPU::BCS(const u16 addr)
 {
-	branchIfCond(addr, checkFlag(Flag::C));
+	branchIfCond(addr, checkFlag(ProcessorStatus::Flags::C));
 }
 /*
  * Instruction Branch if equal
@@ -812,7 +812,7 @@ void CPU::BCS(const u16 addr)
  */
 void CPU::BEQ(const u16 addr)
 {
-	branchIfCond(addr, checkFlag(Flag::Z));
+	branchIfCond(addr, checkFlag(ProcessorStatus::Flags::Z));
 }
 
 /*
@@ -833,9 +833,9 @@ void CPU::BIT(const u16 addr)
 
 	m_discard = m_A & m;
 
-	setFlagIf(Flag::Z, m_discard == 0);
-	setFlagIf(Flag::V, m & 0x40);
-	setFlagIf(Flag::N, m & 0x80);
+	setFlagIf(ProcessorStatus::Flags::Z, m_discard == 0);
+	setFlagIf(ProcessorStatus::Flags::V, m & 0x40);
+	setFlagIf(ProcessorStatus::Flags::N, m & 0x80);
 
 }
 
@@ -845,7 +845,7 @@ void CPU::BIT(const u16 addr)
  */
 void CPU::BMI(const u16 addr)
 {
-	branchIfCond(addr, checkFlag(Flag::N));
+	branchIfCond(addr, checkFlag(ProcessorStatus::Flags::N));
 }
 
 /*
@@ -854,7 +854,7 @@ void CPU::BMI(const u16 addr)
  */
 void CPU::BNE(const u16 addr)
 {
-	branchIfCond(addr, !checkFlag(Flag::Z));
+	branchIfCond(addr, !checkFlag(ProcessorStatus::Flags::Z));
 }
 
 /*
@@ -863,7 +863,7 @@ void CPU::BNE(const u16 addr)
  */
 void CPU::BPL(const u16 addr)
 {
-	branchIfCond(addr, !checkFlag(Flag::N));
+	branchIfCond(addr, !checkFlag(ProcessorStatus::Flags::N));
 
 }
 /*
@@ -893,8 +893,8 @@ void CPU::BRK(const u16 addr)
 	push(pchi);
 	push(pclo);
 
-	push(m_P | Flag::U | Flag::B);
-	setFlag(Flag::I);
+	push(m_P | ProcessorStatus::Flags::U | ProcessorStatus::Flags::B);
+	setFlag(ProcessorStatus::Flags::I);
 
 	const u8 lo = memoryRead(IRQ_VECTOR_LO);
 	const u8 hi = memoryRead(IRQ_VECTOR_HI);
@@ -908,7 +908,7 @@ void CPU::BRK(const u16 addr)
  */
 void CPU::BVC(const u16 addr)
 {
-	branchIfCond(addr, !checkFlag(Flag::V));
+	branchIfCond(addr, !checkFlag(ProcessorStatus::Flags::V));
 }
 
 /*
@@ -917,14 +917,14 @@ void CPU::BVC(const u16 addr)
  */
 void CPU::BVS(const u16 addr)
 {
-	branchIfCond(addr, checkFlag(Flag::V));
+	branchIfCond(addr, checkFlag(ProcessorStatus::Flags::V));
 }
 /*
- * Instruction Clear Carry Flag
+ * Instruction Clear Carry Flags
  */
 void CPU::CLC(const u16 addr)
 {
-	m_P &= ~Flag::C;
+	m_P &= ~ProcessorStatus::Flags::C;
 }
 
 /*
@@ -932,7 +932,7 @@ void CPU::CLC(const u16 addr)
  */
 void CPU::CLD(const u16 addr)
 {
-	m_P &= ~Flag::D;
+	m_P &= ~ProcessorStatus::Flags::D;
 }
 
 /*
@@ -940,15 +940,15 @@ void CPU::CLD(const u16 addr)
  */
 void CPU::CLI(const u16 addr)
 {
-	m_P &= ~Flag::I;
+	m_P &= ~ProcessorStatus::Flags::I;
 }
 
 /*
- * Instruction Clear Overflow Flag
+ * Instruction Clear Overflow Flags
  */
 void CPU::CLV(const u16 addr)
 {
-	m_P &= ~Flag::V;
+	m_P &= ~ProcessorStatus::Flags::V;
 }
 
 /*
@@ -963,9 +963,9 @@ void CPU::CMP(const u16 addr)
 
 	m_discard = m_A - m;
 
-	setFlagIf(Flag::C, m_A >= m);
-	setFlagIf(Flag::Z, ( m_discard & 0x00FF ) == 0x000);
-	setFlagIf(Flag::N, m_discard & 0x80);
+	setFlagIf(ProcessorStatus::Flags::C, m_A >= m);
+	setFlagIf(ProcessorStatus::Flags::Z, ( m_discard & 0x00FF ) == 0x000);
+	setFlagIf(ProcessorStatus::Flags::N, m_discard & 0x80);
 
 #ifdef TRACE_CPU_EXECUTION
 	instr_eval.append(std::format("{:02X}", m));
@@ -987,9 +987,9 @@ void CPU::CPX(const u16 addr)
 
 	m_discard = m_X - m;
 
-	setFlagIf(Flag::C, m_X >= m);
-	setFlagIf(Flag::Z, m_X == m);
-	setFlagIf(Flag::N, m_discard & 0x80);
+	setFlagIf(ProcessorStatus::Flags::C, m_X >= m);
+	setFlagIf(ProcessorStatus::Flags::Z, m_X == m);
+	setFlagIf(ProcessorStatus::Flags::N, m_discard & 0x80);
 
 #ifdef TRACE_CPU_EXECUTION
 	instr_eval.append(std::format("{:02X}", m));
@@ -1009,9 +1009,9 @@ void CPU::CPY(const u16 addr)
 
 	m_discard = m_Y - m;
 
-	setFlagIf(Flag::C, m_Y >= m);
-	setFlagIf(Flag::Z, m_Y == m);
-	setFlagIf(Flag::N, m_discard & 0x80);
+	setFlagIf(ProcessorStatus::Flags::C, m_Y >= m);
+	setFlagIf(ProcessorStatus::Flags::Z, m_Y == m);
+	setFlagIf(ProcessorStatus::Flags::N, m_discard & 0x80);
 
 #ifdef TRACE_CPU_EXECUTION
 	instr_eval.append(std::format("{:02X}", m));
@@ -1032,8 +1032,8 @@ void CPU::DEC(const u16 addr)
 
 	m = ( m - 1 ) & 0x00ff;
 
-	setFlagIf(Flag::N, m & 0x80);
-	setFlagIf(Flag::Z, m == 0);
+	setFlagIf(ProcessorStatus::Flags::N, m & 0x80);
+	setFlagIf(ProcessorStatus::Flags::Z, m == 0);
 
 
 
@@ -1049,8 +1049,8 @@ void CPU::DEX(const u16 addr)
 {
 	m_X = ( m_X - 1 ) & 0x00ff;
 
-	setFlagIf(Flag::N, m_X & 0x80);
-	setFlagIf(Flag::Z, m_X == 0);
+	setFlagIf(ProcessorStatus::Flags::N, m_X & 0x80);
+	setFlagIf(ProcessorStatus::Flags::Z, m_X == 0);
 }
 
 /*
@@ -1062,8 +1062,8 @@ void CPU::DEY(const u16 addr)
 {
 	m_Y = ( m_Y - 1 ) & 0x00ff;
 
-	setFlagIf(Flag::N, m_Y & 0x80);
-	setFlagIf(Flag::Z, m_Y == 0);
+	setFlagIf(ProcessorStatus::Flags::N, m_Y & 0x80);
+	setFlagIf(ProcessorStatus::Flags::Z, m_Y == 0);
 }
 
 /*
@@ -1077,8 +1077,8 @@ void CPU::EOR(const u16 addr)
 
 	m_A ^= m;
 
-	setFlagIf(Flag::Z, m_A == 0);
-	setFlagIf(Flag::N, m_A & 0x80);
+	setFlagIf(ProcessorStatus::Flags::Z, m_A == 0);
+	setFlagIf(ProcessorStatus::Flags::N, m_A & 0x80);
 
 #ifdef TRACE_CPU_EXECUTION
 	instr_eval.append(std::format("{:02X}", m));
@@ -1103,8 +1103,8 @@ void CPU::INC(const u16 addr)
 
 	m = ( m + 1 ) & 0x00ff;
 
-	setFlagIf(Flag::N, m & 0x80);
-	setFlagIf(Flag::Z, m == 0);
+	setFlagIf(ProcessorStatus::Flags::N, m & 0x80);
+	setFlagIf(ProcessorStatus::Flags::Z, m == 0);
 
 	memoryWrite(addr, m);
 }
@@ -1118,8 +1118,8 @@ void CPU::INX(const u16 addr)
 {
 	m_X = ( m_X + 1 ) & 0x00ff;
 
-	setFlagIf(Flag::N, m_X & 0x80);
-	setFlagIf(Flag::Z, m_X == 0);
+	setFlagIf(ProcessorStatus::Flags::N, m_X & 0x80);
+	setFlagIf(ProcessorStatus::Flags::Z, m_X == 0);
 }
 
 /*
@@ -1131,8 +1131,8 @@ void CPU::INY(const u16 addr)
 {
 	m_Y = ( m_Y + 1 ) & 0x00ff;
 
-	setFlagIf(Flag::N, m_Y & 0x80);
-	setFlagIf(Flag::Z, m_Y == 0);
+	setFlagIf(ProcessorStatus::Flags::N, m_Y & 0x80);
+	setFlagIf(ProcessorStatus::Flags::Z, m_Y == 0);
 }
 
 /*
@@ -1232,11 +1232,11 @@ void CPU::LSR(const u16 addr)
 	}
 
 
-	setFlagIf(Flag::C, m & 1);
+	setFlagIf(ProcessorStatus::Flags::C, m & 1);
 	m >>= 1;
 	m &= 0x00FF;
-	setFlagIf(Flag::Z, m == 0);
-	setFlagIf(Flag::N, m & 0x80);
+	setFlagIf(ProcessorStatus::Flags::Z, m == 0);
+	setFlagIf(ProcessorStatus::Flags::N, m & 0x80);
 
 	if (isImplied())
 	{
@@ -1267,8 +1267,8 @@ void CPU::ORA(const u16 addr)
 
 	m_A |= m;
 
-	setFlagIf(Flag::Z, m_A == 0);
-	setFlagIf(Flag::N, m_A & 0x80);
+	setFlagIf(ProcessorStatus::Flags::Z, m_A == 0);
+	setFlagIf(ProcessorStatus::Flags::N, m_A & 0x80);
 
 #ifdef TRACE_CPU_EXECUTION
 	instr_eval.append(std::format("{:02X}", m));
@@ -1298,7 +1298,7 @@ void CPU::PHA(const u16 addr)
  */
 void CPU::PHP(const u16 addr)
 {
-	push(m_P | Flag::B | Flag::U);
+	push(m_P | ProcessorStatus::Flags::B | ProcessorStatus::Flags::U);
 }
 
 /*
@@ -1317,7 +1317,7 @@ void CPU::PLA(const u16 addr)
 void CPU::PLP(const u16 addr)
 {
 	set_p(pop());
-	setFlag(Flag::U);
+	setFlag(ProcessorStatus::Flags::U);
 }
 
 
@@ -1349,15 +1349,15 @@ void CPU::ROL(const u16 addr)
 	// anything above bit 7 will be cut in 8 bits
 	// but in 16 we can store it to check flags
 	m <<= 1;
-	if (checkFlag(Flag::C))
+	if (checkFlag(ProcessorStatus::Flags::C))
 	{
 		m |= 1;
 	}
 
-	setFlagIf(Flag::C, m > 0xff);
+	setFlagIf(ProcessorStatus::Flags::C, m > 0xff);
 	m &= 0x00FF;
-	setFlagIf(Flag::N, m & 0x80);
-	setFlagIf(Flag::Z, m == 0);
+	setFlagIf(ProcessorStatus::Flags::N, m & 0x80);
+	setFlagIf(ProcessorStatus::Flags::Z, m == 0);
 
 	if (isImplied())
 	{
@@ -1394,16 +1394,16 @@ void CPU::ROR(const u16 addr)
 
 	// we set bit 8 in case of carry so we can 
 	// store it after shifting
-	if (checkFlag(Flag::C))
+	if (checkFlag(ProcessorStatus::Flags::C))
 	{
 		m |= 0x100;
 	}
-	setFlagIf(Flag::C, m & 1);
+	setFlagIf(ProcessorStatus::Flags::C, m & 1);
 	m >>= 1;
 
 	m &= 0x00FF;
-	setFlagIf(Flag::N, m & 0x80);
-	setFlagIf(Flag::Z, m == 0);
+	setFlagIf(ProcessorStatus::Flags::N, m & 0x80);
+	setFlagIf(ProcessorStatus::Flags::Z, m == 0);
 
 	if (isImplied())
 	{
@@ -1424,7 +1424,7 @@ void CPU::ROR(const u16 addr)
 void CPU::RTI(u16 addr)
 {
 	set_p(pop());
-	setFlag(Flag::U);
+	setFlag(ProcessorStatus::Flags::U);
 	m_PC = pop_word();
 }
 
@@ -1481,11 +1481,11 @@ void CPU::SBC(const u16 addr)
 }
 
 /*
- * Instruction Set Carry Flag
+ * Instruction Set Carry Flags
  */
 void CPU::SEC(u16 addr)
 {
-	m_P |= Flag::C;
+	m_P |= ProcessorStatus::Flags::C;
 }
 
 /*
@@ -1493,7 +1493,7 @@ void CPU::SEC(u16 addr)
  */
 void CPU::SED(u16 addr)
 {
-	m_P |= Flag::D;
+	m_P |= ProcessorStatus::Flags::D;
 }
 
 /*
@@ -1501,7 +1501,7 @@ void CPU::SED(u16 addr)
  */
 void CPU::SEI(u16 addr)
 {
-	m_P |= Flag::I;
+	m_P |= ProcessorStatus::Flags::I;
 }
 
 /*
@@ -1636,7 +1636,7 @@ void CPU::IGN(const u16 addr)
 void CPU::ALR(const u16 addr)
 {
 	AND(addr);
-	setFlagIf(Flag::C, m_A & 0x01);
+	setFlagIf(ProcessorStatus::Flags::C, m_A & 0x01);
 	set_register(m_A, m_A >> 1);
 
 }
@@ -1644,7 +1644,7 @@ void CPU::ALR(const u16 addr)
 void CPU::ANC(const u16 addr)
 {
 	AND(addr);
-	setFlagIf(Flag::C, addr & 0x80);
+	setFlagIf(ProcessorStatus::Flags::C, addr & 0x80);
 }
 
 void CPU::ARR(const u16 addr)
@@ -1652,7 +1652,7 @@ void CPU::ARR(const u16 addr)
 	AND(addr);
 	// we set bit 8 in case of carry so we can 
 	// store it after shifting
-	set_register(m_A, ( m_A >> 1 ) | ( checkFlag(Flag::C) << 7 ));
+	set_register(m_A, ( m_A >> 1 ) | ( checkFlag(ProcessorStatus::Flags::C) << 7 ));
 
 
 }
@@ -1661,7 +1661,7 @@ void CPU::AXS(const u16 addr)
 {
 	m_discard = m_A & m_X;
 	set_register(m_X, m_discard - addr);
-	setFlagIf(Flag::C, m_discard >= m_X);
+	setFlagIf(ProcessorStatus::Flags::C, m_discard >= m_X);
 }
 
 void CPU::LAX(const u16 addr)
@@ -1689,9 +1689,9 @@ void CPU::DCP(const u16 addr)
 	m--;
 	m_discard = m_A - m;
 
-	setFlagIf(Flag::C, m_A >= m);
-	setFlagIf(Flag::Z, ( m_discard & 0x00FF ) == 0x000);
-	setFlagIf(Flag::N, m_discard & 0x80);
+	setFlagIf(ProcessorStatus::Flags::C, m_A >= m);
+	setFlagIf(ProcessorStatus::Flags::Z, ( m_discard & 0x00FF ) == 0x000);
+	setFlagIf(ProcessorStatus::Flags::N, m_discard & 0x80);
 
 	memoryWrite(addr, m);
 }
@@ -1717,8 +1717,8 @@ void CPU::RLA(const u16 addr)
 #endif
 
 	//memoryWrite(addr, m); // dumy write
-	bool carry = checkFlag(Flag::C);
-	setFlagIf(Flag::C, m & 0x80);
+	bool carry = checkFlag(ProcessorStatus::Flags::C);
+	setFlagIf(ProcessorStatus::Flags::C, m & 0x80);
 	u8 shifted = ( m << 1 ) | ( carry ? 1 : 0 );
 	set_register(m_A, m_A & shifted);
 	memoryWrite(addr, shifted);
@@ -1732,8 +1732,8 @@ void CPU::RRA(const u16 addr)
 #endif
 
 	//memoryWrite(addr, m); // dumy write
-	bool carry = checkFlag(Flag::C);
-	setFlagIf(Flag::C, m & 0x01);
+	bool carry = checkFlag(ProcessorStatus::Flags::C);
+	setFlagIf(ProcessorStatus::Flags::C, m & 0x01);
 	u8 shifted = ( m >> 1 ) | ( carry << 7 );
 	ADD(shifted);
 	memoryWrite(addr, shifted);
@@ -1746,7 +1746,7 @@ void CPU::SLO(const u16 addr)
 	instr_eval.append(std::format("{:02X}", m));
 #endif
 	//memoryWrite(addr, m); // dummy write
-	setFlagIf(Flag::C, m & 0x80);
+	setFlagIf(ProcessorStatus::Flags::C, m & 0x80);
 
 	u8 shifted = m << 1;
 	set_register(m_A, m_A | shifted);
@@ -1761,7 +1761,7 @@ void CPU::SRE(const u16 addr)
 	instr_eval.append(std::format("{:02X}", m));
 #endif
 	//memoryWrite(addr, m); // dummy write
-	setFlagIf(Flag::C, m & 0x01);
+	setFlagIf(ProcessorStatus::Flags::C, m & 0x01);
 
 	u8 shifted = m >> 1;
 	set_register(m_A, m_A ^ shifted);
@@ -1772,12 +1772,12 @@ void CPU::ADD(u8 val)
 {
 	const u16 a = m_A;
 
-	u16 r = a + val + static_cast<u16>( checkFlag(Flag::C) );
+	u16 r = a + val + static_cast<u16>( checkFlag(ProcessorStatus::Flags::C) );
 
-	setFlagIf(Flag::N, r & 0x80);
-	setFlagIf(Flag::Z, ( r & 0x00ff ) == 0);
-	setFlagIf(Flag::V, ( a ^ r ) & ( val ^ r ) & 0x0080);
-	setFlagIf(Flag::C, r & 0xFF00);
+	setFlagIf(ProcessorStatus::Flags::N, r & 0x80);
+	setFlagIf(ProcessorStatus::Flags::Z, ( r & 0x00ff ) == 0);
+	setFlagIf(ProcessorStatus::Flags::V, ( a ^ r ) & ( val ^ r ) & 0x0080);
+	setFlagIf(ProcessorStatus::Flags::C, r & 0xFF00);
 
 	m_A = r & 0x00ff;
 }
@@ -1795,7 +1795,7 @@ void CPU::STP(const u16 addr)
 	throw std::runtime_error(std::format("Called STP opcode [{:#02x}] at PC: [{:d}]", m_opcode, m_PC));
 }
 
-void CPU::setFlagIf(const Flag flag, const bool cond)
+void CPU::setFlagIf(const u8 flag, const bool cond)
 {
 	if (cond)
 	{
@@ -1807,17 +1807,17 @@ void CPU::setFlagIf(const Flag flag, const bool cond)
 	}
 }
 
-void CPU::setFlag(const Flag flag)
+void CPU::setFlag(const u8 flag)
 {
 	m_P |= flag;
 }
 
-void CPU::clearFlag(const Flag flag)
+void CPU::clearFlag(const u8 flag)
 {
 	m_P &= ~flag;
 }
 
-bool CPU::checkFlag(const Flag flag) const
+bool CPU::checkFlag(const u8 flag) const
 {
 	return ( m_P & flag ) == flag;
 }
@@ -1832,7 +1832,7 @@ void CPU::branchIfCond(const u16 addr, bool cond)
 	// flag is clear
 	if (cond)
 	{
-		m_cycles++;
+		m_cycle++;
 
 		const u8 page = static_cast<u8>( m_PC & 0xff00 );
 
@@ -1840,7 +1840,7 @@ void CPU::branchIfCond(const u16 addr, bool cond)
 		// extra cycle for page change
 		if (page != ( m_PC & 0xff00 ))
 		{
-			m_cycles++;
+			m_cycle++;
 		}
 	}
 }
@@ -1848,8 +1848,8 @@ void CPU::branchIfCond(const u16 addr, bool cond)
 void CPU::transferRegTo(const u8 from, u8& to)
 {
 	to = from;
-	setFlagIf(Flag::Z, to == 0);
-	setFlagIf(Flag::N, to & 0x80);
+	setFlagIf(ProcessorStatus::Flags::Z, to == 0);
+	setFlagIf(ProcessorStatus::Flags::N, to & 0x80);
 }
 
 void CPU::push(const u8 val)
@@ -1879,8 +1879,8 @@ u16 CPU::pop_word()
 
 void CPU::set_register(u8& reg, const u8 val)
 {
-	setFlagIf(Flag::Z, val == 0);
-	setFlagIf(Flag::N, val & 0x80);
+	setFlagIf(ProcessorStatus::Flags::Z, val == 0);
+	setFlagIf(ProcessorStatus::Flags::N, val & 0x80);
 	reg = val;
 }
 

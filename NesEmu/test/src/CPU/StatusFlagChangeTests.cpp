@@ -13,7 +13,7 @@ TEST_F(TestStatusFlagChange, SEC)
 
 	clearCycles(2);
 
-	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::C);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::C);
 }
 
 
@@ -23,7 +23,7 @@ TEST_F(TestStatusFlagChange, CLC)
 
 	clearCycles(4);
 
-	ASSERT_FALSE(console.GetCpu().P() & Emu::Flag::C);
+	ASSERT_FALSE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::C);
 }
 
 TEST_F(TestStatusFlagChange, SED)
@@ -32,7 +32,7 @@ TEST_F(TestStatusFlagChange, SED)
 
 	clearCycles(2);
 
-	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::D);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::D);
 }
 
 
@@ -42,7 +42,7 @@ TEST_F(TestStatusFlagChange, CLD)
 
 	clearCycles(4);
 
-	ASSERT_FALSE(console.GetCpu().P() & Emu::Flag::D);
+	ASSERT_FALSE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::D);
 }
 
 TEST_F(TestStatusFlagChange, SEI)
@@ -51,7 +51,7 @@ TEST_F(TestStatusFlagChange, SEI)
 
 	clearCycles(2);
 
-	ASSERT_TRUE(console.GetCpu().P() & Emu::Flag::I);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::I);
 }
 
 
@@ -61,15 +61,15 @@ TEST_F(TestStatusFlagChange, CLI)
 
 	clearCycles(4);
 
-	ASSERT_FALSE(console.GetCpu().P() & Emu::Flag::I);
+	ASSERT_FALSE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::I);
 }
 
 TEST_F(TestStatusFlagChange, CLV)
 {
-	console.GetCpu().SetP(Emu::Flag::V);
+	console.GetCpu().SetP(Emu::ProcessorStatus::Flags::V);
 	asse.Assemble("clv");
 
 	clearCycles(2);
 
-	ASSERT_FALSE(console.GetCpu().P() & Emu::Flag::V);
+	ASSERT_FALSE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::V);
 }

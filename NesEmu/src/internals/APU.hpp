@@ -15,6 +15,7 @@ public:
 
 	void CpuWrite(u16 addr, u8 val);
 	u8 CpuRead(u16 addr);
+	u8 CpuPeek(u16 addr) const;
 private:
 	// pulse    $4000-$4007
 	std::array<u8, 8> m_pulse;

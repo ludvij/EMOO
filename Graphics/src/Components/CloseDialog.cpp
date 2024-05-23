@@ -62,7 +62,7 @@ void CloseDialog::OnRender()
 			{
 				Application::Get().Close();
 			}
-			m_removed = true;
+			removed = true;
 		}
 	}
 	ImGui::End();

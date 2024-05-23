@@ -33,18 +33,7 @@ SDLInput::SDLInput()
 	Lud::check::eq(SDL_Init(SDL_INIT_GAMEPAD), 0, std::format("Could not start input system, error: [{:s}]", SDL_GetError()));
 	// we will select first one by default
 
-	int count;
-	SDL_JoystickID* joystick_ids = SDL_GetJoysticks(&count);
-	for (size_t i = 0; i < count; i++)
-	{
-		const SDL_JoystickID curr = joystick_ids[i];
-		if (SDL_IsGamepad(curr))
-		{
-			std::println("Detected controller index: [{:d}], name: [{:s}]", i, SDL_GetGamepadInstanceName(curr));
-			m_controller = SDL_OpenGamepad(curr);
-		}
-	}
-	SDL_free(joystick_ids);
+	add_controller();
 }
 SDLInput::~SDLInput()
 {
@@ -55,6 +44,60 @@ bool SDLInput::GetButton(Button b)
 {
 	const auto p = SDL_GetGamepadButton(m_controller, get_sdl_equivalent(b));
 	return p;
+}
+
+void SDLInput::add_controller()
+{
+	if (m_controller != nullptr)
+	{
+		return;
+	}
+	int count;
+	SDL_JoystickID* joystick_ids = SDL_GetJoysticks(&count);
+	for (size_t i = 0; i < count; i++)
+	{
+		const SDL_JoystickID curr = joystick_ids[i];
+		if (SDL_IsGamepad(curr))
+		{
+			m_controller = SDL_OpenGamepad(curr);
+			std::println("Added controller ID: [{:d}], name: [{:s}]", curr, SDL_GetGamepadName(m_controller));
+		}
+	}
+	SDL_free(joystick_ids);
+}
+
+void SDLInput::remove_controller()
+{
+	if (m_controller == nullptr)
+	{
+		return;
+	}
+	int count;
+	SDL_JoystickID* joystick_ids = SDL_GetJoysticks(&count);
+	auto id = SDL_GetGamepadInstanceID(m_controller);
+	if (std::find(joystick_ids, joystick_ids + count, id) == joystick_ids + count)
+	{
+		std::println("Removed controller ID: [{:d}], name: [{:s}]", id, SDL_GetGamepadName(m_controller));
+		SDL_CloseGamepad(m_controller);
+		m_controller = nullptr;
+	}
+	SDL_free(joystick_ids);
+}
+
+void SDLInput::ProcessEvents(void* event)
+{
+	auto sdl_e = static_cast<SDL_Event*>( event );
+	switch (sdl_e->type)
+	{
+	case SDL_EVENT_GAMEPAD_ADDED:
+		add_controller();
+		break;
+	case SDL_EVENT_GAMEPAD_REMOVED:
+		remove_controller();
+		break;
+	default:
+		break;
+	}
 }
 
 }

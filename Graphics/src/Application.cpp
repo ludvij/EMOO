@@ -3,6 +3,7 @@
 #include <functional>
 #include <iostream>
 #include <print>
+#include <ranges>
 #include <vector>
 
 #include <backends/imgui_impl_vulkan.h>
@@ -10,6 +11,7 @@
 
 #include "Components/CloseDialog.hpp"
 #include "Components/IComponent.hpp"
+#include "Components/ShowPPUStatus.hpp"
 
 #include "Input/SDL/SDLInput.hpp"
 #include "Renderer/RendererAPI.hpp"
@@ -39,9 +41,9 @@ Application::Application(const Configuration& config)
 	const auto w = static_cast<uint32_t>( m_console.GetConfig().width );
 	const auto h = static_cast<uint32_t>( m_console.GetConfig().height );
 
-	m_textures["SCREEN"]         = std::unique_ptr<ITexture>(Renderer::CreateBindlessTexture(w, h));
+	m_screen = Renderer::CreateBindlessTexture(w, h);
 
-	m_sprites["SCREEN"]          = Sprite({}, 0, m_textures["SCREEN"].get());
+	m_screen_sprite = Sprite({}, 0, m_screen);
 }
 
 Application::~Application()
@@ -53,6 +55,11 @@ Application::~Application()
 Application& Application::Get()
 {
 	return *s_instance;
+}
+
+Emu::Console& Application::GetConsole()
+{
+	return s_instance->m_console;
 }
 
 void Application::SetUpdate(bool set)
@@ -115,9 +122,28 @@ void Application::init_button_mapping()
 void Application::shutdown()
 {
 	m_components.clear();
-	m_textures.clear();
+	delete m_screen;
 }
 
+
+void Application::AddComponent(const std::shared_ptr<Component::IComponent>& component)
+{
+	m_components.emplace_back(component);
+	component->OnCreate();
+}
+
+void Application::RemoveComponent(const UUID& id)
+{
+	const auto was_removed = [&](auto c)
+		{
+			return c->removed;
+		};
+	if (auto it = std::find_if(m_components.begin(), m_components.end(), was_removed); it != m_components.end())
+	{
+		auto& comp = *it;
+		comp->removed = true;
+	}
+}
 
 void Application::Run()
 {
@@ -181,7 +207,7 @@ void Application::event_loop()
 		default:
 			break;
 		}
-
+		m_input->ProcessEvents(&event);
 		m_window->ProcessEventForImGui(&event);
 	}
 
@@ -313,6 +339,23 @@ void Application::draw_menu_bar()
 			}
 			ImGui::EndMenu();
 		}
+		if (ImGui::BeginMenu("PPU"))
+		{
+			if (ImGui::MenuItem("Show status"))
+			{
+				if (m_component_ids.contains("PPU_STATUS"))
+				{
+					RemoveComponent(m_component_ids["PPU_STATUS"]);
+				}
+				else
+				{
+					auto c = std::make_shared<Component::ShowPPUStatus>();
+					AddComponent(c);
+					m_component_ids.insert({ "PPU_STATUS", c->id });
+				}
+			}
+			ImGui::EndMenu();
+		}
 		ImGui::EndMainMenuBar();
 	}
 }
@@ -320,10 +363,7 @@ void Application::draw_application()
 {
 	draw_ui();
 
-	for (auto& [k, v] : m_sprites)
-	{
-		v.Draw();
-	}
+	m_screen_sprite.Draw();
 
 	Renderer::Draw();
 }
@@ -340,6 +380,11 @@ void Application::update()
 	}
 	get_pixel_data();
 
+	for (const auto& c : m_components)
+	{
+		c->OnUpdate();
+	}
+
 	if (m_resized)
 	{
 		m_resized = false;
@@ -349,35 +394,35 @@ void Application::update()
 // TODO: make better
 void Application::clear_deleted_components()
 {
+	// ugly code
+	const auto was_removed = [&](auto c)
+		{
+			return c->removed;
+		};
+
+	for (const auto& c : m_components | std::views::filter(was_removed))
+	{
+		const char* comp_key;
+		for (const auto& [k, v] : m_component_ids)
+		{
+			if (c->id == v)
+			{
+				comp_key = k;
+				break;
+			}
+		}
+		m_component_ids.erase(comp_key);
+		//m_components.remove(c);
+	}
 	m_components.remove_if([&](auto c)
 		{
-			return c->WasRemoved();
+			return c->removed;
 		});
 }
 
 void Application::get_pixel_data()
 {
-	m_textures["SCREEN"]->SetData(m_console.OutputScreen());
-
-	if (m_console.HasUpdatedPatternTables())
-	{
-		//TODO:
-	}
-	if (m_console.HasUpdatedPalettes())
-	{
-		// also update pattern tables
-		//TODO: 
-
-		std::array<u32, 4 * 8> pal;
-		for (uint8_t p = 0; p < 8; p++)
-		{
-			for (uint8_t s = 0; s < 4; s++)
-			{
-				pal[static_cast<size_t>( s + p * 4 )] = m_console.OutputPaletteColor(p, s);
-			}
-		}
-		// TODO:
-	}
+	m_screen->SetData(m_console.OutputScreen());
 }
 void Application::resize_emu_screen()
 {
@@ -413,7 +458,7 @@ void Application::resize_emu_screen()
 	m_screen_h = new_bounds.h;
 	m_screen_w = new_bounds.w;
 
-	m_sprites["SCREEN"].rect = new_bounds;
+	m_screen_sprite.rect = new_bounds;
 
 
 }

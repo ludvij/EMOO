@@ -69,6 +69,7 @@ project "Graphics"
 		defines {
 			"NES_EMU_PLATFORM_WINDOWS",
 			"WIN32",
+			"GRAPHICS_SHOW_FPS"
 		}
 		
 	
@@ -77,7 +78,6 @@ project "Graphics"
 		defines { 
 			"GRAPHICS_DEBUG",
 			"TRACE_UUID_LIFETIMES",
-			"GRAPHICS_SHOW_FPS"
 		}
 		runtime "debug"
 		symbols "On"

@@ -19,6 +19,15 @@ UUID::UUID()
 #endif
 }
 
+UUID::UUID(const UUID& id)
+	: m_lo(id.m_lo)
+	, m_hi(id.m_hi)
+{
+#ifdef TRACE_UUID_LIFETIMES
+	std::println("Copied UUID {{\033[38;5;46m{:s}\033[31;1;0m}}", to_string(*this));
+#endif
+}
+
 UUID::~UUID()
 {
 #ifdef TRACE_UUID_LIFETIMES

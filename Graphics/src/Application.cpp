@@ -24,6 +24,8 @@
 
 #include <numeric>
 
+#include <lud_id.hpp>
+
 namespace Ui
 {
 Application* s_instance;
@@ -132,7 +134,7 @@ void Application::AddComponent(const std::shared_ptr<Component::IComponent>& com
 	component->OnCreate();
 }
 
-void Application::RemoveComponent(const UUID& id)
+void Application::RemoveComponent(const Lud::UUID& id)
 {
 	const auto was_removed = [&](auto c)
 		{

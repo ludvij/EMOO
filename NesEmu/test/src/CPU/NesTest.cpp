@@ -6,7 +6,9 @@ class TestNesTest : public TestFixture
 	void SetUp() override
 	{
 		// reload Cartridge memory
+		testing::internal::CaptureStdout();
 		console.LoadCartridgeFromMemory(nestest_nes, nestest_nes_len);
+		testing::internal::GetCapturedStdout();
 
 
 		// force reset to get the values I want in the registers
@@ -18,17 +20,12 @@ class TestNesTest : public TestFixture
 
 TEST_F(TestNesTest, RunNesTest)
 {
-	try
-	{
-
+	ASSERT_ANY_THROW(
 		while (true)
 		{
-			console.Step();
+			console.GetCpu().Step();
 			ASSERT_EQ(console.GetBus().Read(0x02), 0) << std::format("Test failed error: [{:02X}]", console.GetBus().Read(0x02));
 			ASSERT_EQ(console.GetBus().Read(0x03), 0) << std::format("Test failed error: [{:02X}]", console.GetBus().Read(0x03));
 		}
-	} catch (const std::runtime_error&)
-	{
-
-	}
+	);
 }

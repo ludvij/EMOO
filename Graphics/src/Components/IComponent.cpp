@@ -18,7 +18,7 @@ bool operator==(const IComponent& lhs, const IComponent& rhs)
 }
 
 
-bool IComponent::operator==(const UUID& id) const
+bool IComponent::operator==(const Lud::UUID& id) const
 {
 	return this->id == id;
 }

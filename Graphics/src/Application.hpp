@@ -11,7 +11,10 @@
 #include <NesEmu.hpp>
 #include <string>
 
+#include <lud_id.hpp>
+
 struct SDL_Window;
+
 
 
 namespace Ui
@@ -45,7 +48,7 @@ public:
 
 	void AddComponent(const std::shared_ptr<Component::IComponent>& component);
 
-	void RemoveComponent(const UUID& id);
+	void RemoveComponent(const Lud::UUID& id);
 
 	void Run();
 	void Close();
@@ -84,7 +87,7 @@ private:
 
 	std::list<std::shared_ptr<Component::IComponent>> m_components;
 	// this only exists so I can forbid recreation of some components
-	std::unordered_map<const char*, UUID> m_component_ids;
+	std::unordered_map<const char*, Lud::UUID> m_component_ids;
 
 	ITexture* m_screen;
 	Sprite m_screen_sprite;

@@ -1,38 +1,69 @@
 #include "pch.hpp"
 #include "Disassembler.hpp"
-#include <lud_assert.hpp>
 
 namespace A6502
 {
+std::string FormatAddressingMode(AddressingModeName am, u16 val=0);
+std::string GetInstructionName(InstructionName i);
+u8 GetBytesForAddressingMode(AddressingModeName am);
+
+
 Disassembler& Disassembler::ConnectBus(Emu::Bus* bus)
 {
 	m_bus = bus;
 	return *this;
 }
-std::vector<Disassembly> Disassembler::Disassemble()
+std::map<u16, Disassembly> Disassembler::Disassemble(bool use_registers)
 {
-	std::vector<Disassembly> result(0x10000);
+	std::map<u16, Disassembly> result;
 
-	m_pc = 0;
-
+	m_pc = ( m_bus->Peek(0xFFFD) << 8 ) | m_bus->Peek(0xFFFC);
+	result.insert({ m_pc, {"", "program_start" } });
 	while (m_pc <= 0xFFFF)
 	{
 		const auto& opcode = s_instructions[m_bus->Peek(m_pc)];
-		std::string str_rep = "";
-		str_rep.append(std::format("${:04X} {:3s}", m_pc, GetInstructionName(opcode.instruction)));
+		std::string str_rep = GetInstructionName(opcode.instruction);
 		auto bytes = GetBytesForAddressingMode(opcode.mode);
+
+		if (!result.contains(m_pc))
+		{
+			result.insert({ m_pc, {} });
+		}
 
 		switch (bytes)
 		{
 		case 1:
 		{
-			str_rep.append(FormatAddressingMode(opcode.mode));
+			str_rep += FormatAddressingMode(opcode.mode);
 			break;
 		}
 		case 2:
 		{
-			u8 b0 = m_bus->Peek(( m_pc + 1 ) & 0xFFFF);
-			str_rep.append(FormatAddressingMode(opcode.mode, b0));
+			if (opcode.mode == A6502::AddressingModeName::REL)
+			{
+				i8 b0 = m_bus->Peek(( m_pc + 1 ) & 0xFFFF);
+				u16 addr = ( m_pc + b0 + 2 ) & 0xFFFF;
+				str_rep += ' ';
+				if (b0 > 0)
+				{
+					result.insert({ addr, {} });
+				}
+				if (result[addr].label.empty())
+				{
+					std::string lbl = std::format("_label_{:04X}", m_label_counter++);
+					str_rep += lbl;
+					result[addr].label = lbl;
+				}
+				else
+				{
+					str_rep += result[addr].label;
+				}
+			}
+			else
+			{
+				u8 b0 = m_bus->Peek(( m_pc + 1 ) & 0xFFFF);
+				str_rep += FormatAddressingMode(opcode.mode, b0);
+			}
 			break;
 		}
 		case 3:
@@ -40,19 +71,47 @@ std::vector<Disassembly> Disassembler::Disassemble()
 			u8 b0 = m_bus->Peek(( m_pc + 1 ) & 0xFFFF);
 			u8 b1 = m_bus->Peek(( m_pc + 2 ) & 0xFFFF);
 			u16 word = ( b1 << 8 ) | b0;
-			str_rep.append(FormatAddressingMode(opcode.mode, word));
+			if (opcode.instruction == A6502::InstructionName::JMP || opcode.instruction == A6502::InstructionName::JSR)
+			{
+				if (!result.contains(word))
+				{
+					result.insert({ word, {} });
+				}
+				if (result[word].label.empty())
+				{
+					std::string lbl = std::format("_label_{:04X}", m_label_counter++);
+					str_rep += lbl;
+					result[word].label = lbl;
+				}
+				else
+				{
+					str_rep += result[word].label;
+				}
+			}
+			else
+			{
+				if (use_registers && s_registers.contains(word))
+				{
+					str_rep += s_registers[word];
+				}
+				else
+				{
+					str_rep += FormatAddressingMode(opcode.mode, word);
+				}
+			}
 			break;
 		}
 		default: std::unreachable();
 		}
 
-		result[m_pc] = { str_rep, GetInstructionExplanation(opcode.instruction), GetAddressingModeExplanation(opcode.mode), bytes };
-		m_pc++;
+		result[m_pc].repr = str_rep;
+		// optmistic aproach
+		m_pc += bytes;
 	}
 
 	return result;
 }
-std::string FormatAddressingMode(AddressingModeName am, u16 val)
+static std::string FormatAddressingMode(AddressingModeName am, u16 val /*=0*/)
 {
 	switch (am)
 	{
@@ -62,7 +121,7 @@ std::string FormatAddressingMode(AddressingModeName am, u16 val)
 	case A6502::AddressingModeName::ZPI: return std::format(" ${:02X}", val);
 	case A6502::AddressingModeName::ZPX: return std::format(" ${:02X},X", val);
 	case A6502::AddressingModeName::ZPY: return std::format(" ${:02X},Y", val);
-	case A6502::AddressingModeName::REL: return std::format(" *${:+02X}", val); //????
+	case A6502::AddressingModeName::REL: return std::format(" *${:+02X}", val); // will never happen
 	case A6502::AddressingModeName::ABS: return std::format(" ${:04X}", val);
 	case A6502::AddressingModeName::ABX: return std::format(" ${:04X},X", val);
 	case A6502::AddressingModeName::ABY: return std::format(" ${:04X},Y", val);
@@ -72,7 +131,7 @@ std::string FormatAddressingMode(AddressingModeName am, u16 val)
 	default: std::unreachable();
 	}
 }
-u8 GetBytesForAddressingMode(AddressingModeName am)
+static u8 GetBytesForAddressingMode(AddressingModeName am)
 {
 	switch (am)
 	{
@@ -176,14 +235,5 @@ std::string GetInstructionName(InstructionName i)
 
 	default: std::unreachable();
 	}
-}
-std::string GetAddressingModeExplanation(AddressingModeName am)
-{
-	return std::string();
-}
-
-std::string GetInstructionExplanation(InstructionName i)
-{
-	return std::string();
 }
 }

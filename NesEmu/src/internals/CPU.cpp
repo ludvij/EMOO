@@ -388,7 +388,7 @@ void CPU::Step()
 	}
 	m_totalCycles++;
 	m_cycle--;
-}
+	}
 
 void CPU::Reset()
 {
@@ -788,7 +788,7 @@ void CPU::ASL(const u16 addr)
 	{
 		memoryWrite(addr, m);
 	}
-}
+	}
 
 /*
  * Instruction Branch if carry clear
@@ -1246,7 +1246,7 @@ void CPU::LSR(const u16 addr)
 	{
 		memoryWrite(addr, m);
 	}
-}
+	}
 
 /*
  * Instruction No Operation
@@ -1367,7 +1367,7 @@ void CPU::ROL(const u16 addr)
 	{
 		memoryWrite(addr, static_cast<u8>( m ));
 	}
-}
+	}
 
 /*
  * Instruction Rotate Right

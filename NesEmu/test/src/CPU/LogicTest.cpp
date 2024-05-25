@@ -14,7 +14,7 @@ class TestLogic : public TestFixture
 TEST_F(TestLogic, AND)
 {
 	asse.Assemble(R"(
-		and #12
+		and #$0C
 		and #$c0
 	)");
 	console.GetCpu().SetA(0);
@@ -76,9 +76,9 @@ TEST_F(TestLogic, ORA)
 
 TEST_F(TestLogic, BIT)
 {
+	console.GetBus().Write(2, 0xC0);
 	asse.Assemble(R"(
-		bit 2
-		&2 $c0
+		bit $02
 	)");
 
 	clearCycles();

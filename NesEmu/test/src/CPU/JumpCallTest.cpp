@@ -9,7 +9,7 @@ class TestJumpCall : public TestFixture
 TEST_F(TestJumpCall, JMP)
 {
 	asse.Assemble(R"(
-		ldx #23
+		ldx #$17
 		jmp $0005
 		inx
 		jmp $0040

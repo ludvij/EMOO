@@ -1,8 +1,13 @@
 #ifndef A6502_CORE_HEADER
 #define A6502_CORE_HEADER
 
+
+#include <cstdint>
+#include <utility>
+
 namespace A6502
 {
+
 enum class InstructionName
 {
 	// Legal
@@ -19,6 +24,7 @@ enum class InstructionName
 	XAA,
 	// ????
 	AHX, TAS, SHY, SHX, LAS,
+	___
 };
 
 enum class AddressingModeName
@@ -30,6 +36,7 @@ enum class AddressingModeName
 	REL,
 	ABS, ABX, ABY,
 	IND, INX, INY,
+	___
 };
 
 u8 GetBytesForAddressingMode(AddressingModeName am);
@@ -38,6 +45,8 @@ struct Opcode
 {
 	InstructionName instruction;
 	AddressingModeName mode;
+
+	auto operator<=>(const Opcode&) const = default;
 };
 
 constexpr inline std::array<Opcode, 0x100> s_instructions{ {
@@ -51,7 +60,7 @@ constexpr inline std::array<Opcode, 0x100> s_instructions{ {
 	{InstructionName::SLO, AddressingModeName::ZPI},/*$07*/
 	{InstructionName::PHP, AddressingModeName::IMP},/*$08*/
 	{InstructionName::ORA, AddressingModeName::IMM},/*$09*/
-	{InstructionName::ASL, AddressingModeName::IMP},/*$0A*/
+	{InstructionName::ASL, AddressingModeName::ACC},/*$0A*/
 	{InstructionName::ANC, AddressingModeName::IMM},/*$0B*/
 	{InstructionName::TOP, AddressingModeName::ABS},/*$0C*/
 	{InstructionName::ORA, AddressingModeName::ABS},/*$0D*/
@@ -83,7 +92,7 @@ constexpr inline std::array<Opcode, 0x100> s_instructions{ {
 	{InstructionName::RLA, AddressingModeName::ZPI},/*$27*/
 	{InstructionName::PLP, AddressingModeName::IMP},/*$28*/
 	{InstructionName::AND, AddressingModeName::IMM},/*$29*/
-	{InstructionName::ROL, AddressingModeName::IMP},/*$2A*/
+	{InstructionName::ROL, AddressingModeName::ACC},/*$2A*/
 	{InstructionName::ANC, AddressingModeName::IMM},/*$2B*/
 	{InstructionName::BIT, AddressingModeName::ABS},/*$2C*/
 	{InstructionName::AND, AddressingModeName::ABS},/*$2D*/
@@ -115,7 +124,7 @@ constexpr inline std::array<Opcode, 0x100> s_instructions{ {
 	{InstructionName::SRE, AddressingModeName::ZPI},/*$47*/
 	{InstructionName::PHA, AddressingModeName::IMP},/*$48*/
 	{InstructionName::EOR, AddressingModeName::IMM},/*$49*/
-	{InstructionName::LSR, AddressingModeName::IMP},/*$4A*/
+	{InstructionName::LSR, AddressingModeName::ACC},/*$4A*/
 	{InstructionName::ALR, AddressingModeName::IMM},/*$4B*/
 	{InstructionName::JMP, AddressingModeName::ABS},/*$4C*/
 	{InstructionName::EOR, AddressingModeName::ABS},/*$4D*/
@@ -147,7 +156,7 @@ constexpr inline std::array<Opcode, 0x100> s_instructions{ {
 	{InstructionName::RRA, AddressingModeName::ZPI},/*$67*/
 	{InstructionName::PLA, AddressingModeName::IMP},/*$68*/
 	{InstructionName::ADC, AddressingModeName::IMM},/*$69*/
-	{InstructionName::ROR, AddressingModeName::IMP},/*$6A*/
+	{InstructionName::ROR, AddressingModeName::ACC},/*$6A*/
 	{InstructionName::ARR, AddressingModeName::IMM},/*$6B*/
 	{InstructionName::JMP, AddressingModeName::IND},/*$6C*/
 	{InstructionName::ADC, AddressingModeName::ABS},/*$6D*/
@@ -302,7 +311,7 @@ constexpr inline std::array<Opcode, 0x100> s_instructions{ {
 };
 
 
-u8 GetBytesForAddressingMode(AddressingModeName am)
+inline u8 GetBytesForAddressingMode(AddressingModeName am)
 {
 	switch (am)
 	{
@@ -319,7 +328,7 @@ u8 GetBytesForAddressingMode(AddressingModeName am)
 	case A6502::AddressingModeName::IND: [[fallthrough]];
 	case A6502::AddressingModeName::INX: [[fallthrough]];
 	case A6502::AddressingModeName::INY: return 3;
-	default: std::unreachable();
+	default: throw std::runtime_error("Don't use that here please");
 	}
 }
 }

@@ -84,7 +84,7 @@ TEST_F(TestSystemFunction, RTI)
 
 	clearCycles(7);
 	// imaginary interrupt
-	console.GetCpu().SetPC(2);
+	console.GetCpu().SetPC(1);
 	clearCycles(6);
 
 	ASSERT_EQ(p | Emu::ProcessorStatus::Flags::U, console.GetCpu().P());

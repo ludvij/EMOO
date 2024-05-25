@@ -24,9 +24,9 @@ TEST_F(TestShift, ASL)
 
 TEST_F(TestShift, ASL_WRITE_MEMORY)
 {
+	console.GetBus().Write(2, 0xCD);
 	asse.Assemble(R"(
-		asl 2
-		&2 $cd
+		asl $02
 	)");
 
 

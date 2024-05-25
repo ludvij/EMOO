@@ -10,9 +10,9 @@ class TestLoadStore : public TestFixture
 TEST_F(TestLoadStore, LDA)
 {
 	asse.Assemble(R"(
-		lda #23
+		lda #$17
 		lda #$80
-		lda #0
+		lda #$00
 	)");
 
 	clearCycles(2);
@@ -33,9 +33,9 @@ TEST_F(TestLoadStore, LDA)
 TEST_F(TestLoadStore, LDX)
 {
 	asse.Assemble(R"(
-		ldx #23
+		ldx #$17
 		ldx #$80
-		ldx #0
+		ldx #$00
 	)");
 
 	clearCycles(2);
@@ -56,9 +56,9 @@ TEST_F(TestLoadStore, LDX)
 TEST_F(TestLoadStore, LDY)
 {
 	asse.Assemble(R"(
-		ldy #23
+		ldy #$17
 		ldy #$80
-		ldy #0
+		ldy #$00
 	)");
 
 	clearCycles(2);
@@ -79,7 +79,7 @@ TEST_F(TestLoadStore, LDY)
 TEST_F(TestLoadStore, STA)
 {
 	asse.Assemble(R"(
-		lda #23
+		lda #$17
 		sta $1212
 	)");
 
@@ -90,11 +90,11 @@ TEST_F(TestLoadStore, STA)
 
 TEST_F(TestLoadStore, STX)
 {
+	console.GetBus().Write(23, 23);
 	asse.Assemble(R"(
-		ldy #10
-		ldx 13,y
+		ldy #$0A
+		ldx $0D,y
 		stx $1212
-		&23 23
 	)");
 
 	clearCycles(2 + 4 + 4);
@@ -104,11 +104,11 @@ TEST_F(TestLoadStore, STX)
 
 TEST_F(TestLoadStore, STY)
 {
+	console.GetBus().Write(23, 23);
 	asse.Assemble(R"(
-		ldx #10
-		ldy 13,x
+		ldx #$0A
+		ldy $0D,x
 		sty $1212
-		&23 23
 	)");
 
 	clearCycles(2 + 4 + 4);

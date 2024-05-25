@@ -12,12 +12,12 @@ class TestFixture : public testing::Test
 {
 protected:
 	Emu::Console console;
-	A6502::Assembler<Emu::Bus> asse;
+	A6502::Assembler asse;
 
 	TestFixture()
 		: console(Emu::NTSC)
 	{
-		asse.Link(&console.GetBus());
+		asse.ConnectBus(&console.GetBus());
 	}
 
 	void SetUp() override

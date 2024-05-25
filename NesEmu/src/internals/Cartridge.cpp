@@ -144,7 +144,7 @@ std::optional<u8> Cartridge::CpuRead(u16 addr) const
 
 bool Cartridge::CpuWrite(u16 addr, u8 val)
 {
-	if (const auto mappedAddr = m_mapper->PpuMapWrite(addr); mappedAddr)
+	if (const auto mappedAddr = m_mapper->CpuMapWrite(addr); mappedAddr)
 	{
 		m_prgRom[*mappedAddr] = val;
 		return true;

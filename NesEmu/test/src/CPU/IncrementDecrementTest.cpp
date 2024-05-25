@@ -8,15 +8,14 @@ class TestIncrementDecrement : public TestFixture
 
 TEST_F(TestIncrementDecrement, INC)
 {
+	console.GetBus().Write(0x23, 0x7f);
+	console.GetBus().Write(0x24, 0xfe);
 	asse.Assemble(R"(
-		ldx #1
+		ldx #$01
 		inc $23
-		inc $23, x
+		inc $23,x
 		inc $0024
-		inc $0023, x
-		
-		&$23 $7f
-		&$24 $fe
+		inc $0023,x
 	)");
 
 	clearCycles(2); // ldx
@@ -78,15 +77,14 @@ TEST_F(TestIncrementDecrement, INY)
 
 TEST_F(TestIncrementDecrement, DEC)
 {
+	console.GetBus().Write(0x23, 0x81);
+	console.GetBus().Write(0x24, 0x01);
 	asse.Assemble(R"(
-		ldx #1
+		ldx #$01
 		dec $23
-		dec $23, x
+		dec $23,x
 		dec $0024
-		dec $0023, x
-		
-		&$23 $81
-		&$24 $01
+		dec $0023,x
 	)");
 
 	clearCycles(2); // ldx

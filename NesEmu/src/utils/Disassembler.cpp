@@ -202,7 +202,8 @@ std::string GetInstructionName(InstructionName i)
 	case A6502::InstructionName::SHX: return "SHX";
 	case A6502::InstructionName::LAS: return "LAS";
 
-	default: std::unreachable();
+	default: throw std::runtime_error("Don't use that here please");
+
 	}
 }
 }

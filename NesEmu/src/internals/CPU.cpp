@@ -8,13 +8,7 @@
 
 namespace Emu
 {
-#ifdef TRACE_CPU_EXECUTION
-static std::ofstream file;
-static std::string opcodes = "";
-static u16 pc_copy;
-static std::string instr_eval;
-static std::string flag_state;
-#endif
+
 
 
 constexpr auto MAKE_WORD = [](const u16 hi, const u16 lo) -> u16
@@ -23,15 +17,10 @@ constexpr auto MAKE_WORD = [](const u16 hi, const u16 lo) -> u16
 	};
 CPU::~CPU()
 {
-#ifdef TRACE_CPU_EXECUTION
-	file.close();
-#endif // TRACE_CPU_EXECUTION
+
 }
 CPU::CPU()
 {
-#ifdef TRACE_CPU_EXECUTION
-	file.open("cpu.log");
-#endif
 	// filling the jump table
 	Instruction invalid = { "STP", &CPU::addrIMM, &CPU::STP, 0 };
 	std::ranges::fill(m_jumpTable, invalid);
@@ -359,13 +348,7 @@ void CPU::Step()
 	m_oopsCycles = 0;
 	m_canOops = false;
 	m_discard = 0;
-#ifdef TRACE_CPU_EXECUTION
-	opcodes = "";
-	instr_eval = "";
-	flag_state = "";
-	pc_copy = m_PC;
-	flag_state = std::format("A:{:02X} X:{:02X} Y:{:02X} P:{:02X} SP:{:02X}", m_A, m_X, m_Y, m_P, m_S);
-#endif
+
 	if (m_cycle == 0)
 	{
 		m_opcode = readByte();
@@ -382,13 +365,11 @@ void CPU::Step()
 		{
 			m_cycle += m_oopsCycles;
 		}
-	#ifdef TRACE_CPU_EXECUTION
-		file << std::format("{:04X}  {:9s}{:>4s} {:29s} {:25s} \n", pc_copy, opcodes, m_currentInstr.name, instr_eval, flag_state);
-	#endif
+
 	}
 	m_totalCycles++;
 	m_cycle--;
-	}
+}
 
 void CPU::Reset()
 {
@@ -478,9 +459,6 @@ void CPU::memoryWrite(const u16 addr, const u8 val) const
 u8 CPU::readByte()
 {
 	const u8 value = memoryRead(m_PC);
-#ifdef TRACE_CPU_EXECUTION
-	opcodes.append(std::format("{:02X} ", value));
-#endif
 	m_PC++;
 	return value;
 }
@@ -495,10 +473,7 @@ u16 CPU::addrIMP()
 u16 CPU::addrIMM()
 {
 	const u16 addr = m_PC++;
-#ifdef TRACE_CPU_EXECUTION
-	opcodes.append(std::format("{:02X} ", memoryRead(addr)));
-	instr_eval = "#$";
-#endif
+
 	return addr;
 }
 
@@ -506,9 +481,7 @@ u16 CPU::addrZPI()
 {
 	u16 addr = readByte();
 	addr &= 0x00FF;
-#ifdef TRACE_CPU_EXECUTION
-	instr_eval = std::format("${:02X} = ", addr, memoryRead(addr));
-#endif
+
 	return addr;
 }
 
@@ -517,9 +490,7 @@ u16 CPU::addrZPX()
 	const u16 b = readByte();
 	u16 addr = ( b + m_X );
 	addr &= 0x00FF;
-#ifdef TRACE_CPU_EXECUTION
-	instr_eval = std::format("${:02X},X @ {:02X} = ", b, addr);
-#endif
+
 	return addr;
 }
 
@@ -528,9 +499,7 @@ u16 CPU::addrZPY()
 	const u16 b = readByte();
 	u16 addr = ( b + m_Y );
 	addr &= 0x00FF;
-#ifdef TRACE_CPU_EXECUTION
-	instr_eval = std::format("${:02X},Y @ {:02X} = ", b, addr);
-#endif
+
 	return addr;
 }
 
@@ -540,17 +509,7 @@ u16 CPU::addrABS()
 	const u8 lo = readByte();
 	const u8 hi = readByte();
 	const u16 addr = MAKE_WORD(hi, lo);
-#ifdef TRACE_CPU_EXECUTION
-	instr_eval = std::format("${:04X}", addr);
-	static std::vector<const char*> n = {
-		"JMP",
-		"JSR"
-	};
-	if (std::ranges::find(n, m_currentInstr.name) == n.end())
-	{
-		instr_eval.append(" = ");
-	}
-#endif
+
 	return addr;
 }
 
@@ -563,10 +522,10 @@ u16 CPU::addrABX()
 	addr += m_X;
 
 	if (( addr & 0xFF00 ) != ( hi << 8 ))
+	{
 		m_oopsCycles++;
-#ifdef TRACE_CPU_EXECUTION
-	instr_eval = std::format("${:04X},X @ {:04X} = ", static_cast<u16>( addr - m_X ), addr);
-#endif
+	}
+
 	return addr;
 }
 
@@ -583,9 +542,6 @@ u16 CPU::addrABY()
 		m_oopsCycles++;
 	}
 
-#ifdef TRACE_CPU_EXECUTION
-	instr_eval = std::format("${:04X},Y @ {:04X} = ", static_cast<u16>( addr - m_Y ), addr);
-#endif
 	return addr;
 }
 
@@ -608,9 +564,7 @@ u16 CPU::addrIND()
 		addr = MAKE_WORD(memoryRead(notyet + 1), memoryRead(notyet));
 	}
 
-#ifdef TRACE_CPU_EXECUTION
-	instr_eval = std::format("(${:04X}) = {:04X}", notyet, addr);
-#endif
+
 	return addr;
 }
 
@@ -625,9 +579,7 @@ u16 CPU::addrINX()
 
 	const u16 addr = MAKE_WORD(hi, lo);
 
-#ifdef TRACE_CPU_EXECUTION
-	instr_eval = std::format("(${:02X},X) @ {:02X} = {:04X} = ", b, base, addr, memoryRead(addr));
-#endif
+
 	return addr;
 
 }
@@ -655,9 +607,6 @@ u16 CPU::addrINY()
 	}
 	const u16 addr_final = addr + m_Y;
 
-#ifdef TRACE_CPU_EXECUTION
-	instr_eval = std::format("(${:02X}),Y = {:04X} @ {:04X} = ", base, addr, addr_final, base);
-#endif
 
 	return addr_final;
 }
@@ -679,19 +628,13 @@ u16 CPU::addrREL()
 
 	const u16 addr = m_PC + offset;
 
-#ifdef TRACE_CPU_EXECUTION
-	instr_eval = std::format("${:04X}", addr);
-#endif
-
 	return addr;
 }
 
 
 u16 CPU::addrACC()
 {
-#ifdef TRACE_CPU_EXECUTION
-	instr_eval = "A";
-#endif
+
 	return 0;
 }
 
@@ -728,9 +671,6 @@ void CPU::ADC(const u16 addr)
 
 	ADD(m);
 
-#ifdef TRACE_CPU_EXECUTION
-	instr_eval.append(std::format("{:02X}", m));
-#endif
 	m_canOops = true;
 }
 
@@ -746,9 +686,6 @@ void CPU::AND(const u16 addr)
 	setFlagIf(ProcessorStatus::Flags::Z, m_A == 0);
 	setFlagIf(ProcessorStatus::Flags::N, m_A & 0x80);
 
-#ifdef TRACE_CPU_EXECUTION
-	instr_eval.append(std::format("{:02X}", m));
-#endif
 
 	m_canOops = true;
 }
@@ -769,9 +706,6 @@ void CPU::ASL(const u16 addr)
 	else
 	{
 		m = memoryRead(addr);
-	#ifdef TRACE_CPU_EXECUTION
-		instr_eval.append(std::format("{:02X}", m));
-	#endif
 	}
 
 	setFlagIf(ProcessorStatus::Flags::C, m & 0x80);
@@ -788,7 +722,7 @@ void CPU::ASL(const u16 addr)
 	{
 		memoryWrite(addr, m);
 	}
-	}
+}
 
 /*
  * Instruction Branch if carry clear
@@ -823,13 +757,6 @@ void CPU::BEQ(const u16 addr)
 void CPU::BIT(const u16 addr)
 {
 	const u8 m = memoryRead(addr);
-
-#ifdef TRACE_CPU_EXECUTION
-	if (addr > 0x00ff)
-		instr_eval = std::format("${:04X} = {:02X}", addr, m);
-	else
-		instr_eval = std::format("${:02X} = {:02X}", addr, m);
-#endif
 
 	m_discard = m_A & m;
 
@@ -967,10 +894,6 @@ void CPU::CMP(const u16 addr)
 	setFlagIf(ProcessorStatus::Flags::Z, ( m_discard & 0x00FF ) == 0x000);
 	setFlagIf(ProcessorStatus::Flags::N, m_discard & 0x80);
 
-#ifdef TRACE_CPU_EXECUTION
-	instr_eval.append(std::format("{:02X}", m));
-#endif
-
 
 	m_canOops = true;
 }
@@ -991,10 +914,6 @@ void CPU::CPX(const u16 addr)
 	setFlagIf(ProcessorStatus::Flags::Z, m_X == m);
 	setFlagIf(ProcessorStatus::Flags::N, m_discard & 0x80);
 
-#ifdef TRACE_CPU_EXECUTION
-	instr_eval.append(std::format("{:02X}", m));
-#endif
-
 }
 
 /*
@@ -1012,10 +931,6 @@ void CPU::CPY(const u16 addr)
 	setFlagIf(ProcessorStatus::Flags::C, m_Y >= m);
 	setFlagIf(ProcessorStatus::Flags::Z, m_Y == m);
 	setFlagIf(ProcessorStatus::Flags::N, m_discard & 0x80);
-
-#ifdef TRACE_CPU_EXECUTION
-	instr_eval.append(std::format("{:02X}", m));
-#endif
 }
 
 /*
@@ -1026,16 +941,11 @@ void CPU::CPY(const u16 addr)
 void CPU::DEC(const u16 addr)
 {
 	u8 m = memoryRead(addr);
-#ifdef TRACE_CPU_EXECUTION
-	instr_eval.append(std::format("{:02X}", m));
-#endif
 
 	m = ( m - 1 ) & 0x00ff;
 
 	setFlagIf(ProcessorStatus::Flags::N, m & 0x80);
 	setFlagIf(ProcessorStatus::Flags::Z, m == 0);
-
-
 
 	memoryWrite(addr, m);
 }
@@ -1080,11 +990,6 @@ void CPU::EOR(const u16 addr)
 	setFlagIf(ProcessorStatus::Flags::Z, m_A == 0);
 	setFlagIf(ProcessorStatus::Flags::N, m_A & 0x80);
 
-#ifdef TRACE_CPU_EXECUTION
-	instr_eval.append(std::format("{:02X}", m));
-#endif
-
-
 	m_canOops = true;
 }
 
@@ -1096,10 +1001,6 @@ void CPU::EOR(const u16 addr)
 void CPU::INC(const u16 addr)
 {
 	u8 m = memoryRead(addr);
-#ifdef TRACE_CPU_EXECUTION
-	instr_eval.append(std::format("{:02X}", m));
-#endif
-
 
 	m = ( m + 1 ) & 0x00ff;
 
@@ -1168,9 +1069,6 @@ void CPU::LDA(const u16 addr)
 	const u8 m = memoryRead(addr);
 	set_register(m_A, m);
 
-#ifdef TRACE_CPU_EXECUTION
-	instr_eval.append(std::format("{:02X}", m));
-#endif
 	m_canOops = true;
 }
 
@@ -1184,10 +1082,6 @@ void CPU::LDX(const u16 addr)
 	const u8 m = memoryRead(addr);
 
 	transferRegTo(m, m_X);
-#ifdef TRACE_CPU_EXECUTION
-	instr_eval.append(std::format("{:02X}", m));
-#endif
-
 
 	m_canOops = true;
 }
@@ -1202,11 +1096,6 @@ void CPU::LDY(const u16 addr)
 	const u8 m = memoryRead(addr);
 
 	transferRegTo(m, m_Y);
-
-#ifdef TRACE_CPU_EXECUTION
-	instr_eval.append(std::format("{:02X}", m));
-#endif
-
 
 	m_canOops = true;
 }
@@ -1226,9 +1115,6 @@ void CPU::LSR(const u16 addr)
 	else
 	{
 		m = memoryRead(addr);
-	#ifdef TRACE_CPU_EXECUTION
-		instr_eval.append(std::format("{:02X}", m));
-	#endif
 	}
 
 
@@ -1246,7 +1132,7 @@ void CPU::LSR(const u16 addr)
 	{
 		memoryWrite(addr, m);
 	}
-	}
+}
 
 /*
  * Instruction No Operation
@@ -1269,10 +1155,6 @@ void CPU::ORA(const u16 addr)
 
 	setFlagIf(ProcessorStatus::Flags::Z, m_A == 0);
 	setFlagIf(ProcessorStatus::Flags::N, m_A & 0x80);
-
-#ifdef TRACE_CPU_EXECUTION
-	instr_eval.append(std::format("{:02X}", m));
-#endif
 
 	m_canOops = true;
 }
@@ -1338,9 +1220,6 @@ void CPU::ROL(const u16 addr)
 	else
 	{
 		m = memoryRead(addr);
-	#ifdef TRACE_CPU_EXECUTION
-		instr_eval.append(std::format("{:02X}", m));
-	#endif
 	}
 	// we are in 16 bit realm so if we have
 	// 0000 0000 1011 10001
@@ -1367,7 +1246,7 @@ void CPU::ROL(const u16 addr)
 	{
 		memoryWrite(addr, static_cast<u8>( m ));
 	}
-	}
+}
 
 /*
  * Instruction Rotate Right
@@ -1386,10 +1265,6 @@ void CPU::ROR(const u16 addr)
 	else
 	{
 		m = memoryRead(addr);
-	#ifdef TRACE_CPU_EXECUTION
-		instr_eval.append(std::format("{:02X}", m));
-	#endif
-
 	}
 
 	// we set bit 8 in case of carry so we can 
@@ -1472,11 +1347,6 @@ void CPU::SBC(const u16 addr)
 	const u8 m = memoryRead(addr) ^ 0xFF;
 	ADD(m);
 
-#ifdef TRACE_CPU_EXECUTION
-	instr_eval.append(std::format("{:02X}", m ^ 0xFF));
-#endif
-
-
 	m_canOops = true;
 }
 
@@ -1510,15 +1380,7 @@ void CPU::SEI(u16 addr)
  */
 void CPU::STA(const u16 addr)
 {
-#ifdef TRACE_CPU_EXECUTION
-	if (addr > 0x00ff)
-		instr_eval.append(std::format("{:02X}", memoryRead(addr)));
-	else
-		instr_eval.append(std::format("{:02X}", memoryRead(addr)));
-#endif
 	memoryWrite(addr, m_A);
-
-
 }
 
 /*
@@ -1527,14 +1389,7 @@ void CPU::STA(const u16 addr)
  */
 void CPU::STX(const u16 addr)
 {
-#ifdef TRACE_CPU_EXECUTION
-	if (addr > 0xff)
-		instr_eval = std::format("${:04X} = {:02X}", addr, memoryRead(addr));
-	else
-		instr_eval.append(std::format("{:02X}", memoryRead(addr)));
-#endif
 	memoryWrite(addr, m_X);
-
 }
 
 /*
@@ -1543,14 +1398,7 @@ void CPU::STX(const u16 addr)
  */
 void CPU::STY(const u16 addr)
 {
-#ifdef TRACE_CPU_EXECUTION
-	if (addr > 0x00ff)
-		instr_eval = std::format("${:04X} = {:02X}", addr, memoryRead(addr));
-	else
-		instr_eval.append(std::format("{:02X}", memoryRead(addr)));
-#endif
 	memoryWrite(addr, m_Y);
-
 }
 
 /*
@@ -1617,9 +1465,6 @@ void CPU::SKB(const u16 addr)
 {
 	// reads next byte and discards it
 	m_discard = memoryRead(addr);
-#ifdef TRACE_CPU_EXECUTION
-	instr_eval.append(std::format("{:02X}", m_discard));
-#endif
 }
 
 // Illegal opcode Skip Word
@@ -1627,9 +1472,7 @@ void CPU::IGN(const u16 addr)
 {
 	// reads next word and discards it
 	m_discard = memoryRead(addr);
-#ifdef TRACE_CPU_EXECUTION
-	instr_eval.append(std::format("{:02X}", m_discard));
-#endif
+
 	m_canOops = true;
 }
 
@@ -1673,9 +1516,7 @@ void CPU::LAX(const u16 addr)
 void CPU::SAX(const u16 addr)
 {
 	m_discard = m_A & m_X;
-#ifdef TRACE_CPU_EXECUTION
-	instr_eval.append(std::format("{:02X}", memoryRead(addr)));
-#endif
+
 	memoryWrite(addr, m_discard);
 }
 
@@ -1683,9 +1524,7 @@ void CPU::DCP(const u16 addr)
 {
 	u8 m = memoryRead(addr);
 	//memoryWrite(addr, m); // dummy read
-#ifdef TRACE_CPU_EXECUTION
-	instr_eval.append(std::format("{:02X}", m));
-#endif
+
 	m--;
 	m_discard = m_A - m;
 
@@ -1700,9 +1539,7 @@ void CPU::DCP(const u16 addr)
 void CPU::ISC(const u16 addr)
 {
 	u8 m = memoryRead(addr);
-#ifdef TRACE_CPU_EXECUTION
-	instr_eval.append(std::format("{:02X}", m));
-#endif
+
 	//memoryWrite(addr, m); // dumy write
 	m++;
 	ADD(m ^ 0xFF);
@@ -1712,9 +1549,7 @@ void CPU::ISC(const u16 addr)
 void CPU::RLA(const u16 addr)
 {
 	u8 m = memoryRead(addr);
-#ifdef TRACE_CPU_EXECUTION
-	instr_eval.append(std::format("{:02X}", m));
-#endif
+
 
 	//memoryWrite(addr, m); // dumy write
 	bool carry = checkFlag(ProcessorStatus::Flags::C);
@@ -1727,9 +1562,6 @@ void CPU::RLA(const u16 addr)
 void CPU::RRA(const u16 addr)
 {
 	u8 m = memoryRead(addr);
-#ifdef TRACE_CPU_EXECUTION
-	instr_eval.append(std::format("{:02X}", m));
-#endif
 
 	//memoryWrite(addr, m); // dumy write
 	bool carry = checkFlag(ProcessorStatus::Flags::C);
@@ -1742,9 +1574,7 @@ void CPU::RRA(const u16 addr)
 void CPU::SLO(const u16 addr)
 {
 	u8 m = memoryRead(addr);
-#ifdef TRACE_CPU_EXECUTION
-	instr_eval.append(std::format("{:02X}", m));
-#endif
+
 	//memoryWrite(addr, m); // dummy write
 	setFlagIf(ProcessorStatus::Flags::C, m & 0x80);
 
@@ -1757,9 +1587,7 @@ void CPU::SRE(const u16 addr)
 {
 	// ROL & AND
 	u8 m = memoryRead(addr);
-#ifdef TRACE_CPU_EXECUTION
-	instr_eval.append(std::format("{:02X}", m));
-#endif
+
 	//memoryWrite(addr, m); // dummy write
 	setFlagIf(ProcessorStatus::Flags::C, m & 0x01);
 
@@ -1788,9 +1616,6 @@ void CPU::STP(const u16 addr)
 	// 
 	//std::throw_with_nested(std::runtime_error("Illegal instruction"));
 	std::println("Called STP opcode [{:#02x}] at PC: [{:d}]", m_opcode, m_PC);
-#ifdef TRACE_CPU_EXECUTION
-	instr_eval = "";
-#endif // TRACE_CPU_EXECUTION
 
 	throw std::runtime_error(std::format("Called STP opcode [{:#02x}] at PC: [{:d}]", m_opcode, m_PC));
 }

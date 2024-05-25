@@ -33,6 +33,8 @@ public:
 
 	bool RunFrame();
 
+	bool RunCpuInstruction();
+
 	CPU& GetCpu()
 	{
 		return m_cpu;
@@ -98,6 +100,9 @@ private:
 
 	u64 m_registered_cpu_cycles = 0;
 	u64 m_registered_ppu_cycles = 0;
+
+	bool m_cpu_done{ false };
+	bool m_ppu_done{ false };
 
 };
 

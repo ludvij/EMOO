@@ -340,6 +340,7 @@ private:
 	std::vector<uint8_t> m_assembly;
 	std::unordered_map<uint16_t, uint8_t> m_directAccess;
 	Bus* m_bus = nullptr;
+
 	// C++17 my saviour
 	static inline std::unordered_map<std::string_view, std::unordered_map<std::string_view, uint8_t>> s_instrData = {
 		{"ADC", {{"IMM", 0x69}, {"ZPI", 0x65}, {"ZPX", 0x75}, {"ABS", 0x6d}, {"ABX", 0x7d}, {"ABY", 0x79}, {"INX", 0x61}, {"INY", 0x71}}},

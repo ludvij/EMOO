@@ -21,6 +21,8 @@ Console::~Console()
 
 void Console::Step()
 {
+	m_cpu_done = false;
+	m_ppu_done = false;
 	if (m_masterClock % m_conf.CpuClockDivisor == 0)
 	{
 		if (m_ppu.IsDMATransfer())
@@ -30,12 +32,14 @@ void Console::Step()
 		else
 		{
 			m_cpu.Step();
+			m_cpu_done = true;
 		}
 		m_registered_cpu_cycles++;
 	}
 	if (m_masterClock % m_conf.PpuClockDivisor == 0)
 	{
 		m_ppu.Step();
+		m_ppu_done = true;
 		m_registered_ppu_cycles++;
 	}
 
@@ -99,6 +103,19 @@ bool Console::RunFrame()
 		Step();
 	}
 	m_ppu.SetFrameDone(false);
+	return true;
+}
+
+bool Console::RunCpuInstruction()
+{
+	if (!m_cartridge)
+	{
+		return false;
+	}
+	while (!m_cpu_done)
+	{
+		Step();
+	}
 	return true;
 }
 

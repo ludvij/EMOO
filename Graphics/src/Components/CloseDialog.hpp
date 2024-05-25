@@ -6,7 +6,7 @@ namespace Ui::Component
 class CloseDialog : public IComponent
 {
 public:
-	CloseDialog(const char* msg, bool close=true);
+	CloseDialog(const std::string_view name, const char* msg, bool close=true);
 	virtual ~CloseDialog() override;
 	void OnCreate() override;
 	// Inherited via IComponent

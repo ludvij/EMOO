@@ -11,7 +11,7 @@
 #include <NesEmu.hpp>
 #include <string>
 
-#include <lud_id.hpp>
+#include <unordered_map>
 
 struct SDL_Window;
 
@@ -41,14 +41,16 @@ public:
 	static void SetUpdate(bool set);
 
 	template<typename T, class... Args>
-	void AddComponent(Args... args) requires( std::derived_from<T, Component::IComponent> )
+	void AddComponent(const std::string_view name, Args... args) requires( std::derived_from<T, Component::IComponent> )
 	{
-		m_components.emplace_back(std::make_shared<T>(std::forward<Args>(args)...))->OnCreate();
+		std::shared_ptr<T> comp = std::make_shared<T>(name, std::forward<Args>(args)...);
+		comp->OnCreate();
+		m_components.insert({ comp->name, comp });
 	}
 
 	void AddComponent(const std::shared_ptr<Component::IComponent>& component);
 
-	void RemoveComponent(const Lud::UUID& id);
+	void RemoveComponent(const std::string_view name);
 
 	void Run();
 	void Close();
@@ -85,9 +87,8 @@ private:
 
 	Emu::Console m_console;
 
-	std::list<std::shared_ptr<Component::IComponent>> m_components;
+	std::unordered_map<std::string_view, std::shared_ptr<Component::IComponent>> m_components;
 	// this only exists so I can forbid recreation of some components
-	std::unordered_map<const char*, Lud::UUID> m_component_ids;
 
 	ITexture* m_screen;
 	Sprite m_screen_sprite;

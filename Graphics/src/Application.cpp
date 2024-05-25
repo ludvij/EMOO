@@ -130,21 +130,13 @@ void Application::shutdown()
 
 void Application::AddComponent(const std::shared_ptr<Component::IComponent>& component)
 {
-	m_components.emplace_back(component);
+	m_components.insert({ component->name, component });
 	component->OnCreate();
 }
 
-void Application::RemoveComponent(const Lud::UUID& id)
+void Application::RemoveComponent(const std::string_view id)
 {
-	const auto was_removed = [&](auto c)
-		{
-			return c->removed;
-		};
-	if (auto it = std::find_if(m_components.begin(), m_components.end(), was_removed); it != m_components.end())
-	{
-		auto& comp = *it;
-		comp->removed = true;
-	}
+	m_components[id]->removed = true;
 }
 
 void Application::Run()
@@ -252,9 +244,9 @@ void Application::draw_ui()
 	}
 	ImGui::End();
 
-	for (const auto& component : m_components)
+	for (const auto& [k, v] : m_components)
 	{
-		component->OnRender();
+		v->OnRender();
 	}
 
 	ImGui::End();
@@ -327,7 +319,7 @@ void Application::draw_menu_bar()
 
 					} catch (const std::runtime_error&)
 					{
-						AddComponent<Component::CloseDialog>("Not a valid ROM", false);
+						AddComponent<Component::CloseDialog>("close on file error", "Not a valid ROM", false);
 					}
 				}
 			}
@@ -345,15 +337,14 @@ void Application::draw_menu_bar()
 		{
 			if (ImGui::MenuItem("Show status"))
 			{
-				if (m_component_ids.contains("PPU_STATUS"))
+				if (m_components.contains("ppu status"))
 				{
-					RemoveComponent(m_component_ids["PPU_STATUS"]);
+					RemoveComponent("ppu status");
 				}
 				else
 				{
-					auto c = std::make_shared<Component::ShowPPUStatus>();
+					auto c = std::make_shared<Component::ShowPPUStatus>("ppu status");
 					AddComponent(c);
-					m_component_ids.insert({ "PPU_STATUS", c->id });
 				}
 			}
 			ImGui::EndMenu();
@@ -378,13 +369,13 @@ void Application::update()
 	} catch (const std::runtime_error&)
 	{
 		m_can_update = false;
-		AddComponent<Component::CloseDialog>("STP opcode was executed");
+		AddComponent<Component::CloseDialog>("close on stp", "STP opcode was executed");
 	}
 	get_pixel_data();
 
-	for (const auto& c : m_components)
+	for (const auto& [k, v] : m_components)
 	{
-		c->OnUpdate();
+		v->OnUpdate();
 	}
 
 	if (m_resized)
@@ -396,30 +387,19 @@ void Application::update()
 // TODO: make better
 void Application::clear_deleted_components()
 {
-	// ugly code
-	const auto was_removed = [&](auto c)
-		{
-			return c->removed;
-		};
-
-	for (const auto& c : m_components | std::views::filter(was_removed))
+	std::list<std::string_view> deleter;
+	for (const auto& [k, v] : m_components)
 	{
-		const char* comp_key;
-		for (const auto& [k, v] : m_component_ids)
+		if (v->removed)
 		{
-			if (c->id == v)
-			{
-				comp_key = k;
-				break;
-			}
+			deleter.push_back(k);
 		}
-		m_component_ids.erase(comp_key);
-		//m_components.remove(c);
 	}
-	m_components.remove_if([&](auto c)
-		{
-			return c->removed;
-		});
+
+	for (const auto& del : deleter)
+	{
+		m_components.erase(del);
+	}
 }
 
 void Application::get_pixel_data()

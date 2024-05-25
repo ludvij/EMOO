@@ -5,7 +5,6 @@ namespace A6502
 {
 std::string FormatAddressingMode(AddressingModeName am, u16 val=0);
 std::string GetInstructionName(InstructionName i);
-u8 GetBytesForAddressingMode(AddressingModeName am);
 
 
 Disassembler& Disassembler::ConnectBus(Emu::Bus* bus)
@@ -17,17 +16,25 @@ std::map<u16, Disassembly> Disassembler::Disassemble(bool use_registers)
 {
 	std::map<u16, Disassembly> result;
 
-	m_pc = ( m_bus->Peek(0xFFFD) << 8 ) | m_bus->Peek(0xFFFC);
-	result.insert({ m_pc, {"", "program_start" } });
-	while (m_pc <= 0xFFFF)
+	u32 label_counter = 0;
+	u32 fn_counter = 0;
+
+	const u16 reset = ( m_bus->Peek(0xFFFD) << 8 ) | m_bus->Peek(0xFFFC);
+	const u16 nmi   = ( m_bus->Peek(0xFFFB) << 8 ) | m_bus->Peek(0xFFFA);
+	const u16 irq   = ( m_bus->Peek(0xFFFF) << 8 ) | m_bus->Peek(0xFFFE);
+	result.insert({ reset, {"", "Reset"          } });
+	result.insert({ irq,   {"", "IRQ subroutine" } });
+	result.insert({ nmi,   {"", "NMI subroutine" } });
+	u32 pc = 0x8000;
+	while (pc <= 0xFFFF)
 	{
-		const auto& opcode = s_instructions[m_bus->Peek(m_pc)];
+		const auto& opcode = s_instructions[m_bus->Peek(pc)];
 		std::string str_rep = GetInstructionName(opcode.instruction);
 		auto bytes = GetBytesForAddressingMode(opcode.mode);
 
-		if (!result.contains(m_pc))
+		if (!result.contains(pc))
 		{
-			result.insert({ m_pc, {} });
+			result.insert({ pc, {} });
 		}
 
 		switch (bytes)
@@ -41,8 +48,8 @@ std::map<u16, Disassembly> Disassembler::Disassemble(bool use_registers)
 		{
 			if (opcode.mode == A6502::AddressingModeName::REL)
 			{
-				i8 b0 = m_bus->Peek(( m_pc + 1 ) & 0xFFFF);
-				u16 addr = ( m_pc + b0 + 2 ) & 0xFFFF;
+				i8 b0 = m_bus->Peek(( pc + 1 ) & 0xFFFF);
+				u16 addr = ( pc + b0 + 2 ) & 0xFFFF;
 				str_rep += ' ';
 				if (b0 > 0)
 				{
@@ -50,7 +57,7 @@ std::map<u16, Disassembly> Disassembler::Disassemble(bool use_registers)
 				}
 				if (result[addr].label.empty())
 				{
-					std::string lbl = std::format("_label_{:04X}", m_label_counter++);
+					std::string lbl = std::format("_label_{:04X}", label_counter++);
 					str_rep += lbl;
 					result[addr].label = lbl;
 				}
@@ -61,52 +68,34 @@ std::map<u16, Disassembly> Disassembler::Disassemble(bool use_registers)
 			}
 			else
 			{
-				u8 b0 = m_bus->Peek(( m_pc + 1 ) & 0xFFFF);
+				u8 b0 = m_bus->Peek(( pc + 1 ) & 0xFFFF);
 				str_rep += FormatAddressingMode(opcode.mode, b0);
 			}
 			break;
 		}
 		case 3:
 		{
-			u8 b0 = m_bus->Peek(( m_pc + 1 ) & 0xFFFF);
-			u8 b1 = m_bus->Peek(( m_pc + 2 ) & 0xFFFF);
+			u8 b0 = m_bus->Peek(( pc + 1 ) & 0xFFFF);
+			u8 b1 = m_bus->Peek(( pc + 2 ) & 0xFFFF);
 			u16 word = ( b1 << 8 ) | b0;
-			if (opcode.instruction == A6502::InstructionName::JMP || opcode.instruction == A6502::InstructionName::JSR)
+			if (use_registers && s_registers.contains(word))
 			{
-				if (!result.contains(word))
-				{
-					result.insert({ word, {} });
-				}
-				if (result[word].label.empty())
-				{
-					std::string lbl = std::format("_label_{:04X}", m_label_counter++);
-					str_rep += lbl;
-					result[word].label = lbl;
-				}
-				else
-				{
-					str_rep += result[word].label;
-				}
+				str_rep += s_registers[word];
 			}
 			else
 			{
-				if (use_registers && s_registers.contains(word))
-				{
-					str_rep += s_registers[word];
-				}
-				else
-				{
-					str_rep += FormatAddressingMode(opcode.mode, word);
-				}
+				str_rep += FormatAddressingMode(opcode.mode, word);
 			}
+
 			break;
 		}
 		default: std::unreachable();
 		}
 
-		result[m_pc].repr = str_rep;
+		result[pc].repr = str_rep;
 		// optmistic aproach
-		m_pc += bytes;
+		pc += bytes;
+
 	}
 
 	return result;
@@ -128,26 +117,6 @@ static std::string FormatAddressingMode(AddressingModeName am, u16 val /*=0*/)
 	case A6502::AddressingModeName::IND: return std::format(" (${:04X})", val);
 	case A6502::AddressingModeName::INX: return std::format(" (${:04X},X)", val);
 	case A6502::AddressingModeName::INY: return std::format(" (${:04X}),Y", val);
-	default: std::unreachable();
-	}
-}
-static u8 GetBytesForAddressingMode(AddressingModeName am)
-{
-	switch (am)
-	{
-	case A6502::AddressingModeName::IMP: [[fallthrough]];
-	case A6502::AddressingModeName::ACC: return 1;
-	case A6502::AddressingModeName::IMM: [[fallthrough]];
-	case A6502::AddressingModeName::ZPI: [[fallthrough]];
-	case A6502::AddressingModeName::ZPX: [[fallthrough]];
-	case A6502::AddressingModeName::ZPY: [[fallthrough]];
-	case A6502::AddressingModeName::REL: return 2;
-	case A6502::AddressingModeName::ABS: [[fallthrough]];
-	case A6502::AddressingModeName::ABX: [[fallthrough]];
-	case A6502::AddressingModeName::ABY: [[fallthrough]];
-	case A6502::AddressingModeName::IND: [[fallthrough]];
-	case A6502::AddressingModeName::INX: [[fallthrough]];
-	case A6502::AddressingModeName::INY: return 3;
 	default: std::unreachable();
 	}
 }

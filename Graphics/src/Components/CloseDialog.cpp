@@ -1,14 +1,17 @@
 #include "CloseDialog.hpp"
 #include <imgui.h>
 
+#include <string_view>
+
 #include "Application.hpp"
 
 namespace Ui::Component
 {
 
 
-CloseDialog::CloseDialog(const char* msg, bool close)
-	: m_msg(msg)
+CloseDialog::CloseDialog(const std::string_view name, const char* msg, bool close)
+	: IComponent(name)
+	, m_msg(msg)
 	, m_close(close)
 {
 }

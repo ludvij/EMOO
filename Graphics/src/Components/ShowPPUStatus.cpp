@@ -3,6 +3,11 @@
 
 #include "Application.hpp"
 
+Ui::Component::ShowPPUStatus::ShowPPUStatus(const std::string_view name)
+	: IComponent(name)
+{
+}
+
 Ui::Component::ShowPPUStatus::~ShowPPUStatus()
 {
 	for (size_t i = 0; i < 8; i++)

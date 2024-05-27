@@ -36,8 +36,9 @@ Application::Application(const Configuration& config)
 {
 	s_instance = this;
 	m_window = std::make_shared<SDLWindow>(m_config.name, m_config.w, m_config.h);
-	m_input = std::make_unique<SDLInput>();
+	m_input = std::make_unique<Input::SDLInput>();
 	init_button_mapping();
+	init_keyboard_actions();
 	init();
 
 	const auto w = static_cast<uint32_t>( m_console.GetConfig().width );
@@ -76,49 +77,87 @@ void Application::init()
 
 void Application::init_button_mapping()
 {
-	auto press_a = [&]()
+	auto press_a = [&](Input::IInput* i)
 		{
 			m_console.GetController(0).SetPressed(Emu::Button::A);
 		};
-	auto press_b = [&]()
+	auto press_b = [&](Input::IInput* i)
 		{
 			m_console.GetController(0).SetPressed(Emu::Button::B);
 		};
-	auto press_up = [&]()
+	auto press_up = [&](Input::IInput* i)
 		{
 			m_console.GetController(0).SetPressed(Emu::Button::Up);
 		};
-	auto press_down = [&]()
+	auto press_down = [&](Input::IInput* i)
 		{
 			m_console.GetController(0).SetPressed(Emu::Button::Down);
 		};
-	auto press_left = [&]()
+	auto press_left = [&](Input::IInput* i)
 		{
 			m_console.GetController(0).SetPressed(Emu::Button::Left);
 		};
-	auto press_right = [&]()
+	auto press_right = [&](Input::IInput* i)
 		{
 			m_console.GetController(0).SetPressed(Emu::Button::Right);
 		};
-	auto press_start = [&]()
+	auto press_start = [&](Input::IInput* i)
 		{
 			m_console.GetController(0).SetPressed(Emu::Button::Start);
 		};
-	auto press_select = [&]()
+	auto press_select = [&](Input::IInput* i)
 		{
 			m_console.GetController(0).SetPressed(Emu::Button::Select);
 		};
-	m_input->AddAction(Button::FACE_DOWN, press_a);
-	m_input->AddAction(Button::FACE_LEFT, press_b);
-	m_input->AddAction(Button::FACE_RIGHT, press_a);
-	m_input->AddAction(Button::FACE_UP, press_b);
-	m_input->AddAction(Button::DPAD_UP, press_up);
-	m_input->AddAction(Button::DPAD_DOWN, press_down);
-	m_input->AddAction(Button::DPAD_LEFT, press_left);
-	m_input->AddAction(Button::DPAD_RIGHT, press_right);
-	m_input->AddAction(Button::START, press_start);
-	m_input->AddAction(Button::SELECT, press_select);
+	m_input->AddGamepadAction(Input::Button::FACE_DOWN, press_a);
+	m_input->AddGamepadAction(Input::Button::FACE_LEFT, press_b);
+	m_input->AddGamepadAction(Input::Button::FACE_RIGHT, press_a);
+	m_input->AddGamepadAction(Input::Button::FACE_UP, press_b);
+	m_input->AddGamepadAction(Input::Button::DPAD_UP, press_up);
+	m_input->AddGamepadAction(Input::Button::DPAD_DOWN, press_down);
+	m_input->AddGamepadAction(Input::Button::DPAD_LEFT, press_left);
+	m_input->AddGamepadAction(Input::Button::DPAD_RIGHT, press_right);
+	m_input->AddGamepadAction(Input::Button::START, press_start);
+	m_input->AddGamepadAction(Input::Button::SELECT, press_select);
 
+}
+
+void Application::init_keyboard_actions()
+{
+	auto stop_continue = [&](Input::IInput* i)
+		{
+			INPUT_NOT_REPEATED(i);
+
+			m_emulation_stopped = !m_emulation_stopped;
+		};
+
+	auto run_cpu_instructin = [&](Input::IInput* i)
+		{
+			INPUT_NOT_REPEATED(i);
+
+			RunCpuInstruction();
+		};
+	auto run_frame = [&](Input::IInput* i)
+		{
+			INPUT_NOT_REPEATED(i);
+
+			INPUT_KEY_NOT_MODIFIED(i);
+
+			std::println("Running frame");
+			RunFrame();
+		};
+	auto run_pixel = [&](Input::IInput* i)
+		{
+			INPUT_NOT_REPEATED(i);
+			INPUT_KEY_MODIFIED(i, Input::Key::RSHIFT, Input::Key::LSHIFT);
+
+			std::println("Running pixel");
+			RunPixel();
+		};
+	m_input->AddKeyboardAction(Input::Key::F9, stop_continue);
+	m_input->AddKeyboardAction(Input::Key::F10, run_frame);
+	m_input->AddKeyboardAction(Input::Key::F10, run_pixel);
+	m_input->AddKeyboardAction(Input::Key::F11, run_cpu_instructin);
 }
 
 void Application::shutdown()
@@ -137,6 +176,18 @@ void Application::AddComponent(const std::shared_ptr<Component::IComponent>& com
 void Application::RemoveComponent(const std::string_view id)
 {
 	m_components[id]->removed = true;
+}
+
+void Application::RunCpuInstruction()
+{
+}
+
+void Application::RunFrame()
+{
+}
+
+void Application::RunPixel()
+{
 }
 
 void Application::Run()
@@ -205,7 +256,7 @@ void Application::event_loop()
 		m_window->ProcessEventForImGui(&event);
 	}
 
-	m_input->RunActions();
+	m_input->Update();
 
 }
 
@@ -333,21 +384,36 @@ void Application::draw_menu_bar()
 			}
 			ImGui::EndMenu();
 		}
-		if (ImGui::BeginMenu("PPU"))
+		if (m_console.CanRun())
 		{
-			if (ImGui::MenuItem("Show status"))
+			if (ImGui::BeginMenu("Emulation"))
 			{
-				if (m_components.contains("ppu status"))
+				if (m_emulation_stopped && ImGui::MenuItem("Run (F9)"))
 				{
-					RemoveComponent("ppu status");
+					m_emulation_stopped = false;
 				}
-				else
+				else if (!m_emulation_stopped && ImGui::MenuItem("Stop (F9)"))
 				{
-					auto c = std::make_shared<Component::ShowPPUStatus>("ppu status");
-					AddComponent(c);
+					m_emulation_stopped = true;
 				}
+				ImGui::EndMenu();
 			}
-			ImGui::EndMenu();
+			if (ImGui::BeginMenu("PPU"))
+			{
+				if (ImGui::MenuItem("Show status"))
+				{
+					if (m_components.contains("ppu status"))
+					{
+						RemoveComponent("ppu status");
+					}
+					else
+					{
+						auto c = std::make_shared<Component::ShowPPUStatus>("ppu status");
+						AddComponent(c);
+					}
+				}
+				ImGui::EndMenu();
+			}
 		}
 		ImGui::EndMainMenuBar();
 	}
@@ -362,14 +428,17 @@ void Application::draw_application()
 }
 void Application::update()
 {
-	try
+	if (!m_emulation_stopped)
 	{
-		m_console.RunFrame();
-		// in case of STP
-	} catch (const std::runtime_error&)
-	{
-		m_can_update = false;
-		AddComponent<Component::CloseDialog>("close on stp", "STP opcode was executed");
+		try
+		{
+			m_console.RunFrame();
+			// in case of STP
+		} catch (const std::runtime_error&)
+		{
+			m_can_update = false;
+			AddComponent<Component::CloseDialog>("close on stp", "STP opcode was executed");
+		}
 	}
 	get_pixel_data();
 

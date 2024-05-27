@@ -53,7 +53,7 @@ void Console::Step()
 
 void Console::Reset()
 {
-	if (!m_cartridge)
+	if (!CanRun())
 	{
 		return;
 	}
@@ -94,7 +94,7 @@ void Console::UnloadCartridge()
 
 bool Console::RunFrame()
 {
-	if (!m_cartridge)
+	if (!CanRun())
 	{
 		return false;
 	}

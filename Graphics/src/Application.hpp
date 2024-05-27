@@ -52,6 +52,10 @@ public:
 
 	void RemoveComponent(const std::string_view name);
 
+	void RunCpuInstruction();
+	void RunFrame();
+	void RunPixel();
+
 	void Run();
 	void Close();
 
@@ -59,6 +63,7 @@ public:
 private:
 	void init();
 	void init_button_mapping();
+	void init_keyboard_actions();
 	void shutdown();
 
 	void main_loop();
@@ -93,19 +98,21 @@ private:
 	ITexture* m_screen;
 	Sprite m_screen_sprite;
 
-	std::unique_ptr<IInput> m_input;
+	std::unique_ptr<Input::IInput> m_input;
 	std::shared_ptr<IWindow> m_window;
 
-	bool m_resized{ true };
 
 	float m_menu_bar_height{ 26 };
-	bool m_can_update{ true };
 
 	float m_avail_x{ 0 };
 	float m_avail_y{ 0 };
 
 	float m_screen_w{ 0 };
 	float m_screen_h{ 0 };
+
+	bool m_resized{ true };
+	bool m_can_update{ true };
+	bool m_emulation_stopped{ false };
 };
 
 }

@@ -35,6 +35,11 @@ public:
 
 	bool RunCpuInstruction();
 
+	bool CanRun() const
+	{
+		return m_cartridge != nullptr;
+	}
+
 	CPU& GetCpu()
 	{
 		return m_cpu;

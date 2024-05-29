@@ -31,113 +31,117 @@ static SDL_GamepadButton get_sdl_equivalent(Button b)
 
 static SDL_Scancode get_sdl_equivalent(Key k)
 {
+	typedef Input::Key K;
+	typedef SDL_Scancode S;
 	switch (k)
 	{
-	case Input::Key::NONE: return SDL_Scancode::SDL_SCANCODE_UNKNOWN;
-	case Input::Key::F1: return SDL_Scancode::SDL_SCANCODE_F1;
-	case Input::Key::F2: return SDL_Scancode::SDL_SCANCODE_F2;
-	case Input::Key::F3: return SDL_Scancode::SDL_SCANCODE_F3;
-	case Input::Key::F4: return SDL_Scancode::SDL_SCANCODE_F4;
-	case Input::Key::F5: return SDL_Scancode::SDL_SCANCODE_F5;
-	case Input::Key::F6: return SDL_Scancode::SDL_SCANCODE_F6;
-	case Input::Key::F7: return SDL_Scancode::SDL_SCANCODE_F7;
-	case Input::Key::F8: return SDL_Scancode::SDL_SCANCODE_F8;
-	case Input::Key::F9: return SDL_Scancode::SDL_SCANCODE_F9;
-	case Input::Key::F10: return SDL_Scancode::SDL_SCANCODE_F10;
-	case Input::Key::F11: return SDL_Scancode::SDL_SCANCODE_F11;
-	case Input::Key::F12: return SDL_Scancode::SDL_SCANCODE_F12;
-	case Input::Key::F13: return SDL_Scancode::SDL_SCANCODE_F13;
-	case Input::Key::F14: return SDL_Scancode::SDL_SCANCODE_F14;
-	case Input::Key::F15: return SDL_Scancode::SDL_SCANCODE_F15;
-	case Input::Key::F16: return SDL_Scancode::SDL_SCANCODE_F16;
-	case Input::Key::F17: return SDL_Scancode::SDL_SCANCODE_F17;
-	case Input::Key::F18: return SDL_Scancode::SDL_SCANCODE_F18;
-	case Input::Key::F19: return SDL_Scancode::SDL_SCANCODE_F19;
-	case Input::Key::F20: return SDL_Scancode::SDL_SCANCODE_F20;
-	case Input::Key::F21: return SDL_Scancode::SDL_SCANCODE_F21;
-	case Input::Key::F22: return SDL_Scancode::SDL_SCANCODE_F22;
-	case Input::Key::F23: return SDL_Scancode::SDL_SCANCODE_F23;
-	case Input::Key::F24: return SDL_Scancode::SDL_SCANCODE_F24;
-	case Input::Key::K0: return SDL_Scancode::SDL_SCANCODE_0;
-	case Input::Key::K1: return SDL_Scancode::SDL_SCANCODE_1;
-	case Input::Key::K2: return SDL_Scancode::SDL_SCANCODE_2;
-	case Input::Key::K3: return SDL_Scancode::SDL_SCANCODE_3;
-	case Input::Key::K4: return SDL_Scancode::SDL_SCANCODE_4;
-	case Input::Key::K5: return SDL_Scancode::SDL_SCANCODE_5;
-	case Input::Key::K6: return SDL_Scancode::SDL_SCANCODE_6;
-	case Input::Key::K7: return SDL_Scancode::SDL_SCANCODE_7;
-	case Input::Key::K8: return SDL_Scancode::SDL_SCANCODE_8;
-	case Input::Key::K9: return SDL_Scancode::SDL_SCANCODE_9;
-	case Input::Key::A: return SDL_Scancode::SDL_SCANCODE_A;
-	case Input::Key::B: return SDL_Scancode::SDL_SCANCODE_B;
-	case Input::Key::C: return SDL_Scancode::SDL_SCANCODE_C;
-	case Input::Key::D: return SDL_Scancode::SDL_SCANCODE_D;
-	case Input::Key::E: return SDL_Scancode::SDL_SCANCODE_E;
-	case Input::Key::F: return SDL_Scancode::SDL_SCANCODE_F;
-	case Input::Key::G: return SDL_Scancode::SDL_SCANCODE_G;
-	case Input::Key::H: return SDL_Scancode::SDL_SCANCODE_H;
-	case Input::Key::I: return SDL_Scancode::SDL_SCANCODE_I;
-	case Input::Key::J: return SDL_Scancode::SDL_SCANCODE_J;
-	case Input::Key::K: return SDL_Scancode::SDL_SCANCODE_K;
-	case Input::Key::L: return SDL_Scancode::SDL_SCANCODE_L;
-	case Input::Key::M: return SDL_Scancode::SDL_SCANCODE_M;
-	case Input::Key::N: return SDL_Scancode::SDL_SCANCODE_N;
-	case Input::Key::O: return SDL_Scancode::SDL_SCANCODE_O;
-	case Input::Key::P: return SDL_Scancode::SDL_SCANCODE_P;
-	case Input::Key::Q: return SDL_Scancode::SDL_SCANCODE_Q;
-	case Input::Key::R: return SDL_Scancode::SDL_SCANCODE_R;
-	case Input::Key::S: return SDL_Scancode::SDL_SCANCODE_S;
-	case Input::Key::T: return SDL_Scancode::SDL_SCANCODE_T;
-	case Input::Key::U: return SDL_Scancode::SDL_SCANCODE_U;
-	case Input::Key::V: return SDL_Scancode::SDL_SCANCODE_V;
-	case Input::Key::W: return SDL_Scancode::SDL_SCANCODE_W;
-	case Input::Key::X: return SDL_Scancode::SDL_SCANCODE_X;
-	case Input::Key::Y: return SDL_Scancode::SDL_SCANCODE_Y;
-	case Input::Key::Z: return SDL_Scancode::SDL_SCANCODE_Z;
-	case Input::Key::CAPSLOCK: return SDL_Scancode::SDL_SCANCODE_CAPSLOCK;
-	case Input::Key::SPACE: return SDL_Scancode::SDL_SCANCODE_SPACE;
-	case Input::Key::TAB: return SDL_Scancode::SDL_SCANCODE_TAB;
-	case Input::Key::ENTER: return SDL_Scancode::SDL_SCANCODE_RETURN;
-	case Input::Key::ESCAPE: return SDL_Scancode::SDL_SCANCODE_ESCAPE;
-	case Input::Key::BACK: return SDL_Scancode::SDL_SCANCODE_BACKSPACE;
-	case Input::Key::LWIN: return SDL_Scancode::SDL_SCANCODE_LGUI;
-	case Input::Key::RWIN: return SDL_Scancode::SDL_SCANCODE_RGUI;
-	case Input::Key::LCTRL: return SDL_Scancode::SDL_SCANCODE_LCTRL;
-	case Input::Key::RCTRL: return SDL_Scancode::SDL_SCANCODE_RCTRL;
-	case Input::Key::LALT: return SDL_Scancode::SDL_SCANCODE_LALT;
-	case Input::Key::RALT: return SDL_Scancode::SDL_SCANCODE_RALT;
-	case Input::Key::LSHIFT: return SDL_Scancode::SDL_SCANCODE_LSHIFT;
-	case Input::Key::RSHIFT: return SDL_Scancode::SDL_SCANCODE_RSHIFT;
-	case Input::Key::SCROLLLOCK: return SDL_Scancode::SDL_SCANCODE_SCROLLLOCK;
-	case Input::Key::DELETE: return SDL_Scancode::SDL_SCANCODE_DELETE;
-	case Input::Key::INSERT: return SDL_Scancode::SDL_SCANCODE_INSERT;
-	case Input::Key::HOME: return SDL_Scancode::SDL_SCANCODE_HOME;
-	case Input::Key::END: return SDL_Scancode::SDL_SCANCODE_END;
-	case Input::Key::PAGEUP: return SDL_Scancode::SDL_SCANCODE_PAGEUP;
-	case Input::Key::PAGEDOWN: return SDL_Scancode::SDL_SCANCODE_PAGEDOWN;
-	case Input::Key::UP: return SDL_Scancode::SDL_SCANCODE_UP;
-	case Input::Key::DOWN: return SDL_Scancode::SDL_SCANCODE_DOWN;
-	case Input::Key::LEFT: return SDL_Scancode::SDL_SCANCODE_LEFT;
-	case Input::Key::RIGHT: return SDL_Scancode::SDL_SCANCODE_RIGHT;
-	case Input::Key::NUMLOCK: return SDL_Scancode::SDL_SCANCODE_NUMLOCKCLEAR;
-	case Input::Key::NP0: return SDL_Scancode::SDL_SCANCODE_KP_0;
-	case Input::Key::NP1: return SDL_Scancode::SDL_SCANCODE_KP_1;
-	case Input::Key::NP2: return SDL_Scancode::SDL_SCANCODE_KP_2;
-	case Input::Key::NP3: return SDL_Scancode::SDL_SCANCODE_KP_3;
-	case Input::Key::NP4: return SDL_Scancode::SDL_SCANCODE_KP_4;
-	case Input::Key::NP5: return SDL_Scancode::SDL_SCANCODE_KP_5;
-	case Input::Key::NP6: return SDL_Scancode::SDL_SCANCODE_KP_6;
-	case Input::Key::NP7: return SDL_Scancode::SDL_SCANCODE_KP_7;
-	case Input::Key::NP8: return SDL_Scancode::SDL_SCANCODE_KP_8;
-	case Input::Key::NP9: return SDL_Scancode::SDL_SCANCODE_KP_9;
-	case Input::Key::NPADD: return SDL_Scancode::SDL_SCANCODE_KP_PLUS;
-	case Input::Key::NPSUB: return SDL_Scancode::SDL_SCANCODE_KP_MINUS;
-	case Input::Key::NPDIV: return SDL_Scancode::SDL_SCANCODE_KP_DIVIDE;
-	case Input::Key::NPMUL: return SDL_Scancode::SDL_SCANCODE_KP_MULTIPLY;
-	case Input::Key::NPENTER: return SDL_Scancode::SDL_SCANCODE_KP_ENTER;
-	case Input::Key::NPPERIOD: return SDL_Scancode::SDL_SCANCODE_KP_PERIOD;
-	case Input::Key::GRAVE: return SDL_Scancode::SDL_SCANCODE_GRAVE;
-	default: return SDL_SCANCODE_UNKNOWN;
+	case K::NONE: return S::SDL_SCANCODE_UNKNOWN;
+	case K::F1: return S::SDL_SCANCODE_F1;
+	case K::F2: return S::SDL_SCANCODE_F2;
+	case K::F3: return S::SDL_SCANCODE_F3;
+	case K::F4: return S::SDL_SCANCODE_F4;
+	case K::F5: return S::SDL_SCANCODE_F5;
+	case K::F6: return S::SDL_SCANCODE_F6;
+	case K::F7: return S::SDL_SCANCODE_F7;
+	case K::F8: return S::SDL_SCANCODE_F8;
+	case K::F9: return S::SDL_SCANCODE_F9;
+	case K::F10: return S::SDL_SCANCODE_F10;
+	case K::F11: return S::SDL_SCANCODE_F11;
+	case K::F12: return S::SDL_SCANCODE_F12;
+	case K::F13: return S::SDL_SCANCODE_F13;
+	case K::F14: return S::SDL_SCANCODE_F14;
+	case K::F15: return S::SDL_SCANCODE_F15;
+	case K::F16: return S::SDL_SCANCODE_F16;
+	case K::F17: return S::SDL_SCANCODE_F17;
+	case K::F18: return S::SDL_SCANCODE_F18;
+	case K::F19: return S::SDL_SCANCODE_F19;
+	case K::F20: return S::SDL_SCANCODE_F20;
+	case K::F21: return S::SDL_SCANCODE_F21;
+	case K::F22: return S::SDL_SCANCODE_F22;
+	case K::F23: return S::SDL_SCANCODE_F23;
+	case K::F24: return S::SDL_SCANCODE_F24;
+	case K::K0: return S::SDL_SCANCODE_0;
+	case K::K1: return S::SDL_SCANCODE_1;
+	case K::K2: return S::SDL_SCANCODE_2;
+	case K::K3: return S::SDL_SCANCODE_3;
+	case K::K4: return S::SDL_SCANCODE_4;
+	case K::K5: return S::SDL_SCANCODE_5;
+	case K::K6: return S::SDL_SCANCODE_6;
+	case K::K7: return S::SDL_SCANCODE_7;
+	case K::K8: return S::SDL_SCANCODE_8;
+	case K::K9: return S::SDL_SCANCODE_9;
+	case K::A: return S::SDL_SCANCODE_A;
+	case K::B: return S::SDL_SCANCODE_B;
+	case K::C: return S::SDL_SCANCODE_C;
+	case K::D: return S::SDL_SCANCODE_D;
+	case K::E: return S::SDL_SCANCODE_E;
+	case K::F: return S::SDL_SCANCODE_F;
+	case K::G: return S::SDL_SCANCODE_G;
+	case K::H: return S::SDL_SCANCODE_H;
+	case K::I: return S::SDL_SCANCODE_I;
+	case K::J: return S::SDL_SCANCODE_J;
+	case K::K: return S::SDL_SCANCODE_K;
+	case K::L: return S::SDL_SCANCODE_L;
+	case K::M: return S::SDL_SCANCODE_M;
+	case K::N: return S::SDL_SCANCODE_N;
+	case K::O: return S::SDL_SCANCODE_O;
+	case K::P: return S::SDL_SCANCODE_P;
+	case K::Q: return S::SDL_SCANCODE_Q;
+	case K::R: return S::SDL_SCANCODE_R;
+	case K::S: return S::SDL_SCANCODE_S;
+	case K::T: return S::SDL_SCANCODE_T;
+	case K::U: return S::SDL_SCANCODE_U;
+	case K::V: return S::SDL_SCANCODE_V;
+	case K::W: return S::SDL_SCANCODE_W;
+	case K::X: return S::SDL_SCANCODE_X;
+	case K::Y: return S::SDL_SCANCODE_Y;
+	case K::Z: return S::SDL_SCANCODE_Z;
+	case K::CAPSLOCK: return S::SDL_SCANCODE_CAPSLOCK;
+	case K::SPACE: return S::SDL_SCANCODE_SPACE;
+	case K::TAB: return S::SDL_SCANCODE_TAB;
+	case K::ENTER: return S::SDL_SCANCODE_RETURN;
+	case K::ESCAPE: return S::SDL_SCANCODE_ESCAPE;
+	case K::BACK: return S::SDL_SCANCODE_BACKSPACE;
+	case K::LWIN: return S::SDL_SCANCODE_LGUI;
+	case K::RWIN: return S::SDL_SCANCODE_RGUI;
+	case K::LCTRL: return S::SDL_SCANCODE_LCTRL;
+	case K::RCTRL: return S::SDL_SCANCODE_RCTRL;
+	case K::LALT: return S::SDL_SCANCODE_LALT;
+	case K::RALT: return S::SDL_SCANCODE_RALT;
+	case K::LSHIFT: return S::SDL_SCANCODE_LSHIFT;
+	case K::RSHIFT: return S::SDL_SCANCODE_RSHIFT;
+	case K::SCROLLLOCK: return S::SDL_SCANCODE_SCROLLLOCK;
+	case K::DELETE: return S::SDL_SCANCODE_DELETE;
+	case K::INSERT: return S::SDL_SCANCODE_INSERT;
+	case K::HOME: return S::SDL_SCANCODE_HOME;
+	case K::END: return S::SDL_SCANCODE_END;
+	case K::PAGEUP: return S::SDL_SCANCODE_PAGEUP;
+	case K::PAGEDOWN: return S::SDL_SCANCODE_PAGEDOWN;
+	case K::UP: return S::SDL_SCANCODE_UP;
+	case K::DOWN: return S::SDL_SCANCODE_DOWN;
+	case K::LEFT: return S::SDL_SCANCODE_LEFT;
+	case K::RIGHT: return S::SDL_SCANCODE_RIGHT;
+	case K::NUMLOCK: return S::SDL_SCANCODE_NUMLOCKCLEAR;
+	case K::NP0: return S::SDL_SCANCODE_KP_0;
+	case K::NP1: return S::SDL_SCANCODE_KP_1;
+	case K::NP2: return S::SDL_SCANCODE_KP_2;
+	case K::NP3: return S::SDL_SCANCODE_KP_3;
+	case K::NP4: return S::SDL_SCANCODE_KP_4;
+	case K::NP5: return S::SDL_SCANCODE_KP_5;
+	case K::NP6: return S::SDL_SCANCODE_KP_6;
+	case K::NP7: return S::SDL_SCANCODE_KP_7;
+	case K::NP8: return S::SDL_SCANCODE_KP_8;
+	case K::NP9: return S::SDL_SCANCODE_KP_9;
+	case K::NPADD: return S::SDL_SCANCODE_KP_PLUS;
+	case K::NPSUB: return S::SDL_SCANCODE_KP_MINUS;
+	case K::NPDIV: return S::SDL_SCANCODE_KP_DIVIDE;
+	case K::NPMUL: return S::SDL_SCANCODE_KP_MULTIPLY;
+	case K::NPENTER: return S::SDL_SCANCODE_KP_ENTER;
+	case K::NPPERIOD: return S::SDL_SCANCODE_KP_PERIOD;
+	case K::GRAVE: return S::SDL_SCANCODE_GRAVE;
+		//case K::FN: return S::SDL_SCANCODE_FIND;
+
+	default: return S::SDL_SCANCODE_UNKNOWN;
 	}
 }
 
@@ -204,7 +208,17 @@ void SDLInput::remove_controller()
 
 void SDLInput::platform_override()
 {
-	m_keyboard_state = SDL_GetKeyboardState(NULL);
+	int count;
+	m_keyboard_state = SDL_GetKeyboardState(&count);
+
+	//for (size_t i = 0; i < count; i++)
+	//{
+	//	if (m_keyboard_state[i] == 1)
+	//	{
+	//		auto code = static_cast<SDL_Scancode>( i );
+	//		std::println("Pressed {:s}, scancode: {:d}", SDL_GetKeyName(SDL_GetKeyFromScancode(code)), i);
+	//	}
+	//}
 }
 
 void SDLInput::ProcessEvents(void* event)

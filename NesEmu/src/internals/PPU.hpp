@@ -108,6 +108,22 @@ public:
 	~PPU();
 	void Step();
 
+
+	auto GetCycles() const
+	{
+		return m_cycle;
+	}
+
+	bool IsScanlineDone() const
+	{
+		return m_cycle == 0;
+	}
+
+	auto GetScanlines() const
+	{
+		return m_scanline;
+	}
+
 	bool IsFrameDone() const;
 	void SetFrameDone(bool set);
 
@@ -311,7 +327,7 @@ private:
 
 
 	u32 m_cycle = 0;
-	i32 m_scanline = 0;
+	u32 m_scanline = 0;
 
 	// this was lifted from one lone coder
 	ObjectAttributeEntry m_OAM[64];
@@ -355,6 +371,8 @@ private:
 	bool m_frame_done{ false };
 
 	bool m_nmi{ false };
+
+	bool m_scanline_done{ false };
 
 	u32 m_frames{ 0 };
 

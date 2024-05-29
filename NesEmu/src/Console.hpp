@@ -35,6 +35,12 @@ public:
 
 	bool RunCpuInstruction();
 
+	bool RunPpuPixel();
+	bool RunPpuScanline();
+	bool RunPpuCycle();
+
+	bool RunCpuCycle();
+
 	bool CanRun() const
 	{
 		return m_cartridge != nullptr;

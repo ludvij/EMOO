@@ -12,6 +12,7 @@
 #include <string>
 
 #include <unordered_map>
+#include <utils/Disassembler.hpp>
 
 struct SDL_Window;
 
@@ -55,6 +56,9 @@ public:
 	void RunCpuInstruction();
 	void RunFrame();
 	void RunPixel();
+	void RunScanline();
+	void RunPpuCycle();
+	void RunCpuCycle();
 
 	void Run();
 	void Close();

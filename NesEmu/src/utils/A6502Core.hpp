@@ -30,6 +30,7 @@ enum class InstructionName
 enum class AddressingModeName
 {
 	IMP,
+	IM2,
 	ACC,
 	IMM,
 	ZPI, ZPX, ZPY,
@@ -39,8 +40,6 @@ enum class AddressingModeName
 	___
 };
 
-u8 GetBytesForAddressingMode(AddressingModeName am);
-
 struct Opcode
 {
 	InstructionName instruction;
@@ -49,8 +48,36 @@ struct Opcode
 	auto operator<=>(const Opcode&) const = default;
 };
 
+
+u8 GetBytesForAddressingMode(AddressingModeName am);
+bool IsConditionalJump(Opcode op);
+bool IsUnconditionalJump(Opcode op);
+
+
+
+constexpr inline std::array<bool, 0x100> s_is_jump{ {
+		//00   01     02     03     04     05     06     07     08     09     0A     0B     0C     0D     0E     0F    
+		true,  false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 00
+		true,  false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 10
+		true,  false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 20
+		true,  false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 30
+		true,  false, false, false, false, false, false, false, false, false, false, false, true,  false, false, false, // 40
+		true,  false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 50
+		true,  false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 60
+		true,  false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 70
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 80
+		true,  false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // 90
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // A0
+		true,  false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // B0
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // C0
+		true,  false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // D0
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // E0
+		true,  false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, // F0
+
+} };
+
 constexpr inline std::array<Opcode, 0x100> s_instructions{ {
-	{InstructionName::BRK, AddressingModeName::IMP},/*$00*/
+	{InstructionName::BRK, AddressingModeName::IM2},/*$00*/
 	{InstructionName::ORA, AddressingModeName::INX},/*$01*/
 	{InstructionName::STP, AddressingModeName::IMP},/*$02*/
 	{InstructionName::SLO, AddressingModeName::INX},/*$03*/
@@ -311,26 +338,7 @@ constexpr inline std::array<Opcode, 0x100> s_instructions{ {
 };
 
 
-inline u8 GetBytesForAddressingMode(AddressingModeName am)
-{
-	switch (am)
-	{
-	case A6502::AddressingModeName::IMP: [[fallthrough]];
-	case A6502::AddressingModeName::ACC: return 1;
-	case A6502::AddressingModeName::IMM: [[fallthrough]];
-	case A6502::AddressingModeName::ZPI: [[fallthrough]];
-	case A6502::AddressingModeName::ZPX: [[fallthrough]];
-	case A6502::AddressingModeName::ZPY: [[fallthrough]];
-	case A6502::AddressingModeName::REL: return 2;
-	case A6502::AddressingModeName::ABS: [[fallthrough]];
-	case A6502::AddressingModeName::ABX: [[fallthrough]];
-	case A6502::AddressingModeName::ABY: [[fallthrough]];
-	case A6502::AddressingModeName::IND: [[fallthrough]];
-	case A6502::AddressingModeName::INX: [[fallthrough]];
-	case A6502::AddressingModeName::INY: return 3;
-	default: throw std::runtime_error("Don't use that here please");
-	}
-}
+
 }
 
 #endif//A6502_CORE_HEADER

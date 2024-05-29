@@ -1,0 +1,40 @@
+# TODO
+- [ ] Finish PPU
+  - [ ] PPU sprites
+- [ ] Better CPU status UI
+  - [ ] Show disassembly
+    - [ ] Not disassemble overlapping instructions
+    - [ ] Cache invalidation in case of bank switching :(
+  - [ ] Show registers
+  - [ ] Show cycles
+  - [ ] Show Processor status flags
+  - [ ] Show stack
+- [ ] Memory view UI
+- [ ] Better PPU status UI
+  - [ ] Show scanlines
+  - [ ] Show cycles
+  - [ ] Show ppu status register
+  - [ ] Show ppu ctrl register
+  - [ ] show ppu mask register
+  - [ ] Show secondary oam
+  - [ ] Show Oam
+- [ ] Future additions
+  - [ ] Finish Emulator
+    - [ ] PPU accuracy
+      - [ ] Startup cycles
+      - [ ] Whatever is going on in the cursed diagram
+  	- [ ] APU 
+    	- [ ] Audio system
+  	- [ ] Extra Mappers 
+  		- [ ] MMC1
+  		- [ ] MMC2
+  		- [ ] MMC3
+  		- [ ] VCRC6
+  - [ ] Better disassembly
+    - [ ] Breakpoints
+    - [ ] Assembly modification
+  - [ ] JIT recompilation (?)
+  - [ ] Input system
+    - [ ] Adding missing keys
+    - [ ] Adding Joystick functionality for gamepad
+ 

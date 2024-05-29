@@ -11,6 +11,7 @@
 
 #include "Components/CloseDialog.hpp"
 #include "Components/IComponent.hpp"
+#include "Components/ShowCPUStatus.hpp"
 #include "Components/ShowPPUStatus.hpp"
 
 #include "Input/SDL/SDLInput.hpp"
@@ -25,6 +26,10 @@
 #include <numeric>
 
 #include <lud_id.hpp>
+
+#include <utils/Disassembler.hpp>
+
+using namespace std::chrono_literals;
 
 namespace Ui
 {
@@ -133,31 +138,80 @@ void Application::init_keyboard_actions()
 
 	auto run_cpu_instructin = [&](Input::IInput* i)
 		{
-			INPUT_NOT_REPEATED(i);
+			INPUT_REPEAT_AFTER(i, 1000ms);
+			INPUT_REPEAT_EVERY(i, 50ms);
+			INPUT_KEY_NOT_MODIFIED(i);
 
 			RunCpuInstruction();
 		};
 	auto run_frame = [&](Input::IInput* i)
 		{
-			INPUT_NOT_REPEATED(i);
+			INPUT_REPEAT_AFTER(i, 1000ms);
+			INPUT_REPEAT_EVERY(i, 50ms);
+			INPUT_KEY_MODIFIED(i, Input::Key::RSHIFT, Input::Key::LSHIFT);
 
-			INPUT_KEY_NOT_MODIFIED(i);
-
-			std::println("Running frame");
 			RunFrame();
 		};
 	auto run_pixel = [&](Input::IInput* i)
 		{
+			INPUT_REPEAT_AFTER(i, 1000ms);
+			INPUT_REPEAT_EVERY(i, 10ms);
+			INPUT_KEY_MODIFIED(i, Input::Key::RSHIFT, Input::Key::LSHIFT);
+
+			RunPixel();
+		};
+
+	auto exit = [&](Input::IInput* i)
+		{
 			INPUT_NOT_REPEATED(i);
 			INPUT_KEY_MODIFIED(i, Input::Key::RSHIFT, Input::Key::LSHIFT);
 
-			std::println("Running pixel");
-			RunPixel();
+			Close();
+		};
+	auto reset = [&](Input::IInput* i)
+		{
+			INPUT_NOT_REPEATED(i);
+			INPUT_KEY_MODIFIED(i, Input::Key::RSHIFT, Input::Key::LSHIFT);
+			m_console.Reset();
+		};
+
+	auto run_ppu_cycle = [&](Input::IInput* i)
+		{
+			INPUT_REPEAT_AFTER(i, 1000ms);
+			INPUT_REPEAT_EVERY(i, 10ms);
+			INPUT_KEY_MODIFIED(i, Input::Key::RCTRL, Input::Key::LCTRL);
+
+			RunPpuCycle();
+		};
+	auto run_cpu_cycle = [&](Input::IInput* i)
+		{
+			INPUT_REPEAT_AFTER(i, 1000ms);
+			INPUT_REPEAT_EVERY(i, 10ms);
+			INPUT_KEY_MODIFIED(i, Input::Key::RCTRL, Input::Key::LCTRL);
+
+			RunCpuCycle();
+		};
+
+	auto run_scanline = [&](Input::IInput* i)
+		{
+			INPUT_REPEAT_AFTER(i, 1000ms);
+			INPUT_REPEAT_EVERY(i, 10ms);
+			INPUT_KEY_NOT_MODIFIED(i);
+
+			RunScanline();
 		};
 	m_input->AddKeyboardAction(Input::Key::F9, stop_continue);
-	m_input->AddKeyboardAction(Input::Key::F10, run_frame);
+	m_input->AddKeyboardAction(Input::Key::F9, run_frame);
+
+	m_input->AddKeyboardAction(Input::Key::F10, run_scanline);
 	m_input->AddKeyboardAction(Input::Key::F10, run_pixel);
+	m_input->AddKeyboardAction(Input::Key::F10, run_ppu_cycle);
+
 	m_input->AddKeyboardAction(Input::Key::F11, run_cpu_instructin);
+	m_input->AddKeyboardAction(Input::Key::F11, run_cpu_cycle);
+
+	m_input->AddKeyboardAction(Input::Key::F8, reset);
+	m_input->AddKeyboardAction(Input::Key::ESCAPE, exit);
 }
 
 void Application::shutdown()
@@ -180,14 +234,42 @@ void Application::RemoveComponent(const std::string_view id)
 
 void Application::RunCpuInstruction()
 {
+	m_emulation_stopped = true;
+
+	m_console.RunCpuInstruction();
 }
 
 void Application::RunFrame()
 {
+	m_emulation_stopped = true;
+	m_console.RunFrame();
 }
 
 void Application::RunPixel()
 {
+	m_emulation_stopped = true;
+	m_console.RunPpuPixel();
+
+
+}
+
+void Application::RunScanline()
+{
+	m_emulation_stopped = true;
+	std::println("Scanline: {:d}", m_console.GetPpu().GetScanlines());
+	m_console.RunPpuScanline();
+}
+
+void Application::RunPpuCycle()
+{
+	m_emulation_stopped = true;
+	m_console.RunPpuCycle();
+}
+
+void Application::RunCpuCycle()
+{
+	m_emulation_stopped = true;
+	m_console.RunCpuCycle();
 }
 
 void Application::Run()
@@ -374,46 +456,85 @@ void Application::draw_menu_bar()
 					}
 				}
 			}
-			if (ImGui::MenuItem("Reset"))
+			if (ImGui::MenuItem("Reset (shift + F8)"))
 			{
 				m_console.Reset();
 			}
-			if (ImGui::MenuItem("Exit"))
+			if (ImGui::MenuItem("Exit (shift + Esc)"))
 			{
 				Close();
 			}
 			ImGui::EndMenu();
 		}
-		if (m_console.CanRun())
+		if (ImGui::BeginMenu("Emulation"))
 		{
-			if (ImGui::BeginMenu("Emulation"))
+			if (m_emulation_stopped && ImGui::MenuItem("Run (F9)"))
 			{
-				if (m_emulation_stopped && ImGui::MenuItem("Run (F9)"))
-				{
-					m_emulation_stopped = false;
-				}
-				else if (!m_emulation_stopped && ImGui::MenuItem("Stop (F9)"))
-				{
-					m_emulation_stopped = true;
-				}
-				ImGui::EndMenu();
+				m_emulation_stopped = false;
+			}
+			else if (!m_emulation_stopped && ImGui::MenuItem("Stop (F9)"))
+			{
+				m_emulation_stopped = true;
+			}
+			if (ImGui::MenuItem("Run Frame (shift + F9)"))
+			{
+				RunFrame();
 			}
 			if (ImGui::BeginMenu("PPU"))
 			{
-				if (ImGui::MenuItem("Show status"))
+				if (ImGui::MenuItem("Run Scanline (F10)"))
 				{
-					if (m_components.contains("ppu status"))
-					{
-						RemoveComponent("ppu status");
-					}
-					else
-					{
-						auto c = std::make_shared<Component::ShowPPUStatus>("ppu status");
-						AddComponent(c);
-					}
+					RunScanline();
+				}
+				if (ImGui::MenuItem("Run pixel (shift + F10)"))
+				{
+					RunPixel();
+				}
+				if (ImGui::MenuItem("Run Cycle (ctrl + F10"))
+				{
+					RunPpuCycle();
 				}
 				ImGui::EndMenu();
 			}
+			if (ImGui::BeginMenu("CPU"))
+			{
+				if (ImGui::MenuItem("Run Instruction (F11)"))
+				{
+					RunCpuInstruction();
+				}
+				if (ImGui::MenuItem("Run Cycle (ctrl + F11)"))
+				{
+					RunCpuCycle();
+				}
+				ImGui::EndMenu();
+			}
+			ImGui::EndMenu();
+		}
+		if (ImGui::BeginMenu("Status"))
+		{
+			if (ImGui::MenuItem("Show PPU status"))
+			{
+				if (m_components.contains("ppu status"))
+				{
+					RemoveComponent("ppu status");
+				}
+				else
+				{
+					AddComponent<Component::ShowPPUStatus>("ppu status");
+				}
+			}
+			if (ImGui::MenuItem("Show CPU status"))
+			{
+				if (m_components.contains("cpu status"))
+				{
+					RemoveComponent("cpu status");
+				}
+				else
+				{
+					AddComponent<Component::ShowCPUStatus>("cpu status");
+				}
+			}
+			ImGui::EndMenu();
 		}
 		ImGui::EndMainMenuBar();
 	}

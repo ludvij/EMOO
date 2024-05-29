@@ -21,7 +21,6 @@ Console::~Console()
 
 void Console::Step()
 {
-	m_cpu_done = false;
 	m_ppu_done = false;
 	if (m_masterClock % m_conf.CpuClockDivisor == 0)
 	{
@@ -112,10 +111,62 @@ bool Console::RunCpuInstruction()
 	{
 		return false;
 	}
-	while (!m_cpu_done)
+	do
 	{
 		Step();
+	} while (!m_cpu.IsDone() || m_masterClock % m_conf.CpuClockDivisor != 0);
+	return true;
+}
+
+bool Console::RunPpuPixel()
+{
+	if (!m_cartridge)
+	{
+		return false;
 	}
+	do
+	{
+		Step();
+	} while (!m_ppu_done || m_ppu.GetCycles() > 256);
+	return true;
+}
+
+bool Console::RunPpuScanline()
+{
+	if (!m_cartridge)
+	{
+		return false;
+	}
+	do
+	{
+		Step();
+	} while (!m_ppu.IsScanlineDone() || m_masterClock % m_conf.PpuClockDivisor != 0);
+	return true;
+}
+
+bool Console::RunPpuCycle()
+{
+	if (!m_cartridge)
+	{
+		return false;
+	}
+	do
+	{
+		Step();
+	} while (!m_ppu_done);
+	return true;
+}
+
+bool Console::RunCpuCycle()
+{
+	if (!m_cartridge)
+	{
+		return false;
+	}
+	do
+	{
+		Step();
+	} while (!m_cpu_done);
 	return true;
 }
 

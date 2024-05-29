@@ -22,17 +22,37 @@ Assembler& Assembler::Assemble(const std::string& code)
 	for (const auto& line : ctre::split <"\n">(code))
 	{
 		std::string s = upper(line.str());
-		if (auto m = ctre::search<"@RESET\\s+\\$([A-F0-9]{4})">(s))
+		if (auto m = ctre::search<"\\.([A-Z]+)\\s+([\\$A-F0-9]+)">(s))
 		{
-			u16 dat = Lud::parse_num<u16>(m.get<1>().view(), 16);
-			u8 lo = dat & 0x00FF;
-			u8 hi = ( dat & 0xFF00 ) >> 8;
-			m_bus->Write(0xFFFC, lo);
-			m_bus->Write(0xFFFD, hi);
-		}
-		else if (auto m = ctre::search<"@AT\\s+\\$([A-F0-9]{4})">(s))
-		{
-			write_pos = Lud::parse_num<u16>(m.get<1>().view(), 16);
+			const auto directive = m.get<1>();
+			if (directive == "RESET")
+			{
+				u16 dat = Lud::parse_num<u16>(m.get<2>().view(), 16);
+				u8 lo = dat & 0x00FF;
+				u8 hi = ( dat & 0xFF00 ) >> 8;
+				m_bus->Write(0xFFFC, lo);
+				m_bus->Write(0xFFFD, hi);
+			}
+			else if (directive == "NMI")
+			{
+				u16 dat = Lud::parse_num<u16>(m.get<2>().view(), 16);
+				u8 lo = dat & 0x00FF;
+				u8 hi = ( dat & 0xFF00 ) >> 8;
+				m_bus->Write(0xFFFA, lo);
+				m_bus->Write(0xFFFB, hi);
+			}
+			else if (directive == "IRQ")
+			{
+				u16 dat = Lud::parse_num<u16>(m.get<1>().view(), 16);
+				u8 lo = dat & 0x00FF;
+				u8 hi = ( dat & 0xFF00 ) >> 8;
+				m_bus->Write(0xFFFE, lo);
+				m_bus->Write(0xFFFF, hi);
+			}
+			else if (directive == "AT")
+			{
+				write_pos = Lud::parse_num<u16>(m.get<1>().view(), 16);
+			}
 		}
 		else if (auto m = ctre::search<"([A-Z]{3})(\\s+([0-9A-FXY,\\-()#\\$]+))?">(s))
 		{

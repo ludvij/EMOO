@@ -12,31 +12,60 @@ Disassembler& Disassembler::ConnectBus(Emu::Bus* bus)
 	m_bus = bus;
 	return *this;
 }
-std::map<u16, Disassembly> Disassembler::Disassemble(bool use_registers)
+Disassembly& Disassembler::Get(u16 addr)
 {
-	std::map<u16, Disassembly> result;
-
-	u32 label_counter = 0;
-	u32 fn_counter = 0;
+	if (!m_cache.contains(addr))
+	{
+		DisassembleFromAddress(addr, true);
+	}
+	return m_cache.at(addr);
+}
+void Disassembler::Init(bool use_registers)
+{
+	m_cache.clear();
+	m_label_counter = 0;
 
 	const u16 reset = ( m_bus->Peek(0xFFFD) << 8 ) | m_bus->Peek(0xFFFC);
 	const u16 nmi   = ( m_bus->Peek(0xFFFB) << 8 ) | m_bus->Peek(0xFFFA);
 	const u16 irq   = ( m_bus->Peek(0xFFFF) << 8 ) | m_bus->Peek(0xFFFE);
-	result.insert({ reset, {"", "Reset"          } });
-	result.insert({ irq,   {"", "IRQ subroutine" } });
-	result.insert({ nmi,   {"", "NMI subroutine" } });
-	u32 pc = 0x8000;
-	while (pc <= 0xFFFF)
+	m_cache.insert({ reset, {"", "Reset"          } });
+	m_cache.insert({ irq,   {"", "IRQ_subroutine" } });
+	m_cache.insert({ nmi,   {"", "NMI_subroutine" } });
+
+
+	DisassembleFromAddress(reset, use_registers);
+	DisassembleFromAddress(irq, use_registers);
+	DisassembleFromAddress(nmi, use_registers);
+
+}
+
+std::map<u16, Disassembly>& Disassembler::GetCache()
+{
+	return m_cache;
+}
+
+
+void Disassembler::DisassembleFromAddress(size_t begin, bool use_registers)
+{
+	u16 caddr = static_cast<u16>( begin );
+
+	u16 jmp_addr = caddr;
+	u16 branch_addr = caddr;
+
+	while (begin <= 0xFFFF)
 	{
-		const auto& opcode = s_instructions[m_bus->Peek(pc)];
+		if (m_cache.contains(caddr) && !m_cache.at(caddr).repr.empty())
+		{
+			return;
+		}
+		else
+		{
+			m_cache.insert({ caddr, {} });
+		}
+		const u8 instr = m_bus->Peek(caddr);
+		const auto& opcode = s_instructions[instr];
 		std::string str_rep = GetInstructionName(opcode.instruction);
 		auto bytes = GetBytesForAddressingMode(opcode.mode);
-
-		if (!result.contains(pc))
-		{
-			result.insert({ pc, {} });
-		}
-
 		switch (bytes)
 		{
 		case 1:
@@ -46,38 +75,41 @@ std::map<u16, Disassembly> Disassembler::Disassemble(bool use_registers)
 		}
 		case 2:
 		{
-			if (opcode.mode == A6502::AddressingModeName::REL)
+			if (IsConditionalJump(opcode))
 			{
-				i8 b0 = m_bus->Peek(( pc + 1 ) & 0xFFFF);
-				u16 addr = ( pc + b0 + 2 ) & 0xFFFF;
+				i8 b0 = m_bus->Peek(( begin + 1 ) & 0xFFFF);
+				u16 addr = ( begin + b0 + 2 ) & 0xFFFF;
+				branch_addr = addr;
 				str_rep += ' ';
-				if (b0 > 0)
+				if (!m_cache.contains(addr))
 				{
-					result.insert({ addr, {} });
+					m_cache.insert({ addr, {} });
 				}
-				if (result[addr].label.empty())
+				if (m_cache[addr].label.empty())
 				{
-					std::string lbl = std::format("_label_{:04X}", label_counter++);
+					std::string lbl = std::format("_label_{:04X}", m_label_counter++);
 					str_rep += lbl;
-					result[addr].label = lbl;
+					m_cache[addr].label = lbl;
 				}
 				else
 				{
-					str_rep += result[addr].label;
+					str_rep += m_cache[addr].label;
 				}
 			}
 			else
 			{
-				u8 b0 = m_bus->Peek(( pc + 1 ) & 0xFFFF);
+				u8 b0 = m_bus->Peek(( caddr + 1 ) & 0xFFFF);
 				str_rep += FormatAddressingMode(opcode.mode, b0);
 			}
 			break;
 		}
 		case 3:
 		{
-			u8 b0 = m_bus->Peek(( pc + 1 ) & 0xFFFF);
-			u8 b1 = m_bus->Peek(( pc + 2 ) & 0xFFFF);
+			u8 b0 = m_bus->Peek(( caddr + 1 ) & 0xFFFF);
+			u8 b1 = m_bus->Peek(( caddr + 2 ) & 0xFFFF);
 			u16 word = ( b1 << 8 ) | b0;
+			jmp_addr = word;
+
 			if (use_registers && s_registers.contains(word))
 			{
 				str_rep += s_registers[word];
@@ -89,17 +121,52 @@ std::map<u16, Disassembly> Disassembler::Disassemble(bool use_registers)
 
 			break;
 		}
-		default: std::unreachable();
 		}
 
-		result[pc].repr = str_rep;
-		// optmistic aproach
-		pc += bytes;
+		m_cache[caddr].repr = str_rep;
+		m_cache[caddr].size = bytes;
 
+		if (opcode.instruction == InstructionName::STP)
+		{
+			return;
+		}
+		if (s_is_jump[instr])
+		{
+			if (opcode.instruction == InstructionName::JMP)
+			{
+				DisassembleFromAddress(jmp_addr, use_registers);
+				return;
+			}
+			else if (opcode.instruction == InstructionName::JSR)
+			{
+				//disassemble_address(jmp_addr, use_registers);
+			}
+			else if (opcode.instruction == InstructionName::RTS)
+			{
+				return;
+			}
+			else if (opcode.instruction == InstructionName::BRK)
+			{
+				// no need to do anything, irq is disassembled already
+			}
+			else if (opcode.instruction == InstructionName::RTI)
+			{
+				return;
+			}
+			else if (IsConditionalJump(opcode))
+			{
+				DisassembleFromAddress(branch_addr, use_registers);
+			}
+
+		}
+
+		begin += bytes;
+		caddr = static_cast<u16>( begin );
 	}
 
-	return result;
 }
+
+
 static std::string FormatAddressingMode(AddressingModeName am, u16 val /*=0*/)
 {
 	switch (am)
@@ -107,6 +174,7 @@ static std::string FormatAddressingMode(AddressingModeName am, u16 val /*=0*/)
 	case A6502::AddressingModeName::IMP: return "";
 	case A6502::AddressingModeName::ACC: return " A";
 	case A6502::AddressingModeName::IMM: return std::format(" #${:02X}", val);
+	case A6502::AddressingModeName::IM2: return "";
 	case A6502::AddressingModeName::ZPI: return std::format(" ${:02X}", val);
 	case A6502::AddressingModeName::ZPX: return std::format(" ${:02X},X", val);
 	case A6502::AddressingModeName::ZPY: return std::format(" ${:02X},Y", val);

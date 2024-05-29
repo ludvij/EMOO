@@ -347,6 +347,7 @@ void CPU::Step()
 	// resetting temps
 	m_oopsCycles = 0;
 	m_canOops = false;
+	m_done = false;
 	m_discard = 0;
 
 	if (m_cycle == 0)
@@ -365,7 +366,7 @@ void CPU::Step()
 		{
 			m_cycle += m_oopsCycles;
 		}
-
+		m_done = true;
 	}
 	m_totalCycles++;
 	m_cycle--;

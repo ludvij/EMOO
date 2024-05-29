@@ -9,7 +9,6 @@
 #include "vkutil/Pipelines.hpp"
 #include "vkutil/Types.hpp"
 
-#include "UUID/UUID.hpp"
 
 struct SDL_Window;
 

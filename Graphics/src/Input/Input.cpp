@@ -181,6 +181,81 @@ bool IInput::IsButtonRepeating(Button b) const
 {
 	return m_pressed_buttons.contains(b);
 }
+bool IInput::CanRepeatAfter(const std::chrono::milliseconds ms) const
+{
+	if (m_current_button != Button::NONE)
+	{
+		return CanRepeatButtonAfter(m_current_button, ms);
+	}
+	else if (m_current_key != Key::NONE)
+	{
+		return CanRepeatKeyAfter(m_current_key, ms);
+	}
+	return true;
+}
+bool IInput::CanRepeatKeyAfter(Key k, const std::chrono::milliseconds ms) const
+{
+	if (m_pressed_keys.contains(k))
+	{
+		const auto now = std::chrono::steady_clock::now();
+		const auto diff = std::chrono::duration_cast<std::chrono::milliseconds>( now - m_pressed_keys.at(k) );
+		return ms < diff;
+	}
+	return true;
+}
+bool IInput::CanRepeatButtonAfter(Button b, const std::chrono::milliseconds ms) const
+{
+	if (m_pressed_buttons.contains(b))
+	{
+		const auto now = std::chrono::steady_clock::now();
+		const auto diff = std::chrono::duration_cast<std::chrono::milliseconds>( now - m_pressed_buttons.at(b) );
+		return ms < diff;
+	}
+	return true;
+}
+bool IInput::CanRepeatEvery(std::chrono::milliseconds ms)
+{
+	if (m_current_button != Button::NONE)
+	{
+		return CanRepeatButtonEvery(m_current_button, ms);
+	}
+	else if (m_current_key != Key::NONE)
+	{
+		return CanRepeatKeyEvery(m_current_key, ms);
+	}
+	return true;
+}
+bool IInput::CanRepeatKeyEvery(Key k, std::chrono::milliseconds ms)
+{
+	if (m_pressed_keys.contains(k))
+	{
+		if (!m_time_repetitions.contains(m_current_action))
+		{
+			m_time_repetitions.insert({ m_current_action, 0 });
+		}
+		auto reps = m_time_repetitions.at(m_current_action);
+		const auto now = std::chrono::steady_clock::now();
+		const auto diff = std::chrono::duration_cast<std::chrono::milliseconds>( now - m_pressed_keys.at(k) );
+		const size_t actual_diffs = diff / ms;
+		if (actual_diffs != reps)
+		{
+			m_time_repetitions[m_current_action] = actual_diffs;
+			return true;
+		}
+		return false;
+	}
+	return true;
+}
+bool IInput::CanRepeatButtonEvery(Button b, std::chrono::milliseconds ms)
+{
+	if (m_pressed_buttons.contains(b))
+	{
+		const auto now = std::chrono::steady_clock::now();
+		const auto diff = std::chrono::duration_cast<std::chrono::milliseconds>( now - m_pressed_buttons.at(b) );
+		return diff.count() % ms.count() == 0;
+	}
+	return true;
+}
 void IInput::ClearActions(Button button)
 {
 	m_button_actions[button].clear();
@@ -194,11 +269,13 @@ void IInput::ClearActions()
 void IInput::AddGamepadAction(Button b, const std::function<void(IInput*)>& action)
 {
 	m_button_actions[b].push_back(action);
+	m_time_repetitions.clear();
 }
 
 void IInput::AddKeyboardAction(Key b, const std::function<void(IInput*)>& action)
 {
 	m_key_actions[b].push_back(action);
+	m_time_repetitions.clear();
 }
 
 void IInput::RunGamepadActions(Button b)
@@ -211,6 +288,8 @@ void IInput::RunGamepadActions(Button b)
 	for (const auto& action : m_button_actions[b])
 	{
 		action(this);
+		m_current_action++;
+
 	}
 }
 
@@ -224,11 +303,14 @@ void IInput::RunKeyboardActions(Key k)
 	for (const auto& action : m_key_actions[k])
 	{
 		action(this);
+		m_current_action++;
+
 	}
 }
 
 void IInput::RunActions()
 {
+	m_current_action = 0;
 	for (const auto& [k, v] : m_button_actions)
 	{
 		RunGamepadActions(k);
@@ -249,10 +331,6 @@ void IInput::Update()
 	update_gamepad_state();
 	update_keyboard_state();
 
-}
-
-void IInput::platform_override()
-{
 }
 
 void IInput::update_keyboard_state()

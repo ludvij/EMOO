@@ -37,8 +37,8 @@ TEST_F(TestDisassembler, AssembleDisassemble)
 	SwitchRom();
 
 	asse.Assemble(R"(
-	@reset $8000
-	@at $8000
+	.reset $8000
+	.at $8000
 		SEI
 		CLD
 		LDX #$FF

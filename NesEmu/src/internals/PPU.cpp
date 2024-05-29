@@ -25,6 +25,7 @@ PPU::~PPU()
 }
 void PPU::Step()
 {
+	m_scanline_done = false;
 	m_cycle++;
 	// visible scanlines
 	if (m_scanline >= 0 && m_scanline < 240)
@@ -120,6 +121,7 @@ void PPU::Step()
 	{
 		m_cycle = 0;
 		m_scanline++;
+		m_scanline_done = true;
 		if (m_scanline >= 262)
 		{
 			m_scanline = 0;
@@ -540,7 +542,8 @@ void PPU::spirte_evaluation()
 				// to be in range:
 				// 1. y >= 0       => (s - b) >= 0       => s >= b
 				// 2. y <  16 or 8 => (s - b) <  16 or 8 => s <  b + 16 or 8
-				if (!m_oam_sprite_bounded && m_scanline >= m_oam_copy_buffer && m_scanline < m_oam_copy_buffer + get_sprite_y_size())
+				const int y = m_scanline - m_oam_copy_buffer;
+				if (!m_oam_sprite_bounded && y >= 0 && y < get_sprite_y_size())
 				{
 					m_oam_sprite_bounded = true;
 				}

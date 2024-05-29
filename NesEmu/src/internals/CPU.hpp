@@ -56,6 +56,11 @@ public:  // Public functions
 		m_bus = bus;
 	}
 
+	bool IsDone() const
+	{
+		return m_done;
+	}
+
 	void Step();
 
 	void Reset();
@@ -346,6 +351,8 @@ private: // private members
 	// some operations do not save the result, I'll be saving them for
 	// utility reasons
 	u8 m_discard = 0;
+
+	bool m_done{ false };
 
 };
 

@@ -1,9 +1,11 @@
 #ifndef A6502_DISSASEMBLER_HEADER
 #define A6502_DISSASEMBLER_HEADER
 
-#include "internals/Core.hpp"
+#include "NesEmu.hpp"
+#include <deque>
 #include <map>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "A6502Core.hpp"
@@ -15,8 +17,9 @@ namespace A6502
 
 struct Disassembly
 {
-	std::string repr="";
-	std::string label="";
+	std::string repr{ };
+	std::string label{ };
+	u8 size{ 0 };
 };
 
 class Disassembler
@@ -24,10 +27,21 @@ class Disassembler
 public:
 	Disassembler& ConnectBus(Emu::Bus* bus);
 
-	std::map<u16, Disassembly> Disassemble(bool use_registers=true);
+	Disassembly& Get(u16 addr);
+
+	void Init(bool use_registers=true);
+	std::map<u16, Disassembly>& GetCache();
+
+	void DisassembleFromAddress(size_t begin, bool use_registers);
+
+private:
 
 private:
 	Emu::Bus* m_bus{ nullptr };
+
+	size_t m_label_counter{ 0 };
+
+	std::map<u16, Disassembly> m_cache;
 
 	static inline std::unordered_map<u16, const char*> s_registers{
 		{0x2000, " PPU_CONTROL"    }, {0x2001, " PPU_MASK"        }, {0x2002, " PPU_STATUS" }, {0x2003, " OAM_ADDRESS"},

@@ -8,9 +8,11 @@
 
 #include <print>
 
-#define INPUT_NOT_REPEATED(x) if (x->IsRepeating()) return
-#define INPUT_KEY_NOT_MODIFIED(x) if (x->IsKeyModified()) return
+#define INPUT_NOT_REPEATED(x)      if (x->IsRepeating()) return
+#define INPUT_KEY_NOT_MODIFIED(x)  if (x->IsKeyModified()) return
 #define INPUT_KEY_MODIFIED(x, ...) if (!x->IsKeyModified({__VA_ARGS__})) return
+#define INPUT_REPEAT_AFTER(x, ms)  if (!x->CanRepeatAfter(ms)) return
+#define INPUT_REPEAT_EVERY(x, ms)  if (!x->CanRepeatEvery(ms)) return
 
 namespace Input
 {
@@ -57,6 +59,20 @@ enum class Key
 	// werid thing beside keys
 	// some headache keys
 	GRAVE,
+
+	//     (spanish)                 (american)
+	// problem keys: scancodes:           name
+	//           ?':        45:          MINUS
+	//           ¿¡:        46:         EQUALS
+	//          [^`:        47:    LEFTBRACKET
+	//          ]*+:        48:   RIGHTBRACKET
+	//           }ç:        49:      BACKSLASH
+	//          {¨´:        52:     APOSTROPHE
+	//          \ªº:        53:          GRAVE
+	//           ;,:        54:          COMMA
+	//           :.:        55:         PERIOD
+	//           _-:        56:          SLASH
+	//           ><:       100: NONUSBACKSLASH
 };
 
 auto GetButtonName(Button b);
@@ -77,6 +93,14 @@ public:
 	bool IsKeyRepeating(Key k) const;
 	bool IsButtonRepeating(Button b) const;
 
+	bool CanRepeatAfter(std::chrono::milliseconds ms) const;
+	bool CanRepeatKeyAfter(Key k, std::chrono::milliseconds ms) const;
+	bool CanRepeatButtonAfter(Button b, std::chrono::milliseconds ms) const;
+
+	bool CanRepeatEvery(std::chrono::milliseconds ms);
+	bool CanRepeatKeyEvery(Key k, std::chrono::milliseconds ms);
+	bool CanRepeatButtonEvery(Button b, std::chrono::milliseconds ms);
+
 	void ClearActions(Button button);
 	void ClearActions();
 
@@ -91,7 +115,7 @@ public:
 	virtual void ProcessEvents(void* event) = 0;
 
 protected:
-	virtual void platform_override();
+	virtual void platform_override() = 0;
 
 	void update_keyboard_state();
 	void update_gamepad_state();
@@ -100,8 +124,13 @@ protected:
 	std::unordered_map<Button, std::deque<std::function<void(IInput*)>>> m_button_actions;
 	std::unordered_map<Key, std::deque<std::function<void(IInput*)>>> m_key_actions;
 
+	// can't be a vector, has gaps
+	std::unordered_map<size_t, size_t> m_time_repetitions;
+
 	Button m_current_button;
 	Key m_current_key;
+
+	size_t m_current_action;
 
 	std::unordered_map<Button, std::chrono::time_point<std::chrono::steady_clock>> m_pressed_buttons;
 	std::unordered_map<Key, std::chrono::time_point<std::chrono::steady_clock>> m_pressed_keys;

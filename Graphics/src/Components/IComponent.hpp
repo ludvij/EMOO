@@ -4,6 +4,13 @@
 #include <lud_id.hpp>
 #include <string_view>
 
+#define DEFINE_COLOR(R, G, B) \
+std::endian::native == std::endian::little ? 0xFF << 24 | B << 16 | G << 8 | R : R << 24 | G << 16 | B << 8 | 0xFF
+
+#define DEFINE_COLOR_A(R, G, B, A) \
+std::endian::native == std::endian::little ? A << 24 | B << 16 | G << 8 | R : R << 24 | G << 16 | B << 8 | A
+
+
 namespace Ui::Component
 {
 class IComponent

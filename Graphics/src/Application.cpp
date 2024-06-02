@@ -361,7 +361,6 @@ void Application::draw_ui()
 	Renderer::BeginImGuiFrame();
 
 	ImGui::NewFrame();
-
 	draw_menu_bar();
 	draw_dockspace();
 
@@ -533,7 +532,7 @@ void Application::draw_menu_bar()
 				}
 				else
 				{
-					AddComponent<Component::ShowPPUStatus>("ppu status");
+					AddComponent<Component::ShowPPUStatus>("ppu status", m_monospace_font);
 				}
 			}
 			if (ImGui::MenuItem("Show CPU status"))

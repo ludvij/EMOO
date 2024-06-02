@@ -6,12 +6,6 @@
 #include <lud_parser.hpp>
 #include <misc/cpp/imgui_stdlib.h>
 
-#define DEFINE_COLOR(R, G, B) \
-std::endian::native == std::endian::little ? 0xFF << 24 | B << 16 | G << 8 | R : R << 24 | G << 16 | B << 8 | 0xFF
-
-#define DEFINE_COLOR_A(R, G, B, A) \
-std::endian::native == std::endian::little ? A << 24 | B << 16 | G << 8 | R : R << 24 | G << 16 | B << 8 | A
-
 //https://pixeljoint.com/forum/forum_posts.asp?TID=12795
 static constexpr std::array<u32, 16> dawnbringer16 = {
 	DEFINE_COLOR(20, 12, 28),
@@ -32,51 +26,7 @@ static constexpr std::array<u32, 16> dawnbringer16 = {
 	DEFINE_COLOR(222, 238, 214),
 };
 
-static void CreateMemoryTooltip(u16 addr)
-{
-	std::string text = std::format("Address: ${:04X}", addr);
-	if (addr < 0x100)
-	{
-		text += "\nMemory sector: CPU RAM Zero page";
-	}
-	else if (addr < 0x0800)
-	{
-		text += "\nMemory sector: CPU RAM";
-	}
-	else if (addr < 0x2000)
-	{
-		text += "\nMemory sector: CPU RAM mirrors";
-	}
-	else if (addr < 0x2008)
-	{
-		text += "\nMemory sector: PPU registers";
-	}
-	else if (addr < 0x4000)
-	{
-		text += "\nMemory sector: PPU registers mirrors";
-	}
-	else if (addr < 0x4018)
-	{
-		text += "\nMemory sector: APU & IO registers";
-	}
-	else if (addr < 0x4020)
-	{
-		text += "\nMemory sector: Test mode";
-	}
-	else if (addr < 0x6000)
-	{
-		text += "\nMemory sector: Cartridge space";
-	}
-	else if (addr < 0x8000)
-	{
-		text += "\nMemory sector: Cartridge RAM";
-	}
-	else
-	{
-		text += "\nMemory sector: Cartridge ROM & mapper registers";
-	}
-	ImGui::SetItemTooltip(text.c_str());
-}
+static void CreateMemoryTooltip(size_t addr);
 
 Ui::Component::MemoryView::MemoryView(const std::string_view name, ImFont* font)
 	: IComponent(name)
@@ -101,19 +51,19 @@ Ui::Component::MemoryView::~MemoryView()
 
 void Ui::Component::MemoryView::OnRender()
 {
-	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, { 10.0f, ImGui::GetStyle().FramePadding.y });
 	if (ImGui::Begin("Memory Viewer", &m_open))
 	{
-		auto pad = ImGui::GetStyle().FramePadding;
+		ImGui::PushFont(m_font);
+		const auto pad = ImGui::GetStyle().FramePadding;
+		const auto sp = ImGui::GetStyle().ItemSpacing;
 		const auto max_w = ImGui::GetWindowContentRegionMax();
 		const auto min_w = ImGui::GetWindowContentRegionMin();
 
 
-		const float size_x = ( max_w.x - min_w.x - pad.x ) / 2.0f;
-		const float size_y = ( max_w.y - min_w.y - pad.y ) / 2.0f;
+		const float size_x = ( max_w.x - min_w.x - sp.x ) / 2.0f;
 
 		ImGui::Text("Full memory range");
-		ImGui::SameLine(); ImGui::SetCursorPosX(pad.x + ( size_x + pad.x ) * 1);
+		ImGui::SameLine(pad.x + ( size_x + sp.x ) * 1);
 		ImGui::Text("CPU RAM");
 		ImGui::SameLine();
 		const char* text = "set 4 bit per pixel";
@@ -121,13 +71,13 @@ void Ui::Component::MemoryView::OnRender()
 		{
 			text = "set 1 bit per pixel";
 		}
-		if (ImGui::Button(text))
+		if (ImGui::SmallButton(text))
 		{
 			m_16 = !m_16;
 		}
 
 		ImGui::Image(Renderer::TextureAsImgui(m_memory), { size_x, size_x }, { 0, 0 }, { 1, 1 }, { 1,1,1,1 }, { 1,1,1,1 });
-		ImGui::SameLine(); ImGui::SetCursorPosX(pad.x + ( size_x + pad.x ) * 1);
+		ImGui::SameLine(pad.x + ( size_x + sp.x ) * 1);
 		if (m_16)
 		{
 			ImGui::Image(Renderer::TextureAsImgui(m_cpu_ram_16), { size_x, size_x }, { 0, 0 }, { 1, 1 }, { 1,1,1,1 }, { 1,1,1,1 });
@@ -141,7 +91,6 @@ void Ui::Component::MemoryView::OnRender()
 			ImGuiWindowFlags_NoScrollWithMouse |
 			ImGuiWindowFlags_NoScrollbar;
 
-		ImGui::PushFont(m_font);
 		if (ImGui::BeginChild("no Scrolling", { 0, 0 }, 0, w_flags))
 		{
 			if (ImGui::BeginTable("text repr", 0x10 + 2, ImGuiTableFlags_SizingFixedFit))
@@ -244,10 +193,8 @@ void Ui::Component::MemoryView::OnRender()
 		}
 		ImGui::EndChild();
 		ImGui::PopFont();
-
 	}
 	ImGui::End();
-	ImGui::PopStyleVar();
 }
 
 
@@ -342,3 +289,48 @@ void Ui::Component::MemoryView::repr_cpu_ram_2()
 
 }
 
+void CreateMemoryTooltip(size_t addr)
+{
+	std::string text = std::format("Address: ${:04X}", addr);
+	if (addr < 0x100)
+	{
+		text += "\nMemory sector: CPU RAM Zero page";
+	}
+	else if (addr < 0x0800)
+	{
+		text += "\nMemory sector: CPU RAM";
+	}
+	else if (addr < 0x2000)
+	{
+		text += "\nMemory sector: CPU RAM mirrors";
+	}
+	else if (addr < 0x2008)
+	{
+		text += "\nMemory sector: PPU registers";
+	}
+	else if (addr < 0x4000)
+	{
+		text += "\nMemory sector: PPU registers mirrors";
+	}
+	else if (addr < 0x4018)
+	{
+		text += "\nMemory sector: APU & IO registers";
+	}
+	else if (addr < 0x4020)
+	{
+		text += "\nMemory sector: Test mode";
+	}
+	else if (addr < 0x6000)
+	{
+		text += "\nMemory sector: Cartridge space";
+	}
+	else if (addr < 0x8000)
+	{
+		text += "\nMemory sector: Cartridge RAM";
+	}
+	else
+	{
+		text += "\nMemory sector: Cartridge ROM & mapper registers";
+	}
+	ImGui::SetItemTooltip(text.c_str());
+}

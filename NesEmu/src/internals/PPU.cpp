@@ -285,7 +285,15 @@ u8 PPU::CpuRead(const u16 addr)
 u8 PPU::CpuPeek(u16 addr) const
 {
 	u8 data = 0;
-	if (addr == PPU_STATUS_ADDR) // status
+	if (addr == PPU_CTRL_ADDR)
+	{
+		data = m_ppu_ctrl;
+	}
+	else if (addr == PPU_MASK_ADDR)
+	{
+		data = m_ppu_mask;
+	}
+	else if (addr == PPU_STATUS_ADDR) // status
 	{
 		// takes 3 hi bits from status and the next is stale ppu bus contents
 		data = ( m_ppu_status & Status::Flags::ALL ) | ( m_data_buffer & 0x1F );

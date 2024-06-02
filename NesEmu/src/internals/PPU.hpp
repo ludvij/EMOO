@@ -16,7 +16,7 @@ struct Color
 {
 	Color() = default;
 	Color(u8 val);
-	Color(u8 R, u8 B, u8 G);
+	Color(u8 R, u8 G, u8 B);
 	u8 R;
 	u8 G;
 	u8 B;

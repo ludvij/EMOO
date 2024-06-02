@@ -4,6 +4,7 @@ project "Graphics"
 	cppdialect "C++latest"
 	staticruntime "on"
 	targetdir ("%{wks.location}/bin/" .. outputDir .. "/%{prj.name}")
+	targetname ("emoo")
 	objdir ("%{wks.location}/bin/intermediates/" .. outputDir .. "/%{prj.name}")
 
 	files { 
@@ -38,17 +39,20 @@ project "Graphics"
 		"%{IncludeDir.imgui}",
 		"%{IncludeDir.VulkanSDK}",
 		"%{IncludeDir.glm}",
-		"%{IncludeDir.NesEmu}",
 		"%{IncludeDir.lud_utils}",
 		"%{IncludeDir.vk_bootrstrap}",
 		"%{IncludeDir.nativeFileDialog}",
 		"%{IncludeDir.pfd}",
+
+		"%{IncludeDir.Input}",
+		"%{IncludeDir.NesEmu}",
 	}
 
 
 	links {
 		"ImGui",
 		"NesEmu",
+		"Input",
 		"%{Library.Vulkan}",
 		-- sdl complains
 		"winmm",

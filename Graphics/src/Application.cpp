@@ -11,13 +11,15 @@
 
 #include "Components/CloseDialog.hpp"
 #include "Components/IComponent.hpp"
+#include "Components/MemoryView.hpp"
 #include "Components/ShowCPUStatus.hpp"
 #include "Components/ShowPPUStatus.hpp"
 
-#include "Input/SDL/SDLInput.hpp"
 #include "Renderer/RendererAPI.hpp"
 #include "Window/SDL/SDLWindow.hpp"	
+#include <SDL/SDLInput.hpp>
 
+#include "ImGui/CascadiaMono-Regular.embed"
 #include "Renderer/Vulkan/VulkanTexture.hpp"
 #include <pfd/portable_file_dialogs.h>
 
@@ -46,6 +48,7 @@ Application::Application(const Configuration& config)
 	init_keyboard_actions();
 	init();
 
+
 	const auto w = static_cast<uint32_t>( m_console.GetConfig().width );
 	const auto h = static_cast<uint32_t>( m_console.GetConfig().height );
 
@@ -65,19 +68,25 @@ Application& Application::Get()
 	return *s_instance;
 }
 
+double Application::GetDelta()
+{
+	return Get().m_delta;
+}
+
 Emu::Console& Application::GetConsole()
 {
-	return s_instance->m_console;
+	return Get().m_console;
 }
 
 void Application::SetUpdate(bool set)
 {
-	Application::Get().m_can_update = set;
+	Get().m_can_update = set;
 }
 
 void Application::init()
 {
 	Renderer::Init(m_window, true);
+	m_monospace_font = Renderer::GetMonospaceFont();
 }
 
 void Application::init_button_mapping()
@@ -256,7 +265,6 @@ void Application::RunPixel()
 void Application::RunScanline()
 {
 	m_emulation_stopped = true;
-	std::println("Scanline: {:d}", m_console.GetPpu().GetScanlines());
 	m_console.RunPpuScanline();
 }
 
@@ -289,6 +297,7 @@ void Application::main_loop()
 {
 	while (!m_should_quit)
 	{
+		auto begin = std::chrono::high_resolution_clock::now();
 		event_loop();
 
 		if (m_stop_rendering)
@@ -303,6 +312,10 @@ void Application::main_loop()
 
 		clear_deleted_components();
 		draw_application();
+
+		auto end = std::chrono::high_resolution_clock::now();
+		auto duration = std::chrono::duration_cast<std::chrono::microseconds>( end - begin );
+		m_delta = static_cast<double>( duration.count() ) / 1e6;
 	}
 }
 void Application::event_loop()
@@ -334,8 +347,8 @@ void Application::event_loop()
 		default:
 			break;
 		}
-		m_input->ProcessEvents(&event);
 		m_window->ProcessEventForImGui(&event);
+		m_input->ProcessEvents(&event);
 	}
 
 	m_input->Update();
@@ -532,6 +545,17 @@ void Application::draw_menu_bar()
 				else
 				{
 					AddComponent<Component::ShowCPUStatus>("cpu status");
+				}
+			}
+			if (ImGui::MenuItem("View memory"))
+			{
+				if (m_components.contains("memory view"))
+				{
+					RemoveComponent("memory view");
+				}
+				else
+				{
+					AddComponent<Component::MemoryView>("memory view", m_monospace_font);
 				}
 			}
 			ImGui::EndMenu();

@@ -965,7 +965,7 @@ Color::Color(u8 val) : Color(val, val, val)
 
 }
 
-Color::Color(u8 R, u8 B, u8 G) : R(R), G(G), B(B)
+Color::Color(u8 R, u8 G, u8 B) : R(R), G(G), B(B)
 {
 
 }

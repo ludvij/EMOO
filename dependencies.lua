@@ -8,10 +8,11 @@ IncludeDir["lud_utils"]     = "%{wks.location}/vendor/lud_utils"
 IncludeDir["sdl3"]          = "%{wks.location}/vendor/sdl3/include"
 IncludeDir["vk_bootrstrap"] = "%{wks.location}/Graphics/vendor/vk_bootstrap"
 IncludeDir["pfd"]           = "%{wks.location}/Graphics/vendor/pfd/include"
-IncludeDir["NesEmu"]        = "%{wks.location}/NesEmu/src"
 IncludeDir["ctre"]          = "%{wks.location}/NesEmu/vendor/ctre/include"
 IncludeDir["gtest"]         = "%{wks.location}/NesEmu/vendor/gtest/include"
 IncludeDir["freetype"]      = "%{wks.location}/vendor/freetype/include"
+IncludeDir["NesEmu"]        = "%{wks.location}/NesEmu/src"
+IncludeDir["Input"]         = "%{wks.location}/Input/src"
 
 LibraryDir = {}
 LibraryDir["VulkanSDK"]  = "%{wks.location}/%{VULKAN_SDK}/Lib"

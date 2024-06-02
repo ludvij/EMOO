@@ -114,4 +114,9 @@ ImTextureID TextureAsImgui(ITexture* texture)
 	return v_tex->AsImTexture();
 }
 
+ImFont* GetMonospaceFont()
+{
+	return Engine::Get().GetMonospaceFont();
+}
+
 }

@@ -1,4 +1,5 @@
 # TODO
+## Mandatory
 - [ ] Finish PPU
   - [ ] PPU sprites
 - [ ] Better CPU status UI
@@ -9,7 +10,12 @@
   - [ ] Show cycles
   - [ ] Show Processor status flags
   - [ ] Show stack
-- [ ] Memory view UI
+- [x] Memory view UI
+  - [x] Full memory view
+  - [x] CPU ram view
+  - [x] Text representation
+    - [x] better scrolling
+    - [x] Search address
 - [ ] Better PPU status UI
   - [ ] Show scanlines
   - [ ] Show cycles
@@ -18,23 +24,24 @@
   - [ ] show ppu mask register
   - [ ] Show secondary oam
   - [ ] Show Oam
-- [ ] Future additions
-  - [ ] Finish Emulator
-    - [ ] PPU accuracy
-      - [ ] Startup cycles
-      - [ ] Whatever is going on in the cursed diagram
-  	- [ ] APU 
-    	- [ ] Audio system
-  	- [ ] Extra Mappers 
-  		- [ ] MMC1
-  		- [ ] MMC2
-  		- [ ] MMC3
-  		- [ ] VCRC6
-  - [ ] Better disassembly
-    - [ ] Breakpoints
-    - [ ] Assembly modification
-  - [ ] JIT recompilation (?)
-  - [ ] Input system
-    - [ ] Adding missing keys
-    - [ ] Adding Joystick functionality for gamepad
+## Extras
+- [ ] Save states
+- [ ] Finish Emulator
+  - [ ] PPU accuracy
+    - [ ] Startup cycles
+    - [ ] Whatever is going on in the cursed diagram
+	- [ ] APU 
+  	- [ ] Audio system
+	- [ ] Extra Mappers 
+		- [ ] MMC1
+		- [ ] MMC2
+		- [ ] MMC3
+		- [ ] VCRC6
+- [ ] Better disassembly
+  - [ ] Breakpoints
+  - [ ] Assembly modification
+- [ ] JIT recompilation (?)
+- [ ] Input system
+  - [x] Adding missing keys
+  - [ ] Adding Joystick functionality for gamepad
  

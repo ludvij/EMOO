@@ -56,23 +56,25 @@ enum class Key
 	// NUMPAD
 	NUMLOCK, NP0, NP1, NP2, NP3, NP4, NP5, NP6, NP7, NP8, NP9,
 	NPADD, NPSUB, NPDIV, NPMUL, NPENTER, NPPERIOD,
-	// werid thing beside keys
 	// some headache keys
-	GRAVE,
-
+	PAUSE,
 	//     (spanish)                 (american)
-	// problem keys: scancodes:           name
-	//           ?':        45:          MINUS
-	//           ¿¡:        46:         EQUALS
-	//          [^`:        47:    LEFTBRACKET
-	//          ]*+:        48:   RIGHTBRACKET
-	//           }ç:        49:      BACKSLASH
-	//          {¨´:        52:     APOSTROPHE
-	//          \ªº:        53:          GRAVE
-	//           ;,:        54:          COMMA
-	//           :.:        55:         PERIOD
-	//           _-:        56:          SLASH
-	//           ><:       100: NONUSBACKSLASH
+	// problem keys: scancodes:           name:   key name
+	//           ?':        45:          MINUS:  OEM_MINUS
+	//           ¿¡:        46:         EQUALS: OEM_EQUALS
+	//          [^`:        47:    LEFTBRACKET:      OEM_4
+	//          ]*+:        48:   RIGHTBRACKET:      OEM_6
+	//           }ç:        49:      BACKSLASH:      OEM_5
+	//            ñ:        51:      SEMICOLON:      OEM_1
+	//          {¨´:        52:     APOSTROPHE:      OEM_7
+	//          \ªº:        53:          GRAVE:      OEM_3
+	//           ;,:        54:          COMMA:  OEM_COMMA
+	//           :.:        55:         PERIOD: OEM_PERIOD
+	//           _-:        56:          SLASH:      OEM_2
+	//           ><:       100: NONUSBACKSLASH:     OEM_10
+	OEM_1, OEM_2, OEM_3, OEM_4, OEM_5, OEM_6, OEM_7,
+	OEM_EQUALS, OEM_MINUS, OEM_PERIOD, OEM_COMMA,
+
 };
 
 auto GetButtonName(Button b);

@@ -135,7 +135,17 @@ auto GetKeyName(Key k)
 	case Input::Key::NPMUL:          return "NPMUL";
 	case Input::Key::NPENTER:        return "NPENTER";
 	case Input::Key::NPPERIOD:       return "NPPERIOD";
-	case Input::Key::GRAVE:          return "GRAVE";
+	case Input::Key::OEM_1:          return "OEM1";
+	case Input::Key::OEM_2:          return "OEM2";
+	case Input::Key::OEM_3:          return "OEM3";
+	case Input::Key::OEM_4:          return "OEM4";
+	case Input::Key::OEM_5:          return "OEM5";
+	case Input::Key::OEM_6:          return "OEM6";
+	case Input::Key::OEM_7:          return "OEM7";
+	case Input::Key::OEM_MINUS:      return "OEMMINUS";
+	case Input::Key::OEM_EQUALS:     return "OEMEQUALS";
+	case Input::Key::OEM_COMMA:      return "OEMCOMMA";
+	case Input::Key::OEM_PERIOD:     return "OEMPERIOD";
 	default:                         return "INVALID";
 	}
 }
@@ -335,7 +345,7 @@ void IInput::Update()
 
 void IInput::update_keyboard_state()
 {
-	for (const auto key : enum_range(Key::F1, Key::GRAVE))
+	for (const auto key : enum_range(Key::F1, Key::OEM_COMMA))
 	{
 		if (GetKey(key) && !m_pressed_keys.contains(key))
 		{

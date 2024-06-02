@@ -14,6 +14,7 @@ public:
 	// Inherited via IComponent
 	virtual void OnRender() override;
 	virtual void OnUpdate() override;
+	virtual void OnCreate() override;
 
 private:
 	A6502::Disassembler m_disassembler;

@@ -30,4 +30,5 @@ group ""
 
 
 include "Graphics"
+include "Input"
 include "NesEmu"

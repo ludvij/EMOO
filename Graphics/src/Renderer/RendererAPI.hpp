@@ -9,7 +9,7 @@
 #include <imgui.h>
 #include <memory>
 
-
+struct ImFont;
 
 namespace Ui::Renderer
 {
@@ -30,6 +30,8 @@ ITexture* CreateImGuiTexture(uint32_t w, uint32_t h);
 ITexture* CreateImGuiTexture(uint32_t w, uint32_t h, void* data);
 
 ImTextureID TextureAsImgui(ITexture* texture);
+
+ImFont* GetMonospaceFont();
 
 void BeginImGuiFrame();
 }

@@ -44,8 +44,10 @@ void Ui::Component::ShowPPUStatus::OnRender()
 	if (ImGui::Begin("PPU status", &m_open))
 	{
 		const float pad = ImGui::GetStyle().FramePadding.x;
-		const float size_x = ( ImGui::GetWindowSize().x - pad * 3 ) / 2.0f;
-		const float pal_x = ( ImGui::GetWindowSize().x - pad * 9.0f ) / 8.0f;
+		const auto max = ImGui::GetWindowContentRegionMax();
+		const auto min = ImGui::GetWindowContentRegionMin();
+		const float size_x = ( max.x - min.x - pad ) / 2.0f;
+		const float pal_x = ( max.x - min.x - pad * 7.0f ) / 8.0f;
 		const float pal_y = pal_x / 4;
 
 		ImGui::Text("Sprite pattern table");

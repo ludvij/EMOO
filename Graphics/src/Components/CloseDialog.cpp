@@ -29,46 +29,34 @@ void CloseDialog::OnCreate()
 
 void CloseDialog::OnRender()
 {
-	ImGui::SetNextWindowSize({ 400, 250 }, ImGuiCond_Once);
-	if (ImGui::Begin("An error has occured", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize))
+	if (m_frame++ == 0)
 	{
+		ImGui::OpenPopup("Error");
+	}
+	ImVec2 pad = ImGui::GetStyle().FramePadding;
+	ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+	ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+	if (ImGui::BeginPopupModal("Error", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+	{
+		ImGui::Text("An error has occurred");
 		ImGui::Text(m_msg);
 		if (m_close)
 		{
 			ImGui::Text("Closing application");
 		}
-
-		auto label = "Accept";
-		ImGuiStyle& style = ImGui::GetStyle();
-		auto t_size = ImGui::CalcTextSize(label);
-		ImVec2 avail = ImGui::GetContentRegionAvail();
-
-		float size_x = t_size.x + style.FramePadding.x * 2.0f;
-		float size_y = t_size.y + style.FramePadding.y * 2.0f;
-
-		float off_x = ( avail.x - size_x );
-		float off_y = ( avail.y - size_y );
-
-		if (off_x > 0.0f)
-		{
-			ImGui::SetCursorPosX(ImGui::GetCursorPosX() + off_x);
-		}
-		if (off_y > 0.0f)
-		{
-			ImGui::SetCursorPosY(ImGui::GetCursorPosY() + off_y);
-
-		}
-
-		if (ImGui::Button(label))
+		ImGui::Separator();
+		auto elem = ImGui::GetWindowSize();
+		if (ImGui::Button("Accept", { ( elem.x - pad.x * 2 ) / 2, 0 }))
 		{
 			if (m_close)
 			{
 				Application::Get().Close();
 			}
 			removed = true;
+			ImGui::CloseCurrentPopup();
 		}
+		ImGui::EndPopup();
 	}
-	ImGui::End();
 }
 
 }

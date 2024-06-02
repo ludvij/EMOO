@@ -130,6 +130,7 @@ void Bus::DMA(u64 cycles)
 
 void Bus::Reset()
 {
+	m_cpuRam.fill(0);
 }
 
 }

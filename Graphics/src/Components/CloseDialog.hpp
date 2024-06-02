@@ -16,6 +16,7 @@ public:
 private:
 	const char* m_msg;
 	bool m_close{ true };
+	int m_frame{ 0 };
 };
 }
 #endif

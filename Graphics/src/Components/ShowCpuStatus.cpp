@@ -9,12 +9,7 @@
 Ui::Component::ShowCPUStatus::ShowCPUStatus(const std::string_view name)
 	: IComponent(name)
 {
-	m_disassembler.ConnectBus(&Application::GetConsole().GetBus());
-	if (Application::GetConsole().CanRun())
-	{
-		m_disassembler.Init();
-		m_disassembler_initialised = true;
-	}
+
 }
 
 void Ui::Component::ShowCPUStatus::OnRender()
@@ -79,4 +74,14 @@ void Ui::Component::ShowCPUStatus::OnUpdate()
 		last = elem.first;
 	}
 
+}
+
+void Ui::Component::ShowCPUStatus::OnCreate()
+{
+	m_disassembler.ConnectBus(&Application::GetConsole().GetBus());
+	if (Application::GetConsole().CanRun())
+	{
+		m_disassembler.Init();
+		m_disassembler_initialised = true;
+	}
 }

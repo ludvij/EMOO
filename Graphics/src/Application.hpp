@@ -2,9 +2,9 @@
 #define GRAPHICS_APPLICATION_HEADER
 
 #include "Components/IComponent.hpp"
-#include "Input/Input.hpp"
 #include "Renderer/Sprite.hpp"
 #include "Window/Window.hpp"
+#include <Input.hpp>
 
 #include <functional>
 #include <memory>
@@ -14,6 +14,7 @@
 #include <unordered_map>
 #include <utils/Disassembler.hpp>
 
+struct ImFont;
 struct SDL_Window;
 
 
@@ -36,6 +37,8 @@ public:
 	~Application();
 
 	static Application& Get();
+
+	static double GetDelta();
 
 	static Emu::Console& GetConsole();
 
@@ -117,6 +120,10 @@ private:
 	bool m_resized{ true };
 	bool m_can_update{ true };
 	bool m_emulation_stopped{ false };
+
+	ImFont* m_monospace_font{ nullptr };
+
+	double m_delta{};
 };
 
 }

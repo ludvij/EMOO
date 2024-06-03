@@ -4,8 +4,14 @@
 #include "IComponent.hpp"
 #include "Renderer/RendererAPI.hpp"
 
+
+#include <array>
+#include <memory>
+#include <string>
 #include <string_view>
 #include <vector>
+
+#include <NesEmu.hpp>
 
 struct ImFont;
 
@@ -23,15 +29,29 @@ public:
 
 private:
 	void draw_images();
+	void draw_oam();
+	void draw_registers();
 
 private:
+	std::array<Emu::ObjectAttributeEntry, 64> m_oam;
+
+	std::array<bool, 64> m_is_tracked{ false };
+
+	char m_current_track[3];
+
 	ITexture* m_pattern_table[2]{ nullptr, nullptr };
 
 	ITexture* m_palette[8]{ nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
 
+	ImFont* m_monospace{ nullptr };
+
 	uint8_t m_status{ 0 };
 	uint8_t m_control{ 0 };
 	uint8_t m_mask{ 0 };
+	uint8_t m_latch{ 0 };
+	uint16_t m_temp{ 0 };
+	uint16_t m_addr{ 0 };
+	uint8_t m_finex{ 0 };
 
 	int m_bg_pal{ 4 };
 	int m_sprite_pal{ 0 };
@@ -40,10 +60,12 @@ private:
 
 	bool m_open{ true };
 
-	ImFont* m_monospace;
 
-	int m_cycles;
-	int m_scanlines;
+	int m_cycles{};
+	int m_scanlines{};
+	int m_frames{};
+
+	bool m_first_popup_frame{ true };
 
 };
 }

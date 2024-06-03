@@ -51,6 +51,8 @@ private:
 	int m_last{ -1 };
 	double m_fadeout = 0;
 
+	bool m_first_popup_frame{ true };
+
 };
 }
 

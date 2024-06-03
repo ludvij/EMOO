@@ -73,6 +73,11 @@ double Application::GetDelta()
 	return Get().m_delta;
 }
 
+void Application::Error(const char* name, std::string_view msg)
+{
+	AddComponent<Component::CloseDialog>(name, msg, false);
+}
+
 Emu::Console& Application::GetConsole()
 {
 	return Get().m_console;
@@ -363,31 +368,6 @@ void Application::draw_ui()
 	ImGui::NewFrame();
 	draw_menu_bar();
 	draw_dockspace();
-
-	if (ImGui::Begin("OAM"))
-	{
-		ImGui::BeginTable("Str repr", 4);
-		ImGui::TableSetupColumn("Nº");
-		ImGui::TableSetupColumn("(X, Y)");
-		ImGui::TableSetupColumn("ID");
-		ImGui::TableSetupColumn("Attribute");
-		ImGui::TableHeadersRow();
-		for (size_t i = 0; i < 64; i++)
-		{
-			auto oam = m_console.GetPpu().GetOAMEntry(i);
-			ImGui::TableNextRow();
-			ImGui::TableNextColumn();
-			ImGui::Text("%02X", i);
-			ImGui::TableNextColumn();
-			ImGui::Text("(%02X, %02X)", oam.x, oam.y);
-			ImGui::TableNextColumn();
-			ImGui::Text("%02X", oam.id);
-			ImGui::TableNextColumn();
-			ImGui::Text("%02X", oam.attribute);
-		}
-		ImGui::EndTable();
-	}
-	ImGui::End();
 
 	for (const auto& [k, v] : m_components)
 	{

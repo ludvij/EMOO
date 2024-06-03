@@ -9,7 +9,7 @@ namespace Ui::Component
 {
 
 
-CloseDialog::CloseDialog(const std::string_view name, const char* msg, bool close)
+CloseDialog::CloseDialog(const std::string_view name, const std::string_view msg, bool close)
 	: IComponent(name)
 	, m_msg(msg)
 	, m_close(close)
@@ -23,7 +23,7 @@ CloseDialog::~CloseDialog()
 
 void CloseDialog::OnCreate()
 {
-	Application::Get().RestartEmulator();
+	//Application::Get().RestartEmulator();
 	Application::SetUpdate(false);
 }
 
@@ -39,7 +39,7 @@ void CloseDialog::OnRender()
 	if (ImGui::BeginPopupModal("Error", NULL, ImGuiWindowFlags_AlwaysAutoResize))
 	{
 		ImGui::Text("An error has occurred");
-		ImGui::Text(m_msg);
+		ImGui::Text(m_msg.c_str());
 		if (m_close)
 		{
 			ImGui::Text("Closing application");

@@ -32,13 +32,13 @@ struct Color
 struct ObjectAttributeEntry
 {
 	// Y pos of sprite
-	u8 y;
+	u8 y{ 0xFF };
 	// ID of tile from pattern
-	u8 id;
+	u8 id{ 0 };
 	// color flags and such
-	u8 attribute;
+	u8 attribute{ 0 };
 	// X pos of sprite
-	u8 x;
+	u8 x{ 0 };
 };
 
 namespace Status
@@ -114,6 +114,11 @@ public:
 		return m_cycle;
 	}
 
+	auto GetFrames() const
+	{
+		return m_frames;
+	}
+
 	bool IsScanlineDone() const
 	{
 		return m_cycle == 0;
@@ -159,11 +164,11 @@ public:
 
 	void DMA();
 
-	u8  X() const
+	u8 X() const
 	{
 		return m_x;
 	}
-	u8  W() const
+	u8 W() const
 	{
 		return m_w;
 	}

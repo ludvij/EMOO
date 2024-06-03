@@ -40,6 +40,8 @@ public:
 
 	static double GetDelta();
 
+	void Error(const char* name, std::string_view msg);
+
 	static Emu::Console& GetConsole();
 
 	static void SetUpdate(bool set);

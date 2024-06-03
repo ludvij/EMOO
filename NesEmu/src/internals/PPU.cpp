@@ -202,6 +202,7 @@ void PPU::Reset()
 	m_ppu_mask = 0;
 	m_scanline = 0;
 	m_cycle = 0;
+	m_frames = 0;
 	m_x = 0;
 	m_v = 0;
 	m_t = 0;

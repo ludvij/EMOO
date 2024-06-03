@@ -91,10 +91,11 @@ void Ui::Component::MemoryView::OnRender()
 			ImGuiWindowFlags_NoScrollWithMouse |
 			ImGuiWindowFlags_NoScrollbar;
 
-		if (ImGui::BeginChild("no Scrolling", { 0, 0 }, 0, w_flags))
+		if (ImGui::BeginChild("no Scrolling", {}, 0, w_flags))
 		{
 			if (ImGui::BeginTable("text repr", 0x10 + 2, ImGuiTableFlags_SizingFixedFit))
 			{
+
 				auto s = ImGui::GetWindowSize();
 				const float spacing = ImGui::GetTextLineHeightWithSpacing();
 				const float amount = ( s.y / spacing - 1 ) * 0x10;
@@ -129,31 +130,23 @@ void Ui::Component::MemoryView::OnRender()
 					ImGui::TableNextColumn();
 					ImGui::Text("|%s|", ascii);
 				}
+				if (ImGui::IsWindowHovered())
+				{
+					auto& io = ImGui::GetIO();
+					const int scroll = m_scroll_amount * 0x10;
+					// scrolling
+					if (io.MouseWheel > 0)
+					{
+						m_begin = m_begin >= scroll ? m_begin - scroll : 0x0000;
+					}
+					else if (io.MouseWheel < 0 && m_begin + scroll <= 0xFFFF)
+					{
+						m_begin += scroll;
+					}
+				}
 			}
+
 			ImGui::EndTable();
-
-			const auto max_c = ImGui::GetWindowContentRegionMax();
-			const auto min_c = ImGui::GetWindowContentRegionMin();
-			const auto pos = ImGui::GetWindowPos();
-			const ImVec2 start = { pos.x + min_c.x, pos.y + min_c.y };
-			const ImVec2 end = { start.x + max_c.x, start.y + max_c.y };
-
-
-			const auto m_pos = ImGui::GetMousePos();
-			if (m_pos.x > start.x && m_pos.x < end.x && m_pos.y > start.y && m_pos.y < end.y)
-			{
-				auto& io = ImGui::GetIO();
-				const int scroll = m_scroll_amount * 0x10;
-				// scrolling
-				if (io.MouseWheel > 0)
-				{
-					m_begin = m_begin >= scroll ? m_begin - scroll : 0x0000;
-				}
-				else if (io.MouseWheel < 0 && m_begin + scroll <= 0xFFFF)
-				{
-					m_begin += scroll;
-				}
-			}
 		}
 
 		if (ImGui::BeginPopupContextItem("Search"))
@@ -165,7 +158,11 @@ void Ui::Component::MemoryView::OnRender()
 				ImGuiInputTextFlags_CharsUppercase |
 				ImGuiInputTextFlags_CharsHexadecimal |
 				ImGuiInputTextFlags_EnterReturnsTrue;
-			ImGui::SetKeyboardFocusHere();
+			if (m_first_popup_frame)
+			{
+				ImGui::SetKeyboardFocusHere();
+				m_first_popup_frame = false;
+			}
 			if (ImGui::InputText("Address", m_text_buffer, IM_ARRAYSIZE(m_text_buffer), flags))
 			{
 				m_last = Lud::parse_num<u16>(m_text_buffer, 16);
@@ -190,6 +187,7 @@ void Ui::Component::MemoryView::OnRender()
 		else
 		{
 			memset(m_text_buffer, 0, 5);
+			m_first_popup_frame = true;
 		}
 		ImGui::EndChild();
 		ImGui::PopFont();

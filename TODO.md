@@ -17,13 +17,13 @@
     - [x] better scrolling
     - [x] Search address
 - [ ] Better PPU status UI
-  - [ ] Show scanlines
-  - [ ] Show cycles
-  - [ ] Show ppu status register
-  - [ ] Show ppu ctrl register
-  - [ ] show ppu mask register
+  - [x] Show scanlines
+  - [x] Show cycles
+  - [x] Show ppu status register
+  - [x] Show ppu ctrl register
+  - [x] show ppu mask register
   - [ ] Show secondary oam
-  - [ ] Show Oam
+  - [x] Show Oam
 ## Extras
 - [ ] Save states
 - [ ] Finish Emulator

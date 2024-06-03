@@ -3,6 +3,10 @@
 
 #include "Application.hpp"
 
+#include <imgui.h>
+#include <lud_parser.hpp>
+#include <misc/cpp/imgui_stdlib.h>
+
 Ui::Component::ShowPPUStatus::ShowPPUStatus(const std::string_view name, ImFont* font)
 	: IComponent(name)
 	, m_monospace(font)
@@ -41,107 +45,18 @@ void Ui::Component::ShowPPUStatus::OnCreate()
 
 void Ui::Component::ShowPPUStatus::OnRender()
 {
-	//ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, { 10.0f, ImGui::GetStyle().FramePadding.y });
 	if (ImGui::Begin("PPU status", &m_open))
 	{
 		ImGui::PushFont(m_monospace);
 		draw_images();
-		ImGui::Separator();
-		ImGui::Text("PPU cycle:    %d", m_cycles);
-		ImGui::Text("PPU scanline: %d", m_scanlines);
-		ImGui::Separator();
+		ImGui::SeparatorText("Cycles");
+		ImGui::Text("Cycle:    %d", m_cycles);
+		ImGui::Text("Scanline: %d", m_scanlines);
+		ImGui::Text("Frames:   %d", m_frames);
 
-		if (ImGui::BeginChild("registers", {}, ImGuiChildFlags_None, ImGuiWindowFlags_HorizontalScrollbar))
-		{
-			// control register
-			ImGui::BeginGroup();
-			{
-				ImGui::Text(std::format("PPU control: {:08b}", m_control).c_str());
-				int nametable = m_control & 0x03;
-				bool vram_increment = m_control & 0x4;
-				bool sprite_pattern_addr = m_control & 0x08;
-				bool sprite_size = m_control & 0x10;
-				bool isNmi = m_control & 0x80;
-				ImGui::Text("Base nametable address:");
-				ImGui::BeginDisabled();
-				ImGui::RadioButton("$2000", &nametable, 0);	ImGui::SameLine();
-				ImGui::RadioButton("$2400", &nametable, 1); ImGui::SameLine();
-				ImGui::RadioButton("$2C00", &nametable, 2);
-				ImGui::EndDisabled();
-
-				ImGui::Text("Vram increment:");
-				ImGui::BeginDisabled();
-				ImGui::RadioButton("1", !vram_increment); ImGui::SameLine();
-				ImGui::RadioButton("32", vram_increment);
-				ImGui::EndDisabled();
-
-				ImGui::Text("Sprite address 8x8");
-				ImGui::SetItemTooltip("Ignored for large sprites");
-				ImGui::BeginDisabled();
-				ImGui::RadioButton("$0000", !sprite_pattern_addr); ImGui::SameLine();
-				ImGui::RadioButton("$1000", sprite_pattern_addr);
-				ImGui::EndDisabled();
-
-				ImGui::BeginDisabled();
-				ImGui::Checkbox("Large sprites", &sprite_size);
-				ImGui::EndDisabled();
-
-				ImGui::SetItemTooltip("Large sprites means sprites are 8x16 pixels");
-
-				ImGui::BeginDisabled();
-				ImGui::Checkbox("Generate NMI at vBlank", &isNmi);
-				ImGui::EndDisabled();
-				ImGui::EndGroup();
-			}
-
-			ImGui::SameLine(0, 20);
-			// status register
-			ImGui::BeginGroup();
-			{
-				ImGui::Text(std::format("PPU status: {:03b}|{:05b}", m_status >> 5, m_status & 0x1F).c_str());
-				ImGui::SetItemTooltip("Low 5 bits are the open bus of the PPU");
-				ImGui::BeginDisabled();
-				bool isVBlank = m_status & 0x80;
-				bool isSprite0Hit = m_status & 0x40;
-				bool isSpriteOverflow = m_status & 0x20;
-				ImGui::Checkbox("Vblank", &isVBlank);
-				ImGui::Checkbox("Sprite 0 hit", &isSprite0Hit);
-				ImGui::Checkbox("Sprite Overflow", &isSpriteOverflow);
-
-				ImGui::EndDisabled();
-				ImGui::EndGroup();
-			}
-
-			ImGui::SameLine(0, 20);
-
-			// mask register
-			ImGui::BeginGroup();
-			{
-				ImGui::Text(std::format("PPU mask: {:08b}", m_mask).c_str());
-				ImGui::BeginDisabled();
-				bool blue = m_mask & 0x80;
-				bool green = m_mask & 0x40;
-				bool red = m_mask & 0x20;
-				bool showSprites = m_mask & 0x10;
-				bool showBackground = m_mask & 0x08;
-				bool showSpritesLeft = m_mask & 0x04;
-				bool showBackgroundLeft = m_mask & 0x02;
-				bool grayscale = m_mask & 0x01;
-				ImGui::Checkbox("Emphasize blue", &blue);
-				ImGui::Checkbox("Emphasize green", &green);
-				ImGui::Checkbox("Emphasize red", &red);
-				ImGui::Checkbox("Show sprites", &showSprites);
-				ImGui::Checkbox("Show background", &showBackground);
-				ImGui::Checkbox("Show sprites left", &showSpritesLeft);
-				ImGui::Checkbox("Show background left", &showBackgroundLeft);
-				ImGui::Checkbox("Grayscale", &grayscale);
-
-				ImGui::EndDisabled();
-				ImGui::EndGroup();
-			}
-			ImGui::SameLine();
-		}
-		ImGui::EndChild();
+		draw_registers();
+		ImGui::SeparatorText("OAM");
+		draw_oam();
 		ImGui::PopFont();
 	}
 	ImGui::End();
@@ -156,13 +71,23 @@ void Ui::Component::ShowPPUStatus::OnUpdate()
 		removed = true;
 		return;
 	}
+
 	auto& ppu = Application::GetConsole().GetPpu();
 	auto& bus = Application::GetConsole().GetBus();
 	m_control = bus.Peek(0x2000);
 	m_mask    = bus.Peek(0x2001);
 	m_status  = bus.Peek(0x2002);
 	m_cycles  = ppu.GetCycles();
+	m_frames  = ppu.GetFrames();
+	m_latch = ppu.W();
+	m_temp = ppu.T();
+	m_addr = ppu.V();
+	m_finex = ppu.X();
 	m_scanlines = ppu.GetScanlines();
+	for (size_t i = 0; i < 64; i++)
+	{
+		m_oam[i] = ppu.GetOAMEntry(i);
+	}
 	if (ppu.HasUpdatedPalettes() || m_update_chosen_pal)
 	{
 		m_update_chosen_pal = false;
@@ -266,4 +191,232 @@ void Ui::Component::ShowPPUStatus::draw_images()
 		m_sprite_pal = 3;
 	}
 	ImGui::PopStyleVar();
+}
+
+void Ui::Component::ShowPPUStatus::draw_oam()
+{
+	if (ImGui::BeginChild("OAM", { 0, 300 }))
+	{
+
+		if (ImGui::BeginTable("Str repr", 5, ImGuiTableFlags_BordersH))
+		{
+			ImGui::TableSetupColumn("Nº");
+			ImGui::TableSetupColumn("X pos");
+			ImGui::TableSetupColumn("Y pos");
+			ImGui::TableSetupColumn("ID");
+			ImGui::TableSetupColumn("Attribute");
+			ImGui::TableHeadersRow();
+			for (size_t i = 0; i < 64; i++)
+			{
+				const auto& oam = m_oam[i];
+				if (!m_is_tracked[i] && oam.y == 0xFF)
+				{
+					continue;
+				}
+				ImGui::TableNextRow();
+				ImGui::TableNextColumn();
+				ImGui::Text("%d", i);
+				ImGui::TableNextColumn();
+				ImGui::Text("%02X", oam.x);
+				ImGui::TableNextColumn();
+				ImGui::Text("%02X", oam.y);
+				ImGui::TableNextColumn();
+				ImGui::Text("%02X", oam.id);
+				ImGui::TableNextColumn();
+				ImGui::Text("%02X", oam.attribute);
+			}
+		}
+		ImGui::EndTable();
+
+		if (ImGui::BeginPopupContextItem("track"))
+		{
+			ImGui::Text("Track entry");
+			if (m_first_popup_frame)
+			{
+				m_first_popup_frame = false;
+				ImGui::SetKeyboardFocusHere();
+			}
+			ImGuiInputTextFlags flags =
+				ImGuiInputTextFlags_EscapeClearsAll |
+				ImGuiInputTextFlags_CharsDecimal |
+				ImGuiInputTextFlags_EnterReturnsTrue;
+			if (ImGui::InputText("Nº", m_current_track, IM_ARRAYSIZE(m_current_track), flags))
+			{
+				size_t val = Lud::parse_num<size_t>(m_current_track, 10);
+				if (val >= 64)
+				{
+					Application::Get().Error("Oam out of bounds", std::format("Value {:d} is not in range [0, 63]", val));
+				}
+				else
+				{
+					m_is_tracked[val] = true;
+					ImGui::CloseCurrentPopup();
+				}
+			}
+			ImGui::EndPopup();
+		}
+		else
+		{
+			std::memset(m_current_track, 0, IM_ARRAYSIZE(m_current_track));
+			m_first_popup_frame = true;
+		}
+	}
+	ImGui::EndChild();
+}
+
+void Ui::Component::ShowPPUStatus::draw_registers()
+{
+	if (ImGui::BeginChild("registers", {}, ImGuiChildFlags_AutoResizeY, ImGuiWindowFlags_HorizontalScrollbar))
+	{
+		// tooltips come from https://www.nesdev.org/wiki/PPU_registers#Internal_registers
+		ImGui::SeparatorText("Internal registers");
+
+		ImGui::BeginGroup();
+		{
+			bool latch = m_latch;
+			std::string addr = std::format("${:04X}", m_addr);
+			std::string temp = std::format("${:04X}", m_temp);
+			std::string x = std::format("{:d}", m_finex);
+
+			ImGui::BeginGroup();
+			{
+				ImGui::Text("V (VRAM address)");
+				ImGui::SetItemTooltip("During rendering, used for the scroll position.\nOutside of rendering, used as the current VRAM address.");
+				ImGui::BeginDisabled();
+				ImGui::InputText("##vram", &addr);
+				ImGui::EndDisabled();
+				ImGui::SetItemTooltip("15 bits");
+				ImGui::EndGroup();
+			}
+
+			ImGui::SameLine();
+			ImGui::BeginGroup();
+			{
+				ImGui::Text("T (Temp address)");
+				ImGui::SetItemTooltip("During rendering, specifies the starting coarse - x scroll for the next scanline\nand the starting y scroll for the screen.\nOutside of rendering, holds the scroll or VRAM address before transferring it to v.");
+				ImGui::BeginDisabled();
+				ImGui::InputText("##temp", &temp);
+				ImGui::EndDisabled();
+				ImGui::SetItemTooltip("15 bits");
+				ImGui::EndGroup();
+			}
+			ImVec2 sz;
+			ImGui::BeginGroup();
+			{
+				ImGui::Text("X (fine x scroll)");
+				ImGui::SetItemTooltip("The fine-x position of the current scroll, used during rendering alongside v.");
+				sz = ImGui::GetItemRectSize();
+				ImGui::BeginDisabled();
+				ImGui::InputText("##finex", &x);
+				ImGui::EndDisabled();
+				ImGui::SetItemTooltip("3 bits");
+				ImGui::EndGroup();
+			}
+			ImGui::SameLine();
+			ImGui::BeginGroup();
+			{
+				ImGui::Dummy(sz);
+				ImGui::BeginDisabled();
+				ImGui::Checkbox("W (address latch)", &latch);
+				ImGui::EndDisabled();
+				if (ImGui::BeginItemTooltip())
+				{
+					ImGui::TextUnformatted("Toggles on each write to either PPUSCROLL or PPUADDR, indicating whether this is the first or second write\nClears on reads of PPUSTATUS\nSometimes called the 'write latch' or 'write toggle'.");
+					ImGui::TextUnformatted("\n1 bit");
+					ImGui::EndTooltip();
+				}
+				ImGui::EndGroup();
+			}
+			ImGui::EndGroup();
+		}
+		ImGui::SeparatorText("MMIO registers");
+		// control register
+		ImGui::BeginGroup();
+		{
+			ImGui::Text(std::format("PPU control: {:08b}", m_control).c_str());
+			int nametable = m_control & 0x03;
+			bool vram_increment = m_control & 0x4;
+			bool sprite_pattern_addr = m_control & 0x08;
+			bool sprite_size = m_control & 0x10;
+			bool isNmi = m_control & 0x80;
+			ImGui::Text("Base nametable address:");
+			ImGui::BeginDisabled();
+			ImGui::RadioButton("$2000", &nametable, 0);	ImGui::SameLine();
+			ImGui::RadioButton("$2400", &nametable, 1); ImGui::SameLine();
+			ImGui::RadioButton("$2C00", &nametable, 2);
+			ImGui::EndDisabled();
+
+			ImGui::Text("Vram increment:");
+			ImGui::BeginDisabled();
+			ImGui::RadioButton("1", !vram_increment); ImGui::SameLine();
+			ImGui::RadioButton("32", vram_increment);
+			ImGui::EndDisabled();
+
+			ImGui::Text("Sprite address 8x8");
+			ImGui::SetItemTooltip("Ignored for large sprites");
+			ImGui::BeginDisabled();
+			ImGui::RadioButton("$0000", !sprite_pattern_addr); ImGui::SameLine();
+			ImGui::RadioButton("$1000", sprite_pattern_addr);
+			ImGui::EndDisabled();
+
+			ImGui::BeginDisabled();
+			ImGui::Checkbox("Large sprites", &sprite_size);
+			ImGui::EndDisabled();
+
+			ImGui::SetItemTooltip("Large sprites means sprites are 8x16 pixels");
+
+			ImGui::BeginDisabled();
+			ImGui::Checkbox("Generate NMI at vBlank", &isNmi);
+			ImGui::EndDisabled();
+			ImGui::EndGroup();
+		}
+
+		ImGui::SameLine(0, 20);
+		// status register
+		ImGui::BeginGroup();
+		{
+			ImGui::Text(std::format("PPU status: {:03b}|{:05b}", m_status >> 5, m_status & 0x1F).c_str());
+			ImGui::SetItemTooltip("Low 5 bits are the open bus of the PPU");
+			ImGui::BeginDisabled();
+			bool isVBlank = m_status & 0x80;
+			bool isSprite0Hit = m_status & 0x40;
+			bool isSpriteOverflow = m_status & 0x20;
+			ImGui::Checkbox("Vblank", &isVBlank);
+			ImGui::Checkbox("Sprite 0 hit", &isSprite0Hit);
+			ImGui::Checkbox("Sprite Overflow", &isSpriteOverflow);
+
+			ImGui::EndDisabled();
+			ImGui::EndGroup();
+		}
+
+		ImGui::SameLine(0, 20);
+
+		// mask register
+		ImGui::BeginGroup();
+		{
+			ImGui::Text(std::format("PPU mask: {:08b}", m_mask).c_str());
+			ImGui::BeginDisabled();
+			bool blue = m_mask & 0x80;
+			bool green = m_mask & 0x40;
+			bool red = m_mask & 0x20;
+			bool showSprites = m_mask & 0x10;
+			bool showBackground = m_mask & 0x08;
+			bool showSpritesLeft = m_mask & 0x04;
+			bool showBackgroundLeft = m_mask & 0x02;
+			bool grayscale = m_mask & 0x01;
+			ImGui::Checkbox("Emphasize blue", &blue);
+			ImGui::Checkbox("Emphasize green", &green);
+			ImGui::Checkbox("Emphasize red", &red);
+			ImGui::Checkbox("Show sprites", &showSprites);
+			ImGui::Checkbox("Show background", &showBackground);
+			ImGui::Checkbox("Show sprites left", &showSpritesLeft);
+			ImGui::Checkbox("Show background left", &showBackgroundLeft);
+			ImGui::Checkbox("Grayscale", &grayscale);
+
+			ImGui::EndDisabled();
+			ImGui::EndGroup();
+		}
+		ImGui::SameLine();
+	}
+	ImGui::EndChild();
 }

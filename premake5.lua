@@ -2,7 +2,7 @@ include "dependencies.lua"
 
 workspace "TFG"	
 	architecture "x86_64"
-	startproject "Graphics"
+	startproject "Application"
 
 	configurations { 
 		"Debug", 
@@ -28,7 +28,10 @@ group "Test"
 group ""
 
 
-
-include "Graphics"
-include "Input"
+group "Interface"
+	include "Application"
+	include "Window"
+	include "Input"
+	include "Renderer"
+group ""
 include "NesEmu"

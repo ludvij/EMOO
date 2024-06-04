@@ -22,7 +22,6 @@
   - [x] Show ppu status register
   - [x] Show ppu ctrl register
   - [x] show ppu mask register
-  - [ ] Show secondary oam
   - [x] Show Oam
 ## Extras
 - [ ] Save states
@@ -44,4 +43,5 @@
 - [ ] Input system
   - [x] Adding missing keys
   - [ ] Adding Joystick functionality for gamepad
+- [ ] Fix tooltips (maybe rolling back to sdl2)
  

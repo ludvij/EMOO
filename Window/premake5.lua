@@ -1,4 +1,4 @@
-project "Input"
+project "Window"
 	kind "StaticLib"
 	language "C++"
 	cppdialect "C++latest"
@@ -18,16 +18,18 @@ project "Input"
 
 	includedirs {
 		"src",
-		"include/Input",
+		"include/Window/",
 		"%{IncludeDir.sdl3}",
+		"%{IncludeDir.VulkanSDK}",
 		"%{IncludeDir.lud_utils}",
+		"%{IncludeDir.imgui}",
 
 	}
 
 	filter "system:windows"
 		systemversion "latest"
 		defines {
-			"NES_EMU_PLATFORM_WINDOWS"
+			"WINDOW_PLATFORM_WINDOWS"
 		}
 	
 	postbuildcommands {
@@ -38,14 +40,14 @@ project "Input"
 
 	filter "configurations:Debug"
 		defines { 
-			"INPUT_DEBUG" 
+			"WINDOW_DEBUG" 
 		}
 		runtime "debug"
 		symbols "On"
 
 	filter "configurations:Release"
 		defines { 
-			"INPUT_NDEBUG" 
+			"WINDOW_NDEBUG" 
 		}
 		runtime "release"
 		symbols "Off"

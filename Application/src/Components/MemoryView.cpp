@@ -88,10 +88,10 @@ void Ui::Component::MemoryView::OnRender()
 		}
 
 		ImGuiWindowFlags w_flags =
-			ImGuiWindowFlags_NoScrollWithMouse |
-			ImGuiWindowFlags_NoScrollbar;
+			//ImGuiWindowFlags_NoScrollWithMouse |
+			ImGuiWindowFlags_HorizontalScrollbar;
 
-		if (ImGui::BeginChild("no Scrolling", {}, 0, w_flags))
+		if (ImGui::BeginChild("text", {}, 0, w_flags))
 		{
 			if (ImGui::BeginTable("text repr", 0x10 + 2, ImGuiTableFlags_SizingFixedFit))
 			{
@@ -110,12 +110,11 @@ void Ui::Component::MemoryView::OnRender()
 					{
 						auto c = m_memory_cache[i + j];
 						ImGui::TableNextColumn();
-						if (m_last == i + j && m_fadeout >= 0)
+						if (m_last == i + j)
 						{
-							//         x
-							// 1 - --------- (linear color interpolation)
-							//      max_val
-							ImU32 color = ImColor(1.0f, 1.0f, static_cast<float>( 1.0 - m_fadeout / fade_seconds ));
+
+							float b = EaseInOutCubic(m_fadeout, fade_seconds, -fade_seconds);
+							ImU32 color = ImColor(1.0f, 1.0f, b);
 							ImGui::PushStyleColor(ImGuiCol_Text, color);
 							ImGui::Text("%02X", c);
 							ImGui::PopStyleColor();
@@ -124,7 +123,7 @@ void Ui::Component::MemoryView::OnRender()
 						{
 							ImGui::Text("%02X", c);
 						}
-						//CreateMemoryTooltip(i + j);
+						CreateMemoryTooltip(i + j);
 						ascii[j] = isprint(c) ? c : '.';
 					}
 					ImGui::TableNextColumn();
@@ -144,50 +143,50 @@ void Ui::Component::MemoryView::OnRender()
 						m_begin += scroll;
 					}
 				}
+				ImGui::EndTable();
 			}
 
-			ImGui::EndTable();
-		}
 
-		if (ImGui::BeginPopupContextItem("Search"))
-		{
-			ImGui::Text("Go to:");
-			ImGui::SameLine();
-			ImGuiInputTextFlags flags =
-				ImGuiInputTextFlags_EscapeClearsAll |
-				ImGuiInputTextFlags_CharsUppercase |
-				ImGuiInputTextFlags_CharsHexadecimal |
-				ImGuiInputTextFlags_EnterReturnsTrue;
-			if (m_first_popup_frame)
+			if (ImGui::BeginPopupContextItem("Search"))
 			{
-				ImGui::SetKeyboardFocusHere();
-				m_first_popup_frame = false;
+				ImGui::Text("Go to:");
+				ImGui::SameLine();
+				ImGuiInputTextFlags flags =
+					ImGuiInputTextFlags_EscapeClearsAll |
+					ImGuiInputTextFlags_CharsUppercase |
+					ImGuiInputTextFlags_CharsHexadecimal |
+					ImGuiInputTextFlags_EnterReturnsTrue;
+				if (m_first_popup_frame)
+				{
+					ImGui::SetKeyboardFocusHere();
+					m_first_popup_frame = false;
+				}
+				if (ImGui::InputText("Address", m_text_buffer, IM_ARRAYSIZE(m_text_buffer), flags))
+				{
+					m_last = Lud::parse_num<u16>(m_text_buffer, 16);
+					m_fadeout = fade_seconds;
+					m_begin = static_cast<size_t>( m_last > 0x50 ? ( m_last & 0xFFF0 ) - 0x50 : 0x0000 );
+					ImGui::CloseCurrentPopup();
+				}
+				if (ImGui::Button("Go"))
+				{
+					m_last = Lud::parse_num<u16>(m_text_buffer, 16);
+					m_fadeout = fade_seconds;
+					m_begin = static_cast<size_t>( m_last > 0x50 ? ( m_last & 0xFFF0 ) - 0x50 : 0x0000 );
+					ImGui::CloseCurrentPopup();
+				}
+				ImGui::SameLine();
+				if (ImGui::Button("Close"))
+				{
+					ImGui::CloseCurrentPopup();
+				}
+				ImGui::EndPopup();
 			}
-			if (ImGui::InputText("Address", m_text_buffer, IM_ARRAYSIZE(m_text_buffer), flags))
+			else
 			{
-				m_last = Lud::parse_num<u16>(m_text_buffer, 16);
-				m_fadeout = fade_seconds;
-				m_begin = static_cast<size_t>( m_last > 0x50 ? ( m_last & 0xFFF0 ) - 0x50 : m_last & 0xFFF0 );
-				ImGui::CloseCurrentPopup();
+				memset(m_text_buffer, 0, 5);
+				m_first_popup_frame = true;
 			}
-			if (ImGui::Button("Go"))
-			{
-				m_last = Lud::parse_num<u16>(m_text_buffer, 16);
-				m_fadeout = fade_seconds;
-				m_begin = static_cast<size_t>( m_last > 0x50 ? ( m_last & 0xFFF0 ) - 0x50 : m_last & 0xFFF0 );
-				ImGui::CloseCurrentPopup();
-			}
-			ImGui::SameLine();
-			if (ImGui::Button("Close"))
-			{
-				ImGui::CloseCurrentPopup();
-			}
-			ImGui::EndPopup();
-		}
-		else
-		{
-			memset(m_text_buffer, 0, 5);
-			m_first_popup_frame = true;
 		}
 		ImGui::EndChild();
 		ImGui::PopFont();
@@ -207,7 +206,11 @@ void Ui::Component::MemoryView::OnUpdate()
 
 	if (m_fadeout >= 0)
 	{
-		m_fadeout -= Application::GetDelta();
+		m_fadeout -= static_cast<float>( Application::GetDelta() );
+	}
+	else
+	{
+		m_last = -1;
 	}
 
 

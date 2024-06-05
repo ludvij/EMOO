@@ -6,7 +6,7 @@
 #include <vector>
 
 
-namespace Ui::vkutil
+namespace Renderer::vkutil
 {
 
 vk::ShaderModule load_shader_module(const char* filepath, vk::Device device);

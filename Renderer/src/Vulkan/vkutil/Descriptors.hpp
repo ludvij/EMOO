@@ -5,7 +5,7 @@
 #include <vector>
 #include <vulkan/vulkan.hpp>
 
-namespace Ui::vkutil
+namespace Renderer::vkutil
 {
 class DescriptorLayoutBuilder
 {

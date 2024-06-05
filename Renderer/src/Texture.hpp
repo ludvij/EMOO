@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-namespace Ui
+namespace Renderer
 {
 
 struct TextureWindow

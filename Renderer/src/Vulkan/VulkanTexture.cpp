@@ -5,7 +5,7 @@
 
 
 #include <print>
-namespace Ui
+namespace Renderer
 {
 
 

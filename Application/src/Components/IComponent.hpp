@@ -11,8 +11,12 @@ std::endian::native == std::endian::little ? 0xFF << 24 | B << 16 | G << 8 | R :
 std::endian::native == std::endian::little ? A << 24 | B << 16 | G << 8 | R : R << 24 | G << 16 | B << 8 | A
 
 
+
 namespace Ui::Component
 {
+float EaseInOutCubic(float x, const float min=0.0f, const float max=1.0f);
+
+
 class IComponent
 {
 public:

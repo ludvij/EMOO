@@ -1,6 +1,6 @@
 #include "Descriptors.hpp"
 
-namespace Ui::vkutil
+namespace Renderer::vkutil
 {
 DescriptorLayoutBuilder& DescriptorLayoutBuilder::AddBinding(uint32_t binding, vk::DescriptorType type, uint32_t count /*=1*/)
 {

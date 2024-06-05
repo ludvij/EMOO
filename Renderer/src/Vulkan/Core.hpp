@@ -47,7 +47,7 @@ constexpr void VK_CHECK(VkResult res)
 	}
 }
 
-namespace Ui
+namespace Renderer
 {
 
 using u32 = uint32_t;

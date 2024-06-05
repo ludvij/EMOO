@@ -3,7 +3,7 @@
 
 #include <vulkan/vulkan.hpp>
 
-namespace Ui::vkutil
+namespace Renderer::vkutil
 {
 
 struct QueueBundle

@@ -3,28 +3,66 @@
 #include "Application.hpp"
 
 #include <imgui.h>
+#include <misc/cpp/imgui_stdlib.h>
 
 #include <ranges>
 
-Ui::Component::ShowCPUStatus::ShowCPUStatus(const std::string_view name)
+Ui::Component::ShowCPUStatus::ShowCPUStatus(const std::string_view name, ImFont* monospace)
 	: IComponent(name)
+	, m_monospace(monospace)
 {
 
 }
 
 void Ui::Component::ShowCPUStatus::OnRender()
 {
-
-	if (ImGui::Begin("Disassembly", &m_open))
+	const auto sp = ImGui::GetStyle().ItemSpacing;
+	if (ImGui::Begin("CPU Status", &m_open))
 	{
-		for (const auto& [a, d] : m_current_pos)
+		ImGui::PushFont(m_monospace);
+		const auto min = ImGui::GetWindowContentRegionMin();
+		const auto pos = ImGui::GetWindowPos();
+		const auto siz = ImGui::GetWindowSize();
+		const auto max = ImGui::GetWindowContentRegionMax();
+		const auto size = { max.x - min.x, max.y - min.y };
+		ImGui::SeparatorText("Registers");
+		if (ImGui::BeginChild("status", {}, ImGuiChildFlags_ResizeY))
 		{
-			if (!d.label.empty())
+
+			ImGui::BeginGroup();
 			{
-				ImGui::Text("%s:", d.label.c_str());
+				ImGui::Text("PS"); ImGui::SameLine(40);
+				bool n = m_P & 0x80;
+				bool v = m_P & 0x40;
+				bool _ = m_P & 0x20;
+				bool b = m_P & 0x10;
+				bool d = m_P & 0x08;
+				bool i = m_P & 0x04;
+				bool z = m_P & 0x02;
+				bool c = m_P & 0x01;
+				ImGui::TextColored({ !n * 1.0f, n * 1.0f, 0.0f, 1.0f }, "N"); ImGui::SameLine();
+				ImGui::TextColored({ !v * 1.0f, v * 1.0f, 0.0f, 1.0f }, "V"); ImGui::SameLine();
+				ImGui::TextColored({ !_ * 1.0f, _ * 1.0f, 0.0f, 1.0f }, "-"); ImGui::SameLine();
+				ImGui::TextColored({ !b * 1.0f, b * 1.0f, 0.0f, 1.0f }, "B"); ImGui::SameLine();
+				ImGui::TextColored({ !d * 1.0f, d * 1.0f, 0.0f, 1.0f }, "D"); ImGui::SameLine();
+				ImGui::TextColored({ !i * 1.0f, i * 1.0f, 0.0f, 1.0f }, "I"); ImGui::SameLine();
+				ImGui::TextColored({ !z * 1.0f, z * 1.0f, 0.0f, 1.0f }, "Z"); ImGui::SameLine();
+				ImGui::TextColored({ !c * 1.0f, c * 1.0f, 0.0f, 1.0f }, "C");
+				//ImGui::BeginDisabled();
+				//ImGui::Checkbox("Negative",    &n);
+				//ImGui::Checkbox("Overflow",    &v);
+				//ImGui::Checkbox("Unused",      &_);
+				//ImGui::Checkbox("Break",       &b);
+				//ImGui::Checkbox("Decimal",     &d);
+				//ImGui::Checkbox("IRQ disable", &i);
+				//ImGui::Checkbox("Zero",        &z);
+				//ImGui::Checkbox("Carry",       &c);
+				//ImGui::EndDisabled();
+				ImGui::EndGroup();
 			}
-			ImGui::Text("  $%04X %s", a, d.repr.c_str());
 		}
+		ImGui::EndChild();
+		ImGui::PopFont();
 	}
 	ImGui::End();
 
@@ -50,29 +88,20 @@ void Ui::Component::ShowCPUStatus::OnUpdate()
 			return;
 		}
 	}
-	const u16 pc = Application::GetConsole().GetCpu().PC();
-	// add if not cached
-	m_disassembler.Get(pc);
+	auto& cpu = Application::GetConsole().GetCpu();
+	auto& bus = Application::GetConsole().GetBus();
 
-
-	const auto& disassembly = m_disassembler.GetCache();
-	m_current_pos.clear();
-	u16 last = pc;
-	int count = 0;
-	m_current_pos.clear();
-
-	for (auto it = disassembly.upper_bound(pc); it != disassembly.end() && count < 10; ++it)
+	for (size_t i = 0; i < 256; i++)
 	{
-		auto& elem = *it;
-		// there is a gap
-		if (elem.first - last > 3)
-		{
-			break;
-		}
-		count++;
-		m_current_pos.insert(elem);
-		last = elem.first;
+		m_stack[i] = bus.Peek(static_cast<u16>( 0x01FF - i ));
 	}
+
+	m_S = cpu.S();
+	m_P = cpu.P();
+	m_A = cpu.A();
+	m_X = cpu.X();
+	m_Y = cpu.Y();
+	m_PC = cpu.PC();
 
 }
 
@@ -84,4 +113,9 @@ void Ui::Component::ShowCPUStatus::OnCreate()
 		m_disassembler.Init();
 		m_disassembler_initialised = true;
 	}
+}
+
+void Ui::Component::ShowCPUStatus::draw_status()
+{
+
 }

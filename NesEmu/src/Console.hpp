@@ -24,6 +24,7 @@ public:
 	void Step();
 
 
+
 	void Reset();
 
 	void LoadCartridge(const std::string& filepath);
@@ -44,6 +45,11 @@ public:
 	bool CanRun() const
 	{
 		return m_cartridge != nullptr;
+	}
+
+	double GetFrameTime() const
+	{
+		return m_frame_time;
 	}
 
 	CPU& GetCpu()
@@ -99,6 +105,8 @@ private:
 	PPU m_ppu;
 	APU m_apu;
 	Bus m_bus;
+
+	double m_frame_time{ 0 };
 
 	u64 m_masterClock = 0;
 

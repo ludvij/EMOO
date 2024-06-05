@@ -26,6 +26,7 @@ PPU::~PPU()
 void PPU::Step()
 {
 	m_scanline_done = false;
+	m_frame_done = false;
 	m_cycle++;
 	// visible scanlines
 	if (m_scanline >= 0 && m_scanline < 240)

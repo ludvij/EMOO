@@ -7,9 +7,9 @@
 
 #include <lud_assert.hpp>
 
-using Ui::Detail::Vertex;
+using Renderer::Detail::Vertex;
 
-Ui::BatchRenderer::BatchRenderer()
+Renderer::BatchRenderer::BatchRenderer()
 {
 	// index buffer
 	m_batch_buffers.index_buffer = Engine::Get().CreateBuffer(
@@ -33,13 +33,13 @@ Ui::BatchRenderer::BatchRenderer()
 	m_batch_buffers.address = Engine::Get().GetDevice().getBufferAddress(device_address_info);
 }
 
-Ui::BatchRenderer::~BatchRenderer()
+Renderer::BatchRenderer::~BatchRenderer()
 {
 	Engine::Get().DestroyBuffer(m_batch_buffers.index_buffer);
 	Engine::Get().DestroyBuffer(m_batch_buffers.vertex_buffer);
 }
 
-void Ui::BatchRenderer::StartBatch()
+void Renderer::BatchRenderer::StartBatch()
 {
 	if (m_sprite_count == 0)
 	{
@@ -53,7 +53,7 @@ void Ui::BatchRenderer::StartBatch()
 
 }
 
-void Ui::BatchRenderer::Add(std::span<Detail::Vertex> vertices)
+void Renderer::BatchRenderer::Add(std::span<Detail::Vertex> vertices)
 {
 	Lud::check::eq(vertices.size(), 4, "Batch renderer only supports drawing quads");
 
@@ -70,7 +70,7 @@ void Ui::BatchRenderer::Add(std::span<Detail::Vertex> vertices)
 	m_sprite_count++;
 }
 
-void Ui::BatchRenderer::PrepareDescriptor(const int binding, vkutil::DescriptorWriter& dw) const
+void Renderer::BatchRenderer::PrepareDescriptor(const int binding, vkutil::DescriptorWriter& dw) const
 {
 	for (const auto& t : m_textures)
 	{
@@ -78,7 +78,7 @@ void Ui::BatchRenderer::PrepareDescriptor(const int binding, vkutil::DescriptorW
 	}
 }
 
-void Ui::BatchRenderer::Draw(vk::CommandBuffer cmd)
+void Renderer::BatchRenderer::Draw(vk::CommandBuffer cmd)
 {
 
 	StartBatch();
@@ -90,7 +90,7 @@ void Ui::BatchRenderer::Draw(vk::CommandBuffer cmd)
 	Flush();
 }
 
-void Ui::BatchRenderer::AddTexture(VulkanBindlessTexture* texture)
+void Renderer::BatchRenderer::AddTexture(VulkanBindlessTexture* texture)
 {
 	if (m_ready_texture_slots.empty())
 	{
@@ -105,14 +105,14 @@ void Ui::BatchRenderer::AddTexture(VulkanBindlessTexture* texture)
 
 }
 
-void Ui::BatchRenderer::RemoveTexture(VulkanBindlessTexture* texture)
+void Renderer::BatchRenderer::RemoveTexture(VulkanBindlessTexture* texture)
 {
 	m_ready_texture_slots.push_back(texture->id);
 	m_textures.remove(texture);
 }
 
 
-void Ui::BatchRenderer::Flush()
+void Renderer::BatchRenderer::Flush()
 {
 	m_sprite_count = 0;
 	m_vertices.clear();

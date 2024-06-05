@@ -4,7 +4,7 @@
 
 #include "Core.hpp"
 
-namespace Ui
+namespace Renderer
 {
 class VulkanBindlessTexture : public ITexture
 {

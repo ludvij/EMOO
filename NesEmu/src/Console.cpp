@@ -1,6 +1,8 @@
 #include "pch.hpp"
 #include "Console.hpp"
 
+#include <chrono>
+
 namespace Emu
 {
 Console::Console(Configuration conf = NTSC)
@@ -97,11 +99,14 @@ bool Console::RunFrame()
 	{
 		return false;
 	}
-	while (!m_ppu.IsFrameDone())
+	const auto begin = std::chrono::high_resolution_clock::now();
+	do
 	{
 		Step();
-	}
-	m_ppu.SetFrameDone(false);
+	} while (!m_ppu.IsFrameDone() || m_masterClock % m_conf.PpuClockDivisor != 0);
+	const auto end = std::chrono::high_resolution_clock::now();
+	const auto duration = std::chrono::duration_cast<std::chrono::microseconds>( end - begin );
+	m_frame_time =  duration.count() / 1e6;
 	return true;
 }
 

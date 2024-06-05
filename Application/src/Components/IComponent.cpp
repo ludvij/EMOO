@@ -15,6 +15,35 @@ void IComponent::OnCreate()
 void IComponent::OnUpdate()
 {
 }
+/*
+* x
+* ↓
+* 1 . . . . . . . # # #
+*   . . . . . . # # . .
+*   . . . . . # # . . .
+*   . . . . . # . . . .
+*   . . . . . # . . . .
+*   . . . . # . . . . .
+*   . . . . # . . . . .
+*   . . . # # . . . . .
+*   . . # # . . . . . .
+* 0 # # # . . . . . . .
+*   m                 M ← t
+*/
+float EaseInOutCubic(float x, const float m, const float M)
+{
+	x = ( x - m ) / M;
+
+	if (x < .5)
+	{
+		return 4.0f * x * x * x;
+	}
+	else
+	{
+		const float a = ( -2.0f * x + 2.0f );
+		return 1 - a * a * a / 2.0f;
+	}
+};
 
 bool operator==(const IComponent& lhs, const IComponent& rhs)
 {

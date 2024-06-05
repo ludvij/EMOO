@@ -30,9 +30,8 @@ extern const uint32_t sg_embed_mesh_vert[];
 
 #include "vkutil/Descriptors.hpp"
 #include "vkutil/Initializers.hpp"
-#include <Window/SDL3/SDL3Window.hpp>
 
-namespace Ui
+namespace Renderer
 {
 
 constexpr uint32_t UNIFORM_BINDING = 0;
@@ -629,7 +628,7 @@ void Engine::destroy_swapchain()
 	}
 }
 
-AllocatedBuffer Engine::CreateBuffer(size_t alloc_size, vk::BufferUsageFlags usage, VmaMemoryUsage memory_usage)
+AllocatedBuffer Engine::CreateBuffer(size_t alloc_size, vk::BufferUsageFlags usage, VmaMemoryUsage memory_usage) const
 {
 	VkBufferCreateInfo info = vkinit::buffer_create_info(alloc_size, usage);
 
@@ -653,7 +652,7 @@ AllocatedBuffer Engine::CreateBuffer(size_t alloc_size, vk::BufferUsageFlags usa
 
 }
 
-void Engine::DestroyBuffer(const AllocatedBuffer& buffer)
+void Engine::DestroyBuffer(const AllocatedBuffer& buffer) const
 {
 	vmaDestroyBuffer(m_allocator, buffer.buffer, buffer.allocation);
 }
@@ -946,7 +945,7 @@ void Engine::ImmediateSubmit(std::function<void(vk::CommandBuffer cmd)>&& functi
 
 }
 
-void Engine::draw_imgui(vk::CommandBuffer cmd, vk::ImageView view)
+void Engine::draw_imgui(vk::CommandBuffer cmd, vk::ImageView view) const
 {
 	auto color_attachment = vkinit::attachment_info(view, nullptr, vk::ImageLayout::eGeneral);
 	auto render_info = vkinit::rendering_info(m_swapchain.extent, &color_attachment, nullptr);

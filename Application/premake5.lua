@@ -28,7 +28,7 @@ project "Application"
 
 	includedirs {
 		"src",
-		"%{IncludeDir.sdl3}",
+		sdl3 and "%{IncludeDir.sdl3}" or "%{IncludeDir.sdl2}",
 		"%{IncludeDir.imgui}",
 		"%{IncludeDir.VulkanSDK}",
 		"%{IncludeDir.glm}",
@@ -81,7 +81,7 @@ project "Application"
 
 		links {
 			"%{Library.freetype_d}",
-			"%{Library.sdl3_d}",
+			sdl3 and "%{Library.sdl3_d}" or "%{Library.sdl2_d}",
 		}
 	
 	filter "configurations:Release"
@@ -92,8 +92,7 @@ project "Application"
 		}
 		links {
 			"%{Library.freetype_r}",
-			"%{Library.sdl3_r}",
-
+			"%{Library.sdl2_r}",
 		}
 
 		runtime "release"

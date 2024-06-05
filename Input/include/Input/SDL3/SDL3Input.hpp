@@ -1,7 +1,7 @@
 #ifndef GRAPHICS_SDL_INPUT_HEADER
 #define GRAPHICS_SDL_INPUT_HEADER
 #include "../Input.hpp"
-#include <SDL3/SDL.h>
+#include <SDL.h>
 
 namespace Input
 {
@@ -22,7 +22,7 @@ protected:
 	virtual void platform_override() override;
 
 private:
-	SDL_Gamepad* m_controller{ nullptr };
+	SDL_GameController* m_controller{ nullptr };
 
 	const Uint8* m_keyboard_state{ nullptr };
 

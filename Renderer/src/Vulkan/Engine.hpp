@@ -12,7 +12,7 @@
 
 struct SDL_Window;
 
-namespace Ui
+namespace Renderer
 {
 
 class VulkanImGuiTexture;
@@ -79,8 +79,8 @@ public:
 	void DestroyImage(const Detail::AllocatedImage& img);
 	void SetImageData(Detail::AllocatedImage image, void* data);
 
-	Detail::AllocatedBuffer CreateBuffer(size_t alloc_size, vk::BufferUsageFlags usage, VmaMemoryUsage memory_usage);
-	void DestroyBuffer(const Detail::AllocatedBuffer& buffer);
+	Detail::AllocatedBuffer CreateBuffer(size_t alloc_size, vk::BufferUsageFlags usage, VmaMemoryUsage memory_usage) const;
+	void DestroyBuffer(const Detail::AllocatedBuffer& buffer) const;
 
 
 	void SubmitDrawRect(std::span<Detail::Vertex> vertices);
@@ -202,7 +202,7 @@ private:
 	void init_imgui();
 
 
-	void draw_imgui(vk::CommandBuffer cmd, vk::ImageView view);
+	void draw_imgui(vk::CommandBuffer cmd, vk::ImageView view) const;
 
 
 private:

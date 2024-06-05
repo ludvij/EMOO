@@ -2,7 +2,7 @@
 
 #include "RendererAPI.hpp"
 
-namespace Ui
+namespace Renderer
 {
 Sprite::Sprite(Rect pos, float z_index, ITexture* texture, TextureWindow texture_window)
 	: rect(pos)

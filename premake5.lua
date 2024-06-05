@@ -9,12 +9,17 @@ workspace "TFG"
 		"Release"
 	}
 
+	ignoredefaultlibraries {
+		"MSVCRT",
+		"MSVCRTd"
+	}
+
 	flags {
 		"MultiProcessorCompile",
 	}
 
 outputDir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
-
+sdl3 = false
 
 
 

@@ -24,7 +24,7 @@ namespace Ui
 struct Configuration
 {
 	std::string name = "EMOO";
-	uint32_t w = 1600;
+	uint32_t w = 1700;
 	uint32_t h = 900;
 };
 
@@ -104,8 +104,8 @@ private:
 	std::unordered_map<std::string_view, std::shared_ptr<Component::IComponent>> m_components;
 	// this only exists so I can forbid recreation of some components
 
-	ITexture* m_screen;
-	Sprite m_screen_sprite;
+	Renderer::ITexture* m_screen;
+	Renderer::Sprite m_screen_sprite;
 
 	std::unique_ptr<Input::IInput> m_input;
 	std::shared_ptr<Window::IWindow> m_window;

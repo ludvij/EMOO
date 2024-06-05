@@ -1,7 +1,7 @@
 #include "Initializers.hpp"
 
 
-namespace Ui::vkinit
+namespace Renderer::vkinit
 {
 
 

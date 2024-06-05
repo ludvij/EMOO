@@ -3,8 +3,8 @@ project "Renderer"
 	language "C++"
 	cppdialect "C++latest"
 	staticruntime "on"
+	
 	targetdir ("%{wks.location}/bin/" .. outputDir .. "/%{prj.name}")
-	targetname ("emoo")
 	objdir ("%{wks.location}/bin/intermediates/" .. outputDir .. "/%{prj.name}")
 
 	files { 
@@ -77,7 +77,6 @@ project "Renderer"
 		}
 	
 	filter "configurations:Release"
-		kind "WindowedApp"
 		defines { 
 			"GRAPHICS_NDEBUG",
 			"NDEBUG"

@@ -7,7 +7,7 @@
 
 #include <lud_assert.hpp>
 
-namespace Ui::Renderer
+namespace Renderer
 {
 
 using Detail::Vertex;

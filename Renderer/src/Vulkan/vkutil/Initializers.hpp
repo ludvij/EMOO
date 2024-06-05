@@ -3,7 +3,7 @@
 
 #include <vulkan/vulkan.hpp>
 
-namespace Ui::vkinit
+namespace Renderer::vkinit
 {
 
 vk::CommandPoolCreateInfo command_pool_create_info(const uint32_t queue_family_index, const vk::CommandPoolCreateFlags flags = {});

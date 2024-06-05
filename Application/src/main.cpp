@@ -2,7 +2,7 @@
 #include "Application.hpp"
 #include <iostream>
 
-#include <SDL3/SDL.h>
+#include <SDL.h>
 
 using Ui::Application;
 
@@ -14,7 +14,7 @@ int Main(int argc, char** argv)
 {
 	// i won't be using raii for this
 	// much easier thiw way
-	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD);
+	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER);
 
 	Application* application = new Application();
 	application->Run();

@@ -11,7 +11,7 @@
 
 struct ImFont;
 
-namespace Ui::Renderer
+namespace Renderer
 {
 void Init(std::shared_ptr<Window::IWindow> window, bool use_imgui=true);
 void Shutdown();

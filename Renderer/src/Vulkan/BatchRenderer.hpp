@@ -7,7 +7,7 @@
 #include "vkutil/Descriptors.hpp"
 #include "VulkanTexture.hpp"
 
-namespace Ui
+namespace Renderer
 {
 class BatchRenderer
 {

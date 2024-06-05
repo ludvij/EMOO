@@ -32,6 +32,8 @@ private:
 	void draw_oam();
 	void draw_registers();
 
+	void image_tooltip(uint32_t pat, ImVec2 pos, float size) const;
+
 private:
 	std::array<Emu::ObjectAttributeEntry, 64> m_oam;
 
@@ -39,9 +41,9 @@ private:
 
 	char m_current_track[3];
 
-	ITexture* m_pattern_table[2]{ nullptr, nullptr };
+	Renderer::ITexture* m_pattern_table[2]{ nullptr, nullptr };
 
-	ITexture* m_palette[8]{ nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
+	Renderer::ITexture* m_palette[8]{ nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
 
 	ImFont* m_monospace{ nullptr };
 
@@ -64,6 +66,7 @@ private:
 	int m_cycles{};
 	int m_scanlines{};
 	int m_frames{};
+	float m_frame_time{};
 
 	bool m_first_popup_frame{ true };
 

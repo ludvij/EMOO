@@ -50,9 +50,29 @@ void Ui::Component::ShowPPUStatus::OnRender()
 		ImGui::PushFont(m_monospace);
 		draw_images();
 		ImGui::SeparatorText("Cycles");
-		ImGui::Text("Cycle:    %d", m_cycles);
-		ImGui::Text("Scanline: %d", m_scanlines);
-		ImGui::Text("Frames:   %d", m_frames);
+		ImGui::Text("Scanline: %3d", m_scanlines);
+		if (m_scanlines == 261)
+		{
+			ImGui::SameLine();
+			ImGui::Text("Pre render scanline");
+		}
+		else if (m_scanlines == 240)
+		{
+			ImGui::SameLine();
+			ImGui::Text("Post render scanline");
+		}
+		else if (m_scanlines > 240)
+		{
+			ImGui::SameLine();
+			ImGui::Text("VBlank scanlines");
+		}
+		ImGui::Text("Cycle:    %3d", m_cycles);
+		if (m_cycles > 255)
+		{
+			ImGui::SameLine();
+			ImGui::Text("HBlank cycles");
+		}
+		ImGui::Text("Frame time: %5.02fms Frames: %d", m_frame_time, m_frames);
 
 		draw_registers();
 		ImGui::SeparatorText("OAM");
@@ -79,6 +99,7 @@ void Ui::Component::ShowPPUStatus::OnUpdate()
 	m_status  = bus.Peek(0x2002);
 	m_cycles  = ppu.GetCycles();
 	m_frames  = ppu.GetFrames();
+	m_frame_time = static_cast<float>( Application::GetConsole().GetFrameTime() * 1000 );
 	m_latch = ppu.W();
 	m_temp = ppu.T();
 	m_addr = ppu.V();
@@ -133,10 +154,17 @@ void Ui::Component::ShowPPUStatus::draw_images()
 	ImGui::Text("Sprite pattern table");
 	ImGui::SameLine(pad + ( size_x + sp.x ) * 1); //ImGui::SetCursorPosX(( size_x + pad ) * 1);
 	ImGui::Text("Background pattern table");
-
-	ImGui::Image(Renderer::TextureAsImgui(m_pattern_table[0]), { size_x, size_x }, { 0, 0 }, { 1, 1 }, { 1,1,1,1 }, { 1,1,1,1 });
+	{
+		auto pos = ImGui::GetCursorScreenPos();
+		ImGui::Image(Renderer::TextureAsImgui(m_pattern_table[0]), { size_x, size_x }, { 0, 0 }, { 1, 1 }, { 1,1,1,1 }, { 1,1,1,1 });
+		image_tooltip(0, pos, size_x);
+	}
 	ImGui::SameLine(pad + ( size_x + sp.x ) * 1);
-	ImGui::Image(Renderer::TextureAsImgui(m_pattern_table[1]), { size_x, size_x }, { 0, 0 }, { 1, 1 }, { 1,1,1,1 }, { 1,1,1,1 });
+	{
+		auto pos = ImGui::GetCursorScreenPos();
+		ImGui::Image(Renderer::TextureAsImgui(m_pattern_table[1]), { size_x, size_x }, { 0, 0 }, { 1, 1 }, { 1,1,1,1 }, { 1,1,1,1 });
+		image_tooltip(1, pos, size_x);
+	}
 
 	ImGui::Separator();
 	ImGui::Text("Sprite palettes");
@@ -281,11 +309,11 @@ void Ui::Component::ShowPPUStatus::draw_registers()
 			ImGui::BeginGroup();
 			{
 				ImGui::Text("V (VRAM address)");
-				//ImGui::SetItemTooltip("During rendering, used for the scroll position.\nOutside of rendering, used as the current VRAM address.");
+				ImGui::SetItemTooltip("During rendering, used for the scroll position.\nOutside of rendering, used as the current VRAM address.");
 				ImGui::BeginDisabled();
 				ImGui::InputText("##vram", &addr);
 				ImGui::EndDisabled();
-				//ImGui::SetItemTooltip("15 bits");
+				ImGui::SetItemTooltip("15 bits");
 				ImGui::EndGroup();
 			}
 
@@ -293,23 +321,23 @@ void Ui::Component::ShowPPUStatus::draw_registers()
 			ImGui::BeginGroup();
 			{
 				ImGui::Text("T (Temp address)");
-				//ImGui::SetItemTooltip("During rendering, specifies the starting coarse - x scroll for the next scanline\nand the starting y scroll for the screen.\nOutside of rendering, holds the scroll or VRAM address before transferring it to v.");
+				ImGui::SetItemTooltip("During rendering, specifies the starting coarse - x scroll for the next scanline\nand the starting y scroll for the screen.\nOutside of rendering, holds the scroll or VRAM address before transferring it to v.");
 				ImGui::BeginDisabled();
 				ImGui::InputText("##temp", &temp);
 				ImGui::EndDisabled();
-				//ImGui::SetItemTooltip("15 bits");
+				ImGui::SetItemTooltip("15 bits");
 				ImGui::EndGroup();
 			}
 			ImVec2 sz;
 			ImGui::BeginGroup();
 			{
 				ImGui::Text("X (fine x scroll)");
-				//ImGui::SetItemTooltip("The fine-x position of the current scroll, used during rendering alongside v.");
+				ImGui::SetItemTooltip("The fine-x position of the current scroll, used during rendering alongside v.");
 				sz = ImGui::GetItemRectSize();
 				ImGui::BeginDisabled();
 				ImGui::InputText("##finex", &x);
 				ImGui::EndDisabled();
-				//ImGui::SetItemTooltip("3 bits");
+				ImGui::SetItemTooltip("3 bits");
 				ImGui::EndGroup();
 			}
 			ImGui::SameLine();
@@ -319,12 +347,12 @@ void Ui::Component::ShowPPUStatus::draw_registers()
 				ImGui::BeginDisabled();
 				ImGui::Checkbox("W (address latch)", &latch);
 				ImGui::EndDisabled();
-				//if (ImGui::BeginItemTooltip())
-				//{
-				//	ImGui::TextUnformatted("Toggles on each write to either PPUSCROLL or PPUADDR, indicating whether this is the first or second write\nClears on reads of PPUSTATUS\nSometimes called the 'write latch' or 'write toggle'.");
-				//	ImGui::TextUnformatted("\n1 bit");
-				//	ImGui::EndTooltip();
-				//}
+				if (ImGui::BeginItemTooltip())
+				{
+					ImGui::TextUnformatted("Toggles on each write to either PPUSCROLL or PPUADDR, indicating whether this is the first or second write\nClears on reads of PPUSTATUS\nSometimes called the 'write latch' or 'write toggle'.");
+					ImGui::TextUnformatted("\n1 bit");
+					ImGui::EndTooltip();
+				}
 				ImGui::EndGroup();
 			}
 			ImGui::EndGroup();
@@ -353,7 +381,7 @@ void Ui::Component::ShowPPUStatus::draw_registers()
 			ImGui::EndDisabled();
 
 			ImGui::Text("Sprite address 8x8");
-			//ImGui::SetItemTooltip("Ignored for large sprites");
+			ImGui::SetItemTooltip("Ignored for large sprites");
 			ImGui::BeginDisabled();
 			ImGui::RadioButton("$0000", !sprite_pattern_addr); ImGui::SameLine();
 			ImGui::RadioButton("$1000", sprite_pattern_addr);
@@ -363,7 +391,7 @@ void Ui::Component::ShowPPUStatus::draw_registers()
 			ImGui::Checkbox("Large sprites", &sprite_size);
 			ImGui::EndDisabled();
 
-			//ImGui::SetItemTooltip("Large sprites means sprites are 8x16 pixels");
+			ImGui::SetItemTooltip("Large sprites means sprites are 8x16 pixels");
 
 			ImGui::BeginDisabled();
 			ImGui::Checkbox("Generate NMI at vBlank", &isNmi);
@@ -376,7 +404,7 @@ void Ui::Component::ShowPPUStatus::draw_registers()
 		ImGui::BeginGroup();
 		{
 			ImGui::Text(std::format("PPU status: {:03b}|{:05b}", m_status >> 5, m_status & 0x1F).c_str());
-			//ImGui::SetItemTooltip("Low 5 bits are the open bus of the PPU");
+			ImGui::SetItemTooltip("Low 5 bits are the open bus of the PPU");
 			ImGui::BeginDisabled();
 			bool isVBlank = m_status & 0x80;
 			bool isSprite0Hit = m_status & 0x40;
@@ -419,4 +447,40 @@ void Ui::Component::ShowPPUStatus::draw_registers()
 		ImGui::SameLine();
 	}
 	ImGui::EndChild();
+}
+
+void Ui::Component::ShowPPUStatus::image_tooltip(const uint32_t pat, const ImVec2 pos, const float size) const
+{
+	auto& io = ImGui::GetIO();
+	if (!io.MouseDown[0])
+	{
+		return;
+	}
+	if (ImGui::BeginItemTooltip())
+	{
+		const auto w_size = ImGui::GetWindowSize();
+		const float zoom = 8.0f;
+		const auto mpos = io.MousePos;
+		const ImVec2 sector = {
+			static_cast<float>( static_cast<int>( ( mpos.x - pos.x ) / size * 16 ) ),
+			static_cast<float>( static_cast<int>( ( mpos.y - pos.y ) / size * 16 ) ),
+		};
+		const ImVec2 uv0 = { sector.x / 16, sector.y / 16 };
+		const ImVec2 uv1 = { ( sector.x + 1 ) / 16, ( sector.y + 1 ) / 16 };
+		const ImVec2 dim = { 16 * zoom, 16 * zoom };
+		const int pat_pos = static_cast<int>( sector.x + sector.y * 16 );
+		const u16 pat_addr = pat_pos * 0x10 + 0x1000 * pat;
+
+		ImGui::Text("pattern: $%04X", pat_addr);
+		ImGui::SetCursorPosX(( w_size.x - dim.x ) / 2);
+
+		float n_pos = ImGui::GetCursorPosX();
+		float min_x = ImGui::GetWindowContentRegionMin().x;
+
+		ImGui::Image(Renderer::TextureAsImgui(m_pattern_table[pat]), dim, uv0, uv1);
+		//adding some padding same size of border under image
+		ImGui::Dummy({ 0, ( n_pos - min_x ) / 2 });
+
+		ImGui::EndTooltip();
+	}
 }

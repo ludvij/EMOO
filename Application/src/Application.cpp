@@ -7,7 +7,7 @@
 #include <vector>
 
 #include <backends/imgui_impl_vulkan.h>
-#include <SDL3/SDL.h>
+#include <SDL.h>
 
 #include "Components/CloseDialog.hpp"
 #include "Components/IComponent.hpp"
@@ -15,9 +15,9 @@
 #include "Components/ShowCPUStatus.hpp"
 #include "Components/ShowPPUStatus.hpp"
 
-#include <Input/SDL3/SDL3Input.hpp>
+#include <Input/SDL2/SDL2Input.hpp>
 #include <RendererAPI.hpp>
-#include <Window/SDL3/SDL3Window.hpp>	
+#include <Window/SDL2/SDL2Window.hpp>	
 
 #include <pfd/portable_file_dialogs.h>
 
@@ -40,8 +40,8 @@ Application::Application(const Configuration& config)
 	, m_console(Emu::NTSC)
 {
 	s_instance = this;
-	m_window = std::make_shared<Window::SDL3Window>(m_config.name, m_config.w, m_config.h);
-	m_input = std::make_unique<Input::SDL3Input>();
+	m_window = std::make_shared<Window::SDL2Window>(m_config.name, m_config.w, m_config.h);
+	m_input = std::make_unique<Input::SDL2Input>();
 	init_button_mapping();
 	init_keyboard_actions();
 	init();
@@ -52,7 +52,7 @@ Application::Application(const Configuration& config)
 
 	m_screen = Renderer::CreateBindlessTexture(w, h);
 
-	m_screen_sprite = Sprite({}, 0, m_screen);
+	m_screen_sprite = Renderer::Sprite({}, 0, m_screen);
 }
 
 Application::~Application()
@@ -328,25 +328,34 @@ void Application::event_loop()
 	{
 		switch (event.type)
 		{
-		case SDL_EVENT_QUIT:
+		case SDL_QUIT:
 			m_should_quit = true;
 			break;
-		case SDL_EVENT_WINDOW_RESIZED:
-			Renderer::RequestResize();
-			m_resized = true;
-			break;
-		case SDL_EVENT_WINDOW_MINIMIZED:
-			m_stop_rendering = true;
-			break;
-		case SDL_EVENT_WINDOW_RESTORED:
-			m_stop_rendering = false;
-			break;
-		case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
-			if (event.window.windowID == m_window->GetWindowID())
+		case SDL_WINDOWEVENT:
+		{
+			switch (event.window.event)
 			{
-				m_should_quit = true;
+			case SDL_WINDOWEVENT_RESIZED:
+				Renderer::RequestResize();
+				m_resized = true;
+				break;
+			case SDL_WINDOWEVENT_MINIMIZED:
+				m_stop_rendering = true;
+				break;
+			case SDL_WINDOWEVENT_RESTORED:
+				m_stop_rendering = false;
+				break;
+			case SDL_WINDOWEVENT_CLOSE:
+				if (event.window.windowID == m_window->GetWindowID())
+				{
+					m_should_quit = true;
+				}
+				break;
+			default:
+				break;
 			}
-			break;
+		}
+		break;
 		default:
 			break;
 		}
@@ -366,6 +375,8 @@ void Application::draw_ui()
 	ImGui::NewFrame();
 	draw_menu_bar();
 	draw_dockspace();
+	ImGui::ShowDemoWindow();
+
 
 	for (const auto& [k, v] : m_components)
 	{
@@ -521,7 +532,7 @@ void Application::draw_menu_bar()
 				}
 				else
 				{
-					AddComponent<Component::ShowCPUStatus>("cpu status");
+					AddComponent<Component::ShowCPUStatus>("cpu status", m_monospace_font);
 				}
 			}
 			if (ImGui::MenuItem("View memory"))
@@ -606,7 +617,7 @@ void Application::resize_emu_screen()
 
 	const float nes_aspect_ratio = m_console.GetConfig().width / m_console.GetConfig().height;
 
-	Rect new_bounds;
+	Renderer::Rect new_bounds;
 	// NES resolution is not 1 so i have to check window resolution against nes resolution in order to 
 	// check if width or height should be used for calculations
 	if (w / h > nes_aspect_ratio)

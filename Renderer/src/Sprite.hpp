@@ -5,7 +5,7 @@
 #include "Primitives.hpp"
 #include "Texture.hpp"
 
-namespace Ui
+namespace Renderer
 {
 class Sprite
 {

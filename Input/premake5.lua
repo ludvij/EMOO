@@ -8,9 +8,20 @@ project "Input"
 	objdir ("%{wks.location}/bin/intermediates/" .. outputDir .. "/%{prj.name}")
 
 	files { 
-		"include/**.hpp", 
-		"src/**.cpp",
+		"include/Input/*.hpp", 
+		"src/*.cpp",
 	}
+	if (sdl3) then
+		files {
+			"include/Input/SDL3/**.hpp",
+			"src/SDL3/**.cpp"
+		}
+	else
+		files {
+			"include/Input/SDL2/**.hpp",
+			"src/SDL2/**.cpp"
+		}
+	end
 
 	flags {
 		"FatalWarnings"
@@ -19,7 +30,7 @@ project "Input"
 	includedirs {
 		"src",
 		"include/Input",
-		"%{IncludeDir.sdl3}",
+		sdl3 and "%{IncludeDir.sdl3}" or "%{IncludeDir.sdl2}",
 		"%{IncludeDir.lud_utils}",
 
 	}

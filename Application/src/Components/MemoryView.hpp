@@ -25,7 +25,7 @@ private:
 	void repr_cpu_ram_2();
 
 public:
-	static constexpr double fade_seconds = 2;
+	static constexpr float fade_seconds = 3;
 private:
 
 	std::array<uint8_t, 0x10000> m_memory_cache{ };
@@ -33,9 +33,9 @@ private:
 
 	char m_text_buffer[5]{ "" };
 
-	ITexture* m_memory{ nullptr };
-	ITexture* m_cpu_ram_2{ nullptr };
-	ITexture* m_cpu_ram_16{ nullptr };
+	Renderer::ITexture* m_memory{ nullptr };
+	Renderer::ITexture* m_cpu_ram_2{ nullptr };
+	Renderer::ITexture* m_cpu_ram_16{ nullptr };
 
 	ImFont* m_font;
 
@@ -49,7 +49,7 @@ private:
 	bool m_reset_text_buffer{ true };
 
 	int m_last{ -1 };
-	double m_fadeout = 0;
+	float m_fadeout = 0;
 
 	bool m_first_popup_frame{ true };
 

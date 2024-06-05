@@ -1,6 +1,6 @@
 #ifndef GRAPHICS_PRIMITIVES_HEADER
 #define GRAPHICS_PRIMITIVES_HEADER
-namespace Ui
+namespace Renderer
 {
 struct Rect
 {

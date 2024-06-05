@@ -5,7 +5,7 @@
 
 #include "Initializers.hpp"
 
-namespace Ui::vkutil
+namespace Renderer::vkutil
 {
 
 void transition_image(vk::CommandBuffer cmd, vk::Image image, vk::ImageLayout current_layout, vk::ImageLayout new_layout);

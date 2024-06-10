@@ -7,21 +7,14 @@ project "Input"
 	targetdir ("%{wks.location}/bin/" .. outputDir .. "/%{prj.name}")
 	objdir ("%{wks.location}/bin/intermediates/" .. outputDir .. "/%{prj.name}")
 
+	platform = 'SDL3' and sdl3 or 'SDL2'
+
 	files { 
 		"include/Input/*.hpp", 
 		"src/*.cpp",
+		"include/Input/" .. platform .. "/**.hpp",
+		"src/" .. platform .. "/**.cpp"
 	}
-	if (sdl3) then
-		files {
-			"include/Input/SDL3/**.hpp",
-			"src/SDL3/**.cpp"
-		}
-	else
-		files {
-			"include/Input/SDL2/**.hpp",
-			"src/SDL2/**.cpp"
-		}
-	end
 
 	flags {
 		"FatalWarnings"
@@ -30,7 +23,7 @@ project "Input"
 	includedirs {
 		"src",
 		"include/Input",
-		sdl3 and "%{IncludeDir.sdl3}" or "%{IncludeDir.sdl2}",
+		"%{IncludeDir.sdl}",
 		"%{IncludeDir.lud_utils}",
 
 	}

@@ -37,9 +37,9 @@ Ui::Component::MemoryView::MemoryView(const std::string_view name, ImFont* font)
 
 void Ui::Component::MemoryView::OnCreate()
 {
-	m_memory     = Renderer::CreateImGuiTexture(128, 128);
-	m_cpu_ram_2  = Renderer::CreateImGuiTexture(128, 128);
-	m_cpu_ram_16 = Renderer::CreateImGuiTexture(64, 64);
+	m_memory     = Renderer::CreateTexture(128, 128);
+	m_cpu_ram_2  = Renderer::CreateTexture(128, 128);
+	m_cpu_ram_16 = Renderer::CreateTexture(64, 64);
 }
 
 Ui::Component::MemoryView::~MemoryView()
@@ -56,11 +56,10 @@ void Ui::Component::MemoryView::OnRender()
 		ImGui::PushFont(m_font);
 		const auto pad = ImGui::GetStyle().FramePadding;
 		const auto sp = ImGui::GetStyle().ItemSpacing;
-		const auto max_w = ImGui::GetWindowContentRegionMax();
-		const auto min_w = ImGui::GetWindowContentRegionMin();
+		const auto avail = ImGui::GetContentRegionAvail();
 
 
-		const float size_x = ( max_w.x - min_w.x - sp.x ) / 2.0f;
+		const float size_x = ( avail.x - sp.x ) / 2.0f;
 
 		ImGui::Text("Full memory range");
 		ImGui::SameLine(pad.x + ( size_x + sp.x ) * 1);
@@ -76,26 +75,27 @@ void Ui::Component::MemoryView::OnRender()
 			m_16 = !m_16;
 		}
 
-		ImGui::Image(Renderer::TextureAsImgui(m_memory), { size_x, size_x }, { 0, 0 }, { 1, 1 }, { 1,1,1,1 }, { 1,1,1,1 });
+		ImGui::Image(m_memory->ToImGui(), { size_x, size_x }, { 0, 0 }, { 1, 1 }, { 1,1,1,1 }, { 1,1,1,1 });
 		ImGui::SameLine(pad.x + ( size_x + sp.x ) * 1);
 		if (m_16)
 		{
-			ImGui::Image(Renderer::TextureAsImgui(m_cpu_ram_16), { size_x, size_x }, { 0, 0 }, { 1, 1 }, { 1,1,1,1 }, { 1,1,1,1 });
+			ImGui::Image(m_cpu_ram_16->ToImGui(), { size_x, size_x }, { 0, 0 }, { 1, 1 }, { 1,1,1,1 }, { 1,1,1,1 });
 		}
 		else
 		{
-			ImGui::Image(Renderer::TextureAsImgui(m_cpu_ram_2), { size_x, size_x }, { 0, 0 }, { 1, 1 }, { 1,1,1,1 }, { 1,1,1,1 });
+			ImGui::Image(m_cpu_ram_2->ToImGui(), { size_x, size_x }, { 0, 0 }, { 1, 1 }, { 1,1,1,1 }, { 1,1,1,1 });
 		}
 
 		ImGuiWindowFlags w_flags =
 			//ImGuiWindowFlags_NoScrollWithMouse |
 			ImGuiWindowFlags_HorizontalScrollbar;
-
-		if (ImGui::BeginChild("text", {}, 0, w_flags))
+		// there has to be a better way
+		const float table_x = 686;
+		ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - table_x / 2);
+		if (ImGui::BeginChild("text", {}, ImGuiChildFlags_AutoResizeX, w_flags))
 		{
-			if (ImGui::BeginTable("text repr", 0x10 + 2, ImGuiTableFlags_SizingFixedFit))
+			if (ImGui::BeginTable("text repr", 0x10 + 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoHostExtendX))
 			{
-
 				auto s = ImGui::GetWindowSize();
 				const float spacing = ImGui::GetTextLineHeightWithSpacing();
 				const float amount = ( s.y / spacing - 1 ) * 0x10;
@@ -129,6 +129,7 @@ void Ui::Component::MemoryView::OnRender()
 					ImGui::TableNextColumn();
 					ImGui::Text("|%s|", ascii);
 				}
+
 				if (ImGui::IsWindowHovered())
 				{
 					auto& io = ImGui::GetIO();
@@ -184,7 +185,7 @@ void Ui::Component::MemoryView::OnRender()
 			}
 			else
 			{
-				memset(m_text_buffer, 0, 5);
+				std::fill_n(m_text_buffer, IM_ARRAYSIZE(m_text_buffer), 0);
 				m_first_popup_frame = true;
 			}
 		}

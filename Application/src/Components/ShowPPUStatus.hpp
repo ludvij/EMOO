@@ -67,6 +67,7 @@ private:
 	int m_scanlines{};
 	int m_frames{};
 	float m_frame_time{};
+	float m_time_since_last{};
 
 	bool m_first_popup_frame{ true };
 

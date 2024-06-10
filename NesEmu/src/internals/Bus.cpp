@@ -13,7 +13,7 @@ u8 Bus::Read(const u16 addr) const
 	}
 	if (addr >= 0x2000 && addr < 0x4000) // PPU registers and mirrors
 	{
-		return m_ppu->CpuRead(addr);
+		return m_ppu->CpuRead(addr & 0x0007 + 0x2000);
 	}
 	if (addr >= 0x4000 && addr < 0x4018) // APU and IO functionality
 	{
@@ -47,7 +47,7 @@ u8 Bus::Peek(u16 addr) const
 	}
 	if (addr >= 0x2000 && addr < 0x4000) // PPU registers and mirrors
 	{
-		return m_ppu->CpuPeek(addr);
+		return m_ppu->CpuPeek(addr & 0x0007 + 0x2000);
 	}
 	if (addr >= 0x4000 && addr < 0x4018) // APU and IO functionality
 	{
@@ -79,7 +79,7 @@ void Bus::Write(const u16 addr, const u8 val)
 	}
 	else if (addr >= 0x2000 && addr < 0x4000) // PPU registers and mirrors
 	{
-		m_ppu->CpuWrite(addr, val);
+		m_ppu->CpuWrite(addr & 0x0007 + 0x2000, val);
 	}
 	else if (addr == 0x4014) // DMA
 	{

@@ -6,9 +6,9 @@
   - [ ] Show disassembly
     - [ ] Not disassemble overlapping instructions
     - [ ] Cache invalidation in case of bank switching :(
-  - [ ] Show registers
+  - [x] Show registers
   - [ ] Show cycles
-  - [ ] Show Processor status flags
+  - [x] Show Processor status flags
   - [ ] Show stack
 - [x] Memory view UI
   - [x] Full memory view
@@ -16,7 +16,7 @@
   - [x] Text representation
     - [x] better scrolling
     - [x] Search address
-- [ ] Better PPU status UI
+- [x] Better PPU status UI
   - [x] Show scanlines
   - [x] Show cycles
   - [x] Show ppu status register
@@ -29,13 +29,13 @@
   - [ ] PPU accuracy
     - [ ] Startup cycles
     - [ ] Whatever is going on in the cursed diagram
-	- [ ] APU 
+  - [ ] APU 
   	- [ ] Audio system
-	- [ ] Extra Mappers 
-		- [ ] MMC1
-		- [ ] MMC2
-		- [ ] MMC3
-		- [ ] VCRC6
+  - [ ] Extra Mappers 
+    - [ ] MMC1
+    - [ ] MMC2
+    - [ ] MMC3
+    - [ ] VCRC6
 - [ ] Better disassembly
   - [ ] Breakpoints
   - [ ] Assembly modification

@@ -69,10 +69,13 @@ public:
 	void Close();
 
 	void RestartEmulator();
+
+	ImVec2 GetScreenSize();
 private:
 	void init();
-	void init_button_mapping();
+	void init_button_actions();
 	void init_keyboard_actions();
+	void init_windowevent_actions();
 	void shutdown();
 
 	void main_loop();

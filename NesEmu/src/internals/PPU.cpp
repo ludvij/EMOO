@@ -3,6 +3,42 @@
 #include "palettes/Default.hpp"
 #include "PPU.hpp"
 
+static constexpr u8 BitReverseTable256[256] =
+{
+	0b0000'0000, 0b1000'0000, 0b0100'0000, 0b1100'0000, 0b0010'0000, 0b1010'0000, 0b0110'0000, 0b1110'0000,
+	0b0001'0000, 0b1001'0000, 0b0101'0000, 0b1101'0000, 0b0011'0000, 0b1011'0000, 0b0111'0000, 0b1111'0000,
+	0b0000'1000, 0b1000'1000, 0b0100'1000, 0b1100'1000, 0b0010'1000, 0b1010'1000, 0b0110'1000, 0b1110'1000,
+	0b0001'1000, 0b1001'1000, 0b0101'1000, 0b1101'1000, 0b0011'1000, 0b1011'1000, 0b0111'1000, 0b1111'1000,
+	0b0000'0100, 0b1000'0100, 0b0100'0100, 0b1100'0100, 0b0010'0100, 0b1010'0100, 0b0110'0100, 0b1110'0100,
+	0b0001'0100, 0b1001'0100, 0b0101'0100, 0b1101'0100, 0b0011'0100, 0b1011'0100, 0b0111'0100, 0b1111'0100,
+	0b0000'1100, 0b1000'1100, 0b0100'1100, 0b1100'1100, 0b0010'1100, 0b1010'1100, 0b0110'1100, 0b1110'1100,
+	0b0001'1100, 0b1001'1100, 0b0101'1100, 0b1101'1100, 0b0011'1100, 0b1011'1100, 0b0111'1100, 0b1111'1100,
+	0b0000'0010, 0b1000'0010, 0b0100'0010, 0b1100'0010, 0b0010'0010, 0b1010'0010, 0b0110'0010, 0b1110'0010,
+	0b0001'0010, 0b1001'0010, 0b0101'0010, 0b1101'0010, 0b0011'0010, 0b1011'0010, 0b0111'0010, 0b1111'0010,
+	0b0000'1010, 0b1000'1010, 0b0100'1010, 0b1100'1010, 0b0010'1010, 0b1010'1010, 0b0110'1010, 0b1110'1010,
+	0b0001'1010, 0b1001'1010, 0b0101'1010, 0b1101'1010, 0b0011'1010, 0b1011'1010, 0b0111'1010, 0b1111'1010,
+	0b0000'0110, 0b1000'0110, 0b0100'0110, 0b1100'0110, 0b0010'0110, 0b1010'0110, 0b0110'0110, 0b1110'0110,
+	0b0001'0110, 0b1001'0110, 0b0101'0110, 0b1101'0110, 0b0011'0110, 0b1011'0110, 0b0111'0110, 0b1111'0110,
+	0b0000'1110, 0b1000'1110, 0b0100'1110, 0b1100'1110, 0b0010'1110, 0b1010'1110, 0b0110'1110, 0b1110'1110,
+	0b0001'1110, 0b1001'1110, 0b0101'1110, 0b1101'1110, 0b0011'1110, 0b1011'1110, 0b0111'1110, 0b1111'1110,
+	0b0000'0001, 0b1000'0001, 0b0100'0001, 0b1100'0001, 0b0010'0001, 0b1010'0001, 0b0110'0001, 0b1110'0001,
+	0b0001'0001, 0b1001'0001, 0b0101'0001, 0b1101'0001, 0b0011'0001, 0b1011'0001, 0b0111'0001, 0b1111'0001,
+	0b0000'1001, 0b1000'1001, 0b0100'1001, 0b1100'1001, 0b0010'1001, 0b1010'1001, 0b0110'1001, 0b1110'1001,
+	0b0001'1001, 0b1001'1001, 0b0101'1001, 0b1101'1001, 0b0011'1001, 0b1011'1001, 0b0111'1001, 0b1111'1001,
+	0b0000'0101, 0b1000'0101, 0b0100'0101, 0b1100'0101, 0b0010'0101, 0b1010'0101, 0b0110'0101, 0b1110'0101,
+	0b0001'0101, 0b1001'0101, 0b0101'0101, 0b1101'0101, 0b0011'0101, 0b1011'0101, 0b0111'0101, 0b1111'0101,
+	0b0000'1101, 0b1000'1101, 0b0100'1101, 0b1100'1101, 0b0010'1101, 0b1010'1101, 0b0110'1101, 0b1110'1101,
+	0b0001'1101, 0b1001'1101, 0b0101'1101, 0b1101'1101, 0b0011'1101, 0b1011'1101, 0b0111'1101, 0b1111'1101,
+	0b0000'0011, 0b1000'0011, 0b0100'0011, 0b1100'0011, 0b0010'0011, 0b1010'0011, 0b0110'0011, 0b1110'0011,
+	0b0001'0011, 0b1001'0011, 0b0101'0011, 0b1101'0011, 0b0011'0011, 0b1011'0011, 0b0111'0011, 0b1111'0011,
+	0b0000'1011, 0b1000'1011, 0b0100'1011, 0b1100'1011, 0b0010'1011, 0b1010'1011, 0b0110'1011, 0b1110'1011,
+	0b0001'1011, 0b1001'1011, 0b0101'1011, 0b1101'1011, 0b0011'1011, 0b1011'1011, 0b0111'1011, 0b1111'1011,
+	0b0000'0111, 0b1000'0111, 0b0100'0111, 0b1100'0111, 0b0010'0111, 0b1010'0111, 0b0110'0111, 0b1110'0111,
+	0b0001'0111, 0b1001'0111, 0b0101'0111, 0b1101'0111, 0b0011'0111, 0b1011'0111, 0b0111'0111, 0b1111'0111,
+	0b0000'1111, 0b1000'1111, 0b0100'1111, 0b1100'1111, 0b0010'1111, 0b1010'1111, 0b0110'1111, 0b1110'1111,
+	0b0001'1111, 0b1001'1111, 0b0101'1111, 0b1101'1111, 0b0011'1111, 0b1011'1111, 0b0111'1111, 0b1111'1111,
+};
+
 namespace Emu
 {
 PPU::PPU(Configuration conf)
@@ -33,9 +69,9 @@ void PPU::Step()
 	{
 		if (m_cycle >= 1 && m_cycle < 257)
 		{
-			update_bg_shifters();
+			update_shifters();
 			preload_tile();
-			spirte_evaluation();
+			sprite_evaluation();
 
 			draw_pixel();
 			if (m_cycle == 256)
@@ -45,23 +81,26 @@ void PPU::Step()
 		}
 		else if (m_cycle >= 257 && m_cycle < 321)
 		{
-			m_oam_addr = 0;
+			if (is_rendering_enabled())
+			{
+				m_oam_addr = 0;
+			}
 			if (m_cycle == 257)
 			{
 				load_bg_shifters();
 				reset_x();
 			}
+			load_sprite_shifters();
 		}
 		else if (m_cycle >= 321 && m_cycle < 338)
 		{
-			update_bg_shifters();
+			update_shifters();
 			preload_tile();
 		}
-		// first two tiles on next scanline
-		// unused NT fetches
+		// garbage NT
 		else if (m_cycle == 338 || m_cycle == 340)
 		{
-			m_bg_next_tile_id = memory_read(0x2000 | ( m_v & 0x0FFF ));
+			memory_read(0x2000 | ( m_v & 0x0FFF ));
 		}
 	}
 	// post render scanline, idle
@@ -83,10 +122,17 @@ void PPU::Step()
 		{
 			m_ppu_status.set_flags(Status::Flags::VERTICAL_BLANK, false);
 			m_ppu_status.set_flags(Status::Flags::SPRITE_0_HIT, false);
+			m_ppu_status.set_flags(Status::Flags::SPRITE_OVERFLOW, false);
+
+			for (size_t i = 0; i < 8; i++)
+			{
+				m_sprite_shifter_pattern_hi[i] = 0;
+				m_sprite_shifter_pattern_lo[i] = 0;
+			}
 		}
 		if (m_cycle >= 1 && m_cycle < 257)
 		{
-			update_bg_shifters();
+			update_shifters();
 			preload_tile();
 			if (m_cycle == 256)
 			{
@@ -108,7 +154,7 @@ void PPU::Step()
 		}
 		else if (m_cycle >= 321 && m_cycle < 338)
 		{
-			update_bg_shifters();
+			update_shifters();
 			preload_tile();
 		}
 		//For odd frames, the cycle at the end of the scanline is skipped (this is done internally by jumping directly from (339,261) to (0,0)
@@ -213,6 +259,8 @@ void PPU::Reset()
 
 	std::ranges::fill(m_palette_ram_indexes, Color(0, 0, 0));
 	std::fill_n(m_screen, 256 * 240, Color(0, 0, 0));
+	std::ranges::fill(m_scanline_sprites, SpriteInfo{ false, false, 0, 0 });
+	m_current_sprite_count = 0;
 
 	m_bg_next_tile_attrib = 0;
 	m_bg_next_tile_hi = 0;
@@ -223,6 +271,10 @@ void PPU::Reset()
 	m_bg_shifter_attrib_lo = 0;
 	m_bg_shifter_pattern_hi = 0;
 	m_bg_shifter_pattern_lo = 0;
+
+	std::ranges::fill(m_sprite_shifter_pattern_lo, 0);
+	std::ranges::fill(m_sprite_shifter_pattern_hi, 0);
+	m_current_sprite_addr = 0;
 
 	m_dma_addr = 0;
 	m_dma_data = 0;
@@ -238,12 +290,13 @@ void PPU::Reset()
 	m_oam_n = 0;
 	m_oam_m = 0;
 	m_oam_dma = 0;
+	m_current_oam_pos = 0;
 	m_secondary_oam_addr = 0;
 	m_secondary_oam_val = 0;
 	m_current_sprite_count = 0;
 
 	std::ranges::fill(m_secondary_OAM, 0);
-	std::memset(m_OAM, 0, 64);
+	std::fill_n(m_oam_data, 64 * 4, 0);
 
 
 }
@@ -319,7 +372,8 @@ void PPU::CpuWrite(const u16 addr, const u8 val)
 	{
 		m_ppu_ctrl = val;
 		// set nametables
-		m_t = ( ( m_ppu_ctrl & Control::Flags::NAMETABLE_BASE_ADDR ) << 10 ) | ( m_t & ~0x0C00 );
+		const u8 nametable = m_ppu_ctrl & Control::Flags::NAMETABLE_BASE_ADDR;
+		m_t = ( nametable << 10 ) | ( m_t & ~0x0C00 );
 	}
 	else if (addr == PPU_MASK_ADDR) // mask
 	{
@@ -507,7 +561,7 @@ void PPU::write_ppu_scroll(const u8 val)
 }
 
 
-void PPU::spirte_evaluation()
+void PPU::sprite_evaluation()
 {
 	// secondary OAM clear
 	if (m_cycle < 65)
@@ -527,7 +581,7 @@ void PPU::spirte_evaluation()
 			m_oam_sprite_bounded = false;
 
 			m_secondary_oam_addr = 0;
-			m_current_sprite_count = 0;
+			m_current_oam_pos = 0;
 
 			m_oam_n = ( m_oam_addr >> 2 ) & 0x3F;
 			m_oam_m = m_oam_addr & 0x03;
@@ -682,9 +736,9 @@ void PPU::preload_tile()
 		m_bg_next_tile_attrib &= 0x03;
 		break;
 	case 4:
-		m_bg_next_tile_addr = 0
+		m_bg_next_tile_addr =
 			// offset background nametable address
-			+ ( ( m_ppu_ctrl & Control::Flags::BACKGROUND_PATTERN_ADDR ) << 8 )
+			( ( m_ppu_ctrl & Control::Flags::BACKGROUND_PATTERN_ADDR ) << 8 )
 			// add tile id * 16
 			+ ( m_bg_next_tile_id * 16 )
 			// add nametable position
@@ -797,7 +851,7 @@ void PPU::load_bg_shifters()
 	m_bg_shifter_attrib_hi = ( m_bg_shifter_attrib_hi & 0xFF00 ) | ( ( m_bg_next_tile_attrib & 0x02 ) ? 0xFF : 0x00 );
 }
 
-void PPU::update_bg_shifters()
+void PPU::update_shifters()
 {
 	if (can_show_background())
 	{
@@ -807,6 +861,119 @@ void PPU::update_bg_shifters()
 		m_bg_shifter_attrib_lo <<= 1;
 		m_bg_shifter_attrib_hi <<= 1;
 	}
+	if (can_show_sprites() && m_cycle <= 256 && m_cycle > 1)
+	{
+		for (size_t i = 0; i < m_current_sprite_count; i++)
+		{
+			if (m_scanline_sprites[i].x > 0)
+			{
+				m_scanline_sprites[i].x--;
+			}
+			else
+			{
+				m_sprite_shifter_pattern_lo[i] <<= 1;
+				m_sprite_shifter_pattern_hi[i] <<= 1;
+			}
+		}
+	}
+}
+
+// cycles 257 to 320
+// every 2 cycles we copy a byte from secondary OAM
+// to sprite shifters
+void PPU::load_sprite_shifters()
+{
+	if (!is_rendering_enabled() || m_cycle >= 320)
+	{
+		return;
+	}
+
+	switch (m_cycle & 0x07)
+	{
+		// garbage NT
+	case 1:
+	{
+		memory_read(0x2000 | ( m_v & 0x0FFF ));
+		break;
+	}
+	// garbage NT
+	case 3:
+	{
+		memory_read(0x2000 | ( m_v & 0x0FFF ));
+		break;
+	}
+	// sprite lsbits
+	case 5:
+	{
+		const auto y         = m_secondary_OAM[static_cast<size_t>( m_current_oam_pos * 4 + 0 )];
+		const auto id        = m_secondary_OAM[static_cast<size_t>( m_current_oam_pos * 4 + 1 )];
+		const auto attribute = m_secondary_OAM[static_cast<size_t>( m_current_oam_pos * 4 + 2 )];
+		const auto x         = m_secondary_OAM[static_cast<size_t>( m_current_oam_pos * 4 + 3 )];
+		u8 y_pos;
+		// vertical mirroring
+		if (attribute & 0x80)
+		{
+			y_pos = ( m_ppu_ctrl.is_flag_set(Control::Flags::LARGE_SPRITES) ? 15 : 7 ) - ( m_scanline - y );
+		}
+		else
+		{
+			y_pos = m_scanline - y;
+		}
+
+		m_scanline_sprites[m_current_oam_pos] = {
+			attribute & 0x40 ? true : false,
+			attribute & 0x20 ? false : true,
+			static_cast<u8>( 4 + ( attribute & 0x03 ) ),
+			static_cast<u8>( x ),
+		};
+		u16 base_addr;
+		if (m_ppu_ctrl.is_flag_set(Control::Flags::LARGE_SPRITES))
+		{
+			base_addr =
+				// base nametable address
+				0x1000 * ( id & 0x01 )
+				// sprite pos
+				| 16 * ( ( id & ~0x01 ) >> 1 )
+				// nametable y position
+				| ( y_pos >= 8 ? y_pos + 8 : y_pos );
+		}
+		else
+		{
+			base_addr =
+				// base nametable address
+				( m_ppu_ctrl & Control::Flags::SPRITE_PATTERN_ADDR ) << 9
+				// sprite pos
+				| 16 * id
+				// nametable y position
+				| y_pos;
+		}
+		m_current_sprite_addr = base_addr;
+		u8 lo_plane_bits = memory_read(m_current_sprite_addr);
+		// http://graphics.stanford.edu/~seander/bithacks.html#ReverseByteWith64Bits
+		if (m_scanline_sprites[m_current_oam_pos].flip_horizontally)
+		{
+			lo_plane_bits = BitReverseTable256[lo_plane_bits];
+		}
+		m_sprite_shifter_pattern_lo[m_current_oam_pos] = lo_plane_bits;
+		break;
+	}
+	// sprite msbits
+	case 7:
+	{
+		u8 hi_plane_bits = memory_read(m_current_sprite_addr + 8);
+		if (m_scanline_sprites[m_current_oam_pos].flip_horizontally)
+		{
+			hi_plane_bits = BitReverseTable256[hi_plane_bits];
+		}
+		m_sprite_shifter_pattern_hi[m_current_oam_pos] = hi_plane_bits;
+		m_current_oam_pos++;
+		break;
+	}
+	default:
+		break;
+	}
+
+
 }
 
 u8 PPU::get_vram_increment_mode() const
@@ -816,7 +983,7 @@ u8 PPU::get_vram_increment_mode() const
 
 u8 PPU::get_sprite_y_size() const
 {
-	return m_ppu_ctrl.is_flag_set(Control::Flags::SPRITE_SIZE_SELECT) ? 16 : 8;
+	return m_ppu_ctrl.is_flag_set(Control::Flags::LARGE_SPRITES) ? 16 : 8;
 }
 
 
@@ -880,7 +1047,15 @@ void PPU::write_palette_ram_indexes(u16 addr, u8 val)
 
 u32 PPU::get_color_for_pixel()
 {
-	u32 color = 0;
+	bool sprite_0_rendering = 0;
+	u8 bg_pixel = 0;
+	u8 bg_palette = 0;
+	u8 sprite_pixel = 0;
+	bool sprite_priority = false;
+	u8 sprite_palette = 0;
+
+	u8 pixel = 0;
+	u8 palette = 0;
 	if (can_show_background())
 	{
 		const u16 bit_mux = 0x8000 >> m_x;
@@ -888,18 +1063,102 @@ u32 PPU::get_color_for_pixel()
 		const u8 p0_pixel = ( m_bg_shifter_pattern_lo & bit_mux ) > 0;
 		const u8 p1_pixel = ( m_bg_shifter_pattern_hi & bit_mux ) > 0;
 
-		const u8 bg_pixel = ( p1_pixel << 1 ) | p0_pixel;
+		bg_pixel = ( p1_pixel << 1 ) | p0_pixel;
 
 		const u8 bg_pal0 = ( m_bg_shifter_attrib_lo & bit_mux ) > 0;
 		const u8 bg_pal1 = ( m_bg_shifter_attrib_hi & bit_mux ) > 0;
 
-		const u8 bg_palette = ( bg_pal1 << 1 ) | bg_pal0;
+		bg_palette = ( bg_pal1 << 1 ) | bg_pal0;
+	}
+	if (can_show_sprites())
+	{
+		for (size_t i = 0; i < m_current_sprite_count; i++)
+		{
+			if (m_scanline_sprites[i].x != 0)
+			{
+				continue;
+			}
 
+			const u8 p0_pixel = ( m_sprite_shifter_pattern_lo[i] & 0x80 ) > 0;
+			const u8 p1_pixel = ( m_sprite_shifter_pattern_hi[i] & 0x80 ) > 0;
+			sprite_pixel = ( p1_pixel << 1 ) | p0_pixel;
 
-		color = GetColorFromPalette(bg_palette, bg_pixel);
+			sprite_palette = m_scanline_sprites[i].palette;
+			sprite_priority = m_scanline_sprites[i].priority;
+
+			if (sprite_pixel != 0)
+			{
+				if (i == 0)
+				{
+					sprite_0_rendering = true;
+				}
+				break;
+			}
+		}
 	}
 
-	return color;
+	// priority calculation
+	// ╔══════════╦══════════════╦══════════╦════════════════╗
+	// ║ bg_pixel ║ sprite_pixel ║ priority ║     output     ║
+	// ╠══════════╬══════════════╬══════════╬════════════════╣
+	// │     0    │       0      │     X    │  EXT in $3F00  │
+	// ├──────────┼──────────────┼──────────┼────────────────┤
+	// │     0    │     1-3      │     X    │        SPRITE  │
+	// ├──────────┼──────────────┼──────────┼────────────────┤
+	// │   1-3    │       0      │     X    │            BG  │
+	// ├──────────┼──────────────┼──────────┼────────────────┤
+	// │   1-3    │     1-3      │     0    │         SPRITE │
+	// ├──────────┼──────────────┼──────────┼────────────────┤
+	// │   1-3    │     1-3      │     1    │             BG │
+	// └──────────┴──────────────┴──────────┴────────────────┘
+	if (bg_pixel == 0 && sprite_pixel == 0)
+	{
+		pixel = 0;
+		palette = 0;
+	}
+	else if (bg_pixel == 0 && sprite_pixel != 0)
+	{
+		pixel = sprite_pixel;
+		palette = sprite_palette;
+	}
+	else if (bg_pixel != 0 && sprite_pixel == 0)
+	{
+		pixel = bg_pixel;
+		palette = bg_palette;
+	}
+	else if (bg_pixel != 0 && sprite_pixel != 0 && !sprite_priority)
+	{
+		pixel = bg_pixel;
+		palette = bg_palette;
+	}
+	else if (bg_pixel != 0 && sprite_pixel != 0 && sprite_priority)
+	{
+		pixel = sprite_pixel;
+		palette = sprite_palette;
+	}
+
+	if (sprite_0_rendering && m_added_sprite_0)
+	{
+		if (is_rendering_enabled())
+		{
+			if (!m_ppu_mask.is_flag_set(Mask::SHOW_LEFT_BACKGROUND | Mask::SHOW_LEFT_SPRITE))
+			{
+				if (m_cycle >= 9 && m_cycle < 257)
+				{
+					m_ppu_status.set_flags(Status::SPRITE_0_HIT);
+				}
+			}
+			else
+			{
+				if (m_cycle >= 1 && m_cycle < 257)
+				{
+					m_ppu_status.set_flags(Status::SPRITE_0_HIT);
+				}
+			}
+		}
+	}
+
+	return GetColorFromPalette(palette, pixel);
 }
 
 void PPU::draw_pixel()

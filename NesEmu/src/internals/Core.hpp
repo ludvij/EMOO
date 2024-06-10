@@ -3,6 +3,9 @@
 
 #include <cstdint>
 
+#include <chrono>
+using namespace std::chrono_literals;
+
 /*
 * This file handles global definitions and defaults for the whole emulator
 * It will also contain macros for logs and platform specific copde in case it's needed
@@ -26,6 +29,7 @@ using u32 = uint32_t;
 using i64 =  int64_t;
 using u64 = uint64_t;
 
+
 namespace Emu
 {
 
@@ -47,12 +51,13 @@ struct Configuration
 	u32 CpuClockDivisor;
 	u32 PpuClockDivisor;
 	u32 FrameRate;
+	std::chrono::microseconds FrameTime;
 	float width;
 	float height;
 };
 
-inline constexpr Configuration NTSC{ 12, 4, 60, 256.0f, 240.0f };
-inline constexpr Configuration PAL{ 16, 5, 50, 256.0f, 240.0f };
+inline constexpr Configuration NTSC{ 12, 4, 60, 16667us,  256.0f, 240.0f };
+inline constexpr Configuration PAL{ 16, 5, 50, 20000us, 256.0f, 240.0f };
 
 /*
 * Master clock of the nes

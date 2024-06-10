@@ -62,6 +62,7 @@ void Ui::Component::ShowCPUStatus::OnRender()
 			}
 		}
 		ImGui::EndChild();
+
 		ImGui::PopFont();
 	}
 	ImGui::End();

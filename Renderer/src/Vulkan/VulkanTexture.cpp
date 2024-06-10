@@ -37,7 +37,12 @@ void VulkanBindlessTexture::SetData(void* data)
 	Engine::Get().SetImageData(image, data);
 }
 
-VulkanImGuiTexture::VulkanImGuiTexture(uint32_t w, uint32_t h)
+ImTextureID VulkanTexture::ToImGui() const
+{
+	return static_cast<ImTextureID>( descriptor_set );
+}
+
+VulkanTexture::VulkanTexture(uint32_t w, uint32_t h)
 	: ITexture(w, h)
 {
 	image = Engine::Get().CreateImage({ w, h, 1 }, vk::Format::eR8G8B8A8Unorm, vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferDst);
@@ -55,7 +60,7 @@ VulkanImGuiTexture::VulkanImGuiTexture(uint32_t w, uint32_t h)
 
 }
 
-VulkanImGuiTexture::VulkanImGuiTexture(uint32_t w, uint32_t h, void* data)
+VulkanTexture::VulkanTexture(uint32_t w, uint32_t h, void* data)
 	: ITexture(w, h)
 {
 	image = Engine::Get().CreateImage(data, { w, h, 1 }, vk::Format::eR8G8B8A8Unorm, vk::ImageUsageFlagBits::eTransferDst);
@@ -73,7 +78,7 @@ VulkanImGuiTexture::VulkanImGuiTexture(uint32_t w, uint32_t h, void* data)
 
 }
 
-VulkanImGuiTexture::~VulkanImGuiTexture()
+VulkanTexture::~VulkanTexture()
 {
 	Engine::Get().GetDevice().waitIdle();
 
@@ -81,7 +86,7 @@ VulkanImGuiTexture::~VulkanImGuiTexture()
 	ImGui_ImplVulkan_RemoveTexture(descriptor_set);
 }
 
-void VulkanImGuiTexture::SetData(void* data)
+void VulkanTexture::SetData(void* data)
 {
 	Engine::Get().SetImageData(image, data);
 }

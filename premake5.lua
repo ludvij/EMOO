@@ -1,3 +1,5 @@
+outputDir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
+sdl3 = false
 include "dependencies.lua"
 
 workspace "TFG"	
@@ -18,8 +20,6 @@ workspace "TFG"
 		"MultiProcessorCompile",
 	}
 
-outputDir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
-sdl3 = false
 
 
 
@@ -38,5 +38,9 @@ group "Interface"
 	include "Window"
 	include "Input"
 	include "Renderer"
+group ""
+
+group "Utility"
+	include "FileManager"
 group ""
 include "NesEmu"

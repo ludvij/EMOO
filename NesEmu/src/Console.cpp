@@ -1,7 +1,9 @@
 #include "pch.hpp"
 #include "Console.hpp"
 
-#include <chrono>
+// I'm not writing this
+using namespace std::chrono_literals;
+namespace stdc = std::chrono;
 
 namespace Emu
 {
@@ -92,21 +94,31 @@ void Console::UnloadCartridge()
 	m_bus.ConnectCartridge(nullptr);
 	m_ppu.ConnectCartridge(nullptr);
 }
-
 bool Console::RunFrame()
 {
 	if (!CanRun())
 	{
 		return false;
 	}
-	const auto begin = std::chrono::high_resolution_clock::now();
+	typedef stdc::steady_clock time;
+	//TODO move this to application
+	auto time_sice_last = stdc::duration_cast<stdc::microseconds>( time::now() - m_last_frame_start );
+
+	while (time_sice_last < m_conf.FrameTime)
+	{
+		time_sice_last = stdc::duration_cast<stdc::microseconds>( time::now() - m_last_frame_start );
+	}
+	m_last_frame_start = time::now();
+
 	do
 	{
 		Step();
 	} while (!m_ppu.IsFrameDone() || m_masterClock % m_conf.PpuClockDivisor != 0);
-	const auto end = std::chrono::high_resolution_clock::now();
-	const auto duration = std::chrono::duration_cast<std::chrono::microseconds>( end - begin );
-	m_frame_time =  duration.count() / 1e6;
+
+	const auto end = time::now();
+	const auto duration = stdc::duration_cast<stdc::microseconds>( end - m_last_frame_start );
+	m_frame_time = duration.count() / 1e6;
+	m_time_sice_last_frame = time_sice_last.count() / 1e6;
 	return true;
 }
 

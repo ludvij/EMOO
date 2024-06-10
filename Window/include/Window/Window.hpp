@@ -1,7 +1,10 @@
 #ifndef GRAPHICS_WINDOW_HEADER
 #define GRAPHICS_WINDOW_HEADER
 
+#include <functional>
+#include <unordered_map>
 #include <vulkan/vulkan.h>
+
 namespace Window
 {
 
@@ -9,6 +12,21 @@ struct WindowExtent
 {
 	int w;
 	int h;
+};
+
+enum class Event
+{
+	NONE,
+	RESIZED,
+	MINIMIZED,
+	RESTORED,
+	MAXIMIZED,
+	CLOSE,
+	MOVED,
+	FOCUS_LOST_MOUSE,
+	FOCUS_GAIN_MOUSE,
+	FOCUS_LOST_KEYBOARD,
+	FOCUS_GAIN_KEYBOARD,
 };
 
 class IWindow
@@ -29,7 +47,13 @@ public:
 
 	virtual void BeginImGuiFrame() = 0;
 
-	virtual void ProcessEventForImGui(void* event) = 0;
+	void AddEventFunction(Event e, const std::function<void(IWindow*, void*)>& fn);
+
+	virtual void ProcessEvents(void* event) = 0;
+
+
+protected:
+	std::unordered_map <Event, std::function<void(IWindow*, void*)>> m_event_fn;
 };
 }
 

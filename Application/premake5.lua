@@ -28,7 +28,7 @@ project "Application"
 
 	includedirs {
 		"src",
-		sdl3 and "%{IncludeDir.sdl3}" or "%{IncludeDir.sdl2}",
+		"%{IncludeDir.sdl}",
 		"%{IncludeDir.imgui}",
 		"%{IncludeDir.VulkanSDK}",
 		"%{IncludeDir.glm}",
@@ -41,6 +41,7 @@ project "Application"
 		"%{IncludeDir.Window}",
 		"%{IncludeDir.NesEmu}",
 		"%{IncludeDir.Renderer}",
+		"%{IncludeDir.FileManager}",
 	}
 
 
@@ -49,6 +50,7 @@ project "Application"
 		"NesEmu",
 		"Input",
 		"Window",
+		"FileManager",
 		"Renderer",
 		"%{Library.Vulkan}",
 		-- sdl complains
@@ -60,6 +62,7 @@ project "Application"
 
 	defines {
 		"SDL_MAIN_HANDLED",
+		"IMGUI_DEFINE_MATH_OPERATORS"
 	}
 
 	filter "system:windows"
@@ -81,7 +84,7 @@ project "Application"
 
 		links {
 			"%{Library.freetype_d}",
-			sdl3 and "%{Library.sdl3_d}" or "%{Library.sdl2_d}",
+			"%{Library.sdl_d}",
 		}
 	
 	filter "configurations:Release"
@@ -92,7 +95,7 @@ project "Application"
 		}
 		links {
 			"%{Library.freetype_r}",
-			"%{Library.sdl2_r}",
+			"%{Library.sdl_r}",
 		}
 
 		runtime "release"

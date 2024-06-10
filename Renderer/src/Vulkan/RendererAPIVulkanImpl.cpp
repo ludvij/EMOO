@@ -46,6 +46,7 @@ void RequestResize()
 }
 
 
+// TODO: make it work with normal textures too
 void DrawSprite(const Sprite& sprite)
 {
 	Lud::assert::eq(s_initialized, true, "Did you forgot to call to Renderer::Init ?");
@@ -77,41 +78,31 @@ void DrawSprite(const Sprite& sprite)
 	Engine::Get().SubmitDrawRect(vertices);
 }
 
-ITexture* CreateBindlessTexture(uint32_t w, uint32_t h)
+ITexture* CreateTexture(uint32_t w, uint32_t h, TextureType type)
 {
 	Lud::assert::eq(s_initialized, true, "Did you forgot to call to Renderer::Init ?");
-
-	return new VulkanBindlessTexture(w, h);
+	switch (type)
+	{
+	case Renderer::TextureType::NORMAL: return new VulkanTexture(w, h);
+	case Renderer::TextureType::BINDLESS: return new VulkanBindlessTexture(w, h);
+	default: return nullptr;
+	}
 }
 
-ITexture* CreateBindlessTexture(uint32_t w, uint32_t h, void* data)
+ITexture* CreateTexture(uint32_t w, uint32_t h, void* data, TextureType type)
 {
 	Lud::assert::eq(s_initialized, true, "Did you forgot to call to Renderer::Init ?");
-	return new VulkanBindlessTexture(w, h, data);
+	switch (type)
+	{
+	case Renderer::TextureType::NORMAL: return new VulkanTexture(w, h, data);
+	case Renderer::TextureType::BINDLESS: return new VulkanBindlessTexture(w, h, data);
+	default: return nullptr;
+	}
 }
 
 void BeginImGuiFrame()
 {
 	ImGui_ImplVulkan_NewFrame();
-}
-
-
-ITexture* CreateImGuiTexture(uint32_t w, uint32_t h)
-{
-	Lud::assert::eq(s_initialized, true, "Did you forgot to call to Renderer::Init ?");
-	return new VulkanImGuiTexture(w, h);
-}
-
-ITexture* CreateImGuiTexture(uint32_t w, uint32_t h, void* data)
-{
-	Lud::assert::eq(s_initialized, true, "Did you forgot to call to Renderer::Init ?");
-	return new VulkanImGuiTexture(w, h, data);
-}
-
-ImTextureID TextureAsImgui(ITexture* texture)
-{
-	auto v_tex = std::bit_cast<VulkanImGuiTexture*>( texture );
-	return v_tex->AsImTexture();
 }
 
 ImFont* GetMonospaceFont()

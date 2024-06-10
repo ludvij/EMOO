@@ -1,4 +1,4 @@
-project "Window"
+project "FileManager"
 	kind "StaticLib"
 	language "C++"
 	cppdialect "C++latest"
@@ -7,13 +7,10 @@ project "Window"
 	targetdir ("%{wks.location}/bin/" .. outputDir .. "/%{prj.name}")
 	objdir ("%{wks.location}/bin/intermediates/" .. outputDir .. "/%{prj.name}")
 
-	platform = 'SDL3' and sdl3 or 'SDL2'
 
 	files { 
-		"include/Window/*.hpp", 
-		"src/*.cpp",
-		"include/Window/" .. platform .. "/**.hpp",
-		"src/" .. platform .. "/**.cpp"
+		"include/**.hpp", 
+		"src/**.cpp",
 	}
 
 	flags {
@@ -22,31 +19,28 @@ project "Window"
 
 	includedirs {
 		"src",
-		"include/Window/",
-		"%{IncludeDir.sdl}",
-		"%{IncludeDir.VulkanSDK}",
+		"include/FileManager",
 		"%{IncludeDir.lud_utils}",
-		"%{IncludeDir.imgui}",
 
 	}
 
 	filter "system:windows"
 		systemversion "latest"
 		defines {
-			"WINDOW_PLATFORM_WINDOWS"
+			"FILE_MANAGER_PLATFORM_WINDOWS"
 		}
 	
 
 	filter "configurations:Debug"
 		defines { 
-			"WINDOW_DEBUG" 
+			"FILE_MANAGER_DEBUG" 
 		}
 		runtime "debug"
 		symbols "On"
 
 	filter "configurations:Release"
 		defines { 
-			"WINDOW_NDEBUG" 
+			"FILE_MANAGER_NDEBUG" 
 		}
 		runtime "release"
 		symbols "Off"

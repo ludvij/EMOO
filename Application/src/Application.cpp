@@ -2,6 +2,8 @@
 
 #include <functional>
 #include <iostream>
+#include <memory>
+#include <numeric>
 #include <print>
 #include <ranges>
 #include <vector>
@@ -21,11 +23,8 @@
 
 #include <pfd/portable_file_dialogs.h>
 
-#include <memory>
+#include <FileManager/FileManager.hpp>
 
-#include <numeric>
-
-#include <lud_id.hpp>
 
 #include <utils/Disassembler.hpp>
 
@@ -42,15 +41,13 @@ Application::Application(const Configuration& config)
 	s_instance = this;
 	m_window = std::make_shared<Window::SDL2Window>(m_config.name, m_config.w, m_config.h);
 	m_input = std::make_unique<Input::SDL2Input>();
-	init_button_mapping();
-	init_keyboard_actions();
-	init();
 
+	init();
 
 	const auto w = static_cast<uint32_t>( m_console.GetConfig().width );
 	const auto h = static_cast<uint32_t>( m_console.GetConfig().height );
 
-	m_screen = Renderer::CreateBindlessTexture(w, h);
+	m_screen = Renderer::CreateTexture(w, h, Renderer::TextureType::BINDLESS);
 
 	m_screen_sprite = Renderer::Sprite({}, 0, m_screen);
 }
@@ -88,12 +85,37 @@ void Application::SetUpdate(bool set)
 
 void Application::init()
 {
+	// set app directory to appdata/roaming/EMOO
+	Fman::PushFolder("EMOO");
+	Fman::SetRoot();
+
+
 	Renderer::Init(m_window, true);
+	auto& io = ImGui::GetIO();
+	io.IniFilename = Fman::AllocateFileName("imgui.ini");
+
+	Fman::PushFolder("Test");
+	if (Fman::PushFile("test.txt"))
+	{
+		Fman::Write("asdad\n");
+	}
+	Fman::PopFile();
+	if (Fman::PushFile("test.txt"))
+	{
+		Fman::Write("asdasdasd\n");
+	}
+	Fman::PopFile();
+
 	m_monospace_font = Renderer::GetMonospaceFont();
+
+	init_button_actions();
+	init_keyboard_actions();
+	init_windowevent_actions();
 }
 
-void Application::init_button_mapping()
+void Application::init_button_actions()
 {
+
 	auto press_a = [&](Input::IInput* i)
 		{
 			m_console.GetController(0).SetPressed(Emu::Button::A);
@@ -141,6 +163,7 @@ void Application::init_button_mapping()
 
 void Application::init_keyboard_actions()
 {
+	typedef Input::Key K;
 	auto stop_continue = [&](Input::IInput* i)
 		{
 			INPUT_NOT_REPEATED(i);
@@ -160,7 +183,7 @@ void Application::init_keyboard_actions()
 		{
 			INPUT_REPEAT_AFTER(i, 1000ms);
 			INPUT_REPEAT_EVERY(i, 50ms);
-			INPUT_KEY_MODIFIED(i, Input::Key::RSHIFT, Input::Key::LSHIFT);
+			INPUT_KEY_MODIFIED(i, K::RSHIFT, K::LSHIFT);
 
 			RunFrame();
 		};
@@ -168,7 +191,7 @@ void Application::init_keyboard_actions()
 		{
 			INPUT_REPEAT_AFTER(i, 1000ms);
 			INPUT_REPEAT_EVERY(i, 10ms);
-			INPUT_KEY_MODIFIED(i, Input::Key::RSHIFT, Input::Key::LSHIFT);
+			INPUT_KEY_MODIFIED(i, K::RSHIFT, K::LSHIFT);
 
 			RunPixel();
 		};
@@ -176,14 +199,14 @@ void Application::init_keyboard_actions()
 	auto exit = [&](Input::IInput* i)
 		{
 			INPUT_NOT_REPEATED(i);
-			INPUT_KEY_MODIFIED(i, Input::Key::RSHIFT, Input::Key::LSHIFT);
+			INPUT_KEY_MODIFIED(i, K::RSHIFT, K::LSHIFT);
 
 			Close();
 		};
 	auto reset = [&](Input::IInput* i)
 		{
 			INPUT_NOT_REPEATED(i);
-			INPUT_KEY_MODIFIED(i, Input::Key::RSHIFT, Input::Key::LSHIFT);
+			INPUT_KEY_MODIFIED(i, K::RSHIFT, K::LSHIFT);
 			m_console.Reset();
 		};
 
@@ -191,7 +214,7 @@ void Application::init_keyboard_actions()
 		{
 			INPUT_REPEAT_AFTER(i, 1000ms);
 			INPUT_REPEAT_EVERY(i, 10ms);
-			INPUT_KEY_MODIFIED(i, Input::Key::RCTRL, Input::Key::LCTRL);
+			INPUT_KEY_MODIFIED(i, K::RCTRL, K::LCTRL);
 
 			RunPpuCycle();
 		};
@@ -199,7 +222,7 @@ void Application::init_keyboard_actions()
 		{
 			INPUT_REPEAT_AFTER(i, 1000ms);
 			INPUT_REPEAT_EVERY(i, 10ms);
-			INPUT_KEY_MODIFIED(i, Input::Key::RCTRL, Input::Key::LCTRL);
+			INPUT_KEY_MODIFIED(i, K::RCTRL, K::LCTRL);
 
 			RunCpuCycle();
 		};
@@ -212,18 +235,44 @@ void Application::init_keyboard_actions()
 
 			RunScanline();
 		};
-	m_input->AddKeyboardAction(Input::Key::F9, stop_continue);
-	m_input->AddKeyboardAction(Input::Key::F9, run_frame);
+	m_input->AddKeyboardAction(K::F9, stop_continue);
+	m_input->AddKeyboardAction(K::F9, run_frame);
 
-	m_input->AddKeyboardAction(Input::Key::F10, run_scanline);
-	m_input->AddKeyboardAction(Input::Key::F10, run_pixel);
-	m_input->AddKeyboardAction(Input::Key::F10, run_ppu_cycle);
+	m_input->AddKeyboardAction(K::F10, run_scanline);
+	m_input->AddKeyboardAction(K::F10, run_pixel);
+	m_input->AddKeyboardAction(K::F10, run_ppu_cycle);
 
-	m_input->AddKeyboardAction(Input::Key::F11, run_cpu_instructin);
-	m_input->AddKeyboardAction(Input::Key::F11, run_cpu_cycle);
+	m_input->AddKeyboardAction(K::F11, run_cpu_instructin);
+	m_input->AddKeyboardAction(K::F11, run_cpu_cycle);
 
-	m_input->AddKeyboardAction(Input::Key::F8, reset);
-	m_input->AddKeyboardAction(Input::Key::ESCAPE, exit);
+	m_input->AddKeyboardAction(K::F8, reset);
+	m_input->AddKeyboardAction(K::ESCAPE, exit);
+}
+
+void Application::init_windowevent_actions()
+{
+	typedef Window::Event E;
+	m_window->AddEventFunction(E::RESIZED, [&](Window::IWindow* i, void* event)
+		{
+			Renderer::RequestResize();
+			m_resized = true;
+		});
+	m_window->AddEventFunction(E::MINIMIZED, [&](Window::IWindow* i, void* event)
+		{
+			m_stop_rendering = true;
+		});
+	m_window->AddEventFunction(E::RESTORED, [&](Window::IWindow* i, void* event)
+		{
+			m_stop_rendering = false;
+		});
+	m_window->AddEventFunction(E::CLOSE, [&](Window::IWindow* i, void* event)
+		{
+			auto e = static_cast<SDL_Event*>( event );
+			if (e->window.windowID == i->GetWindowID())
+			{
+				m_should_quit = true;
+			}
+		});
 }
 
 void Application::shutdown()
@@ -296,6 +345,10 @@ void Application::RestartEmulator()
 {
 	//m_console = Emu::Console(Emu::NTSC);
 }
+ImVec2 Application::GetScreenSize()
+{
+	return { m_screen_w, m_screen_h };
+}
 void Application::main_loop()
 {
 	while (!m_should_quit)
@@ -331,35 +384,10 @@ void Application::event_loop()
 		case SDL_QUIT:
 			m_should_quit = true;
 			break;
-		case SDL_WINDOWEVENT:
-		{
-			switch (event.window.event)
-			{
-			case SDL_WINDOWEVENT_RESIZED:
-				Renderer::RequestResize();
-				m_resized = true;
-				break;
-			case SDL_WINDOWEVENT_MINIMIZED:
-				m_stop_rendering = true;
-				break;
-			case SDL_WINDOWEVENT_RESTORED:
-				m_stop_rendering = false;
-				break;
-			case SDL_WINDOWEVENT_CLOSE:
-				if (event.window.windowID == m_window->GetWindowID())
-				{
-					m_should_quit = true;
-				}
-				break;
-			default:
-				break;
-			}
-		}
-		break;
 		default:
 			break;
 		}
-		m_window->ProcessEventForImGui(&event);
+		m_window->ProcessEvents(&event);
 		m_input->ProcessEvents(&event);
 	}
 
@@ -375,7 +403,6 @@ void Application::draw_ui()
 	ImGui::NewFrame();
 	draw_menu_bar();
 	draw_dockspace();
-	ImGui::ShowDemoWindow();
 
 
 	for (const auto& [k, v] : m_components)

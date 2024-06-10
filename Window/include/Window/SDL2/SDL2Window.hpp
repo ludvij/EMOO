@@ -24,17 +24,17 @@ public:
 
 	virtual void InitImguiForVulkan() override;
 
-private:
-	NativeType* m_window;
 
 	// Inherited via IWindow
 	void ShutdownImGuiWindow() override;
 
 	// Inherited via IWindow
-	void ProcessEventForImGui(void* event) override;
+	void ProcessEvents(void* event) override;
 
 	// Inherited via IWindow
 	void BeginImGuiFrame() override;
+private:
+	NativeType* m_window;
 };
 }
 #endif //!GRAPHICS_WINDOW_SDL_WINDOW_HEADER

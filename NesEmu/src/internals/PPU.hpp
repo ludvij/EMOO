@@ -58,9 +58,9 @@ enum Flags : u8
 {
 	NAMETABLE_BASE_ADDR     = 0x03,
 	VRAM_INCREMENT          = 0x04,
-	SPRITE_PATTERN_8_ADDR   = 0x08,
+	SPRITE_PATTERN_ADDR     = 0x08,
 	BACKGROUND_PATTERN_ADDR = 0x10,
-	SPRITE_SIZE_SELECT      = 0x20,
+	LARGE_SPRITES           = 0x20,
 	PPU_MASTER_SELECT       = 0x40,
 	GENERATE_NMI            = 0x80,
 	ALL                     = 0xFF,
@@ -99,6 +99,15 @@ struct RegisterFlags
 	u8 operator | (u8 flags) const;
 
 	u8 reg;
+};
+
+// helper
+struct SpriteInfo
+{
+	bool flip_horizontally{};
+	bool priority{};
+	u8 palette{};
+	u8 x{};
 };
 
 class PPU
@@ -206,7 +215,8 @@ private:
 	void reset_y();
 
 	void load_bg_shifters();
-	void update_bg_shifters();
+	void update_shifters();
+	void load_sprite_shifters();
 
 	u8 get_vram_increment_mode() const;
 	u8 get_sprite_y_size() const;
@@ -235,7 +245,7 @@ private:
 
 	void load_palette();
 
-	void spirte_evaluation();
+	void sprite_evaluation();
 
 	bool is_rendering_enabled();
 
@@ -346,6 +356,10 @@ private:
 	bool m_added_sprite_0{ false };
 
 	u8 m_current_sprite_count{ 0x00 };
+	u8 m_current_oam_pos{ 0x00 };
+	u16 m_current_sprite_addr{ 0x00 };
+
+	std::array<SpriteInfo, 8> m_scanline_sprites;
 
 	std::array<u8, 32> m_secondary_OAM;
 	u8 m_secondary_oam_addr{ 0 };
@@ -356,6 +370,9 @@ private:
 	u16 m_bg_shifter_pattern_hi{ 0x0000 };
 	u16 m_bg_shifter_attrib_lo{ 0x0000 };
 	u16 m_bg_shifter_attrib_hi{ 0x0000 };
+
+	std::array<u16, 8> m_sprite_shifter_pattern_lo{};
+	std::array<u16, 8> m_sprite_shifter_pattern_hi{};
 
 	u16 m_bg_next_tile_addr{ 0x00 };
 	u8 m_bg_next_tile_attrib{ 0x00 };

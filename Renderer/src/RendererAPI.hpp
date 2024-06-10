@@ -22,14 +22,9 @@ void RequestResize();
 void DrawSprite(const Sprite& sprite);
 
 // user needs to delete texture manually
-ITexture* CreateBindlessTexture(uint32_t w, uint32_t h);
+ITexture* CreateTexture(uint32_t w, uint32_t h, TextureType type=TextureType::NORMAL);
 // user needs to delete texture manually
-ITexture* CreateBindlessTexture(uint32_t w, uint32_t h, void* data);
-
-ITexture* CreateImGuiTexture(uint32_t w, uint32_t h);
-ITexture* CreateImGuiTexture(uint32_t w, uint32_t h, void* data);
-
-ImTextureID TextureAsImgui(ITexture* texture);
+ITexture* CreateTexture(uint32_t w, uint32_t h, void* data, TextureType type=TextureType::NORMAL);
 
 ImFont* GetMonospaceFont();
 

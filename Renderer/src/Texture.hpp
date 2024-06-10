@@ -2,6 +2,7 @@
 #define GRAPHICS_RENDERER_TEXTURE_HEADER
 
 #include <cstdint>
+#include <imgui.h>
 
 namespace Renderer
 {
@@ -12,6 +13,13 @@ struct TextureWindow
 	float y0{ 0.0f };
 	float x1{ 1.0f };
 	float y1{ 1.0f };
+};
+
+
+enum class TextureType
+{
+	NORMAL,
+	BINDLESS
 };
 
 class ITexture
@@ -28,6 +36,8 @@ public:
 	};
 	virtual ~ITexture() = default;
 	virtual void SetData(void* data) = 0;
+
+	virtual ImTextureID ToImGui() const;
 
 protected:
 	uint32_t m_w;

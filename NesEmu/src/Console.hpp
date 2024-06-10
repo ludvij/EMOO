@@ -8,6 +8,7 @@
 #include "internals/InputDevice.hpp"
 #include "internals/PPU.hpp"
 
+#include <chrono>
 #include <memory>
 
 namespace Emu
@@ -50,6 +51,11 @@ public:
 	double GetFrameTime() const
 	{
 		return m_frame_time;
+	}
+
+	double GetTimeSinceLast() const
+	{
+		return m_time_sice_last_frame;
 	}
 
 	CPU& GetCpu()
@@ -107,6 +113,7 @@ private:
 	Bus m_bus;
 
 	double m_frame_time{ 0 };
+	double m_time_sice_last_frame{ 0 };
 
 	u64 m_masterClock = 0;
 
@@ -122,6 +129,8 @@ private:
 
 	bool m_cpu_done{ false };
 	bool m_ppu_done{ false };
+
+	std::chrono::time_point<std::chrono::steady_clock> m_last_frame_start;
 
 };
 

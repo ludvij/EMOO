@@ -15,7 +15,7 @@ struct SDL_Window;
 namespace Renderer
 {
 
-class VulkanImGuiTexture;
+class VulkanTexture;
 namespace Detail
 {
 
@@ -219,7 +219,7 @@ private:
 
 	BatchRenderer* m_batcher{ nullptr };
 	friend class BatchRenderer;
-	friend class VulkanImGuiTexture;
+	friend class VulkanTexture;
 };
 
 }

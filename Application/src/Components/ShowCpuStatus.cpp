@@ -2,6 +2,7 @@
 
 #include "Application.hpp"
 
+#include <cppicons/IconsFontAwesome5.hpp>
 #include <imgui.h>
 #include <misc/cpp/imgui_stdlib.h>
 
@@ -26,21 +27,22 @@ void Ui::Component::ShowCPUStatus::OnRender()
 		const auto max = ImGui::GetWindowContentRegionMax();
 		const auto size = { max.x - min.x, max.y - min.y };
 		ImGui::SeparatorText("Registers");
-		if (ImGui::BeginChild("status", {}, ImGuiChildFlags_ResizeY))
+		if (ImGui::BeginChild("status", {}, ImGuiChildFlags_AutoResizeY))
 		{
 			draw_status();
 		}
 		ImGui::EndChild();
 		ImGui::BeginGroup();
 		auto& style = ImGui::GetStyle();
-		const float button_size = ImGui::CalcTextSize("Go to PC").x + style.FramePadding.x * 2;
+		const auto pc_text = "Go to PC";
+		const float button_size = ImGui::CalcTextSize(pc_text).x + style.FramePadding.x * 2;
 		if (ImGui::BeginChild("disassembly", { ImGui::GetContentRegionAvail().x * .7f,0 }))
 		{
 			ImGui::BeginChild("separator_text", ImVec2(ImGui::GetContentRegionAvail().x - button_size - style.ItemSpacing.x, 0), ImGuiChildFlags_AutoResizeY);
 			ImGui::SeparatorText("Disassembly");
 			ImGui::EndChild();
 			ImGui::SameLine();
-			if (ImGui::Button("Go to PC"))
+			if (ImGui::Button(pc_text))
 			{
 				m_track = true;
 			}
@@ -146,8 +148,18 @@ void Ui::Component::ShowCPUStatus::draw_status()
 		//ImGui::Checkbox("Zero",        &z);
 		//ImGui::Checkbox("Carry",       &c);
 		//ImGui::EndDisabled();
-		ImGui::EndGroup();
 	}
+	ImGui::EndGroup();
+	ImGui::SameLine();
+	ImGui::BeginGroup();
+	{
+		ImGui::Text("X register  %03d (%02X)", m_X, m_X);
+		ImGui::Text("Y register  %03d (%02X)", m_Y, m_Y);
+		ImGui::Text("A register  %03d (%02X)", m_A, m_A);
+	}
+	ImGui::EndGroup();
+	ImGui::SameLine(ImGui::GetContentRegionAvail().x * .7f);
+	ImGui::Text("Stack ptr  %03d (%02X)", m_S, m_S);
 }
 
 void Ui::Component::ShowCPUStatus::draw_stack()
@@ -189,8 +201,8 @@ void Ui::Component::ShowCPUStatus::draw_assembly()
 		if (m_PC == pc)
 		{
 			ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.22f, 0.24f, 0.29f, 1.0f));
-			ImGui::BeginChild(pc, {}, ImGuiChildFlags_AutoResizeY);
-			ImGui::Text("   $%04X %s", pc, repr.repr.c_str());
+			ImGui::BeginChild("tracked", {}, ImGuiChildFlags_AutoResizeY);
+			ImGui::Text(" " ICON_FA_ARROW_RIGHT " $%04X %s", pc, repr.repr.c_str());
 			ImGui::EndChild();
 			ImGui::PopStyleColor();
 			if (m_last_pc != m_PC || m_track)

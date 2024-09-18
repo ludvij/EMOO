@@ -14,6 +14,7 @@ project "Application"
 		"assets/**.embed",
 
 		"%{IncludeDir.lud_utils}/**.hpp",
+		"%{IncludeDir.cppicons}/**.hpp",
 
 		"src/**.embed",
 

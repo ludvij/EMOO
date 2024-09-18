@@ -109,15 +109,22 @@ void Application::init()
 	icons_config.PixelSnapH = true;
 	icons_config.GlyphMaxAdvanceX = icon_font_size;
 
-	ImFont* default_font = io.Fonts->AddFontFromMemoryCompressedTTF(
-		OpenSans_compressed_data,
-		OpenSans_compressed_size,
-		base_font_size,
-		&font_config
-	);
 	m_monospace_font = io.Fonts->AddFontFromMemoryCompressedTTF(
 		CascadiaMono_compressed_data,
 		CascadiaMono_compressed_size,
+		base_font_size,
+		&font_config
+	);
+	io.Fonts->AddFontFromMemoryCompressedTTF(
+		fa_solid_900_compressed_data,
+		fa_solid_900_compressed_size,
+		icon_font_size,
+		&icons_config,
+		icons_ranges
+	);
+	ImFont* default_font = io.Fonts->AddFontFromMemoryCompressedTTF(
+		OpenSans_compressed_data,
+		OpenSans_compressed_size,
 		base_font_size,
 		&font_config
 	);
@@ -485,7 +492,7 @@ void Application::draw_menu_bar()
 		m_menu_bar_height = ImGui::GetWindowSize().y;
 		if (ImGui::BeginMenu("File"))
 		{
-			if (ImGui::MenuItem("Load ROM") && m_can_update)
+			if (ImGui::MenuItem(ICON_FA_FOLDER_OPEN " Load ROM") && m_can_update)
 			{
 				// TODO:
 				auto f = pfd::open_file("Chose ROM File", pfd::path::home(),
@@ -506,11 +513,11 @@ void Application::draw_menu_bar()
 					}
 				}
 			}
-			if (ImGui::MenuItem("Reset (shift + F8)"))
+			if (ImGui::MenuItem(ICON_FA_REDO " Reset(shift + F8)"))
 			{
 				m_console.Reset();
 			}
-			if (ImGui::MenuItem("Exit (shift + Esc)"))
+			if (ImGui::MenuItem(ICON_FA_TIMES" Exit"))
 			{
 				Close();
 			}
@@ -518,11 +525,11 @@ void Application::draw_menu_bar()
 		}
 		if (ImGui::BeginMenu("Emulation"))
 		{
-			if (m_emulation_stopped && ImGui::MenuItem("Run (F9)"))
+			if (m_emulation_stopped && ImGui::MenuItem(ICON_FA_PLAY " Run (F9)"))
 			{
 				m_emulation_stopped = false;
 			}
-			else if (!m_emulation_stopped && ImGui::MenuItem("Stop (F9)"))
+			else if (!m_emulation_stopped && ImGui::MenuItem(ICON_FA_PAUSE " Stop (F9)"))
 			{
 				m_emulation_stopped = true;
 			}
@@ -560,9 +567,9 @@ void Application::draw_menu_bar()
 			}
 			ImGui::EndMenu();
 		}
-		if (ImGui::BeginMenu("Status"))
+		if (ImGui::BeginMenu("View"))
 		{
-			if (ImGui::MenuItem("Show PPU status"))
+			if (ImGui::MenuItem(ICON_FA_IMAGE " Show PPU status"))
 			{
 				if (m_components.contains("ppu status"))
 				{
@@ -573,7 +580,7 @@ void Application::draw_menu_bar()
 					AddComponent<Component::ShowPPUStatus>("ppu status", m_monospace_font);
 				}
 			}
-			if (ImGui::MenuItem("Show CPU status"))
+			if (ImGui::MenuItem(ICON_FA_MICROCHIP " Show CPU status"))
 			{
 				if (m_components.contains("cpu status"))
 				{
@@ -584,7 +591,7 @@ void Application::draw_menu_bar()
 					AddComponent<Component::ShowCPUStatus>("cpu status", m_monospace_font);
 				}
 			}
-			if (ImGui::MenuItem("View memory"))
+			if (ImGui::MenuItem(ICON_FA_DATABASE " View memory"))
 			{
 				if (m_components.contains("memory view"))
 				{

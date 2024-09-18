@@ -452,8 +452,8 @@ void Ui::Component::ShowPPUStatus::draw_registers()
 			ImGui::Text("Base nametable address:");
 			ImGui::BeginDisabled();
 			{
-				ImGui::RadioButton("$2000", &nametable, 0);	ImGui::SameLine();
-				ImGui::RadioButton("$2400", &nametable, 1); ImGui::SameLine();
+				ImGui::RadioButton("$2000", &nametable, 0);	//ImGui::SameLine();
+				ImGui::RadioButton("$2400", &nametable, 1); //ImGui::SameLine();
 				ImGui::RadioButton("$2C00", &nametable, 2);
 			}
 			ImGui::EndDisabled();
@@ -493,7 +493,7 @@ void Ui::Component::ShowPPUStatus::draw_registers()
 
 			ImGui::BeginDisabled();
 			{
-				ImGui::Checkbox("Generate NMI at vBlank", &isNmi);
+				ImGui::Checkbox("NMI at vBlank", &isNmi);
 			}
 			ImGui::EndDisabled();
 			ImGui::Dummy(ImGui::CalcTextSize("A"));

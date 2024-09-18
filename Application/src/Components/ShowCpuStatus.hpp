@@ -21,15 +21,22 @@ public:
 private:
 	void draw_status();
 
+	void draw_stack();
+
+	void draw_assembly();
+
+
 private:
 	uint8_t m_A{ 0 };
 	uint8_t m_X{ 0 };
 	uint8_t m_Y{ 0 };
 	uint8_t m_P{ 0 };
 	uint16_t m_PC{ 0 };
-	uint16_t m_S{ 0 };
+	uint8_t m_S{ 0 };
+	uint16_t m_last_pc{ 0 };
 	std::array<uint8_t, 256> m_stack{};
 	A6502::Disassembler m_disassembler;
+	bool m_track{ false };
 
 	std::map<u16, A6502::Disassembly> m_current_pos;
 

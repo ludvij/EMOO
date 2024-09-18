@@ -105,9 +105,12 @@ void BeginImGuiFrame()
 	ImGui_ImplVulkan_NewFrame();
 }
 
-ImFont* GetMonospaceFont()
+void BuildFontTexture()
 {
-	return Engine::Get().GetMonospaceFont();
+	Engine::Get().ImmediateSubmit([&](vk::CommandBuffer cmd)
+		{
+			ImGui_ImplVulkan_CreateFontsTexture();
+		});
 }
 
 }

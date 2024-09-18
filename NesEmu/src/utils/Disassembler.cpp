@@ -36,6 +36,15 @@ void Disassembler::Init(bool use_registers)
 	DisassembleFromAddress(reset, use_registers);
 	DisassembleFromAddress(irq, use_registers);
 	DisassembleFromAddress(nmi, use_registers);
+	std::fstream file("test.txt", std::ios::out);
+	for (const auto& [k, v] : m_cache)
+	{
+		if (!v.label.empty())
+		{
+			file << v.label << ":\n";
+		}
+		file << std::hex << k << std::dec << " " << v.repr << '\n';
+	}
 
 }
 
@@ -132,14 +141,14 @@ void Disassembler::DisassembleFromAddress(size_t begin, bool use_registers)
 		}
 		if (s_is_jump[instr])
 		{
-			if (opcode.instruction == InstructionName::JMP)
+			if (opcode.instruction == InstructionName::JMP && opcode.mode != AddressingModeName::IND)
 			{
 				DisassembleFromAddress(jmp_addr, use_registers);
 				return;
 			}
 			else if (opcode.instruction == InstructionName::JSR)
 			{
-				//disassemble_address(jmp_addr, use_registers);
+				DisassembleFromAddress(jmp_addr, use_registers);
 			}
 			else if (opcode.instruction == InstructionName::RTS)
 			{

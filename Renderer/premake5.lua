@@ -16,8 +16,6 @@ project "Renderer"
 		"%{IncludeDir.vk_bootrstrap}/**.h",
 		"%{IncludeDir.lud_utils}/**.hpp",
 
-		"Fonts/**.embed",
-
 		"Shader/**.comp",
 		"Shader/**.frag",
 		"Shader/**.vert",

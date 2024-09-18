@@ -215,11 +215,11 @@ void Ui::Component::MemoryView::OnUpdate()
 	}
 
 
-	if (!Application::GetConsole().CanRun())
+	if (!Application::Get().GetConsole().CanRun())
 	{
 		return;
 	}
-	const auto& bus = Application::GetConsole().GetBus();
+	const auto& bus = Application::Get().GetConsole().GetBus();
 	u32* buf = new u32[128 * 128];
 	size_t count = 0;
 	for (size_t i = 0; i <= 0xFFFF; i+= 4)
@@ -251,7 +251,7 @@ void Ui::Component::MemoryView::OnUpdate()
 
 void Ui::Component::MemoryView::repr_cpu_ram_16()
 {
-	const auto& bus = Application::GetConsole().GetBus();
+	const auto& bus = Application::Get().GetConsole().GetBus();
 	u32* buf = new u32[64 * 64];
 
 	size_t count = 0;
@@ -270,7 +270,7 @@ void Ui::Component::MemoryView::repr_cpu_ram_16()
 
 void Ui::Component::MemoryView::repr_cpu_ram_2()
 {
-	const auto& bus = Application::GetConsole().GetBus();
+	const auto& bus = Application::Get().GetConsole().GetBus();
 	u32* buf = new u32[128 * 128];
 
 	size_t count = 0;

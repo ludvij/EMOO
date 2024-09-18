@@ -28,41 +28,33 @@ void Ui::Component::ShowCPUStatus::OnRender()
 		ImGui::SeparatorText("Registers");
 		if (ImGui::BeginChild("status", {}, ImGuiChildFlags_ResizeY))
 		{
-
-			ImGui::BeginGroup();
-			{
-				ImGui::Text("PS"); ImGui::SameLine(40);
-				bool n = m_P & 0x80;
-				bool v = m_P & 0x40;
-				bool _ = m_P & 0x20;
-				bool b = m_P & 0x10;
-				bool d = m_P & 0x08;
-				bool i = m_P & 0x04;
-				bool z = m_P & 0x02;
-				bool c = m_P & 0x01;
-				ImGui::TextColored({ !n * 1.0f, n * 1.0f, 0.0f, 1.0f }, "N"); ImGui::SameLine();
-				ImGui::TextColored({ !v * 1.0f, v * 1.0f, 0.0f, 1.0f }, "V"); ImGui::SameLine();
-				ImGui::TextColored({ !_ * 1.0f, _ * 1.0f, 0.0f, 1.0f }, "-"); ImGui::SameLine();
-				ImGui::TextColored({ !b * 1.0f, b * 1.0f, 0.0f, 1.0f }, "B"); ImGui::SameLine();
-				ImGui::TextColored({ !d * 1.0f, d * 1.0f, 0.0f, 1.0f }, "D"); ImGui::SameLine();
-				ImGui::TextColored({ !i * 1.0f, i * 1.0f, 0.0f, 1.0f }, "I"); ImGui::SameLine();
-				ImGui::TextColored({ !z * 1.0f, z * 1.0f, 0.0f, 1.0f }, "Z"); ImGui::SameLine();
-				ImGui::TextColored({ !c * 1.0f, c * 1.0f, 0.0f, 1.0f }, "C");
-				//ImGui::BeginDisabled();
-				//ImGui::Checkbox("Negative",    &n);
-				//ImGui::Checkbox("Overflow",    &v);
-				//ImGui::Checkbox("Unused",      &_);
-				//ImGui::Checkbox("Break",       &b);
-				//ImGui::Checkbox("Decimal",     &d);
-				//ImGui::Checkbox("IRQ disable", &i);
-				//ImGui::Checkbox("Zero",        &z);
-				//ImGui::Checkbox("Carry",       &c);
-				//ImGui::EndDisabled();
-				ImGui::EndGroup();
-			}
+			draw_status();
 		}
 		ImGui::EndChild();
-
+		ImGui::BeginGroup();
+		auto& style = ImGui::GetStyle();
+		const float button_size = ImGui::CalcTextSize("Go to PC").x + style.FramePadding.x * 2;
+		if (ImGui::BeginChild("disassembly", { ImGui::GetContentRegionAvail().x * .7f,0 }))
+		{
+			ImGui::BeginChild("separator_text", ImVec2(ImGui::GetContentRegionAvail().x - button_size - style.ItemSpacing.x, 0), ImGuiChildFlags_AutoResizeY);
+			ImGui::SeparatorText("Disassembly");
+			ImGui::EndChild();
+			ImGui::SameLine();
+			if (ImGui::Button("Go to PC"))
+			{
+				m_track = true;
+			}
+			draw_assembly();
+		}
+		ImGui::EndChild();
+		ImGui::SameLine();
+		if (ImGui::BeginChild("stack", {}))
+		{
+			ImGui::SeparatorText("Stack");
+			draw_stack();
+		}
+		ImGui::EndChild();
+		ImGui::EndGroup();
 		ImGui::PopFont();
 	}
 	ImGui::End();
@@ -79,7 +71,7 @@ void Ui::Component::ShowCPUStatus::OnUpdate()
 	}
 	if (!m_disassembler_initialised)
 	{
-		if (Application::GetConsole().CanRun())
+		if (Application::Get().GetConsole().CanRun())
 		{
 			m_disassembler.Init();
 			m_disassembler_initialised = true;
@@ -89,8 +81,8 @@ void Ui::Component::ShowCPUStatus::OnUpdate()
 			return;
 		}
 	}
-	auto& cpu = Application::GetConsole().GetCpu();
-	auto& bus = Application::GetConsole().GetBus();
+	auto& cpu = Application::Get().GetConsole().GetCpu();
+	auto& bus = Application::Get().GetConsole().GetBus();
 
 	for (size_t i = 0; i < 256; i++)
 	{
@@ -102,14 +94,21 @@ void Ui::Component::ShowCPUStatus::OnUpdate()
 	m_A = cpu.A();
 	m_X = cpu.X();
 	m_Y = cpu.Y();
+	m_last_pc = m_PC;
 	m_PC = cpu.PC();
+
+	if (Application::Get().GetConsole().CanRun())
+	{
+		// just to disassemble in case it's not
+		m_disassembler.Get(m_PC);
+	}
 
 }
 
 void Ui::Component::ShowCPUStatus::OnCreate()
 {
-	m_disassembler.ConnectBus(&Application::GetConsole().GetBus());
-	if (Application::GetConsole().CanRun())
+	m_disassembler.ConnectBus(&Application::Get().GetConsole().GetBus());
+	if (Application::Get().GetConsole().CanRun())
 	{
 		m_disassembler.Init();
 		m_disassembler_initialised = true;
@@ -118,5 +117,94 @@ void Ui::Component::ShowCPUStatus::OnCreate()
 
 void Ui::Component::ShowCPUStatus::draw_status()
 {
+	ImGui::BeginGroup();
+	{
+		ImGui::Text("PS"); ImGui::SameLine(40);
+		bool n = m_P & 0x80;
+		bool v = m_P & 0x40;
+		bool _ = m_P & 0x20;
+		bool b = m_P & 0x10;
+		bool d = m_P & 0x08;
+		bool i = m_P & 0x04;
+		bool z = m_P & 0x02;
+		bool c = m_P & 0x01;
+		ImGui::TextColored({ !n * 1.0f, n * 1.0f, 0.0f, 1.0f }, "N"); ImGui::SameLine();
+		ImGui::TextColored({ !v * 1.0f, v * 1.0f, 0.0f, 1.0f }, "V"); ImGui::SameLine();
+		ImGui::TextColored({ !_ * 1.0f, _ * 1.0f, 0.0f, 1.0f }, "-"); ImGui::SameLine();
+		ImGui::TextColored({ !b * 1.0f, b * 1.0f, 0.0f, 1.0f }, "B"); ImGui::SameLine();
+		ImGui::TextColored({ !d * 1.0f, d * 1.0f, 0.0f, 1.0f }, "D"); ImGui::SameLine();
+		ImGui::TextColored({ !i * 1.0f, i * 1.0f, 0.0f, 1.0f }, "I"); ImGui::SameLine();
+		ImGui::TextColored({ !z * 1.0f, z * 1.0f, 0.0f, 1.0f }, "Z"); ImGui::SameLine();
+		ImGui::TextColored({ !c * 1.0f, c * 1.0f, 0.0f, 1.0f }, "C");
+		//ImGui::BeginDisabled();
+		//ImGui::Checkbox("Negative",    &n);
+		//ImGui::Checkbox("Overflow",    &v);
+		//ImGui::Checkbox("Unused",      &_);
+		//ImGui::Checkbox("Break",       &b);
+		//ImGui::Checkbox("Decimal",     &d);
+		//ImGui::Checkbox("IRQ disable", &i);
+		//ImGui::Checkbox("Zero",        &z);
+		//ImGui::Checkbox("Carry",       &c);
+		//ImGui::EndDisabled();
+		ImGui::EndGroup();
+	}
+}
 
+void Ui::Component::ShowCPUStatus::draw_stack()
+{
+	const auto& bus = Application::Get()
+		.GetConsole()
+		.GetBus();
+	const u8 current_stack_position = m_S;
+	const u16 stack_vector = Emu::CPU::STACK_VECTOR;
+	std::vector<u8> stack_values;
+	stack_values.reserve(0xFF - current_stack_position);
+	// could be in the same loop, but whatever
+	for (int i = current_stack_position; i <= 0xFF; i++)
+	{
+		stack_values.push_back(bus.Read(static_cast<u16>( stack_vector + i )));
+	}
+	u16 c = current_stack_position;
+	for (const auto& sp : stack_values)
+	{
+		ImGui::Text("$%04X %02X", stack_vector + c++, sp);
+	}
+}
+
+void Ui::Component::ShowCPUStatus::draw_assembly()
+{
+
+	const auto& assembly = m_disassembler.GetCache();
+
+
+
+	ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.16f, 0.17f, 0.2f, 1.0f));
+	ImGui::BeginChild("scroll");
+	for (const auto& [pc, repr] : assembly)
+	{
+		if (!repr.label.empty())
+		{
+			ImGui::Text(" %s:", repr.label.c_str());
+		}
+		if (m_PC == pc)
+		{
+			ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.22f, 0.24f, 0.29f, 1.0f));
+			ImGui::BeginChild(pc, {}, ImGuiChildFlags_AutoResizeY);
+			ImGui::Text("   $%04X %s", pc, repr.repr.c_str());
+			ImGui::EndChild();
+			ImGui::PopStyleColor();
+			if (m_last_pc != m_PC || m_track)
+			{
+				m_track = false;
+				// scroll to current pc
+				ImGui::SetScrollHereY(.5f);
+			}
+		}
+		else
+		{
+			ImGui::Text("   $%04X %s", pc, repr.repr.c_str());
+		}
+	}
+	ImGui::EndChild();
+	ImGui::PopStyleColor();
 }

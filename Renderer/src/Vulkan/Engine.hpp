@@ -86,12 +86,6 @@ public:
 	void SubmitDrawRect(std::span<Detail::Vertex> vertices);
 
 
-	ImFont* GetMonospaceFont()
-	{
-		return m_monospace_font;
-	}
-
-
 	vk::Device GetDevice() const
 	{
 		return m_device;
@@ -212,8 +206,6 @@ private:
 	vk::CommandPool   m_imm_command_pool;
 
 	bool m_use_imgui = true;
-
-	ImFont* m_monospace_font{ nullptr };
 
 private:
 

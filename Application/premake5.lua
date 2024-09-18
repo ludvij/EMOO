@@ -11,6 +11,7 @@ project "Application"
 		"src/**.hpp", 
 		"src/**.h", 
 		"src/**.cpp",
+		"assets/**.embed",
 
 		"%{IncludeDir.lud_utils}/**.hpp",
 
@@ -36,6 +37,7 @@ project "Application"
 		"%{IncludeDir.vk_bootrstrap}",
 		"%{IncludeDir.nativeFileDialog}",
 		"%{IncludeDir.pfd}",
+		"%{IncludeDir.cppicons}",
 
 		"%{IncludeDir.Input}",
 		"%{IncludeDir.Window}",

@@ -42,7 +42,7 @@ public:
 
 	void Error(const char* name, std::string_view msg);
 
-	static Emu::Console& GetConsole();
+	Emu::Console& GetConsole();
 
 	static void SetUpdate(bool set);
 

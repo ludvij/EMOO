@@ -17,11 +17,14 @@
 #include "Components/ShowCPUStatus.hpp"
 #include "Components/ShowPPUStatus.hpp"
 
+#include <assets/fonts/CascadiaMono-Regular.embed>
+#include <assets/fonts/fa-solid-900.embed>
+#include <assets/fonts/OpenSans-Regular.embed>
+#include <cppicons/IconsFontAwesome5.hpp>
 #include <Input/SDL2/SDL2Input.hpp>
+#include <pfd/portable_file_dialogs.h>
 #include <RendererAPI.hpp>
 #include <Window/SDL2/SDL2Window.hpp>	
-
-#include <pfd/portable_file_dialogs.h>
 
 #include <FileManager/FileManager.hpp>
 
@@ -75,7 +78,7 @@ void Application::Error(const char* name, std::string_view msg)
 
 Emu::Console& Application::GetConsole()
 {
-	return Get().m_console;
+	return m_console;
 }
 
 void Application::SetUpdate(bool set)
@@ -94,20 +97,39 @@ void Application::init()
 	auto& io = ImGui::GetIO();
 	io.IniFilename = Fman::AllocateFileName("imgui.ini");
 
-	Fman::PushFolder("Test");
-	if (Fman::PushFile("test.txt"))
-	{
-		Fman::Write("asdad\n");
-	}
-	Fman::PopFile();
-	if (Fman::PushFile("test.txt"))
-	{
-		Fman::Write("asdasdasd\n");
-	}
-	Fman::PopFile();
+	const float base_font_size = 20.0f;
+	const float icon_font_size = base_font_size * 2.0f / 3.0f;
+	static const ImWchar icons_ranges[] = { ICON_MIN_FA, ICON_MAX_16_FA, 0 };
 
-	m_monospace_font = Renderer::GetMonospaceFont();
+	ImFontConfig font_config;
+	font_config.FontDataOwnedByAtlas = true;
 
+	ImFontConfig icons_config;
+	icons_config.MergeMode = true;
+	icons_config.PixelSnapH = true;
+	icons_config.GlyphMaxAdvanceX = icon_font_size;
+
+	ImFont* default_font = io.Fonts->AddFontFromMemoryCompressedTTF(
+		OpenSans_compressed_data,
+		OpenSans_compressed_size,
+		base_font_size,
+		&font_config
+	);
+	m_monospace_font = io.Fonts->AddFontFromMemoryCompressedTTF(
+		CascadiaMono_compressed_data,
+		CascadiaMono_compressed_size,
+		base_font_size,
+		&font_config
+	);
+	io.Fonts->AddFontFromMemoryCompressedTTF(
+		fa_solid_900_compressed_data,
+		fa_solid_900_compressed_size,
+		icon_font_size,
+		&icons_config,
+		icons_ranges
+	);
+	io.FontDefault = default_font;
+	Renderer::BuildFontTexture();
 	init_button_actions();
 	init_keyboard_actions();
 	init_windowevent_actions();
@@ -397,8 +419,8 @@ void Application::event_loop()
 
 void Application::draw_ui()
 {
-	m_window->BeginImGuiFrame();
 	Renderer::BeginImGuiFrame();
+	m_window->BeginImGuiFrame();
 
 	ImGui::NewFrame();
 	draw_menu_bar();

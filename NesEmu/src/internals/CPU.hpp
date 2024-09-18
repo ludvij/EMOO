@@ -126,6 +126,15 @@ public:  // Public functions
 		return m_totalCycles;
 	}
 
+public:
+	constexpr static u16 STACK_VECTOR    = 0x0100;
+	constexpr static u16 IRQ_VECTOR_LO   = 0xFFFE;
+	constexpr static u16 IRQ_VECTOR_HI   = 0xFFFF;
+	constexpr static u16 NMI_VECTOR_LO   = 0xFFFA;
+	constexpr static u16 NMI_VECTOR_HI   = 0xFFFB;
+	constexpr static u16 RESET_VECTOR_LO = 0xFFFC;
+	constexpr static u16 RESET_VECTOR_HI = 0xFFFD;
+
 private: // private functions
 	u8 memoryRead(u16 addr) const;
 	void memoryWrite(u16 addr, u8 val) const;
@@ -333,13 +342,7 @@ private: // private members
 	// Stack Pointer
 	u8 m_S = 0;
 	// vectors
-	constexpr static u16 STACK_VECTOR    = 0x0100;
-	constexpr static u16 IRQ_VECTOR_LO   = 0xFFFE;
-	constexpr static u16 IRQ_VECTOR_HI   = 0xFFFF;
-	constexpr static u16 NMI_VECTOR_LO   = 0xFFFA;
-	constexpr static u16 NMI_VECTOR_HI   = 0xFFFB;
-	constexpr static u16 RESET_VECTOR_LO = 0xFFFC;
-	constexpr static u16 RESET_VECTOR_HI = 0xFFFD;
+
 
 
 	// Status register

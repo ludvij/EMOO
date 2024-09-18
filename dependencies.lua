@@ -15,6 +15,7 @@ IncludeDir["Renderer"]      = "%{wks.location}/Renderer/src"
 IncludeDir["Input"]         = "%{wks.location}/Input/include"
 IncludeDir["Window"]        = "%{wks.location}/Window/include"
 IncludeDir["FileManager"]   = "%{wks.location}/FileManager/include"
+IncludeDir["cppicons"]      = "%{wks.location}/Application/vendor/cppicons/include"
 
 LibraryDir = {}
 LibraryDir["VulkanSDK"]  = "%{wks.location}/%{VULKAN_SDK}/Lib"

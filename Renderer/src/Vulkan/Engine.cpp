@@ -6,9 +6,6 @@
 #include <backends/imgui_impl_vulkan.h>
 #include <imgui.h>
 
-#include "Fonts/CascadiaMono-Regular.embed"
-#include "Fonts/OpenSans-Regular.embed"
-
 #include <glm/gtx/transform.hpp>
 
 #include <lud_assert.hpp>
@@ -895,19 +892,11 @@ void Engine::init_imgui()
 
 	ImGui_ImplVulkan_Init(&init_info);
 
-	ImFontConfig fontConfig;
-	fontConfig.FontDataOwnedByAtlas = true;
-	io.Fonts->AddFontDefault();
-	ImFont* main_font = io.Fonts->AddFontFromMemoryCompressedTTF(OpenSans_compressed_data, OpenSans_compressed_size, 20.0f, &fontConfig);
-	m_monospace_font = io.Fonts->AddFontFromMemoryCompressedTTF(CascadiaMono_compressed_data, CascadiaMono_compressed_size, 20.0f, &fontConfig);
-	io.FontDefault = main_font;
-	io.Fonts->Build();
 
-
-	ImmediateSubmit([&](vk::CommandBuffer cmd)
-		{
-			ImGui_ImplVulkan_CreateFontsTexture();
-		});
+	//ImmediateSubmit([&](vk::CommandBuffer cmd)
+	//	{
+	//		ImGui_ImplVulkan_CreateFontsTexture();
+	//	});
 
 	m_deletion_queue.PushFunction([=]()
 		{

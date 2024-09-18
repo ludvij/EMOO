@@ -26,8 +26,8 @@ ITexture* CreateTexture(uint32_t w, uint32_t h, TextureType type=TextureType::NO
 // user needs to delete texture manually
 ITexture* CreateTexture(uint32_t w, uint32_t h, void* data, TextureType type=TextureType::NORMAL);
 
-ImFont* GetMonospaceFont();
-
 void BeginImGuiFrame();
+
+void BuildFontTexture();
 }
 #endif //! GRAPHICS_RENDERER_API_HEADER

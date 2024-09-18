@@ -116,15 +116,15 @@ void Ui::Component::ShowPPUStatus::OnUpdate()
 		return;
 	}
 
-	auto& ppu = Application::GetConsole().GetPpu();
-	auto& bus = Application::GetConsole().GetBus();
+	auto& ppu = Application::Get().GetConsole().GetPpu();
+	auto& bus = Application::Get().GetConsole().GetBus();
 	m_control = bus.Peek(0x2000);
 	m_mask    = bus.Peek(0x2001);
 	m_status  = bus.Peek(0x2002);
 	m_cycles  = ppu.GetCycles();
 	m_frames  = ppu.GetFrames();
-	m_frame_time = static_cast<float>( Application::GetConsole().GetFrameTime() * 1000 );
-	m_time_since_last = static_cast<float>( Application::GetConsole().GetTimeSinceLast() * 1000 );
+	m_frame_time = static_cast<float>( Application::Get().GetConsole().GetFrameTime() * 1000 );
+	m_time_since_last = static_cast<float>( Application::Get().GetConsole().GetTimeSinceLast() * 1000 );
 	m_latch = ppu.W();
 	m_temp = ppu.T();
 	m_addr = ppu.V();
@@ -268,7 +268,7 @@ void Ui::Component::ShowPPUStatus::draw_oam()
 			for (size_t i = 0; i < 64; i++)
 			{
 				const auto& oam = m_oam[i];
-				if (!m_is_tracked[i] && oam.y > static_cast<u8>( Application::GetConsole().GetConfig().height ))
+				if (!m_is_tracked[i] && oam.y > static_cast<u8>( Application::Get().GetConsole().GetConfig().height ))
 				{
 					continue;
 				}

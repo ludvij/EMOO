@@ -20,6 +20,8 @@ struct Disassembly
 	std::string repr{ };
 	std::string label{ };
 	u8 size{ 0 };
+	const char* instruction;
+	const char* addressing;
 };
 
 class Disassembler

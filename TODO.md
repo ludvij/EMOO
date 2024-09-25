@@ -1,15 +1,15 @@
 # TODO
 ## Mandatory
-- [ ] Finish PPU
-  - [ ] PPU sprites
-- [ ] Better CPU status UI
-  - [ ] Show disassembly
-    - [ ] Not disassemble overlapping instructions
+- [x] Finish PPU
+  - [x] PPU sprites
+- [x] Better CPU status UI
+  - [x] Show disassembly
+    - [x] Not disassemble overlapping instructions
     - [ ] Cache invalidation in case of bank switching :(
   - [x] Show registers
   - [ ] Show cycles
   - [x] Show Processor status flags
-  - [ ] Show stack
+  - [x] Show stack
 - [x] Memory view UI
   - [x] Full memory view
   - [x] CPU ram view
@@ -43,5 +43,5 @@
 - [ ] Input system
   - [x] Adding missing keys
   - [ ] Adding Joystick functionality for gamepad
-- [ ] Fix tooltips (maybe rolling back to sdl2)
+- [x] Fix tooltips (maybe rolling back to sdl2)
  

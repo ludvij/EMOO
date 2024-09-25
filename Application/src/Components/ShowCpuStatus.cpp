@@ -2,11 +2,15 @@
 
 #include "Application.hpp"
 
+
 #include <cppicons/IconsFontAwesome5.hpp>
 #include <imgui.h>
 #include <misc/cpp/imgui_stdlib.h>
 
 #include <ranges>
+
+#include <embedding/explanations.hpp>
+
 
 Ui::Component::ShowCPUStatus::ShowCPUStatus(const std::string_view name, ImFont* monospace)
 	: IComponent(name)
@@ -215,6 +219,23 @@ void Ui::Component::ShowCPUStatus::draw_assembly()
 		else
 		{
 			ImGui::Text("   $%04X %s", pc, repr.repr.c_str());
+		}
+		if (ImGui::BeginItemTooltip())
+		{
+			ImGui::Text("%s - %s", map_title.at(repr.instruction), map_title.at(repr.addressing));
+			ImGui::Dummy(ImVec2(400, 0));
+			ImGui::Separator();
+			ImGui::Indent();
+			if (repr.size > 1)
+			{
+				ImGui::TextWrapped(map_explanation.at(repr.instruction), map_explanation.at(repr.addressing));
+			}
+			else
+			{
+				ImGui::TextWrapped(map_explanation.at(repr.instruction));
+			}
+			ImGui::Unindent();
+			ImGui::EndTooltip();
 		}
 	}
 	ImGui::EndChild();

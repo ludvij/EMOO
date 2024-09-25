@@ -17,9 +17,9 @@
 #include "Components/ShowCPUStatus.hpp"
 #include "Components/ShowPPUStatus.hpp"
 
-#include <assets/fonts/CascadiaMono-Regular.embed>
-#include <assets/fonts/fa-solid-900.embed>
-#include <assets/fonts/OpenSans-Regular.embed>
+#include <resources/fonts/CascadiaMono-Regular.embed>
+#include <resources/fonts/fa-solid-900.embed>
+#include <resources/fonts/OpenSans-Regular.embed>
 #include <cppicons/IconsFontAwesome5.hpp>
 #include <Input/SDL2/SDL2Input.hpp>
 #include <pfd/portable_file_dialogs.h>

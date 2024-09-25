@@ -4,8 +4,8 @@
 namespace A6502
 {
 std::string FormatAddressingMode(AddressingModeName am, u16 val=0);
-std::string GetInstructionName(InstructionName i);
-
+const char* GetInstructionName(InstructionName i);
+const char* GetAddressingModeName(AddressingModeName a);
 
 Disassembler& Disassembler::ConnectBus(Emu::Bus* bus)
 {
@@ -134,6 +134,8 @@ void Disassembler::DisassembleFromAddress(size_t begin, bool use_registers)
 
 		m_cache[caddr].repr = str_rep;
 		m_cache[caddr].size = bytes;
+		m_cache[caddr].instruction = GetInstructionName(opcode.instruction);
+		m_cache[caddr].addressing = GetAddressingModeName(opcode.mode);
 
 		if (opcode.instruction == InstructionName::STP)
 		{
@@ -178,109 +180,135 @@ void Disassembler::DisassembleFromAddress(size_t begin, bool use_registers)
 
 static std::string FormatAddressingMode(AddressingModeName am, u16 val /*=0*/)
 {
+	using A = A6502::AddressingModeName;
 	switch (am)
 	{
-	case A6502::AddressingModeName::IMP: return "";
-	case A6502::AddressingModeName::ACC: return " A";
-	case A6502::AddressingModeName::IMM: return std::format(" #${:02X}", val);
-	case A6502::AddressingModeName::IM2: return "";
-	case A6502::AddressingModeName::ZPI: return std::format(" ${:02X}", val);
-	case A6502::AddressingModeName::ZPX: return std::format(" ${:02X},X", val);
-	case A6502::AddressingModeName::ZPY: return std::format(" ${:02X},Y", val);
-	case A6502::AddressingModeName::REL: return std::format(" *${:+02X}", val); // will never happen
-	case A6502::AddressingModeName::ABS: return std::format(" ${:04X}", val);
-	case A6502::AddressingModeName::ABX: return std::format(" ${:04X},X", val);
-	case A6502::AddressingModeName::ABY: return std::format(" ${:04X},Y", val);
-	case A6502::AddressingModeName::IND: return std::format(" (${:04X})", val);
-	case A6502::AddressingModeName::INX: return std::format(" (${:04X},X)", val);
-	case A6502::AddressingModeName::INY: return std::format(" (${:04X}),Y", val);
+	case A::IMP: return "";
+	case A::ACC: return " A";
+	case A::IMM: return std::format(" #${:02X}", val);
+	case A::IM2: return "";
+	case A::ZPI: return std::format(" ${:02X}", val);
+	case A::ZPX: return std::format(" ${:02X},X", val);
+	case A::ZPY: return std::format(" ${:02X},Y", val);
+	case A::REL: return std::format(" *${:+02X}", val); // will never happen
+	case A::ABS: return std::format(" ${:04X}", val);
+	case A::ABX: return std::format(" ${:04X},X", val);
+	case A::ABY: return std::format(" ${:04X},Y", val);
+	case A::IND: return std::format(" (${:04X})", val);
+	case A::INX: return std::format(" (${:04X},X)", val);
+	case A::INY: return std::format(" (${:04X}),Y", val);
 	default: std::unreachable();
 	}
 }
-std::string GetInstructionName(InstructionName i)
+const char* GetInstructionName(InstructionName i)
 {
+	using I = A6502::InstructionName;
 	switch (i)
 	{
-	case A6502::InstructionName::ADC: return "ADC";
-	case A6502::InstructionName::AND: return "AND";
-	case A6502::InstructionName::ASL: return "ASL";
-	case A6502::InstructionName::BCC: return "BCC";
-	case A6502::InstructionName::BCS: return "BCS";
-	case A6502::InstructionName::BEQ: return "BEQ";
-	case A6502::InstructionName::BIT: return "BIT";
-	case A6502::InstructionName::BMI: return "BMI";
-	case A6502::InstructionName::BNE: return "BNE";
-	case A6502::InstructionName::BPL: return "BPL";
-	case A6502::InstructionName::BRK: return "BRK";
-	case A6502::InstructionName::BVC: return "BVC";
-	case A6502::InstructionName::BVS: return "BVS";
-	case A6502::InstructionName::CLC: return "CLC";
-	case A6502::InstructionName::CLD: return "CLD";
-	case A6502::InstructionName::CLI: return "CLI";
-	case A6502::InstructionName::CLV: return "CLV";
-	case A6502::InstructionName::CMP: return "CMP";
-	case A6502::InstructionName::CPX: return "CPX";
-	case A6502::InstructionName::CPY: return "CPY";
-	case A6502::InstructionName::DEC: return "DEC";
-	case A6502::InstructionName::DEX: return "DEX";
-	case A6502::InstructionName::DEY: return "DEY";
-	case A6502::InstructionName::EOR: return "EOR";
-	case A6502::InstructionName::INC: return "INC";
-	case A6502::InstructionName::INX: return "INX";
-	case A6502::InstructionName::INY: return "INY";
-	case A6502::InstructionName::JMP: return "JMP";
-	case A6502::InstructionName::JSR: return "JSR";
-	case A6502::InstructionName::LDA: return "LDA";
-	case A6502::InstructionName::LDX: return "LDX";
-	case A6502::InstructionName::LDY: return "LDY";
-	case A6502::InstructionName::LSR: return "LSR";
-	case A6502::InstructionName::NOP: return "NOP";
-	case A6502::InstructionName::ORA: return "ORA";
-	case A6502::InstructionName::PHA: return "PHA";
-	case A6502::InstructionName::PHP: return "PHP";
-	case A6502::InstructionName::PLA: return "PLA";
-	case A6502::InstructionName::PLP: return "PLP";
-	case A6502::InstructionName::ROL: return "ROL";
-	case A6502::InstructionName::ROR: return "ROR";
-	case A6502::InstructionName::RTI: return "RTI";
-	case A6502::InstructionName::RTS: return "RTS";
-	case A6502::InstructionName::SBC: return "SBC";
-	case A6502::InstructionName::SEC: return "SEC";
-	case A6502::InstructionName::SED: return "SED";
-	case A6502::InstructionName::SEI: return "SEI";
-	case A6502::InstructionName::STA: return "STA";
-	case A6502::InstructionName::STX: return "STX";
-	case A6502::InstructionName::STY: return "STY";
-	case A6502::InstructionName::TAX: return "TAX";
-	case A6502::InstructionName::TAY: return "TAY";
-	case A6502::InstructionName::TSX: return "TSX";
-	case A6502::InstructionName::TXA: return "TXA";
-	case A6502::InstructionName::TXS: return "TXS";
-	case A6502::InstructionName::TYA: return "TYA";
-	case A6502::InstructionName::ALR: return "ALR";
-	case A6502::InstructionName::ANC: return "ANC";
-	case A6502::InstructionName::ARR: return "ARR";
-	case A6502::InstructionName::AXS: return "AXS";
-	case A6502::InstructionName::LAX: return "LAX";
-	case A6502::InstructionName::SAX: return "SAX";
-	case A6502::InstructionName::DCP: return "DCP";
-	case A6502::InstructionName::ISC: return "ISC";
-	case A6502::InstructionName::RLA: return "RLA";
-	case A6502::InstructionName::RRA: return "RRA";
-	case A6502::InstructionName::SLO: return "SLO";
-	case A6502::InstructionName::SRE: return "SRE";
-	case A6502::InstructionName::DOP: return "DOP";
-	case A6502::InstructionName::TOP: return "TOP";
-	case A6502::InstructionName::STP: return "STP";
-	case A6502::InstructionName::XAA: return "XAA";
-	case A6502::InstructionName::AHX: return "AHX";
-	case A6502::InstructionName::TAS: return "TAS";
-	case A6502::InstructionName::SHY: return "SHY";
-	case A6502::InstructionName::SHX: return "SHX";
-	case A6502::InstructionName::LAS: return "LAS";
+	case I::ADC: return "ADC";
+	case I::AND: return "AND";
+	case I::ASL: return "ASL";
+	case I::BCC: return "BCC";
+	case I::BCS: return "BCS";
+	case I::BEQ: return "BEQ";
+	case I::BIT: return "BIT";
+	case I::BMI: return "BMI";
+	case I::BNE: return "BNE";
+	case I::BPL: return "BPL";
+	case I::BRK: return "BRK";
+	case I::BVC: return "BVC";
+	case I::BVS: return "BVS";
+	case I::CLC: return "CLC";
+	case I::CLD: return "CLD";
+	case I::CLI: return "CLI";
+	case I::CLV: return "CLV";
+	case I::CMP: return "CMP";
+	case I::CPX: return "CPX";
+	case I::CPY: return "CPY";
+	case I::DEC: return "DEC";
+	case I::DEX: return "DEX";
+	case I::DEY: return "DEY";
+	case I::EOR: return "EOR";
+	case I::INC: return "INC";
+	case I::INX: return "INX";
+	case I::INY: return "INY";
+	case I::JMP: return "JMP";
+	case I::JSR: return "JSR";
+	case I::LDA: return "LDA";
+	case I::LDX: return "LDX";
+	case I::LDY: return "LDY";
+	case I::LSR: return "LSR";
+	case I::NOP: return "NOP";
+	case I::ORA: return "ORA";
+	case I::PHA: return "PHA";
+	case I::PHP: return "PHP";
+	case I::PLA: return "PLA";
+	case I::PLP: return "PLP";
+	case I::ROL: return "ROL";
+	case I::ROR: return "ROR";
+	case I::RTI: return "RTI";
+	case I::RTS: return "RTS";
+	case I::SBC: return "SBC";
+	case I::SEC: return "SEC";
+	case I::SED: return "SED";
+	case I::SEI: return "SEI";
+	case I::STA: return "STA";
+	case I::STX: return "STX";
+	case I::STY: return "STY";
+	case I::TAX: return "TAX";
+	case I::TAY: return "TAY";
+	case I::TSX: return "TSX";
+	case I::TXA: return "TXA";
+	case I::TXS: return "TXS";
+	case I::TYA: return "TYA";
+	case I::ALR: return "ALR";
+	case I::ANC: return "ANC";
+	case I::ARR: return "ARR";
+	case I::AXS: return "AXS";
+	case I::LAX: return "LAX";
+	case I::SAX: return "SAX";
+	case I::DCP: return "DCP";
+	case I::ISC: return "ISC";
+	case I::RLA: return "RLA";
+	case I::RRA: return "RRA";
+	case I::SLO: return "SLO";
+	case I::SRE: return "SRE";
+	case I::DOP: return "DOP";
+	case I::TOP: return "TOP";
+	case I::STP: return "STP";
+	case I::XAA: return "XAA";
+	case I::AHX: return "AHX";
+	case I::TAS: return "TAS";
+	case I::SHY: return "SHY";
+	case I::SHX: return "SHX";
+	case I::LAS: return "LAS";
 
 	default: throw std::runtime_error("Don't use that here please");
 
 	}
+}
+
+const char* GetAddressingModeName(AddressingModeName a)
+{
+	using A = A6502::AddressingModeName;
+	switch (a)
+	{
+	case A::IMP: return "IMP";
+	case A::IM2: return "IMP";
+	case A::ACC: return "ACC";
+	case A::IMM: return "IMM";
+	case A::ZPI: return "ZPI";
+	case A::ZPX: return "ZPX";
+	case A::ZPY: return "ZPY";
+	case A::REL: return "REL";
+	case A::ABS: return "ABS";
+	case A::ABX: return "ABX";
+	case A::ABY: return "ABY";
+	case A::IND: return "IND";
+	case A::INX: return "INX";
+	case A::INY: return "INY";
+	default: throw std::runtime_error("Don't use that here please");
+	}
+
 }
 }

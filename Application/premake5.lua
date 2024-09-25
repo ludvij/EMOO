@@ -11,14 +11,15 @@ project "Application"
 		"src/**.hpp", 
 		"src/**.h", 
 		"src/**.cpp",
-		"assets/**.embed",
 
 		"%{IncludeDir.lud_utils}/**.hpp",
 		"%{IncludeDir.cppicons}/**.hpp",
 
 		"src/**.embed",
 
-		"assets/resource.rc"
+		"resources/resource.rc",
+		"resources/texts/*.txf",
+		"resources/fonts/*.embed"
 	}
 
 	flags {
@@ -104,6 +105,14 @@ project "Application"
 		runtime "release"
 		optimize "On"
 
+	filter 'files:resources/texts/*.txf' 
+		buildcommands {
+			'"%{prj.location}/make_ex_file.py"'
+		}
+
+		buildoutputs {
+			"%{prj.location}/src/embedding/explanations.hpp",
+		}
 
 
 	

@@ -22,7 +22,7 @@ Assembler& Assembler::Assemble(const std::string& code)
 	for (const auto& line : ctre::split <"\n">(code))
 	{
 		std::string s = upper(line.str());
-		if (auto m = ctre::search<"\\.([A-Z]+)\\s+([\\$A-F0-9]+)">(s))
+		if (auto m = ctre::search<"\\.([A-Z]+)\\s+\\$([A-F0-9]+)">(s))
 		{
 			const auto directive = m.get<1>();
 			if (directive == "RESET")
@@ -43,7 +43,7 @@ Assembler& Assembler::Assemble(const std::string& code)
 			}
 			else if (directive == "IRQ")
 			{
-				u16 dat = Lud::parse_num<u16>(m.get<1>().view(), 16);
+				u16 dat = Lud::parse_num<u16>(m.get<2>().view(), 16);
 				u8 lo = dat & 0x00FF;
 				u8 hi = ( dat & 0xFF00 ) >> 8;
 				m_bus->Write(0xFFFE, lo);
@@ -51,7 +51,7 @@ Assembler& Assembler::Assemble(const std::string& code)
 			}
 			else if (directive == "AT")
 			{
-				write_pos = Lud::parse_num<u16>(m.get<1>().view(), 16);
+				write_pos = Lud::parse_num<u16>(m.get<2>().view(), 16);
 			}
 		}
 		else if (auto m = ctre::search<"([A-Z]{3})(\\s+([0-9A-FXY,\\-()#\\$]+))?">(s))
@@ -61,6 +61,11 @@ Assembler& Assembler::Assemble(const std::string& code)
 			op.instruction = GetInstructionName(m.get<1>());
 			auto [mode, dat] = ParseAddressingMode(m.get<3>());
 			op.mode = mode;
+			// break is weird
+			if (op.instruction == InstructionName::BRK && op.mode == AddressingModeName::IMP)
+			{
+				op.mode = AddressingModeName::IM2;
+			}
 			auto bytes = GetBytesForAddressingMode(mode);
 
 			if (auto it = std::find(s_instructions.begin(), s_instructions.end(), op); it != s_instructions.end())

@@ -75,7 +75,7 @@ TEST_F(TestSystemFunction, BRK)
 TEST_F(TestSystemFunction, RTI)
 {
 	asse.Assemble(R"(
-		brk
+		brk 
 		rti
 	)");
 

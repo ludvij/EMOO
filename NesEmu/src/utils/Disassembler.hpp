@@ -30,6 +30,7 @@ public:
 	Disassembler& ConnectBus(Emu::Bus* bus);
 
 	Disassembly& Get(u16 addr);
+	bool Contains(u16 addr);
 
 	void Init(bool use_registers=true);
 	std::map<u16, Disassembly>& GetCache();

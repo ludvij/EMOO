@@ -24,7 +24,8 @@ project "NesEmu-test"
 		"%{IncludeDir.lud_utils}",
 	}
 	links {
-		"NesEmu"
+		"NesEmu",
+		"googletest"
 	}
 
 	filter "system:windows"
@@ -40,16 +41,10 @@ project "NesEmu-test"
 		}
 		runtime "debug"
 		symbols "On"
-		links {
-			"%{Library.gtest_d}"
-		}
 
 	filter "configurations:Release"
 		defines { 
 			"NES_EMU_NDEBUG" 
-		}
-		links {
-			"%{Library.gtest_r}"
 		}
 		runtime "release"
 		symbols "Off"

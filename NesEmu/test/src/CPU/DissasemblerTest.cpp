@@ -48,11 +48,12 @@ TEST_F(TestDisassembler, AssembleDisassemble)
 		JMP $0001
 	)");
 
+
 	console.Reset();
 
 	A6502::Disassembler d;
 	d.ConnectBus(&console.GetBus());
-	auto res = d.Disassemble();
+	d.Init();
 
 	const auto pc = console.GetCpu().PC();
 
@@ -67,9 +68,9 @@ TEST_F(TestDisassembler, AssembleDisassemble)
 
 	for (const auto& [k, v] : test)
 	{
-		ASSERT_TRUE(res.contains(k)) << std::format("Missing pc value: {:04X}", k);
-		ASSERT_EQ(res[k].repr, v.repr);
-		ASSERT_EQ(res[k].label, v.label);
+		ASSERT_TRUE(d.Contains(k)) << std::format("Missing pc value: {:04X}", k);
+		ASSERT_EQ(d.Get(k).repr, v.repr);
+		ASSERT_EQ(d.Get(k).label, v.label);
 	}
 }
 
@@ -87,23 +88,23 @@ TEST_F(TestDisassembler, DisassembleNesTest)
 
 	A6502::Disassembler d;
 	d.ConnectBus(&console.GetBus());
-	auto res = d.Disassemble();
-
+	d.Init();
 	const auto pc = console.GetCpu().PC();
+
 
 	std::map<u16, A6502::Disassembly> test{
 		{static_cast<u16>( pc + 0x0000 ), {"SEI", "Reset"}},
 		{static_cast<u16>( pc + 0x0001 ), {"CLD", ""}},
 		{static_cast<u16>( pc + 0x0002 ), {"LDX #$FF", ""}},
 		{static_cast<u16>( pc + 0x0004 ), {"TXS", ""}},
-		{static_cast<u16>( pc + 0x0005 ), {"LDA PPU_STATUS", "_label_021F"}},
-		{static_cast<u16>( pc + 0x0008 ), {"BPL _label_021F", ""}},
+		{static_cast<u16>( pc + 0x0005 ), {"LDA PPU_STATUS", "_label_0000"}},
+		{static_cast<u16>( pc + 0x0008 ), {"BPL _label_0000", ""}},
 	};
 
 	for (const auto& [k, v] : test)
 	{
-		ASSERT_TRUE(res.contains(k)) << std::format("Missing pc value: {:04X}", k);
-		ASSERT_EQ(res[k].repr, v.repr);
-		ASSERT_EQ(res[k].label, v.label);
+		ASSERT_TRUE(d.Contains(k)) << std::format("Missing pc value: {:04X}", k);
+		ASSERT_EQ(d.Get(k).repr, v.repr);
+		ASSERT_EQ(d.Get(k).label, v.label);
 	}
 }

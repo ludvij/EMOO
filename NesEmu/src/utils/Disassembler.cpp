@@ -12,13 +12,17 @@ Disassembler& Disassembler::ConnectBus(Emu::Bus* bus)
 	m_bus = bus;
 	return *this;
 }
-Disassembly& Disassembler::Get(u16 addr)
+Disassembly& Disassembler::Get(const u16 addr)
 {
 	if (!m_cache.contains(addr))
 	{
 		DisassembleFromAddress(addr, true);
 	}
 	return m_cache.at(addr);
+}
+bool Disassembler::Contains(const u16 addr)
+{
+	return m_cache.contains(addr);
 }
 void Disassembler::Init(bool use_registers)
 {
@@ -36,16 +40,6 @@ void Disassembler::Init(bool use_registers)
 	DisassembleFromAddress(reset, use_registers);
 	DisassembleFromAddress(irq, use_registers);
 	DisassembleFromAddress(nmi, use_registers);
-	std::fstream file("test.txt", std::ios::out);
-	for (const auto& [k, v] : m_cache)
-	{
-		if (!v.label.empty())
-		{
-			file << v.label << ":\n";
-		}
-		file << std::hex << k << std::dec << " " << v.repr << '\n';
-	}
-
 }
 
 std::map<u16, Disassembly>& Disassembler::GetCache()

@@ -17,13 +17,13 @@
 #include "Components/ShowCPUStatus.hpp"
 #include "Components/ShowPPUStatus.hpp"
 
-#include <resources/fonts/CascadiaMono-Regular.embed>
-#include <resources/fonts/fa-solid-900.embed>
-#include <resources/fonts/OpenSans-Regular.embed>
 #include <cppicons/IconsFontAwesome5.hpp>
 #include <Input/SDL2/SDL2Input.hpp>
 #include <pfd/portable_file_dialogs.h>
 #include <RendererAPI.hpp>
+#include <resources/fonts/CascadiaMono-Regular.embed>
+#include <resources/fonts/fa-solid-900.embed>
+#include <resources/fonts/OpenSans-Regular.embed>
 #include <Window/SDL2/SDL2Window.hpp>	
 
 #include <FileManager/FileManager.hpp>
@@ -513,7 +513,7 @@ void Application::draw_menu_bar()
 					}
 				}
 			}
-			if (ImGui::MenuItem(ICON_FA_REDO " Reset(shift + F8)"))
+			if (ImGui::MenuItem(ICON_FA_REDO " Reset (shift + F8)"))
 			{
 				m_console.Reset();
 			}

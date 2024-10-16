@@ -24,7 +24,7 @@ workspace "TFG"
 
 
 group "Dependencies"
-	include "vendor/premake"
+	-- include "vendor/premake"
 	include "vendor/imgui"
 	include "vendor/googletest/googletest"
 group ""

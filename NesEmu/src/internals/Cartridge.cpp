@@ -49,7 +49,7 @@ Cartridge::Cartridge(const std::string& filePath)
 		break;
 	default:
 		std::println("Mapper [{:d}] Not implemented", m_mapperNumber);
-		std::throw_with_nested(std::runtime_error("Mapper not implemented"));
+		throw std::runtime_error("Mapper not implemented");
 	}
 
 	inputFile.close();
@@ -109,7 +109,7 @@ Cartridge::Cartridge(const u8* data, const size_t size)
 		break;
 	default:
 		std::println("Mapper [{:d}] Not implemented", m_mapperNumber);
-		std::throw_with_nested(std::runtime_error("Mapper not implemented"));
+		throw std::runtime_error("Mapper not implemented");
 	}
 
 	m_valid = true;

@@ -142,19 +142,19 @@ void Disassembler::DisassembleFromAddress(size_t begin, bool use_registers)
 				DisassembleFromAddress(jmp_addr, use_registers);
 				return;
 			}
-			else if (opcode.instruction == InstructionName::JSR)
+			if (opcode.instruction == InstructionName::JSR)
 			{
 				DisassembleFromAddress(jmp_addr, use_registers);
 			}
-			else if (opcode.instruction == InstructionName::RTS)
-			{
-				return;
-			}
-			else if (opcode.instruction == InstructionName::BRK)
+			if (opcode.instruction == InstructionName::BRK)
 			{
 				// no need to do anything, irq is disassembled already
 			}
-			else if (opcode.instruction == InstructionName::RTI)
+			if (opcode.instruction == InstructionName::RTS)
+			{
+				return;
+			}
+			if (opcode.instruction == InstructionName::RTI)
 			{
 				return;
 			}

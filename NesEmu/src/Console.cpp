@@ -144,7 +144,7 @@ bool Console::RunPpuPixel()
 	do
 	{
 		Step();
-	} while (!m_ppu_done || m_ppu.GetCycles() > 256 && m_ppu.GetScanlines() > 240);
+	} while (!m_ppu_done || m_ppu.GetCycles() > 256 || m_ppu.GetScanlines() > 240);
 	return true;
 }
 

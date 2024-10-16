@@ -10,7 +10,8 @@
 **.dotSettings.user
 
 # Binaries
-**/bin
+bin
+bin-int
 **.nes
 **.exe
 # Exceptions

@@ -54,6 +54,27 @@ explanation_SED: Sets the decimal flag
 explanation_NOP: Does nothing
 explanation_BRK: Forces an interrupt request. Pushes the program counter and the processor status to the stack, then loads the interrupt vector ($FFFE/F) into the program counter and sets the break flag
 explanation_RTI: Returns from the interrupt process. Pulls the processor status and program counter from the stack
+explanation_STP: Stops the console, in this emulator, the application is closed, in real hardware this hangs the console
+explanation_ALR: AND %s, then LSR A
+explanation_ANC: AND %s and updates NZ, then copies N to C
+explanation_ARR: AND %s, then ROR A
+explanation_AXS: sets X to (A AND X), and updates NZC
+explanation_LAX: LDA %s, then TAX, saves a byte and two cycles (highly unstable)
+explanation_SAX: Stores the bitwise AND of A and X in %s, no flags are affected
+explanation_DCP: DEC %s, then CMP it
+explanation_ISC: INC %s, then SBC it
+explanation_RLA: ROL %s, then AND it
+explanation_RRA: ROR %s, then ADC it
+explanation_SLO: ASL %s, then ORA it
+explanation_SRE: LSR %s, then EOR it
+explanation_DOP: Does nothing for double the duration of NOP
+explanation_TOP: Does nothing for triple the duration of NOP
+explanation_XAA: Sets the accumulator to the AND of X and %s modifies NZ (highly unstable, unpredictable behavior), sometimes notated as A = (A | magic) & X & imm, magic being random
+explanation_AHX: Sets %s to the AND of A, X and the immediate operand (unstable)
+explanation_TAS: Sets S to the AND of A and X, then sets %s to the AND of S and the immediate operand (unstable)
+explanation_SHY: Sets %s to the AND of Y and the immediate operand (unstable)
+explanation_SHX: Sets %s to the AND of X and the immediate operand (unstable)
+explanation_LAS: Sets A, X and S to the AND of %s and S, modifies NZ
 explanation_IMM: The next byte in the program
 explanation_IMP: 
 explanation_ACC: the accumulator
@@ -123,6 +144,28 @@ title_SEI: Set interrupt
 title_BRK: Break
 title_NOP: No operation
 title_RTI: Return from interrupt
+title_STP: Stop
+title_ALR: [Unofficial] Combined operation
+title_ANC: [Unofficial] Combined operation
+title_ARR: [Unofficial] Combined operation
+title_AXS: [Unofficial] Combined operation
+title_LAX: [Unofficial] Combined operation
+title_SAX: [Unofficial] Combined operation
+title_DCP: [Unofficial] RMW instructions
+title_ISC: [Unofficial] RMW instructions
+title_RLA: [Unofficial] RMW instructions
+title_RRA: [Unofficial] RMW instructions
+title_SLO: [Unofficial] RMW instructions
+title_SRE: [Unofficial] RMW instructions
+title_DOP: [Unofficial] Double NOP
+title_TOP: [Unofficial] Triple NOP
+title_XAA: [Unofficial] Dumpster fire
+title_AHX: [Unofficial] Unknown
+title_TAS: [Unofficial] Unknown
+title_SHY: [Unofficial] Unknown
+title_SHX: [Unofficial] Unknown
+title_LAS: [Unofficial] Unknown
+title_IMM: Immediate
 title_IMM: Immediate
 title_IMP: Implied
 title_ACC: Accumulator

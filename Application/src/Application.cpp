@@ -66,9 +66,9 @@ Application& Application::Get()
 	return *s_instance;
 }
 
-double Application::GetDelta()
+double Application::GetDelta() const
 {
-	return Get().m_delta;
+	return m_delta;
 }
 
 void Application::Error(const char* name, std::string_view msg)
@@ -83,18 +83,17 @@ Emu::Console& Application::GetConsole()
 
 void Application::SetUpdate(bool set)
 {
-	Get().m_can_update = set;
+	m_can_update = set;
 }
 
 void Application::init()
 {
+	Renderer::Init(m_window, true);
+	auto& io = ImGui::GetIO();
 	// set app directory to appdata/roaming/EMOO
 	Fman::PushFolder("EMOO");
 	Fman::SetRoot();
 
-
-	Renderer::Init(m_window, true);
-	auto& io = ImGui::GetIO();
 	io.IniFilename = Fman::AllocateFileName("imgui.ini");
 
 	const float base_font_size = 20.0f;
@@ -155,27 +154,27 @@ void Application::init_button_actions()
 		};
 	auto press_up = [&](Input::IInput* i)
 		{
-			m_console.GetController(0).SetPressed(Emu::Button::Up);
+			m_console.GetController(0).SetPressed(Emu::Button::UP);
 		};
 	auto press_down = [&](Input::IInput* i)
 		{
-			m_console.GetController(0).SetPressed(Emu::Button::Down);
+			m_console.GetController(0).SetPressed(Emu::Button::DOWN);
 		};
 	auto press_left = [&](Input::IInput* i)
 		{
-			m_console.GetController(0).SetPressed(Emu::Button::Left);
+			m_console.GetController(0).SetPressed(Emu::Button::LEFT);
 		};
 	auto press_right = [&](Input::IInput* i)
 		{
-			m_console.GetController(0).SetPressed(Emu::Button::Right);
+			m_console.GetController(0).SetPressed(Emu::Button::RIGHT);
 		};
 	auto press_start = [&](Input::IInput* i)
 		{
-			m_console.GetController(0).SetPressed(Emu::Button::Start);
+			m_console.GetController(0).SetPressed(Emu::Button::START);
 		};
 	auto press_select = [&](Input::IInput* i)
 		{
-			m_console.GetController(0).SetPressed(Emu::Button::Select);
+			m_console.GetController(0).SetPressed(Emu::Button::SELECT);
 		};
 	m_input->AddGamepadAction(Input::Button::FACE_DOWN, press_a);
 	m_input->AddGamepadAction(Input::Button::FACE_LEFT, press_b);
@@ -193,89 +192,122 @@ void Application::init_button_actions()
 void Application::init_keyboard_actions()
 {
 	typedef Input::Key K;
-	auto stop_continue = [&](Input::IInput* i)
+	auto action_stop_continue = [&](Input::IInput* i)
 		{
 			INPUT_NOT_REPEATED(i);
 
 			m_emulation_stopped = !m_emulation_stopped;
 		};
 
-	auto run_cpu_instructin = [&](Input::IInput* i)
+	auto action_run_cpu_instructin = [&](Input::IInput* i)
 		{
 			INPUT_REPEAT_AFTER(i, 1000ms);
 			INPUT_REPEAT_EVERY(i, 50ms);
 			INPUT_KEY_NOT_MODIFIED(i);
 
-			RunCpuInstruction();
+			run_cpu_instruction();
 		};
-	auto run_frame = [&](Input::IInput* i)
+	auto action_run_frame = [&](Input::IInput* i)
 		{
 			INPUT_REPEAT_AFTER(i, 1000ms);
 			INPUT_REPEAT_EVERY(i, 50ms);
 			INPUT_KEY_MODIFIED(i, K::RSHIFT, K::LSHIFT);
 
-			RunFrame();
+			run_frame();
 		};
-	auto run_pixel = [&](Input::IInput* i)
+	auto action_run_pixel = [&](Input::IInput* i)
 		{
 			INPUT_REPEAT_AFTER(i, 1000ms);
 			INPUT_REPEAT_EVERY(i, 10ms);
 			INPUT_KEY_MODIFIED(i, K::RSHIFT, K::LSHIFT);
 
-			RunPixel();
+			run_pixel();
 		};
 
-	auto exit = [&](Input::IInput* i)
+	auto action_exit = [&](Input::IInput* i)
 		{
 			INPUT_NOT_REPEATED(i);
 			INPUT_KEY_MODIFIED(i, K::RSHIFT, K::LSHIFT);
 
 			Close();
 		};
-	auto reset = [&](Input::IInput* i)
+	auto action_reset = [&](Input::IInput* i)
 		{
 			INPUT_NOT_REPEATED(i);
 			INPUT_KEY_MODIFIED(i, K::RSHIFT, K::LSHIFT);
 			m_console.Reset();
 		};
 
-	auto run_ppu_cycle = [&](Input::IInput* i)
+	auto action_run_ppu_cycle = [&](Input::IInput* i)
 		{
 			INPUT_REPEAT_AFTER(i, 1000ms);
 			INPUT_REPEAT_EVERY(i, 10ms);
 			INPUT_KEY_MODIFIED(i, K::RCTRL, K::LCTRL);
 
-			RunPpuCycle();
+			run_ppu_cycle();
 		};
-	auto run_cpu_cycle = [&](Input::IInput* i)
+	auto action_run_cpu_cycle = [&](Input::IInput* i)
 		{
 			INPUT_REPEAT_AFTER(i, 1000ms);
 			INPUT_REPEAT_EVERY(i, 10ms);
 			INPUT_KEY_MODIFIED(i, K::RCTRL, K::LCTRL);
 
-			RunCpuCycle();
+			run_cpu_cycle();
 		};
 
-	auto run_scanline = [&](Input::IInput* i)
+	auto action_run_scanline = [&](Input::IInput* i)
 		{
 			INPUT_REPEAT_AFTER(i, 1000ms);
 			INPUT_REPEAT_EVERY(i, 10ms);
 			INPUT_KEY_NOT_MODIFIED(i);
 
-			RunScanline();
+			run_scanline();
 		};
-	m_input->AddKeyboardAction(K::F9, stop_continue);
-	m_input->AddKeyboardAction(K::F9, run_frame);
+	auto action_load_rom = [&](Input::IInput* i)
+		{
+			INPUT_NOT_REPEATED(i);
+			INPUT_KEY_MODIFIED(i, K::LCTRL, K::RCTRL);
 
-	m_input->AddKeyboardAction(K::F10, run_scanline);
-	m_input->AddKeyboardAction(K::F10, run_pixel);
-	m_input->AddKeyboardAction(K::F10, run_ppu_cycle);
+			load_rom();
+		};
+	auto action_cpu_status = [&](Input::IInput* i)
+		{
+			INPUT_NOT_REPEATED(i);
+			INPUT_KEY_MODIFIED(i, K::LCTRL, K::RCTRL);
 
-	m_input->AddKeyboardAction(K::F11, run_cpu_instructin);
-	m_input->AddKeyboardAction(K::F11, run_cpu_cycle);
+			cpu_status();
+		};
+	auto action_ppu_status = [&](Input::IInput* i)
+		{
+			INPUT_NOT_REPEATED(i);
+			INPUT_KEY_MODIFIED(i, K::LCTRL, K::RCTRL);
 
-	m_input->AddKeyboardAction(K::F8, reset);
-	m_input->AddKeyboardAction(K::ESCAPE, exit);
+			ppu_status();
+		};
+	auto action_memory_view = [&](Input::IInput* i)
+		{
+			INPUT_NOT_REPEATED(i);
+			INPUT_KEY_MODIFIED(i, K::LCTRL, K::RCTRL);
+
+			memory_view();
+		};
+	m_input->AddKeyboardAction(K::F9, action_stop_continue);
+	m_input->AddKeyboardAction(K::F9, action_run_frame);
+
+	m_input->AddKeyboardAction(K::F10, action_run_scanline);
+	m_input->AddKeyboardAction(K::F10, action_run_pixel);
+	m_input->AddKeyboardAction(K::F10, action_run_ppu_cycle);
+
+	m_input->AddKeyboardAction(K::F11, action_run_cpu_instructin);
+	m_input->AddKeyboardAction(K::F11, action_run_cpu_cycle);
+
+	m_input->AddKeyboardAction(K::F8, action_reset);
+	m_input->AddKeyboardAction(K::ESCAPE, action_exit);
+	m_input->AddKeyboardAction(K::O, action_load_rom);
+
+	m_input->AddKeyboardAction(K::C, action_cpu_status);
+	m_input->AddKeyboardAction(K::P, action_ppu_status);
+	m_input->AddKeyboardAction(K::M, action_memory_view);
 }
 
 void Application::init_windowevent_actions()
@@ -283,16 +315,18 @@ void Application::init_windowevent_actions()
 	typedef Window::Event E;
 	m_window->AddEventFunction(E::RESIZED, [&](Window::IWindow* i, void* event)
 		{
-			Renderer::RequestResize();
+			Renderer::Resize();
 			m_resized = true;
 		});
 	m_window->AddEventFunction(E::MINIMIZED, [&](Window::IWindow* i, void* event)
 		{
 			m_stop_rendering = true;
+			m_minimized = true;
 		});
 	m_window->AddEventFunction(E::RESTORED, [&](Window::IWindow* i, void* event)
 		{
 			m_stop_rendering = false;
+			m_minimized = false;
 		});
 	m_window->AddEventFunction(E::CLOSE, [&](Window::IWindow* i, void* event)
 		{
@@ -322,20 +356,25 @@ void Application::RemoveComponent(const std::string_view id)
 	m_components[id]->removed = true;
 }
 
-void Application::RunCpuInstruction()
+Renderer::Rect Application::GetEmuRect() const
+{
+	return m_screen_sprite.rect;
+}
+
+void Application::run_cpu_instruction()
 {
 	m_emulation_stopped = true;
 
 	m_console.RunCpuInstruction();
 }
 
-void Application::RunFrame()
+void Application::run_frame()
 {
 	m_emulation_stopped = true;
 	m_console.RunFrame();
 }
 
-void Application::RunPixel()
+void Application::run_pixel()
 {
 	m_emulation_stopped = true;
 	m_console.RunPpuPixel();
@@ -343,22 +382,84 @@ void Application::RunPixel()
 
 }
 
-void Application::RunScanline()
+void Application::run_scanline()
 {
 	m_emulation_stopped = true;
 	m_console.RunPpuScanline();
 }
 
-void Application::RunPpuCycle()
+void Application::run_ppu_cycle()
 {
 	m_emulation_stopped = true;
 	m_console.RunPpuCycle();
 }
 
-void Application::RunCpuCycle()
+void Application::run_cpu_cycle()
 {
 	m_emulation_stopped = true;
 	m_console.RunCpuCycle();
+}
+
+void Application::load_rom()
+{
+	if (!m_can_update)
+	{
+		return;
+	}
+	// TODO:
+	auto f = pfd::open_file("Chose ROM File", pfd::path::home(),
+		{
+			"Rom Files (.nes, .ines)", "*.nes *.ines",
+			"All files", "*"
+		});
+
+	if (!f.result().empty())
+	{
+		try
+		{
+			m_console.LoadCartridge(f.result()[0]);
+
+		} catch (const std::runtime_error&)
+		{
+			AddComponent<Component::CloseDialog>("close on file error", "Not a valid ROM", false);
+		}
+	}
+}
+
+void Application::ppu_status()
+{
+	if (m_components.contains("ppu status"))
+	{
+		RemoveComponent("ppu status");
+	}
+	else
+	{
+		AddComponent<Component::ShowPPUStatus>("ppu status", m_monospace_font);
+	}
+}
+
+void Application::cpu_status()
+{
+	if (m_components.contains("cpu status"))
+	{
+		RemoveComponent("cpu status");
+	}
+	else
+	{
+		AddComponent<Component::ShowCPUStatus>("cpu status", m_monospace_font);
+	}
+}
+
+void Application::memory_view()
+{
+	if (m_components.contains("memory view"))
+	{
+		RemoveComponent("memory view");
+	}
+	else
+	{
+		AddComponent<Component::MemoryView>("memory view", m_monospace_font);
+	}
 }
 
 void Application::Run()
@@ -430,15 +531,21 @@ void Application::draw_ui()
 	m_window->BeginImGuiFrame();
 
 	ImGui::NewFrame();
-	draw_menu_bar();
-	draw_dockspace();
-
-
-	for (const auto& [k, v] : m_components)
+	try
 	{
-		v->OnRender();
-	}
+		draw_menu_bar();
+		draw_dockspace();
 
+
+		for (const auto& [k, v] : m_components)
+		{
+			v->OnRender();
+		}
+	} catch (const std::exception&)
+	{
+		m_components.clear();
+		AddComponent<Component::CloseDialog>("oopsie", "Unrecoverable error, sorry :&");
+	}
 	ImGui::End();
 
 
@@ -492,32 +599,15 @@ void Application::draw_menu_bar()
 		m_menu_bar_height = ImGui::GetWindowSize().y;
 		if (ImGui::BeginMenu("File"))
 		{
-			if (ImGui::MenuItem(ICON_FA_FOLDER_OPEN " Load ROM") && m_can_update)
+			if (ImGui::MenuItem(ICON_FA_FOLDER_OPEN " Load ROM", "Ctrl+O") && m_can_update)
 			{
-				// TODO:
-				auto f = pfd::open_file("Chose ROM File", pfd::path::home(),
-					{
-						"Rom Files (.nes, .ines)", "*.nes *.ines",
-						"All files", "*"
-					});
-
-				if (!f.result().empty())
-				{
-					try
-					{
-						m_console.LoadCartridge(f.result()[0]);
-
-					} catch (const std::runtime_error&)
-					{
-						AddComponent<Component::CloseDialog>("close on file error", "Not a valid ROM", false);
-					}
-				}
+				load_rom();
 			}
-			if (ImGui::MenuItem(ICON_FA_REDO " Reset (shift + F8)"))
+			if (ImGui::MenuItem(ICON_FA_REDO " Reset", "Shift+F8"))
 			{
 				m_console.Reset();
 			}
-			if (ImGui::MenuItem(ICON_FA_TIMES" Exit"))
+			if (ImGui::MenuItem(ICON_FA_TIMES" Exit", "Shift+Esc"))
 			{
 				Close();
 			}
@@ -525,43 +615,43 @@ void Application::draw_menu_bar()
 		}
 		if (ImGui::BeginMenu("Emulation"))
 		{
-			if (m_emulation_stopped && ImGui::MenuItem(ICON_FA_PLAY " Run (F9)"))
+			if (m_emulation_stopped && ImGui::MenuItem(ICON_FA_PLAY " Run", "F9"))
 			{
 				m_emulation_stopped = false;
 			}
-			else if (!m_emulation_stopped && ImGui::MenuItem(ICON_FA_PAUSE " Stop (F9)"))
+			else if (!m_emulation_stopped && ImGui::MenuItem(ICON_FA_PAUSE " Stop", "F9"))
 			{
 				m_emulation_stopped = true;
 			}
-			if (ImGui::MenuItem("Run Frame (shift + F9)"))
+			if (ImGui::MenuItem("Run Frame", "Shift+F9"))
 			{
-				RunFrame();
+				run_frame();
 			}
 			if (ImGui::BeginMenu("PPU"))
 			{
-				if (ImGui::MenuItem("Run Scanline (F10)"))
+				if (ImGui::MenuItem("Run Scanline", "F10"))
 				{
-					RunScanline();
+					run_scanline();
 				}
-				if (ImGui::MenuItem("Run pixel (shift + F10)"))
+				if (ImGui::MenuItem("Run pixel", "Shift+F10"))
 				{
-					RunPixel();
+					run_pixel();
 				}
-				if (ImGui::MenuItem("Run Cycle (ctrl + F10"))
+				if (ImGui::MenuItem("Run Cycle", "Ctrl+F10"))
 				{
-					RunPpuCycle();
+					run_ppu_cycle();
 				}
 				ImGui::EndMenu();
 			}
 			if (ImGui::BeginMenu("CPU"))
 			{
-				if (ImGui::MenuItem("Run Instruction (F11)"))
+				if (ImGui::MenuItem("Run Instruction", "F11"))
 				{
-					RunCpuInstruction();
+					run_cpu_instruction();
 				}
-				if (ImGui::MenuItem("Run Cycle (ctrl + F11)"))
+				if (ImGui::MenuItem("Run Cycle", "Ctrl+F11"))
 				{
-					RunCpuCycle();
+					run_cpu_cycle();
 				}
 				ImGui::EndMenu();
 			}
@@ -569,38 +659,17 @@ void Application::draw_menu_bar()
 		}
 		if (ImGui::BeginMenu("View"))
 		{
-			if (ImGui::MenuItem(ICON_FA_IMAGE " Show PPU status"))
+			if (ImGui::MenuItem(ICON_FA_IMAGE " PPU status", "Ctrl+P"))
 			{
-				if (m_components.contains("ppu status"))
-				{
-					RemoveComponent("ppu status");
-				}
-				else
-				{
-					AddComponent<Component::ShowPPUStatus>("ppu status", m_monospace_font);
-				}
+				ppu_status();
 			}
-			if (ImGui::MenuItem(ICON_FA_MICROCHIP " Show CPU status"))
+			if (ImGui::MenuItem(ICON_FA_MICROCHIP " CPU status", "Ctrl+C"))
 			{
-				if (m_components.contains("cpu status"))
-				{
-					RemoveComponent("cpu status");
-				}
-				else
-				{
-					AddComponent<Component::ShowCPUStatus>("cpu status", m_monospace_font);
-				}
+				cpu_status();
 			}
-			if (ImGui::MenuItem(ICON_FA_DATABASE " View memory"))
+			if (ImGui::MenuItem(ICON_FA_DATABASE " Memory status", "Ctrl+M"))
 			{
-				if (m_components.contains("memory view"))
-				{
-					RemoveComponent("memory view");
-				}
-				else
-				{
-					AddComponent<Component::MemoryView>("memory view", m_monospace_font);
-				}
+				memory_view();
 			}
 			ImGui::EndMenu();
 		}
@@ -614,10 +683,11 @@ void Application::draw_application()
 	m_screen_sprite.Draw();
 
 	Renderer::Draw();
+
 }
 void Application::update()
 {
-	if (!m_emulation_stopped)
+	if (!m_emulation_stopped && !m_minimized)
 	{
 		try
 		{
@@ -625,7 +695,6 @@ void Application::update()
 			// in case of STP
 		} catch (const std::runtime_error&)
 		{
-			m_can_update = false;
 			AddComponent<Component::CloseDialog>("close on stp", "STP opcode was executed");
 		}
 	}
@@ -662,7 +731,7 @@ void Application::clear_deleted_components()
 
 void Application::get_pixel_data()
 {
-	m_screen->SetData(m_console.OutputScreen());
+	m_screen->SetData(m_console.GetPpu().GetScreen());
 }
 void Application::resize_emu_screen()
 {

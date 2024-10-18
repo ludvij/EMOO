@@ -115,7 +115,10 @@ void Disassembler::DisassembleFromAddress(size_t begin, bool use_registers)
 
 			if (use_registers && s_registers.contains(word))
 			{
-				str_rep += s_registers[word];
+				str_rep.append(" ").append(s_registers[word]);
+				m_cache[caddr].has_register = true;
+				m_cache[caddr].register_name = s_registers[word];
+				m_cache[caddr].register_value = word;
 			}
 			else
 			{
@@ -128,8 +131,8 @@ void Disassembler::DisassembleFromAddress(size_t begin, bool use_registers)
 
 		m_cache[caddr].repr = str_rep;
 		m_cache[caddr].size = bytes;
-		m_cache[caddr].instruction = GetInstructionName(opcode.instruction);
-		m_cache[caddr].addressing = GetAddressingModeName(opcode.mode);
+		m_cache[caddr].instruction.append(GetInstructionName(opcode.instruction));
+		m_cache[caddr].addressing.append(GetAddressingModeName(opcode.mode));
 
 		if (opcode.instruction == InstructionName::STP)
 		{

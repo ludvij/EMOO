@@ -39,12 +39,6 @@ void Resize()
 	Engine::Get().Resize();
 }
 
-void RequestResize()
-{
-	Lud::assert::eq(s_initialized, true, "Did you forgot to call to Renderer::Init ?");
-	Engine::Get().Resize();
-}
-
 
 // TODO: make it work with normal textures too
 void DrawSprite(const Sprite& sprite)
@@ -69,10 +63,10 @@ void DrawSprite(const Sprite& sprite)
 	if (sprite.texture)
 	{
 		VulkanBindlessTexture* tex = std::bit_cast<VulkanBindlessTexture*>( sprite.texture );
-		vertices[0].textureId = tex->id;
-		vertices[1].textureId = tex->id;
-		vertices[2].textureId = tex->id;
-		vertices[3].textureId = tex->id;
+		vertices[0].texture_id = tex->id;
+		vertices[1].texture_id = tex->id;
+		vertices[2].texture_id = tex->id;
+		vertices[3].texture_id = tex->id;
 	}
 
 	Engine::Get().SubmitDrawRect(vertices);

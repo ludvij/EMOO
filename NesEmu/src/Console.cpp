@@ -26,7 +26,7 @@ Console::~Console()
 void Console::Step()
 {
 	m_ppu_done = false;
-	if (m_masterClock % m_conf.CpuClockDivisor == 0)
+	if (m_master_clock % m_conf.cpu_clock_divisor == 0)
 	{
 		if (m_ppu.IsDMATransfer())
 		{
@@ -39,7 +39,7 @@ void Console::Step()
 		}
 		m_registered_cpu_cycles++;
 	}
-	if (m_masterClock % m_conf.PpuClockDivisor == 0)
+	if (m_master_clock % m_conf.ppu_clock_divisor == 0)
 	{
 		m_ppu.Step();
 		m_ppu_done = true;
@@ -51,7 +51,7 @@ void Console::Step()
 		m_ppu.SetNMI(false);
 		m_cpu.NMI();
 	}
-	m_masterClock++;
+	m_master_clock++;
 }
 
 void Console::Reset()
@@ -64,7 +64,7 @@ void Console::Reset()
 	m_ppu.Reset();
 	m_bus.Reset();
 	m_apu.Reset();
-	m_masterClock = 0;
+	m_master_clock = 0;
 	m_registered_cpu_cycles = 0;
 	m_registered_ppu_cycles = 0;
 }
@@ -104,7 +104,7 @@ bool Console::RunFrame()
 	//TODO move this to application
 	auto time_sice_last = stdc::duration_cast<stdc::microseconds>( time::now() - m_last_frame_start );
 
-	while (time_sice_last < m_conf.FrameTime)
+	while (time_sice_last < m_conf.frame_time)
 	{
 		time_sice_last = stdc::duration_cast<stdc::microseconds>( time::now() - m_last_frame_start );
 	}
@@ -113,7 +113,7 @@ bool Console::RunFrame()
 	do
 	{
 		Step();
-	} while (!m_ppu.IsFrameDone() || m_masterClock % m_conf.PpuClockDivisor != 0);
+	} while (!m_ppu.IsFrameDone() || m_master_clock % m_conf.ppu_clock_divisor != 0);
 
 	const auto end = time::now();
 	const auto duration = stdc::duration_cast<stdc::microseconds>( end - m_last_frame_start );
@@ -131,7 +131,7 @@ bool Console::RunCpuInstruction()
 	do
 	{
 		Step();
-	} while (!m_cpu.IsDone() || m_masterClock % m_conf.CpuClockDivisor != 0);
+	} while (!m_cpu.IsDone() || m_master_clock % m_conf.cpu_clock_divisor != 0);
 	return true;
 }
 
@@ -157,7 +157,7 @@ bool Console::RunPpuScanline()
 	do
 	{
 		Step();
-	} while (!m_ppu.IsScanlineDone() || m_masterClock % m_conf.PpuClockDivisor != 0);
+	} while (!m_ppu.IsScanlineDone() || m_master_clock % m_conf.ppu_clock_divisor != 0);
 	return true;
 }
 

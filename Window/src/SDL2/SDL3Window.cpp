@@ -71,11 +71,11 @@ void SDL2Window::GetDimensions(int* w, int* h) const
 }
 
 
-VkSurfaceKHR SDL2Window::CreateVulkanSurface(VkInstance instance)
+void* SDL2Window::CreateRenderSurface(void* instance)
 {
 	VkSurfaceKHR surface;
-	SDL_Vulkan_CreateSurface(m_window, instance, &surface);
-	return surface;
+	SDL_Vulkan_CreateSurface(m_window, static_cast<VkInstance>( instance ), &surface);
+	return static_cast<void*>( surface );
 }
 
 
@@ -83,7 +83,7 @@ uint32_t SDL2Window::GetWindowID()
 {
 	return SDL_GetWindowID(m_window);
 }
-void SDL2Window::InitImguiForVulkan()
+void SDL2Window::InitImguiForRenderer()
 {
 	ImGui_ImplSDL2_InitForVulkan(m_window);
 }

@@ -1,181 +1,180 @@
-explanation_LDA: Loads a byte of %s into the accumulator setting zero and negative flags as appropriate
-explanation_LDX: Loads a byte of %s into the X register setting zero and negative flags as appropriate
-explanation_LDY: Loads a byte of %s into the Y register setting zero and negative flags as appropriate
-explanation_STA: Stores the contents of the accumulator into %s
-explanation_STX: Stores the contents of the X register into %s
-explanation_STY: Stores the contents of the Y register into %s
-explanation_TAX: Copies the contents of the accumulator into the X register and sets the zero and negative flags as appropriate
-explanation_TAY: Copies the contents of the accumulator into the Y register and sets the zero and negative flags as appropriate
-explanation_TXA: Copies the current contents of the X register into the accumulator and sets the zero and negative flags as appropriate
-explanation_TYA: Copies the current contents of the Y register into the accumulator and sets the zero and negative flags as appropriate
-explanation_TSX: Copies the current contents of the stack register into the X register and sets the zero and negative flags as appropriate
-explanation_TXS: Copies the current contents of the X register into the stack register
-explanation_PHA: Pushes the contents of the accumulator into the stack
-explanation_PHP: Pushes the contents of the processor status into the stack
-explanation_PLA: Pulls a byte from the top of the stack into the accumulator setting zero and negative flags as appropriate
-explanation_PLP: Pulls a byte from the top of the stack into the processor status
-explanation_AND: Performs a logical and, bit by bit, on the accumulator using the value of %s setting zero and negative flags as appropriate
-explanation_EOR: Performs an exclusive or, bit by bit, on the accumulator using the value of %s setting zero and negative flags as appropriate
-explanation_ORA: Performs a logical or, bit by bit, on the accumulator using the value of %s setting zero and negative flags as appropriate
-explanation_BIT: Tests if one or more bits of %s are set using the accumulator as a mask, the value is discarded and flags are set as appropriate
-explanation_ADC: Adds the contents of %s and the accumulator together with the carry bit, sets the carry flag in case of overflow; sets the zero, overflow and negative flags as appropriate
-explanation_SBC: Subtracts the contents of %s and the accumulator together with the not of the carry, clears the carry flag in case of overflow; sets the zero, overflow and negative flags as appropriate
-explanation_CMP: Compares the value of %s and the accumulator and sets the carry, negative and zero flags as appropriate
-explanation_CPX: Compares the value of %s and the X register and sets the carry, negative and zero flags as appropriate
-explanation_CPY: Compares the value of %s and the Y register and sets the carry, negative and zero flags as appropriate
-explanation_INC: Adds one to the value of %s and sets the zero and negative flags as appropriate
-explanation_INX: Adds one to the value of the X register and sets the zero and negative flags as appropriate
-explanation_INY: Adds one to the value of the Y register and sets the zero and negative flags as appropriate
-explanation_DEC: Subtracts one to the value of %s and sets the zero and negative flags as appropriate
-explanation_DEX: Subtracts one to the value of the X register and sets the zero and negative flags as appropriate
-explanation_DEY: Subtracts one to the value of the Y register and sets the zero and negative flags as appropriate
-explanation_ASL: Shifts all the bits of %s one bit to the left. Bit 0 is set to 0 and the contents of bit 7 are placed in the carry flag; sets the zero and negative flag as appropriate
-explanation_LSR: Shifts all the bits of %s one bit to the right. Bit 0 is shifted to the carry flag and bit 7 is set to 0
-explanation_ROL: Move each of the bits of %s one place to the left. Bit 0 is filled with the contents of the carry flag and bit 7 becomes the new carry flag; sets zero and negative flags as appropriate
-explanation_ROR: Move each of the bits of %s one place to the right. Bit 7 is filled with the contents of the carry flag and bit 0 becomes the new carry flag; sets the zero and negative flags as appropriate
-explanation_JMP: Sets the program counter to %s
-explanation_JSR: Pushes the address minus one of the return point to the stack and then sets the program counter to %s
-explanation_RTS: Pulls a byte from the top of the stack and sets the program counter to it
-explanation_BCS: Adds %s to the program counter if the carry flag is set
-explanation_BCC: Adds %s to the program counter if the carry flag is not set
-explanation_BEQ: Adds %s to the program counter if the zero flag is set
-explanation_BNE: Adds %s to the program counter if the zero flag is not set
-explanation_BMI: Adds %s to the program counter if the negative flag is set
-explanation_BVS: Adds %s to the program counter if the overflow flag is set
-explanation_BPL: Adds %s to the program counter if the negative flag is not set
-explanation_CLC: Clears the carry flag
-explanation_BVC: Adds %s to the program counter if the overflow flag is not set
-explanation_CLI: Clears the interrupt flag
-explanation_CLD: Clears the decimal flag
-explanation_SEC: Sets the carry flag
-explanation_CLV: Clears the overflow flag
-explanation_SEI: Sets the interrupt flag
-explanation_SED: Sets the decimal flag
-explanation_NOP: Does nothing
-explanation_BRK: Forces an interrupt request. Pushes the program counter and the processor status to the stack, then loads the interrupt vector ($FFFE/F) into the program counter and sets the break flag
-explanation_RTI: Returns from the interrupt process. Pulls the processor status and program counter from the stack
-explanation_STP: Stops the console, in this emulator, the application is closed, in real hardware this hangs the console
-explanation_ALR: AND %s, then LSR A
-explanation_ANC: AND %s and updates NZ, then copies N to C
-explanation_ARR: AND %s, then ROR A
-explanation_AXS: sets X to (A AND X), and updates NZC
-explanation_LAX: LDA %s, then TAX, saves a byte and two cycles (highly unstable)
-explanation_SAX: Stores the bitwise AND of A and X in %s, no flags are affected
-explanation_DCP: DEC %s, then CMP it
-explanation_ISC: INC %s, then SBC it
-explanation_RLA: ROL %s, then AND it
-explanation_RRA: ROR %s, then ADC it
-explanation_SLO: ASL %s, then ORA it
-explanation_SRE: LSR %s, then EOR it
-explanation_DOP: Does nothing for double the duration of NOP
-explanation_TOP: Does nothing for triple the duration of NOP
-explanation_XAA: Sets the accumulator to the AND of X and %s modifies NZ (highly unstable, unpredictable behavior), sometimes notated as A = (A | magic) & X & imm, magic being random
-explanation_AHX: Sets %s to the AND of A, X and the immediate operand (unstable)
-explanation_TAS: Sets S to the AND of A and X, then sets %s to the AND of S and the immediate operand (unstable)
-explanation_SHY: Sets %s to the AND of Y and the immediate operand (unstable)
-explanation_SHX: Sets %s to the AND of X and the immediate operand (unstable)
-explanation_LAS: Sets A, X and S to the AND of %s and S, modifies NZ
-explanation_IMM: The next byte in the program
-explanation_IMP: 
-explanation_ACC: the accumulator
-explanation_ZPI: the memory value of the next byte in the program in the zero page ($0000 - $0100)
-explanation_ZPX: the value of the next byte in the program added to the X register in the zero page ($0000 - $0100)
-explanation_ZPY: the value of the next byte in the program added to the Y register in the zero page ($0000 - $0100)
-explanation_REL: the next signed byte in the program
-explanation_ABS: the value of the word made up by the next two bytes in the program
-explanation_ABX: the value of the word made up by the next two bytes in the program added to the X register
-explanation_ABY: the value of the word made up by the next two bytes in the program added to the Y register
-explanation_IND: the word located in memory pointed by the next two bytes in the program
-explanation_INX: the byte located in memory pointed by the next byte in memory added to the X register
-explanation_INY: the Y register added to a byte located in memory pointed by the next byte in the program
-title_LDA: Load accumulator
-title_LDX: Load X register
-title_LDY: Load Y register
-title_STA: Store accumulator
-title_STX: Store X register
-title_STY: Store Y register
-title_TAX: Transfer accumulator to X register
-title_TAY: Transfer accumulator to Y register
-title_TXA: Transfer X register to accumulator
-title_TYA: Transfer Y register to accumulator
-title_TSX: Transfer Stack pointer to X register
-title_TXS: Transfer X register to stack pointer
-title_PHA: Push accumulator
-title_PHP: Push processor status
-title_PLA: pull accumulator
-title_PLP: Pull processor status
-title_AND: Logical and
-title_EOR: Logical exclusive or
-title_ORA: Logical or
-title_BIT: Bit test
-title_ADC: Add with carry
-title_SBC: Subtract with carry
-title_CMP: Compare
-title_CPX: Compare X register
-title_CPY: Compare Y register
-title_INC: Increment
-title_INX: Increment X register
-title_INY: Increment Y register
-title_DEC: Decrement
-title_DEX: Decrement X register
-title_DEY: Decrement Y register
-title_ASL: Arithmetic shift left
-title_LSR: Logical shift right
-title_ROL: Rotate left
-title_ROR: Rotate right
-title_JMP: Jump
-title_JSR: Jump to subroutine
-title_RTS: Return from subroutine
-title_BCS: Brach if carry set
-title_BCC: Branch if carry clear 
-title_BEQ: Branch if equals
-title_BNE: Branch if not equals
-title_BMI: Branch if minus
-title_BPL: Branch if positive
-title_BVS: Brach if overflow set
-title_BVC: Branch if overflow clear
-title_CLC: Clear carry
-title_CLD: Clear decimal
-title_CLI: Clear interrupt
-title_CLV: Clear overflow
-title_SEC: Set carry
-title_SED: Set decimal
-title_SEI: Set interrupt
-title_BRK: Break
-title_NOP: No operation
-title_RTI: Return from interrupt
-title_STP: Stop
-title_ALR: [Unofficial] Combined operation
-title_ANC: [Unofficial] Combined operation
-title_ARR: [Unofficial] Combined operation
-title_AXS: [Unofficial] Combined operation
-title_LAX: [Unofficial] Combined operation
-title_SAX: [Unofficial] Combined operation
-title_DCP: [Unofficial] RMW instructions
-title_ISC: [Unofficial] RMW instructions
-title_RLA: [Unofficial] RMW instructions
-title_RRA: [Unofficial] RMW instructions
-title_SLO: [Unofficial] RMW instructions
-title_SRE: [Unofficial] RMW instructions
-title_DOP: [Unofficial] Double NOP
-title_TOP: [Unofficial] Triple NOP
-title_XAA: [Unofficial] Dumpster fire
-title_AHX: [Unofficial] Unknown
-title_TAS: [Unofficial] Unknown
-title_SHY: [Unofficial] Unknown
-title_SHX: [Unofficial] Unknown
-title_LAS: [Unofficial] Unknown
-title_IMM: Immediate
-title_IMM: Immediate
-title_IMP: Implied
-title_ACC: Accumulator
-title_ZPI: Zero page
-title_ZPX: Zero page, X
-title_ZPY: Zero page, Y
-title_REL: Relative
-title_ABS: Absolute
-title_ABX: Absolute, X
-title_ABY: Absolute, Y
-title_IND: Indirect
-title_INX: Indexed indirect
-title_INY: Indirect indexed
+explanation_instruction_LDA: Loads a byte of %s into the accumulator setting zero and negative flags as appropriate
+explanation_instruction_LDX: Loads a byte of %s into the X register setting zero and negative flags as appropriate
+explanation_instruction_LDY: Loads a byte of %s into the Y register setting zero and negative flags as appropriate
+explanation_instruction_STA: Stores the contents of the accumulator into %s
+explanation_instruction_STX: Stores the contents of the X register into %s
+explanation_instruction_STY: Stores the contents of the Y register into %s
+explanation_instruction_TAX: Copies the contents of the accumulator into the X register and sets the zero and negative flags as appropriate
+explanation_instruction_TAY: Copies the contents of the accumulator into the Y register and sets the zero and negative flags as appropriate
+explanation_instruction_TXA: Copies the current contents of the X register into the accumulator and sets the zero and negative flags as appropriate
+explanation_instruction_TYA: Copies the current contents of the Y register into the accumulator and sets the zero and negative flags as appropriate
+explanation_instruction_TSX: Copies the current contents of the stack register into the X register and sets the zero and negative flags as appropriate
+explanation_instruction_TXS: Copies the current contents of the X register into the stack register
+explanation_instruction_PHA: Pushes the contents of the accumulator into the stack
+explanation_instruction_PHP: Pushes the contents of the processor status into the stack
+explanation_instruction_PLA: Pulls a byte from the top of the stack into the accumulator setting zero and negative flags as appropriate
+explanation_instruction_PLP: Pulls a byte from the top of the stack into the processor status
+explanation_instruction_AND: Performs a logical and, bit by bit, on the accumulator using the value of %s setting zero and negative flags as appropriate
+explanation_instruction_EOR: Performs an exclusive or, bit by bit, on the accumulator using the value of %s setting zero and negative flags as appropriate
+explanation_instruction_ORA: Performs a logical or, bit by bit, on the accumulator using the value of %s setting zero and negative flags as appropriate
+explanation_instruction_BIT: Tests if one or more bits of %s are set using the accumulator as a mask, the value is discarded and flags are set as appropriate
+explanation_instruction_ADC: Adds the contents of %s and the accumulator together with the carry bit, sets the carry flag in case of overflow; sets the zero, overflow and negative flags as appropriate
+explanation_instruction_SBC: Subtracts the contents of %s and the accumulator together with the not of the carry, clears the carry flag in case of overflow; sets the zero, overflow and negative flags as appropriate
+explanation_instruction_CMP: Compares the value of %s and the accumulator and sets the carry, negative and zero flags as appropriate
+explanation_instruction_CPX: Compares the value of %s and the X register and sets the carry, negative and zero flags as appropriate
+explanation_instruction_CPY: Compares the value of %s and the Y register and sets the carry, negative and zero flags as appropriate
+explanation_instruction_INC: Adds one to the value of %s and sets the zero and negative flags as appropriate
+explanation_instruction_INX: Adds one to the value of the X register and sets the zero and negative flags as appropriate
+explanation_instruction_INY: Adds one to the value of the Y register and sets the zero and negative flags as appropriate
+explanation_instruction_DEC: Subtracts one to the value of %s and sets the zero and negative flags as appropriate
+explanation_instruction_DEX: Subtracts one to the value of the X register and sets the zero and negative flags as appropriate
+explanation_instruction_DEY: Subtracts one to the value of the Y register and sets the zero and negative flags as appropriate
+explanation_instruction_ASL: Shifts all the bits of %s one bit to the left. Bit 0 is set to 0 and the contents of bit 7 are placed in the carry flag; sets the zero and negative flag as appropriate
+explanation_instruction_LSR: Shifts all the bits of %s one bit to the right. Bit 0 is shifted to the carry flag and bit 7 is set to 0
+explanation_instruction_ROL: Move each of the bits of %s one place to the left. Bit 0 is filled with the contents of the carry flag and bit 7 becomes the new carry flag; sets zero and negative flags as appropriate
+explanation_instruction_ROR: Move each of the bits of %s one place to the right. Bit 7 is filled with the contents of the carry flag and bit 0 becomes the new carry flag; sets the zero and negative flags as appropriate
+explanation_instruction_JMP: Sets the program counter to %s
+explanation_instruction_JSR: Pushes the address minus one of the return point to the stack and then sets the program counter to %s
+explanation_instruction_RTS: Pulls a byte from the top of the stack and sets the program counter to it
+explanation_instruction_BCS: Adds %s to the program counter if the carry flag is set
+explanation_instruction_BCC: Adds %s to the program counter if the carry flag is not set
+explanation_instruction_BEQ: Adds %s to the program counter if the zero flag is set
+explanation_instruction_BNE: Adds %s to the program counter if the zero flag is not set
+explanation_instruction_BMI: Adds %s to the program counter if the negative flag is set
+explanation_instruction_BVS: Adds %s to the program counter if the overflow flag is set
+explanation_instruction_BPL: Adds %s to the program counter if the negative flag is not set
+explanation_instruction_CLC: Clears the carry flag
+explanation_instruction_BVC: Adds %s to the program counter if the overflow flag is not set
+explanation_instruction_CLI: Clears the interrupt flag
+explanation_instruction_CLD: Clears the decimal flag
+explanation_instruction_SEC: Sets the carry flag
+explanation_instruction_CLV: Clears the overflow flag
+explanation_instruction_SEI: Sets the interrupt flag
+explanation_instruction_SED: Sets the decimal flag
+explanation_instruction_NOP: Does nothing
+explanation_instruction_BRK: Forces an interrupt request. Pushes the program counter and the processor status to the stack, then loads the interrupt vector ($FFFE/F) into the program counter and sets the break flag
+explanation_instruction_RTI: Returns from the interrupt process. Pulls the processor status and program counter from the stack
+explanation_instruction_STP: Stops the console, in this emulator, the application is closed, in real hardware this hangs the console
+explanation_instruction_ALR: AND %s, then LSR A
+explanation_instruction_ANC: AND %s and updates NZ, then copies N to C
+explanation_instruction_ARR: AND %s, then ROR A
+explanation_instruction_AXS: sets X to (A AND X), and updates NZC
+explanation_instruction_LAX: LDA %s, then TAX, saves a byte and two cycles (highly unstable)
+explanation_instruction_SAX: Stores the bitwise AND of A and X in %s, no flags are affected
+explanation_instruction_DCP: DEC %s, then CMP it
+explanation_instruction_ISC: INC %s, then SBC it
+explanation_instruction_RLA: ROL %s, then AND it
+explanation_instruction_RRA: ROR %s, then ADC it
+explanation_instruction_SLO: ASL %s, then ORA it
+explanation_instruction_SRE: LSR %s, then EOR it
+explanation_instruction_DOP: Does nothing for double the duration of NOP
+explanation_instruction_TOP: Does nothing for triple the duration of NOP
+explanation_instruction_XAA: Sets the accumulator to the AND of X and %s modifies NZ (highly unstable, unpredictable behavior), sometimes notated as A = (A | magic) & X & imm, magic being random
+explanation_instruction_AHX: Sets %s to the AND of A, X and the immediate operand (unstable)
+explanation_instruction_TAS: Sets S to the AND of A and X, then sets %s to the AND of S and the immediate operand (unstable)
+explanation_instruction_SHY: Sets %s to the AND of Y and the immediate operand (unstable)
+explanation_instruction_SHX: Sets %s to the AND of X and the immediate operand (unstable)
+explanation_instruction_LAS: Sets A, X and S to the AND of %s and S, modifies NZ
+explanation_addressing_IMM: The next byte in the program
+explanation_addressing_IMP: 
+explanation_addressing_ACC: the accumulator
+explanation_addressing_ZPI: the memory value of the next byte in the program in the zero page ($0000 - $0100)
+explanation_addressing_ZPX: the value of the next byte in the program added to the X register in the zero page ($0000 - $0100)
+explanation_addressing_ZPY: the value of the next byte in the program added to the Y register in the zero page ($0000 - $0100)
+explanation_addressing_REL: the next signed byte in the program
+explanation_addressing_ABS: the value of the word made up by the next two bytes in the program
+explanation_addressing_ABX: the value of the word made up by the next two bytes in the program added to the X register
+explanation_addressing_ABY: the value of the word made up by the next two bytes in the program added to the Y register
+explanation_addressing_IND: the word located in memory pointed by the next two bytes in the program
+explanation_addressing_INX: the byte located in memory pointed by the next byte in memory added to the X register
+explanation_addressing_INY: the Y register added to a byte located in memory pointed by the next byte in the program
+title_instruction_LDA: Load accumulator
+title_instruction_LDX: Load X register
+title_instruction_LDY: Load Y register
+title_instruction_STA: Store accumulator
+title_instruction_STX: Store X register
+title_instruction_STY: Store Y register
+title_instruction_TAX: Transfer accumulator to X register
+title_instruction_TAY: Transfer accumulator to Y register
+title_instruction_TXA: Transfer X register to accumulator
+title_instruction_TYA: Transfer Y register to accumulator
+title_instruction_TSX: Transfer Stack pointer to X register
+title_instruction_TXS: Transfer X register to stack pointer
+title_instruction_PHA: Push accumulator
+title_instruction_PHP: Push processor status
+title_instruction_PLA: pull accumulator
+title_instruction_PLP: Pull processor status
+title_instruction_AND: Logical and
+title_instruction_EOR: Logical exclusive or
+title_instruction_ORA: Logical or
+title_instruction_BIT: Bit test
+title_instruction_ADC: Add with carry
+title_instruction_SBC: Subtract with carry
+title_instruction_CMP: Compare
+title_instruction_CPX: Compare X register
+title_instruction_CPY: Compare Y register
+title_instruction_INC: Increment
+title_instruction_INX: Increment X register
+title_instruction_INY: Increment Y register
+title_instruction_DEC: Decrement
+title_instruction_DEX: Decrement X register
+title_instruction_DEY: Decrement Y register
+title_instruction_ASL: Arithmetic shift left
+title_instruction_LSR: Logical shift right
+title_instruction_ROL: Rotate left
+title_instruction_ROR: Rotate right
+title_instruction_JMP: Jump
+title_instruction_JSR: Jump to subroutine
+title_instruction_RTS: Return from subroutine
+title_instruction_BCS: Brach if carry set
+title_instruction_BCC: Branch if carry clear 
+title_instruction_BEQ: Branch if equals
+title_instruction_BNE: Branch if not equals
+title_instruction_BMI: Branch if minus
+title_instruction_BPL: Branch if positive
+title_instruction_BVS: Brach if overflow set
+title_instruction_BVC: Branch if overflow clear
+title_instruction_CLC: Clear carry
+title_instruction_CLD: Clear decimal
+title_instruction_CLI: Clear interrupt
+title_instruction_CLV: Clear overflow
+title_instruction_SEC: Set carry
+title_instruction_SED: Set decimal
+title_instruction_SEI: Set interrupt
+title_instruction_BRK: Break
+title_instruction_NOP: No operation
+title_instruction_RTI: Return from interrupt
+title_instruction_STP: Stop
+title_instruction_ALR: [Unofficial] Combined operation
+title_instruction_ANC: [Unofficial] Combined operation
+title_instruction_ARR: [Unofficial] Combined operation
+title_instruction_AXS: [Unofficial] Combined operation
+title_instruction_LAX: [Unofficial] Combined operation
+title_instruction_SAX: [Unofficial] Combined operation
+title_instruction_DCP: [Unofficial] RMW instructions
+title_instruction_ISC: [Unofficial] RMW instructions
+title_instruction_RLA: [Unofficial] RMW instructions
+title_instruction_RRA: [Unofficial] RMW instructions
+title_instruction_SLO: [Unofficial] RMW instructions
+title_instruction_SRE: [Unofficial] RMW instructions
+title_instruction_DOP: [Unofficial] Double NOP
+title_instruction_TOP: [Unofficial] Triple NOP
+title_instruction_XAA: [Unofficial] Dumpster fire
+title_instruction_AHX: [Unofficial] Unknown
+title_instruction_TAS: [Unofficial] Unknown
+title_instruction_SHY: [Unofficial] Unknown
+title_instruction_SHX: [Unofficial] Unknown
+title_instruction_LAS: [Unofficial] Unknown
+title_addressing_IMP: Implied
+title_addressing_IMM: Immediate
+title_addressing_ACC: Accumulator
+title_addressing_ZPI: Zero page
+title_addressing_ZPX: Zero page, X
+title_addressing_ZPY: Zero page, Y
+title_addressing_REL: Relative
+title_addressing_ABS: Absolute
+title_addressing_ABX: Absolute, X
+title_addressing_ABY: Absolute, Y
+title_addressing_IND: Indirect
+title_addressing_INX: Indexed indirect
+title_addressing_INY: Indirect indexed

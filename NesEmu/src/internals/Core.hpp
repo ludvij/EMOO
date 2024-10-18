@@ -48,10 +48,10 @@ namespace Emu
 
 struct Configuration
 {
-	u32 CpuClockDivisor;
-	u32 PpuClockDivisor;
-	u32 FrameRate;
-	std::chrono::microseconds FrameTime;
+	u32 cpu_clock_divisor;
+	u32 ppu_clock_divisor;
+	u32 frame_rate;
+	std::chrono::microseconds frame_time;
 	float width;
 	float height;
 };

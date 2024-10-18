@@ -38,13 +38,13 @@ public:
 
 	static Application& Get();
 
-	static double GetDelta();
+	double GetDelta() const;
 
 	void Error(const char* name, std::string_view msg);
 
 	Emu::Console& GetConsole();
 
-	static void SetUpdate(bool set);
+	void SetUpdate(bool set);
 
 	template<typename T, class... Args>
 	void AddComponent(const std::string_view name, Args... args) requires( std::derived_from<T, Component::IComponent> )
@@ -58,12 +58,8 @@ public:
 
 	void RemoveComponent(const std::string_view name);
 
-	void RunCpuInstruction();
-	void RunFrame();
-	void RunPixel();
-	void RunScanline();
-	void RunPpuCycle();
-	void RunCpuCycle();
+	Renderer::Rect GetEmuRect() const;
+
 
 	void Run();
 	void Close();
@@ -72,6 +68,7 @@ public:
 
 	ImVec2 GetScreenSize();
 private:
+
 	void init();
 	void init_button_actions();
 	void init_keyboard_actions();
@@ -95,6 +92,18 @@ private:
 
 
 	void resize_emu_screen();
+
+	void run_cpu_instruction();
+	void run_frame();
+	void run_pixel();
+	void run_scanline();
+	void run_ppu_cycle();
+	void run_cpu_cycle();
+	void load_rom();
+
+	void ppu_status();
+	void cpu_status();
+	void memory_view();
 
 
 private:
@@ -124,6 +133,7 @@ private:
 
 	bool m_resized{ true };
 	bool m_can_update{ true };
+	bool m_minimized{ false };
 	bool m_emulation_stopped{ false };
 
 	ImFont* m_monospace_font{ nullptr };

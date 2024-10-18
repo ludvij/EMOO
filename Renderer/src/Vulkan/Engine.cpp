@@ -73,7 +73,7 @@ void Engine::Init(std::shared_ptr<Window::IWindow> window, bool use_imgui)
 
 	init_default_data();
 
-	m_batcher = new BatchRenderer();
+	m_batcher.push_back(new BatchRenderer());
 
 	m_initialised = true;
 }
@@ -204,7 +204,7 @@ void Engine::draw_background(vk::CommandBuffer cmd) const
 {
 	constexpr vk::ImageSubresourceRange image_range(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1);
 
-	vk::ClearColorValue color(40.0f / 255.0f, 44.0f / 255.0f, 52.0f / 255.0f, 0.0f);
+	vk::ClearColorValue color(0.16f, 0.17f, 0.2f, 1.0f);
 	cmd.clearColorImage(m_draw_image.image, vk::ImageLayout::eGeneral, color, image_range);
 }
 
@@ -233,22 +233,24 @@ void Engine::draw_geometry(vk::CommandBuffer cmd)
 	vmaCopyMemoryToAllocation(m_allocator, &m_scene_data, scene_buffer.allocation, 0, sizeof m_scene_data);
 
 	vk::DescriptorSet image_set = get_current_frame().frame_descriptor.Allocate(m_device, m_bindless_image_descriptor_layout);
+	for (const auto batcher : m_batcher)
+	{
+		vkutil::DescriptorWriter writer;
+		writer.WriteBuffer(UNIFORM_BINDING, scene_buffer.buffer, sizeof m_scene_data, 0, vk::DescriptorType::eUniformBuffer);
+		batcher->PrepareDescriptor(SAMPLER_BINDING, writer);
+		writer.UpdateSet(m_device, image_set);
 
-	vkutil::DescriptorWriter writer;
-	writer.WriteBuffer(UNIFORM_BINDING, scene_buffer.buffer, sizeof m_scene_data, 0, vk::DescriptorType::eUniformBuffer);
-	m_batcher->PrepareDescriptor(SAMPLER_BINDING, writer);
-	writer.UpdateSet(m_device, image_set);
-
-	cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_mesh_pipeline_layout, 0, image_set, {});
+		cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_mesh_pipeline_layout, 0, image_set, {});
 
 
-	GPUDrawPushConstants push_constants{};
-	push_constants.world_matrix = glm::mat4{ 1.0f };
-	push_constants.vertex_buffer = m_batcher->GetAddress();
+		GPUDrawPushConstants push_constants{};
+		push_constants.world_matrix = glm::mat4{ 1.0f };
+		push_constants.vertex_buffer = batcher->GetAddress();
 
-	cmd.pushConstants(m_mesh_pipeline_layout, vk::ShaderStageFlagBits::eVertex, 0, sizeof GPUDrawPushConstants, &push_constants);
+		cmd.pushConstants(m_mesh_pipeline_layout, vk::ShaderStageFlagBits::eVertex, 0, sizeof GPUDrawPushConstants, &push_constants);
 
-	m_batcher->Draw(cmd);
+		batcher->Draw(cmd);
+	}
 
 
 	cmd.endRendering();
@@ -287,12 +289,25 @@ void Engine::RequestResize()
 
 void Engine::AddTextureToBatcher(VulkanBindlessTexture* texture)
 {
-	m_batcher->AddTexture(texture);
+	for (const auto batcher : m_batcher)
+	{
+		if (batcher->HasSpace())
+		{
+			batcher->AddTexture(texture);
+			return;
+		}
+	}
 }
 
 void Engine::RemoveTextureFromBatcher(VulkanBindlessTexture* texture)
 {
-	m_batcher->RemoveTexture(texture);
+	for (const auto batcher : m_batcher)
+	{
+		if (batcher->ContainsTexture(texture))
+		{
+			batcher->RemoveTexture(texture);
+		}
+	}
 }
 
 void Engine::init_vulkan()
@@ -314,7 +329,7 @@ void Engine::init_vulkan()
 	m_debug_messenger = vkb_inst.debug_messenger;
 
 
-	m_surface = m_window->CreateVulkanSurface(m_instance);
+	m_surface = static_cast<VkSurfaceKHR>( m_window->CreateRenderSurface(m_instance) );
 
 	// vulkan 1.3 features
 	auto features_13 = vk::PhysicalDeviceVulkan13Features()
@@ -541,7 +556,7 @@ void Engine::init_mesh_pipeline()
 		.SetShaders(vert_module, frag_module)
 		.SetInputTopology(vk::PrimitiveTopology::eTriangleList)
 		.SetPolygonMode(vk::PolygonMode::eFill)
-		.SetCullMode(vk::CullModeFlagBits::eNone, vk::FrontFace::eClockwise)
+		.SetCullMode(vk::CullModeFlagBits::eBack, vk::FrontFace::eClockwise)
 		.SetMultisamplingNone()
 		.EnableBlendingAlphablend()
 		//.DisableBlending()
@@ -769,7 +784,17 @@ void Engine::SetImageData(Detail::AllocatedImage image, void* data)
 
 void Engine::SubmitDrawRect(std::span<Vertex> vertices)
 {
-	m_batcher->Add(vertices);
+
+	for (const auto batcher : m_batcher)
+	{
+		if (m_batcher.back()->HasSpace())
+		{
+			m_batcher.back()->Add(vertices);
+			return;
+		}
+	}
+	m_batcher.push_back(new BatchRenderer);
+	m_batcher.back()->Add(vertices);
 }
 
 GPUMeshBuffers Engine::upload_mesh(std::span<u32> indices, std::span<Vertex> vertices)
@@ -874,7 +899,7 @@ void Engine::init_imgui()
 		style.WindowRounding = 0.0f;
 		style.Colors[ImGuiCol_WindowBg].w = 1.0f;
 	}
-	m_window->InitImguiForVulkan();
+	m_window->InitImguiForRenderer();
 
 	ImGui_ImplVulkan_InitInfo init_info = {};
 	init_info.Instance = m_instance;
@@ -963,7 +988,11 @@ void Engine::Cleanup()
 		frame.deletion_queue.Flush();
 	}
 	m_deletion_queue.Flush();
-	delete m_batcher;
+	for (auto b : m_batcher)
+	{
+		delete b;
+	}
+	m_batcher.clear();
 	vmaDestroyAllocator(m_allocator);
 	destroy_swapchain();
 	m_device.destroy();

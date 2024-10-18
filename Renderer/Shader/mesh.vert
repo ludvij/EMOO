@@ -32,7 +32,7 @@ void main()
 	vec4 position = vec4(v.position, 1.0f);
 
 	//output data
-	gl_Position = sceneData.view * sceneData.proj * PushConstants.model * vec4(v.position, 1.0f);
+	gl_Position = sceneData.view * sceneData.proj * PushConstants.model * position;
 
 	outTexCoords = v.tex_coords;
 	textureID = v.textureID;

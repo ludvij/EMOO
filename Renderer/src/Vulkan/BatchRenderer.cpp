@@ -57,6 +57,7 @@ void Renderer::BatchRenderer::Add(std::span<Detail::Vertex> vertices)
 {
 	Lud::check::eq(vertices.size(), 4, "Batch renderer only supports drawing quads");
 
+
 	std::move(vertices.begin(), vertices.end(), std::back_inserter(m_vertices));
 
 	m_indices.push_back(static_cast<uint32_t>( m_sprite_count * 4 + 0 ));
@@ -68,6 +69,11 @@ void Renderer::BatchRenderer::Add(std::span<Detail::Vertex> vertices)
 	m_indices.push_back(static_cast<uint32_t>( m_sprite_count * 4 + 0 ));
 
 	m_sprite_count++;
+}
+
+bool Renderer::BatchRenderer::HasSpace() const
+{
+	return m_sprite_count <= MAX_SPRITE_AMOUNT;
 }
 
 void Renderer::BatchRenderer::PrepareDescriptor(const int binding, vkutil::DescriptorWriter& dw) const
@@ -109,6 +115,15 @@ void Renderer::BatchRenderer::RemoveTexture(VulkanBindlessTexture* texture)
 {
 	m_ready_texture_slots.push_back(texture->id);
 	m_textures.remove(texture);
+}
+
+bool Renderer::BatchRenderer::ContainsTexture(VulkanBindlessTexture* texture)
+{
+	if (std::find(m_textures.begin(), m_textures.end(), texture) != m_textures.end())
+	{
+		return true;
+	}
+	return false;
 }
 
 

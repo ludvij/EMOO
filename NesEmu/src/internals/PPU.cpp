@@ -183,11 +183,6 @@ bool PPU::IsFrameDone() const
 	return m_frame_done;
 }
 
-void PPU::SetFrameDone(bool set)
-{
-	m_frame_done = set;
-}
-
 bool PPU::IsNMI() const
 {
 	return m_nmi;
@@ -1268,9 +1263,5 @@ void RegisterFlags::set_flags(u8 flags, bool set)
 	}
 }
 
-u8 RegisterFlags::operator|(u8 flags) const
-{
-	return reg & flags;
-}
 
 }

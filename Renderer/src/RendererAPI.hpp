@@ -17,7 +17,6 @@ void Init(std::shared_ptr<Window::IWindow> window, bool use_imgui=true);
 void Shutdown();
 void Draw();
 void Resize();
-void RequestResize();
 
 void DrawSprite(const Sprite& sprite);
 

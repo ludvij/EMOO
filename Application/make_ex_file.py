@@ -2,12 +2,12 @@ from os import listdir, makedirs
 txf = [''.join(['resources/texts/', x]) for x in listdir('resources/texts')]
 
 
-
 def build_cpp_file():
 	return """
 #ifndef EXPLANATIONS_MAP_HEADER
 #define EXPLANATIONS_MAP_HEADER
 #include <unordered_map>
+#include <string>
 {ex}
 #endif
 """
@@ -15,7 +15,7 @@ def build_cpp_file():
 def append_to_cpp_file(x, fmt):
 	res = ''
 	umap = """
-inline const std::unordered_map<const char*, const char*> map_{name} = {{
+inline const std::unordered_map<std::string, const char*> map_{name} = {{
 	{fields}
 }};
 """
@@ -23,8 +23,20 @@ inline const std::unordered_map<const char*, const char*> map_{name} = {{
 		lines = f.readlines()
 	maps = {x.split('_')[0] for x in lines if x}
 	for m in maps:
-		elements = [[x.split(': ')[0].replace(f'{m}_',''), ''.join(x.split(': ')[1:]).strip()] for x in lines if m in x]
-		res += umap.format(name=m, fields=',\n\t'.join([f'{{ "{x[0]}", "{x[1]}" }}' for x in elements]))
+		elements = []
+		for line in lines:
+			if m not in line:
+				continue
+			mapped_line = '_'.join(line.split('_')[1:]).split(':')
+			value = {
+				'key': mapped_line[0].strip(),
+				'value': mapped_line[1].strip()
+			}
+			if value['key'] in [x['key'] for x in elements]:
+				print(f'key {value["key"]} already added')
+				raise KeyError
+			elements.append(value)
+		res += umap.format(name=m, fields=',\n\t'.join([f'{{ "{x["key"]}", "{x["value"]}" }}' for x in elements]))
 	return res
 fmt = build_cpp_file()
 

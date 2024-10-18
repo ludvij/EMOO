@@ -11,6 +11,7 @@ Ui::Component::ShowPPUStatus::ShowPPUStatus(const std::string_view name, ImFont*
 	: IComponent(name)
 	, m_monospace(font)
 {
+
 }
 
 Ui::Component::ShowPPUStatus::~ShowPPUStatus()

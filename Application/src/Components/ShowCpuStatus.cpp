@@ -225,7 +225,6 @@ void Ui::Component::ShowCPUStatus::draw_assembly()
 			ImGui::Text("%s - %s", map_title.at(repr.instruction), map_title.at(repr.addressing));
 			ImGui::Dummy(ImVec2(400, 0));
 			ImGui::Separator();
-			ImGui::Indent();
 			if (repr.size > 1)
 			{
 				ImGui::TextWrapped(map_explanation.at(repr.instruction), map_explanation.at(repr.addressing));
@@ -234,7 +233,11 @@ void Ui::Component::ShowCPUStatus::draw_assembly()
 			{
 				ImGui::TextWrapped(map_explanation.at(repr.instruction));
 			}
-			ImGui::Unindent();
+			if (repr.has_register)
+			{
+				ImGui::Separator();
+				ImGui::TextWrapped("The value of %s is $%04X", repr.register_name, repr.register_value);
+			}
 			ImGui::EndTooltip();
 		}
 	}

@@ -120,17 +120,10 @@ PipelineBuilder& PipelineBuilder::EnableBlendingAdditive()
 		vk::ColorComponentFlagBits::eG |
 		vk::ColorComponentFlagBits::eB |
 		vk::ColorComponentFlagBits::eA;
+
 	m_color_blend_attachment.blendEnable = vk::True;
-	if constexpr (std::endian::native == std::endian::little)
-	{
-		m_color_blend_attachment.srcColorBlendFactor = vk::BlendFactor::eSrcAlpha;
-		m_color_blend_attachment.dstColorBlendFactor = vk::BlendFactor::eOne;
-	}
-	else
-	{
-		m_color_blend_attachment.srcColorBlendFactor = vk::BlendFactor::eOne;
-		m_color_blend_attachment.dstColorBlendFactor = vk::BlendFactor::eDstAlpha;
-	}
+	m_color_blend_attachment.srcColorBlendFactor = vk::BlendFactor::eSrcAlpha;
+	m_color_blend_attachment.dstColorBlendFactor = vk::BlendFactor::eOne;
 	m_color_blend_attachment.colorBlendOp = vk::BlendOp::eAdd;
 	m_color_blend_attachment.srcAlphaBlendFactor = vk::BlendFactor::eOne;
 	m_color_blend_attachment.dstAlphaBlendFactor = vk::BlendFactor::eZero;
@@ -146,17 +139,10 @@ PipelineBuilder& PipelineBuilder::EnableBlendingAlphablend()
 		vk::ColorComponentFlagBits::eG |
 		vk::ColorComponentFlagBits::eB |
 		vk::ColorComponentFlagBits::eA;
+
 	m_color_blend_attachment.blendEnable = vk::True;
-	if constexpr (std::endian::native == std::endian::little)
-	{
-		m_color_blend_attachment.srcColorBlendFactor = vk::BlendFactor::eSrcAlpha;
-		m_color_blend_attachment.dstColorBlendFactor = vk::BlendFactor::eOneMinusSrcAlpha;
-	}
-	else
-	{
-		m_color_blend_attachment.srcColorBlendFactor = vk::BlendFactor::eOneMinusDstAlpha;
-		m_color_blend_attachment.dstColorBlendFactor = vk::BlendFactor::eDstAlpha;
-	}
+	m_color_blend_attachment.srcColorBlendFactor = vk::BlendFactor::eSrcAlpha;
+	m_color_blend_attachment.dstColorBlendFactor = vk::BlendFactor::eOneMinusSrcAlpha;
 	m_color_blend_attachment.colorBlendOp = vk::BlendOp::eAdd;
 	m_color_blend_attachment.srcAlphaBlendFactor = vk::BlendFactor::eOne;
 	m_color_blend_attachment.dstAlphaBlendFactor = vk::BlendFactor::eZero;

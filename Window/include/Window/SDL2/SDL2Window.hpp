@@ -17,12 +17,12 @@ public:
 	virtual WindowExtent GetDimensions() const override;
 	virtual void GetDimensions(int* w, int* h) const override;
 
-	virtual VkSurfaceKHR CreateVulkanSurface(VkInstance instance) override;
+	virtual void* CreateRenderSurface(void* instance) override;
 
 	virtual uint32_t GetWindowID() override;
 
 
-	virtual void InitImguiForVulkan() override;
+	virtual void InitImguiForRenderer() override;
 
 
 	// Inherited via IWindow

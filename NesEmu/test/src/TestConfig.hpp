@@ -37,7 +37,6 @@ protected:
 
 	void TearDown() override
 	{
-		asse.Clean();
 		testing::internal::CaptureStdout();
 		console.UnloadCartridge();
 		testing::internal::GetCapturedStdout();

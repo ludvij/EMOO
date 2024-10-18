@@ -96,7 +96,6 @@ struct RegisterFlags
 	bool is_flag_set(u8 flags) const;
 	void set_flags(u8 flags, bool set=true);
 
-	u8 operator | (u8 flags) const;
 
 	u8 reg;
 };
@@ -139,7 +138,6 @@ public:
 	}
 
 	bool IsFrameDone() const;
-	void SetFrameDone(bool set);
 
 	bool IsNMI() const;
 	void SetNMI(bool set);
@@ -264,6 +262,7 @@ private:
 	u32* m_screen{};
 
 	std::array<Color, 0x40> m_palette;
+	//std::unordered_map<u16, u8> m_known_patterns;
 
 	// not configurable palette inner ram
 	// $3F00         -> Universal background color

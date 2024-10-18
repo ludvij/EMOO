@@ -37,12 +37,12 @@ public:
 	virtual WindowExtent GetDimensions() const = 0;
 	virtual void GetDimensions(int* w, int* h) const = 0;
 
-	virtual VkSurfaceKHR CreateVulkanSurface(VkInstance instance) = 0;
+	virtual void* CreateRenderSurface(void* instance) = 0;
 
 	virtual uint32_t GetWindowID() = 0;
 
 	// imgui functions
-	virtual void InitImguiForVulkan() = 0;
+	virtual void InitImguiForRenderer() = 0;
 	virtual void ShutdownImGuiWindow() = 0;
 
 	virtual void BeginImGuiFrame() = 0;

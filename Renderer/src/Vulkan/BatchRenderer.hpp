@@ -17,12 +17,14 @@ public:
 
 	void StartBatch();
 	void Add(std::span<Detail::Vertex> vertices);
+	bool HasSpace() const;
 
 	void PrepareDescriptor(int binding, vkutil::DescriptorWriter& dw) const;
 	void Draw(vk::CommandBuffer cmd);
 
 	void AddTexture(VulkanBindlessTexture* texture);
 	void RemoveTexture(VulkanBindlessTexture* texture);
+	bool ContainsTexture(VulkanBindlessTexture* texture);
 
 	void Flush();
 

@@ -10,12 +10,12 @@ enum Button : u8
 {
 	A      = 0x80,
 	B      = 0x40,
-	Select = 0x20,
-	Start  = 0x10,
-	Up     = 0x08,
-	Down   = 0x04,
-	Left   = 0x02,
-	Right  = 0x01,
+	SELECT = 0x20,
+	START  = 0x10,
+	UP     = 0x08,
+	DOWN   = 0x04,
+	LEFT   = 0x02,
+	RIGHT  = 0x01,
 };
 class Controller
 {

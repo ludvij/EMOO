@@ -18,13 +18,13 @@ CloseDialog::CloseDialog(const std::string_view name, const std::string_view msg
 
 CloseDialog::~CloseDialog()
 {
-	Application::SetUpdate(true);
+	Application::Get().SetUpdate(true);
 }
 
 void CloseDialog::OnCreate()
 {
 	//Application::Get().RestartEmulator();
-	Application::SetUpdate(false);
+	Application::Get().SetUpdate(false);
 }
 
 void CloseDialog::OnRender()

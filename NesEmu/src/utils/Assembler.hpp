@@ -29,8 +29,6 @@ public:
 
 	Assembler& Assemble(const std::string& code);
 
-	void Clean();
-
 	InstructionName GetInstructionName(const std::string_view name);
 	AddressingModeData ParseAddressingMode(const std::string_view mode);
 

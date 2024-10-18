@@ -16,14 +16,14 @@ layout (location = 0) out vec4 outFragColor;
 
 void main() 
 {
-	if (textureID < 0)
-	{
-		float scale = 8.0f;
-		int magenta = (int(inTexCoords.x * scale) % 2) ^ (int(inTexCoords.y * scale) % 2);
-		outFragColor = magenta == 1 ? vec4(1.0f, 0.0f, 1.0f, 1.0f) : vec4(0.0f, 0.0f, 0.0f, 1.0f);
-	}
-	else 
-	{
-		outFragColor = texture(displayTexture[textureID], inTexCoords);
-	}
+	// if (textureID < 0)
+	// {
+	// 	float scale = 8.0f;
+	// 	int magenta = (int(inTexCoords.x * scale) % 2) ^ (int(inTexCoords.y * scale) % 2);
+	// 	outFragColor = magenta == 1 ? vec4(1.0f, 0.0f, 1.0f, 1.0f) : vec4(0.0f, 0.0f, 0.0f, 1.0f);
+	// }
+	// else 
+	// {
+	// }
+	outFragColor = texture(displayTexture[textureID], inTexCoords);
 }

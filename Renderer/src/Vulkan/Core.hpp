@@ -80,7 +80,7 @@ struct Vertex
 {
 	alignas( 16 ) glm::vec3 position{};
 	alignas( 8 ) glm::vec2 tex_coords{};
-	int32_t textureId{ -1 };
+	int32_t texture_id{ -1 };
 };
 
 struct GPUMeshBuffers
@@ -97,15 +97,6 @@ struct GPUDrawPushConstants
 	vk::DeviceAddress vertex_buffer;
 };
 
-struct GPUSceneData
-{
-	glm::mat4 view;
-	glm::mat4 proj;
-	glm::mat4 viewproj;
-	glm::vec4 ambientcolor;
-	glm::vec4 sunlinghtdirection;
-	glm::vec4 sunlightcolor;
-};
 }
 }
 #endif

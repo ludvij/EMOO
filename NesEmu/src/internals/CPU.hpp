@@ -317,17 +317,17 @@ private: // private members
 	*	an exec that acts as the operation itself
 	*	and the number of m_cycle the operation will take
 	*/
-	typedef u16(CPU::* addressingMode)( );
-	typedef void ( CPU::* execution )( u16 );
+	typedef u16(CPU::* AddressingModeCallable)( );
+	typedef void ( CPU::* InstructionCallable )( u16 );
 	struct Instruction
 	{
 		const char* name = "STP";
-		addressingMode addrMode = nullptr;
-		execution exec = nullptr;
+		AddressingModeCallable addressing_mode_fn = nullptr;
+		InstructionCallable instrucion_fn = nullptr;
 		u8 cycles = 0;
 	};
 
-	std::array<Instruction, 256> m_jumpTable;
+	std::array<Instruction, 256> m_jump_table;
 
 	// Accumulator
 	u8 m_A = 0;
@@ -350,7 +350,7 @@ private: // private members
 
 	// some helpers
 	u8 m_opcode = 0;
-	Instruction m_currentInstr = {};
+	Instruction m_current_instr = {};
 	// some operations do not save the result, I'll be saving them for
 	// utility reasons
 	u8 m_discard = 0;

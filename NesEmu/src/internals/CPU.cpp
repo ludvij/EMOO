@@ -23,323 +23,323 @@ CPU::CPU()
 {
 	// filling the jump table
 	Instruction invalid = { "STP", &CPU::addrIMM, &CPU::STP, 0 };
-	std::ranges::fill(m_jumpTable, invalid);
+	std::ranges::fill(m_jump_table, invalid);
 	// ADC
-	m_jumpTable[0x69] = { "ADC", &CPU::addrIMM, &CPU::ADC, 2 };
-	m_jumpTable[0x65] = { "ADC", &CPU::addrZPI, &CPU::ADC, 3 };
-	m_jumpTable[0x75] = { "ADC", &CPU::addrZPX, &CPU::ADC, 4 };
-	m_jumpTable[0x6D] = { "ADC", &CPU::addrABS, &CPU::ADC, 4 };
-	m_jumpTable[0x7D] = { "ADC", &CPU::addrABX, &CPU::ADC, 4 };
-	m_jumpTable[0x79] = { "ADC", &CPU::addrABY, &CPU::ADC, 4 };
-	m_jumpTable[0x61] = { "ADC", &CPU::addrINX, &CPU::ADC, 6 };
-	m_jumpTable[0x71] = { "ADC", &CPU::addrINY, &CPU::ADC, 5 };
+	m_jump_table[0x69] = { "ADC", &CPU::addrIMM, &CPU::ADC, 2 };
+	m_jump_table[0x65] = { "ADC", &CPU::addrZPI, &CPU::ADC, 3 };
+	m_jump_table[0x75] = { "ADC", &CPU::addrZPX, &CPU::ADC, 4 };
+	m_jump_table[0x6D] = { "ADC", &CPU::addrABS, &CPU::ADC, 4 };
+	m_jump_table[0x7D] = { "ADC", &CPU::addrABX, &CPU::ADC, 4 };
+	m_jump_table[0x79] = { "ADC", &CPU::addrABY, &CPU::ADC, 4 };
+	m_jump_table[0x61] = { "ADC", &CPU::addrINX, &CPU::ADC, 6 };
+	m_jump_table[0x71] = { "ADC", &CPU::addrINY, &CPU::ADC, 5 };
 	// AND
-	m_jumpTable[0x29] = { "AND", &CPU::addrIMM, &CPU::AND, 2 };
-	m_jumpTable[0x25] = { "AND", &CPU::addrZPI, &CPU::AND, 3 };
-	m_jumpTable[0x35] = { "AND", &CPU::addrZPX, &CPU::AND, 4 };
-	m_jumpTable[0x2D] = { "AND", &CPU::addrABS, &CPU::AND, 4 };
-	m_jumpTable[0x3D] = { "AND", &CPU::addrABX, &CPU::AND, 4 };
-	m_jumpTable[0x39] = { "AND", &CPU::addrABY, &CPU::AND, 4 };
-	m_jumpTable[0x21] = { "AND", &CPU::addrINX, &CPU::AND, 6 };
-	m_jumpTable[0x31] = { "AND", &CPU::addrINY, &CPU::AND, 5 };
+	m_jump_table[0x29] = { "AND", &CPU::addrIMM, &CPU::AND, 2 };
+	m_jump_table[0x25] = { "AND", &CPU::addrZPI, &CPU::AND, 3 };
+	m_jump_table[0x35] = { "AND", &CPU::addrZPX, &CPU::AND, 4 };
+	m_jump_table[0x2D] = { "AND", &CPU::addrABS, &CPU::AND, 4 };
+	m_jump_table[0x3D] = { "AND", &CPU::addrABX, &CPU::AND, 4 };
+	m_jump_table[0x39] = { "AND", &CPU::addrABY, &CPU::AND, 4 };
+	m_jump_table[0x21] = { "AND", &CPU::addrINX, &CPU::AND, 6 };
+	m_jump_table[0x31] = { "AND", &CPU::addrINY, &CPU::AND, 5 };
 	// ASL
-	m_jumpTable[0x0A] = { "ASL", &CPU::addrACC, &CPU::ASL, 2 };
-	m_jumpTable[0x06] = { "ASL", &CPU::addrZPI, &CPU::ASL, 5 };
-	m_jumpTable[0x0E] = { "ASL", &CPU::addrABS, &CPU::ASL, 6 };
-	m_jumpTable[0x16] = { "ASL", &CPU::addrZPX, &CPU::ASL, 6 };
-	m_jumpTable[0x1E] = { "ASL", &CPU::addrABX, &CPU::ASL, 7 };
+	m_jump_table[0x0A] = { "ASL", &CPU::addrACC, &CPU::ASL, 2 };
+	m_jump_table[0x06] = { "ASL", &CPU::addrZPI, &CPU::ASL, 5 };
+	m_jump_table[0x0E] = { "ASL", &CPU::addrABS, &CPU::ASL, 6 };
+	m_jump_table[0x16] = { "ASL", &CPU::addrZPX, &CPU::ASL, 6 };
+	m_jump_table[0x1E] = { "ASL", &CPU::addrABX, &CPU::ASL, 7 };
 	// BCC
-	m_jumpTable[0x90] = { "BCC", &CPU::addrREL, &CPU::BCC, 2 };
+	m_jump_table[0x90] = { "BCC", &CPU::addrREL, &CPU::BCC, 2 };
 	// BCS
-	m_jumpTable[0xB0] = { "BCS", &CPU::addrREL, &CPU::BCS, 2 };
+	m_jump_table[0xB0] = { "BCS", &CPU::addrREL, &CPU::BCS, 2 };
 	// BEQ
-	m_jumpTable[0xF0] = { "BEQ", &CPU::addrREL, &CPU::BEQ, 2 };
+	m_jump_table[0xF0] = { "BEQ", &CPU::addrREL, &CPU::BEQ, 2 };
 	// BIT
-	m_jumpTable[0x24] = { "BIT", &CPU::addrZPI, &CPU::BIT, 3 };
-	m_jumpTable[0x2C] = { "BIT", &CPU::addrABS, &CPU::BIT, 4 };
+	m_jump_table[0x24] = { "BIT", &CPU::addrZPI, &CPU::BIT, 3 };
+	m_jump_table[0x2C] = { "BIT", &CPU::addrABS, &CPU::BIT, 4 };
 	// BMI
-	m_jumpTable[0x30] = { "BMI", &CPU::addrREL, &CPU::BMI, 2 };
+	m_jump_table[0x30] = { "BMI", &CPU::addrREL, &CPU::BMI, 2 };
 	// BNE
-	m_jumpTable[0xD0] = { "BNE", &CPU::addrREL, &CPU::BNE, 2 };
+	m_jump_table[0xD0] = { "BNE", &CPU::addrREL, &CPU::BNE, 2 };
 	// BPL
-	m_jumpTable[0x10] = { "BPL", &CPU::addrREL, &CPU::BPL, 2 };
+	m_jump_table[0x10] = { "BPL", &CPU::addrREL, &CPU::BPL, 2 };
 	// BRK
-	m_jumpTable[0x00] = { "BRK", &CPU::addrIMP, &CPU::BRK, 7 };
+	m_jump_table[0x00] = { "BRK", &CPU::addrIMP, &CPU::BRK, 7 };
 	// BVC
-	m_jumpTable[0x50] = { "BVC", &CPU::addrREL, &CPU::BVC, 2 };
+	m_jump_table[0x50] = { "BVC", &CPU::addrREL, &CPU::BVC, 2 };
 	// BVS
-	m_jumpTable[0x70] = { "BVS", &CPU::addrREL, &CPU::BVS, 2 };
+	m_jump_table[0x70] = { "BVS", &CPU::addrREL, &CPU::BVS, 2 };
 	//CLC
-	m_jumpTable[0x18] = { "CLC", &CPU::addrIMP, &CPU::CLC, 2 };
+	m_jump_table[0x18] = { "CLC", &CPU::addrIMP, &CPU::CLC, 2 };
 	//CLD
-	m_jumpTable[0xD8] = { "CLD", &CPU::addrIMP, &CPU::CLD, 2 };
+	m_jump_table[0xD8] = { "CLD", &CPU::addrIMP, &CPU::CLD, 2 };
 	//CLI
-	m_jumpTable[0x58] = { "CLI", &CPU::addrIMP, &CPU::CLI, 2 };
+	m_jump_table[0x58] = { "CLI", &CPU::addrIMP, &CPU::CLI, 2 };
 	//CLV
-	m_jumpTable[0xB8] = { "CLV", &CPU::addrIMP, &CPU::CLV, 2 };
+	m_jump_table[0xB8] = { "CLV", &CPU::addrIMP, &CPU::CLV, 2 };
 	//CMP
-	m_jumpTable[0xC9] = { "CMP", &CPU::addrIMM, &CPU::CMP, 2 };
-	m_jumpTable[0xC5] = { "CMP", &CPU::addrZPI, &CPU::CMP, 3 };
-	m_jumpTable[0xD5] = { "CMP", &CPU::addrZPX, &CPU::CMP, 4 };
-	m_jumpTable[0xCD] = { "CMP", &CPU::addrABS, &CPU::CMP, 4 };
-	m_jumpTable[0xDD] = { "CMP", &CPU::addrABX, &CPU::CMP, 4 };
-	m_jumpTable[0xD9] = { "CMP", &CPU::addrABY, &CPU::CMP, 4 };
-	m_jumpTable[0xC1] = { "CMP", &CPU::addrINX, &CPU::CMP, 6 };
-	m_jumpTable[0xD1] = { "CMP", &CPU::addrINY, &CPU::CMP, 5 };
+	m_jump_table[0xC9] = { "CMP", &CPU::addrIMM, &CPU::CMP, 2 };
+	m_jump_table[0xC5] = { "CMP", &CPU::addrZPI, &CPU::CMP, 3 };
+	m_jump_table[0xD5] = { "CMP", &CPU::addrZPX, &CPU::CMP, 4 };
+	m_jump_table[0xCD] = { "CMP", &CPU::addrABS, &CPU::CMP, 4 };
+	m_jump_table[0xDD] = { "CMP", &CPU::addrABX, &CPU::CMP, 4 };
+	m_jump_table[0xD9] = { "CMP", &CPU::addrABY, &CPU::CMP, 4 };
+	m_jump_table[0xC1] = { "CMP", &CPU::addrINX, &CPU::CMP, 6 };
+	m_jump_table[0xD1] = { "CMP", &CPU::addrINY, &CPU::CMP, 5 };
 	//CPX
-	m_jumpTable[0xE0] = { "CPX", &CPU::addrIMM, &CPU::CPX, 2 };
-	m_jumpTable[0xE4] = { "CPX", &CPU::addrZPI, &CPU::CPX, 3 };
-	m_jumpTable[0xEC] = { "CPX", &CPU::addrABS, &CPU::CPX, 4 };
+	m_jump_table[0xE0] = { "CPX", &CPU::addrIMM, &CPU::CPX, 2 };
+	m_jump_table[0xE4] = { "CPX", &CPU::addrZPI, &CPU::CPX, 3 };
+	m_jump_table[0xEC] = { "CPX", &CPU::addrABS, &CPU::CPX, 4 };
 	//CPY
-	m_jumpTable[0xC0] = { "CPY", &CPU::addrIMM, &CPU::CPY, 2 };
-	m_jumpTable[0xC4] = { "CPY", &CPU::addrZPI, &CPU::CPY, 3 };
-	m_jumpTable[0xCC] = { "CPY", &CPU::addrABS, &CPU::CPY, 4 };
+	m_jump_table[0xC0] = { "CPY", &CPU::addrIMM, &CPU::CPY, 2 };
+	m_jump_table[0xC4] = { "CPY", &CPU::addrZPI, &CPU::CPY, 3 };
+	m_jump_table[0xCC] = { "CPY", &CPU::addrABS, &CPU::CPY, 4 };
 	//DEC
-	m_jumpTable[0xC6] = { "DEC", &CPU::addrZPI, &CPU::DEC, 5 };
-	m_jumpTable[0xD6] = { "DEC", &CPU::addrZPX, &CPU::DEC, 6 };
-	m_jumpTable[0xCE] = { "DEC", &CPU::addrABS, &CPU::DEC, 6 };
-	m_jumpTable[0xDE] = { "DEC", &CPU::addrABX, &CPU::DEC, 7 };
+	m_jump_table[0xC6] = { "DEC", &CPU::addrZPI, &CPU::DEC, 5 };
+	m_jump_table[0xD6] = { "DEC", &CPU::addrZPX, &CPU::DEC, 6 };
+	m_jump_table[0xCE] = { "DEC", &CPU::addrABS, &CPU::DEC, 6 };
+	m_jump_table[0xDE] = { "DEC", &CPU::addrABX, &CPU::DEC, 7 };
 	//DEX
-	m_jumpTable[0xCA] = { "DEX", &CPU::addrIMP, &CPU::DEX, 2 };
+	m_jump_table[0xCA] = { "DEX", &CPU::addrIMP, &CPU::DEX, 2 };
 	//DEY
-	m_jumpTable[0x88] = { "DEY", &CPU::addrIMP, &CPU::DEY, 2 };
+	m_jump_table[0x88] = { "DEY", &CPU::addrIMP, &CPU::DEY, 2 };
 	//EOR
-	m_jumpTable[0x49] = { "EOR", &CPU::addrIMM, &CPU::EOR, 2 };
-	m_jumpTable[0x45] = { "EOR", &CPU::addrZPI, &CPU::EOR, 3 };
-	m_jumpTable[0x55] = { "EOR", &CPU::addrZPX, &CPU::EOR, 4 };
-	m_jumpTable[0x4D] = { "EOR", &CPU::addrABS, &CPU::EOR, 4 };
-	m_jumpTable[0x5D] = { "EOR", &CPU::addrABX, &CPU::EOR, 4 };
-	m_jumpTable[0x59] = { "EOR", &CPU::addrABY, &CPU::EOR, 4 };
-	m_jumpTable[0x41] = { "EOR", &CPU::addrINX, &CPU::EOR, 6 };
-	m_jumpTable[0x51] = { "EOR", &CPU::addrINY, &CPU::EOR, 5 };
+	m_jump_table[0x49] = { "EOR", &CPU::addrIMM, &CPU::EOR, 2 };
+	m_jump_table[0x45] = { "EOR", &CPU::addrZPI, &CPU::EOR, 3 };
+	m_jump_table[0x55] = { "EOR", &CPU::addrZPX, &CPU::EOR, 4 };
+	m_jump_table[0x4D] = { "EOR", &CPU::addrABS, &CPU::EOR, 4 };
+	m_jump_table[0x5D] = { "EOR", &CPU::addrABX, &CPU::EOR, 4 };
+	m_jump_table[0x59] = { "EOR", &CPU::addrABY, &CPU::EOR, 4 };
+	m_jump_table[0x41] = { "EOR", &CPU::addrINX, &CPU::EOR, 6 };
+	m_jump_table[0x51] = { "EOR", &CPU::addrINY, &CPU::EOR, 5 };
 	//INC
-	m_jumpTable[0xE6] = { "INC", &CPU::addrZPI, &CPU::INC, 5 };
-	m_jumpTable[0xF6] = { "INC", &CPU::addrZPX, &CPU::INC, 6 };
-	m_jumpTable[0xEE] = { "INC", &CPU::addrABS, &CPU::INC, 6 };
-	m_jumpTable[0xFE] = { "INC", &CPU::addrABX, &CPU::INC, 7 };
+	m_jump_table[0xE6] = { "INC", &CPU::addrZPI, &CPU::INC, 5 };
+	m_jump_table[0xF6] = { "INC", &CPU::addrZPX, &CPU::INC, 6 };
+	m_jump_table[0xEE] = { "INC", &CPU::addrABS, &CPU::INC, 6 };
+	m_jump_table[0xFE] = { "INC", &CPU::addrABX, &CPU::INC, 7 };
 	//INX
-	m_jumpTable[0xE8] = { "INX", &CPU::addrIMP, &CPU::INX, 2 };
+	m_jump_table[0xE8] = { "INX", &CPU::addrIMP, &CPU::INX, 2 };
 	//INY
-	m_jumpTable[0xC8] = { "INY", &CPU::addrIMP, &CPU::INY, 2 };
+	m_jump_table[0xC8] = { "INY", &CPU::addrIMP, &CPU::INY, 2 };
 	//JMP
-	m_jumpTable[0x4C] = { "JMP", &CPU::addrABS, &CPU::JMP, 3 };
-	m_jumpTable[0x6C] = { "JMP", &CPU::addrIND, &CPU::JMP, 5 };
+	m_jump_table[0x4C] = { "JMP", &CPU::addrABS, &CPU::JMP, 3 };
+	m_jump_table[0x6C] = { "JMP", &CPU::addrIND, &CPU::JMP, 5 };
 	//JSR
-	m_jumpTable[0x20] = { "JSR", &CPU::addrABS, &CPU::JSR, 6 };
+	m_jump_table[0x20] = { "JSR", &CPU::addrABS, &CPU::JSR, 6 };
 	//LDA
-	m_jumpTable[0xA9] = { "LDA", &CPU::addrIMM, &CPU::LDA, 2 };
-	m_jumpTable[0xA5] = { "LDA", &CPU::addrZPI, &CPU::LDA, 3 };
-	m_jumpTable[0xB5] = { "LDA", &CPU::addrZPX, &CPU::LDA, 4 };
-	m_jumpTable[0xAD] = { "LDA", &CPU::addrABS, &CPU::LDA, 4 };
-	m_jumpTable[0xBD] = { "LDA", &CPU::addrABX, &CPU::LDA, 4 };
-	m_jumpTable[0xB9] = { "LDA", &CPU::addrABY, &CPU::LDA, 4 };
-	m_jumpTable[0xA1] = { "LDA", &CPU::addrINX, &CPU::LDA, 6 };
-	m_jumpTable[0xB1] = { "LDA", &CPU::addrINY, &CPU::LDA, 5 };
+	m_jump_table[0xA9] = { "LDA", &CPU::addrIMM, &CPU::LDA, 2 };
+	m_jump_table[0xA5] = { "LDA", &CPU::addrZPI, &CPU::LDA, 3 };
+	m_jump_table[0xB5] = { "LDA", &CPU::addrZPX, &CPU::LDA, 4 };
+	m_jump_table[0xAD] = { "LDA", &CPU::addrABS, &CPU::LDA, 4 };
+	m_jump_table[0xBD] = { "LDA", &CPU::addrABX, &CPU::LDA, 4 };
+	m_jump_table[0xB9] = { "LDA", &CPU::addrABY, &CPU::LDA, 4 };
+	m_jump_table[0xA1] = { "LDA", &CPU::addrINX, &CPU::LDA, 6 };
+	m_jump_table[0xB1] = { "LDA", &CPU::addrINY, &CPU::LDA, 5 };
 	//LDX
-	m_jumpTable[0xA2] = { "LDX", &CPU::addrIMM, &CPU::LDX, 2 };
-	m_jumpTable[0xA6] = { "LDX", &CPU::addrZPI, &CPU::LDX, 3 };
-	m_jumpTable[0xB6] = { "LDX", &CPU::addrZPY, &CPU::LDX, 4 };
-	m_jumpTable[0xAE] = { "LDX", &CPU::addrABS, &CPU::LDX, 4 };
-	m_jumpTable[0xBE] = { "LDX", &CPU::addrABY, &CPU::LDX, 4 };
+	m_jump_table[0xA2] = { "LDX", &CPU::addrIMM, &CPU::LDX, 2 };
+	m_jump_table[0xA6] = { "LDX", &CPU::addrZPI, &CPU::LDX, 3 };
+	m_jump_table[0xB6] = { "LDX", &CPU::addrZPY, &CPU::LDX, 4 };
+	m_jump_table[0xAE] = { "LDX", &CPU::addrABS, &CPU::LDX, 4 };
+	m_jump_table[0xBE] = { "LDX", &CPU::addrABY, &CPU::LDX, 4 };
 	//LDY
-	m_jumpTable[0xA0] = { "LDY", &CPU::addrIMM, &CPU::LDY, 2 };
-	m_jumpTable[0xA4] = { "LDY", &CPU::addrZPI, &CPU::LDY, 3 };
-	m_jumpTable[0xB4] = { "LDY", &CPU::addrZPX, &CPU::LDY, 4 };
-	m_jumpTable[0xAC] = { "LDY", &CPU::addrABS, &CPU::LDY, 4 };
-	m_jumpTable[0xBC] = { "LDY", &CPU::addrABX, &CPU::LDY, 4 };
+	m_jump_table[0xA0] = { "LDY", &CPU::addrIMM, &CPU::LDY, 2 };
+	m_jump_table[0xA4] = { "LDY", &CPU::addrZPI, &CPU::LDY, 3 };
+	m_jump_table[0xB4] = { "LDY", &CPU::addrZPX, &CPU::LDY, 4 };
+	m_jump_table[0xAC] = { "LDY", &CPU::addrABS, &CPU::LDY, 4 };
+	m_jump_table[0xBC] = { "LDY", &CPU::addrABX, &CPU::LDY, 4 };
 	//LSR
-	m_jumpTable[0x4A] = { "LSR", &CPU::addrACC, &CPU::LSR, 2 };
-	m_jumpTable[0x46] = { "LSR", &CPU::addrZPI, &CPU::LSR, 5 };
-	m_jumpTable[0x56] = { "LSR", &CPU::addrZPX, &CPU::LSR, 6 };
-	m_jumpTable[0x4E] = { "LSR", &CPU::addrABS, &CPU::LSR, 6 };
-	m_jumpTable[0x5E] = { "LSR", &CPU::addrABX, &CPU::LSR, 7 };
+	m_jump_table[0x4A] = { "LSR", &CPU::addrACC, &CPU::LSR, 2 };
+	m_jump_table[0x46] = { "LSR", &CPU::addrZPI, &CPU::LSR, 5 };
+	m_jump_table[0x56] = { "LSR", &CPU::addrZPX, &CPU::LSR, 6 };
+	m_jump_table[0x4E] = { "LSR", &CPU::addrABS, &CPU::LSR, 6 };
+	m_jump_table[0x5E] = { "LSR", &CPU::addrABX, &CPU::LSR, 7 };
 	//NOP
-	m_jumpTable[0xEA] = { "NOP", &CPU::addrIMP, &CPU::NOP, 2 };
+	m_jump_table[0xEA] = { "NOP", &CPU::addrIMP, &CPU::NOP, 2 };
 	//ORA
-	m_jumpTable[0x09] = { "ORA", &CPU::addrIMM, &CPU::ORA, 2 };
-	m_jumpTable[0x05] = { "ORA", &CPU::addrZPI, &CPU::ORA, 3 };
-	m_jumpTable[0x15] = { "ORA", &CPU::addrZPX, &CPU::ORA, 4 };
-	m_jumpTable[0x0D] = { "ORA", &CPU::addrABS, &CPU::ORA, 4 };
-	m_jumpTable[0x1D] = { "ORA", &CPU::addrABX, &CPU::ORA, 4 };
-	m_jumpTable[0x19] = { "ORA", &CPU::addrABY, &CPU::ORA, 4 };
-	m_jumpTable[0x01] = { "ORA", &CPU::addrINX, &CPU::ORA, 6 };
-	m_jumpTable[0x11] = { "ORA", &CPU::addrINY, &CPU::ORA, 5 };
+	m_jump_table[0x09] = { "ORA", &CPU::addrIMM, &CPU::ORA, 2 };
+	m_jump_table[0x05] = { "ORA", &CPU::addrZPI, &CPU::ORA, 3 };
+	m_jump_table[0x15] = { "ORA", &CPU::addrZPX, &CPU::ORA, 4 };
+	m_jump_table[0x0D] = { "ORA", &CPU::addrABS, &CPU::ORA, 4 };
+	m_jump_table[0x1D] = { "ORA", &CPU::addrABX, &CPU::ORA, 4 };
+	m_jump_table[0x19] = { "ORA", &CPU::addrABY, &CPU::ORA, 4 };
+	m_jump_table[0x01] = { "ORA", &CPU::addrINX, &CPU::ORA, 6 };
+	m_jump_table[0x11] = { "ORA", &CPU::addrINY, &CPU::ORA, 5 };
 	//PHA
-	m_jumpTable[0x48] = { "PHA", &CPU::addrIMP, &CPU::PHA, 3 };
+	m_jump_table[0x48] = { "PHA", &CPU::addrIMP, &CPU::PHA, 3 };
 	//PHP
-	m_jumpTable[0x08] = { "PHP", &CPU::addrIMP, &CPU::PHP, 3 };
+	m_jump_table[0x08] = { "PHP", &CPU::addrIMP, &CPU::PHP, 3 };
 	//PLA
-	m_jumpTable[0x68] = { "PLA", &CPU::addrIMP, &CPU::PLA, 4 };
+	m_jump_table[0x68] = { "PLA", &CPU::addrIMP, &CPU::PLA, 4 };
 	//PLP
-	m_jumpTable[0x28] = { "PLP", &CPU::addrIMP, &CPU::PLP, 4 };
+	m_jump_table[0x28] = { "PLP", &CPU::addrIMP, &CPU::PLP, 4 };
 	//ROL
-	m_jumpTable[0x2A] = { "ROL", &CPU::addrACC, &CPU::ROL, 2 };
-	m_jumpTable[0x26] = { "ROL", &CPU::addrZPI, &CPU::ROL, 5 };
-	m_jumpTable[0x36] = { "ROL", &CPU::addrZPX, &CPU::ROL, 6 };
-	m_jumpTable[0x2E] = { "ROL", &CPU::addrABS, &CPU::ROL, 6 };
-	m_jumpTable[0x3E] = { "ROL", &CPU::addrABX, &CPU::ROL, 7 };
+	m_jump_table[0x2A] = { "ROL", &CPU::addrACC, &CPU::ROL, 2 };
+	m_jump_table[0x26] = { "ROL", &CPU::addrZPI, &CPU::ROL, 5 };
+	m_jump_table[0x36] = { "ROL", &CPU::addrZPX, &CPU::ROL, 6 };
+	m_jump_table[0x2E] = { "ROL", &CPU::addrABS, &CPU::ROL, 6 };
+	m_jump_table[0x3E] = { "ROL", &CPU::addrABX, &CPU::ROL, 7 };
 	//ROR
-	m_jumpTable[0x6A] = { "ROR", &CPU::addrACC, &CPU::ROR, 2 };
-	m_jumpTable[0x66] = { "ROR", &CPU::addrZPI, &CPU::ROR, 5 };
-	m_jumpTable[0x76] = { "ROR", &CPU::addrZPX, &CPU::ROR, 6 };
-	m_jumpTable[0x6E] = { "ROR", &CPU::addrABS, &CPU::ROR, 6 };
-	m_jumpTable[0x7E] = { "ROR", &CPU::addrABX, &CPU::ROR, 7 };
+	m_jump_table[0x6A] = { "ROR", &CPU::addrACC, &CPU::ROR, 2 };
+	m_jump_table[0x66] = { "ROR", &CPU::addrZPI, &CPU::ROR, 5 };
+	m_jump_table[0x76] = { "ROR", &CPU::addrZPX, &CPU::ROR, 6 };
+	m_jump_table[0x6E] = { "ROR", &CPU::addrABS, &CPU::ROR, 6 };
+	m_jump_table[0x7E] = { "ROR", &CPU::addrABX, &CPU::ROR, 7 };
 	// RTI
-	m_jumpTable[0x40] = { "RTI", &CPU::addrIMP, &CPU::RTI, 6 };
+	m_jump_table[0x40] = { "RTI", &CPU::addrIMP, &CPU::RTI, 6 };
 	//RTS
-	m_jumpTable[0x60] = { "RTS", &CPU::addrIMP, &CPU::RTS, 6 };
+	m_jump_table[0x60] = { "RTS", &CPU::addrIMP, &CPU::RTS, 6 };
 	//SBC
-	m_jumpTable[0xE9] = { "SBC", &CPU::addrIMM, &CPU::SBC, 2 };
-	m_jumpTable[0xE5] = { "SBC", &CPU::addrZPI, &CPU::SBC, 3 };
-	m_jumpTable[0xF5] = { "SBC", &CPU::addrZPX, &CPU::SBC, 4 };
-	m_jumpTable[0xED] = { "SBC", &CPU::addrABS, &CPU::SBC, 4 };
-	m_jumpTable[0xFD] = { "SBC", &CPU::addrABX, &CPU::SBC, 4 };
-	m_jumpTable[0xF9] = { "SBC", &CPU::addrABY, &CPU::SBC, 4 };
-	m_jumpTable[0xE1] = { "SBC", &CPU::addrINX, &CPU::SBC, 6 };
-	m_jumpTable[0xF1] = { "SBC", &CPU::addrINY, &CPU::SBC, 5 };
+	m_jump_table[0xE9] = { "SBC", &CPU::addrIMM, &CPU::SBC, 2 };
+	m_jump_table[0xE5] = { "SBC", &CPU::addrZPI, &CPU::SBC, 3 };
+	m_jump_table[0xF5] = { "SBC", &CPU::addrZPX, &CPU::SBC, 4 };
+	m_jump_table[0xED] = { "SBC", &CPU::addrABS, &CPU::SBC, 4 };
+	m_jump_table[0xFD] = { "SBC", &CPU::addrABX, &CPU::SBC, 4 };
+	m_jump_table[0xF9] = { "SBC", &CPU::addrABY, &CPU::SBC, 4 };
+	m_jump_table[0xE1] = { "SBC", &CPU::addrINX, &CPU::SBC, 6 };
+	m_jump_table[0xF1] = { "SBC", &CPU::addrINY, &CPU::SBC, 5 };
 	//SEC
-	m_jumpTable[0x38] = { "SEC", &CPU::addrIMP, &CPU::SEC, 2 };
+	m_jump_table[0x38] = { "SEC", &CPU::addrIMP, &CPU::SEC, 2 };
 	//SED
-	m_jumpTable[0xF8] = { "SED", &CPU::addrIMP, &CPU::SED, 2 };
+	m_jump_table[0xF8] = { "SED", &CPU::addrIMP, &CPU::SED, 2 };
 	//SEI
-	m_jumpTable[0x78] = { "SEI", &CPU::addrIMP, &CPU::SEI, 2 };
+	m_jump_table[0x78] = { "SEI", &CPU::addrIMP, &CPU::SEI, 2 };
 	//STA
-	m_jumpTable[0x85] = { "STA", &CPU::addrZPI, &CPU::STA, 3 };
-	m_jumpTable[0x95] = { "STA", &CPU::addrZPX, &CPU::STA, 4 };
-	m_jumpTable[0x8D] = { "STA", &CPU::addrABS, &CPU::STA, 4 };
-	m_jumpTable[0x9D] = { "STA", &CPU::addrABX, &CPU::STA, 4 };
-	m_jumpTable[0x99] = { "STA", &CPU::addrABY, &CPU::STA, 5 };
-	m_jumpTable[0x81] = { "STA", &CPU::addrINX, &CPU::STA, 6 };
-	m_jumpTable[0x91] = { "STA", &CPU::addrINY, &CPU::STA, 6 };
+	m_jump_table[0x85] = { "STA", &CPU::addrZPI, &CPU::STA, 3 };
+	m_jump_table[0x95] = { "STA", &CPU::addrZPX, &CPU::STA, 4 };
+	m_jump_table[0x8D] = { "STA", &CPU::addrABS, &CPU::STA, 4 };
+	m_jump_table[0x9D] = { "STA", &CPU::addrABX, &CPU::STA, 4 };
+	m_jump_table[0x99] = { "STA", &CPU::addrABY, &CPU::STA, 5 };
+	m_jump_table[0x81] = { "STA", &CPU::addrINX, &CPU::STA, 6 };
+	m_jump_table[0x91] = { "STA", &CPU::addrINY, &CPU::STA, 6 };
 	//STX
-	m_jumpTable[0x86] = { "STX", &CPU::addrZPI, &CPU::STX, 3 };
-	m_jumpTable[0x96] = { "STX", &CPU::addrZPY, &CPU::STX, 4 };
-	m_jumpTable[0x8E] = { "STX", &CPU::addrABS, &CPU::STX, 4 };
+	m_jump_table[0x86] = { "STX", &CPU::addrZPI, &CPU::STX, 3 };
+	m_jump_table[0x96] = { "STX", &CPU::addrZPY, &CPU::STX, 4 };
+	m_jump_table[0x8E] = { "STX", &CPU::addrABS, &CPU::STX, 4 };
 	//STY
-	m_jumpTable[0x84] = { "STY", &CPU::addrZPI, &CPU::STY, 3 };
-	m_jumpTable[0x94] = { "STY", &CPU::addrZPX, &CPU::STY, 4 };
-	m_jumpTable[0x8C] = { "STY", &CPU::addrABS, &CPU::STY, 4 };
+	m_jump_table[0x84] = { "STY", &CPU::addrZPI, &CPU::STY, 3 };
+	m_jump_table[0x94] = { "STY", &CPU::addrZPX, &CPU::STY, 4 };
+	m_jump_table[0x8C] = { "STY", &CPU::addrABS, &CPU::STY, 4 };
 	//TAX
-	m_jumpTable[0xAA] = { "TAX", &CPU::addrIMP, &CPU::TAX, 2 };
+	m_jump_table[0xAA] = { "TAX", &CPU::addrIMP, &CPU::TAX, 2 };
 	//TAY
-	m_jumpTable[0xA8] = { "TAY", &CPU::addrIMP, &CPU::TAY, 2 };
+	m_jump_table[0xA8] = { "TAY", &CPU::addrIMP, &CPU::TAY, 2 };
 	//TSX
-	m_jumpTable[0xBA] = { "TSX", &CPU::addrIMP, &CPU::TSX, 2 };
+	m_jump_table[0xBA] = { "TSX", &CPU::addrIMP, &CPU::TSX, 2 };
 	//TXA
-	m_jumpTable[0x8A] = { "TXA", &CPU::addrIMP, &CPU::TXA, 2 };
+	m_jump_table[0x8A] = { "TXA", &CPU::addrIMP, &CPU::TXA, 2 };
 	//TXS
-	m_jumpTable[0x9A] = { "TXS", &CPU::addrIMP, &CPU::TXS, 2 };
+	m_jump_table[0x9A] = { "TXS", &CPU::addrIMP, &CPU::TXS, 2 };
 	//TYA
-	m_jumpTable[0x98] = { "TYA", &CPU::addrIMP, &CPU::TYA, 2 };
+	m_jump_table[0x98] = { "TYA", &CPU::addrIMP, &CPU::TYA, 2 };
 
 	// illegal opcodes
 	// NOPs
 	// NOP
-	m_jumpTable[0x1A] = { "*NOP", &CPU::addrIMP, &CPU::NOP, 2 };
-	m_jumpTable[0x3A] = { "*NOP", &CPU::addrIMP, &CPU::NOP, 2 };
-	m_jumpTable[0x5A] = { "*NOP", &CPU::addrIMP, &CPU::NOP, 2 };
-	m_jumpTable[0x7A] = { "*NOP", &CPU::addrIMP, &CPU::NOP, 2 };
-	m_jumpTable[0xDA] = { "*NOP", &CPU::addrIMP, &CPU::NOP, 2 };
-	m_jumpTable[0xFA] = { "*NOP", &CPU::addrIMP, &CPU::NOP, 2 };
+	m_jump_table[0x1A] = { "*NOP", &CPU::addrIMP, &CPU::NOP, 2 };
+	m_jump_table[0x3A] = { "*NOP", &CPU::addrIMP, &CPU::NOP, 2 };
+	m_jump_table[0x5A] = { "*NOP", &CPU::addrIMP, &CPU::NOP, 2 };
+	m_jump_table[0x7A] = { "*NOP", &CPU::addrIMP, &CPU::NOP, 2 };
+	m_jump_table[0xDA] = { "*NOP", &CPU::addrIMP, &CPU::NOP, 2 };
+	m_jump_table[0xFA] = { "*NOP", &CPU::addrIMP, &CPU::NOP, 2 };
 	// SKB
-	m_jumpTable[0x80] = { "*NOP", &CPU::addrIMM, &CPU::SKB, 2 };
-	m_jumpTable[0x82] = { "*NOP", &CPU::addrIMM, &CPU::SKB, 2 };
-	m_jumpTable[0x89] = { "*NOP", &CPU::addrIMM, &CPU::SKB, 2 };
-	m_jumpTable[0xC2] = { "*NOP", &CPU::addrIMM, &CPU::SKB, 2 };
-	m_jumpTable[0xE2] = { "*NOP", &CPU::addrIMM, &CPU::SKB, 2 };
+	m_jump_table[0x80] = { "*NOP", &CPU::addrIMM, &CPU::SKB, 2 };
+	m_jump_table[0x82] = { "*NOP", &CPU::addrIMM, &CPU::SKB, 2 };
+	m_jump_table[0x89] = { "*NOP", &CPU::addrIMM, &CPU::SKB, 2 };
+	m_jump_table[0xC2] = { "*NOP", &CPU::addrIMM, &CPU::SKB, 2 };
+	m_jump_table[0xE2] = { "*NOP", &CPU::addrIMM, &CPU::SKB, 2 };
 	// IGN
-	m_jumpTable[0x0C] = { "*NOP", &CPU::addrABS, &CPU::IGN, 4 };
-	m_jumpTable[0x1C] = { "*NOP", &CPU::addrABX, &CPU::IGN, 4 };
-	m_jumpTable[0x3C] = { "*NOP", &CPU::addrABX, &CPU::IGN, 4 };
-	m_jumpTable[0x5C] = { "*NOP", &CPU::addrABX, &CPU::IGN, 4 };
-	m_jumpTable[0x7C] = { "*NOP", &CPU::addrABX, &CPU::IGN, 4 };
-	m_jumpTable[0xDC] = { "*NOP", &CPU::addrABX, &CPU::IGN, 4 };
-	m_jumpTable[0xFC] = { "*NOP", &CPU::addrABX, &CPU::IGN, 4 };
-	m_jumpTable[0x04] = { "*NOP", &CPU::addrZPI, &CPU::IGN, 3 };
-	m_jumpTable[0x44] = { "*NOP", &CPU::addrZPI, &CPU::IGN, 3 };
-	m_jumpTable[0x64] = { "*NOP", &CPU::addrZPI, &CPU::IGN, 3 };
-	m_jumpTable[0x14] = { "*NOP", &CPU::addrZPX, &CPU::IGN, 4 };
-	m_jumpTable[0x34] = { "*NOP", &CPU::addrZPX, &CPU::IGN, 4 };
-	m_jumpTable[0x54] = { "*NOP", &CPU::addrZPX, &CPU::IGN, 4 };
-	m_jumpTable[0x74] = { "*NOP", &CPU::addrZPX, &CPU::IGN, 4 };
-	m_jumpTable[0xD4] = { "*NOP", &CPU::addrZPX, &CPU::IGN, 4 };
-	m_jumpTable[0xF4] = { "*NOP", &CPU::addrZPX, &CPU::IGN, 4 };
+	m_jump_table[0x0C] = { "*NOP", &CPU::addrABS, &CPU::IGN, 4 };
+	m_jump_table[0x1C] = { "*NOP", &CPU::addrABX, &CPU::IGN, 4 };
+	m_jump_table[0x3C] = { "*NOP", &CPU::addrABX, &CPU::IGN, 4 };
+	m_jump_table[0x5C] = { "*NOP", &CPU::addrABX, &CPU::IGN, 4 };
+	m_jump_table[0x7C] = { "*NOP", &CPU::addrABX, &CPU::IGN, 4 };
+	m_jump_table[0xDC] = { "*NOP", &CPU::addrABX, &CPU::IGN, 4 };
+	m_jump_table[0xFC] = { "*NOP", &CPU::addrABX, &CPU::IGN, 4 };
+	m_jump_table[0x04] = { "*NOP", &CPU::addrZPI, &CPU::IGN, 3 };
+	m_jump_table[0x44] = { "*NOP", &CPU::addrZPI, &CPU::IGN, 3 };
+	m_jump_table[0x64] = { "*NOP", &CPU::addrZPI, &CPU::IGN, 3 };
+	m_jump_table[0x14] = { "*NOP", &CPU::addrZPX, &CPU::IGN, 4 };
+	m_jump_table[0x34] = { "*NOP", &CPU::addrZPX, &CPU::IGN, 4 };
+	m_jump_table[0x54] = { "*NOP", &CPU::addrZPX, &CPU::IGN, 4 };
+	m_jump_table[0x74] = { "*NOP", &CPU::addrZPX, &CPU::IGN, 4 };
+	m_jump_table[0xD4] = { "*NOP", &CPU::addrZPX, &CPU::IGN, 4 };
+	m_jump_table[0xF4] = { "*NOP", &CPU::addrZPX, &CPU::IGN, 4 };
 
 	// Combined operations
 	// ALR
-	m_jumpTable[0x4B] = { "*ALR", &CPU::addrIMM, &CPU::ALR, 2 };
+	m_jump_table[0x4B] = { "*ALR", &CPU::addrIMM, &CPU::ALR, 2 };
 	// ANC
-	m_jumpTable[0x0B] = { "*ANC", &CPU::addrIMM, &CPU::ANC, 2 };
-	m_jumpTable[0x2B] = { "*ANC", &CPU::addrIMM, &CPU::ANC, 2 };
+	m_jump_table[0x0B] = { "*ANC", &CPU::addrIMM, &CPU::ANC, 2 };
+	m_jump_table[0x2B] = { "*ANC", &CPU::addrIMM, &CPU::ANC, 2 };
 	// ARR
-	m_jumpTable[0x6B] = { "*ARR", &CPU::addrIMM, &CPU::ARR, 2 };
+	m_jump_table[0x6B] = { "*ARR", &CPU::addrIMM, &CPU::ARR, 2 };
 	// AXS
-	m_jumpTable[0x0B] = { "*AXS", &CPU::addrIMM, &CPU::AXS, 2 };
+	m_jump_table[0x0B] = { "*AXS", &CPU::addrIMM, &CPU::AXS, 2 };
 	// LAX
-	m_jumpTable[0xA3] = { "*LAX", &CPU::addrINX, &CPU::LAX, 6 };
-	m_jumpTable[0xA7] = { "*LAX", &CPU::addrZPI, &CPU::LAX, 3 };
-	m_jumpTable[0xAF] = { "*LAX", &CPU::addrABS, &CPU::LAX, 4 };
-	m_jumpTable[0xB3] = { "*LAX", &CPU::addrINY, &CPU::LAX, 5 };
-	m_jumpTable[0xB7] = { "*LAX", &CPU::addrZPY, &CPU::LAX, 4 };
-	m_jumpTable[0xBF] = { "*LAX", &CPU::addrABY, &CPU::LAX, 4 };
+	m_jump_table[0xA3] = { "*LAX", &CPU::addrINX, &CPU::LAX, 6 };
+	m_jump_table[0xA7] = { "*LAX", &CPU::addrZPI, &CPU::LAX, 3 };
+	m_jump_table[0xAF] = { "*LAX", &CPU::addrABS, &CPU::LAX, 4 };
+	m_jump_table[0xB3] = { "*LAX", &CPU::addrINY, &CPU::LAX, 5 };
+	m_jump_table[0xB7] = { "*LAX", &CPU::addrZPY, &CPU::LAX, 4 };
+	m_jump_table[0xBF] = { "*LAX", &CPU::addrABY, &CPU::LAX, 4 };
 	// SAX
-	m_jumpTable[0x83] = { "*SAX", &CPU::addrINX, &CPU::SAX, 6 };
-	m_jumpTable[0x87] = { "*SAX", &CPU::addrZPI, &CPU::SAX, 3 };
-	m_jumpTable[0x8F] = { "*SAX", &CPU::addrABS, &CPU::SAX, 4 };
-	m_jumpTable[0x97] = { "*SAX", &CPU::addrZPY, &CPU::SAX, 4 };
+	m_jump_table[0x83] = { "*SAX", &CPU::addrINX, &CPU::SAX, 6 };
+	m_jump_table[0x87] = { "*SAX", &CPU::addrZPI, &CPU::SAX, 3 };
+	m_jump_table[0x8F] = { "*SAX", &CPU::addrABS, &CPU::SAX, 4 };
+	m_jump_table[0x97] = { "*SAX", &CPU::addrZPY, &CPU::SAX, 4 };
 
 	// duplicates
-	m_jumpTable[0xEB] = { "*SBC", &CPU::addrIMM, &CPU::SBC, 2 };
+	m_jump_table[0xEB] = { "*SBC", &CPU::addrIMM, &CPU::SBC, 2 };
 
 	// MRW
 	// DCP
-	m_jumpTable[0xC3] = { "*DCP", &CPU::addrINX, &CPU::DCP, 8 };
-	m_jumpTable[0xC7] = { "*DCP", &CPU::addrZPI, &CPU::DCP, 5 };
-	m_jumpTable[0xCF] = { "*DCP", &CPU::addrABS, &CPU::DCP, 6 };
-	m_jumpTable[0xD3] = { "*DCP", &CPU::addrINY, &CPU::DCP, 8 };
-	m_jumpTable[0xD7] = { "*DCP", &CPU::addrZPX, &CPU::DCP, 6 };
-	m_jumpTable[0xDB] = { "*DCP", &CPU::addrABY, &CPU::DCP, 7 };
-	m_jumpTable[0xDF] = { "*DCP", &CPU::addrABX, &CPU::DCP, 7 };
+	m_jump_table[0xC3] = { "*DCP", &CPU::addrINX, &CPU::DCP, 8 };
+	m_jump_table[0xC7] = { "*DCP", &CPU::addrZPI, &CPU::DCP, 5 };
+	m_jump_table[0xCF] = { "*DCP", &CPU::addrABS, &CPU::DCP, 6 };
+	m_jump_table[0xD3] = { "*DCP", &CPU::addrINY, &CPU::DCP, 8 };
+	m_jump_table[0xD7] = { "*DCP", &CPU::addrZPX, &CPU::DCP, 6 };
+	m_jump_table[0xDB] = { "*DCP", &CPU::addrABY, &CPU::DCP, 7 };
+	m_jump_table[0xDF] = { "*DCP", &CPU::addrABX, &CPU::DCP, 7 };
 	// ISC
-	m_jumpTable[0xE3] = { "*ISB", &CPU::addrINX, &CPU::ISC, 8 };
-	m_jumpTable[0xE7] = { "*ISB", &CPU::addrZPI, &CPU::ISC, 5 };
-	m_jumpTable[0xEF] = { "*ISB", &CPU::addrABS, &CPU::ISC, 6 };
-	m_jumpTable[0xF3] = { "*ISB", &CPU::addrINY, &CPU::ISC, 8 };
-	m_jumpTable[0xF7] = { "*ISB", &CPU::addrZPX, &CPU::ISC, 6 };
-	m_jumpTable[0xFB] = { "*ISB", &CPU::addrABY, &CPU::ISC, 7 };
-	m_jumpTable[0xFF] = { "*ISB", &CPU::addrABX, &CPU::ISC, 7 };
+	m_jump_table[0xE3] = { "*ISB", &CPU::addrINX, &CPU::ISC, 8 };
+	m_jump_table[0xE7] = { "*ISB", &CPU::addrZPI, &CPU::ISC, 5 };
+	m_jump_table[0xEF] = { "*ISB", &CPU::addrABS, &CPU::ISC, 6 };
+	m_jump_table[0xF3] = { "*ISB", &CPU::addrINY, &CPU::ISC, 8 };
+	m_jump_table[0xF7] = { "*ISB", &CPU::addrZPX, &CPU::ISC, 6 };
+	m_jump_table[0xFB] = { "*ISB", &CPU::addrABY, &CPU::ISC, 7 };
+	m_jump_table[0xFF] = { "*ISB", &CPU::addrABX, &CPU::ISC, 7 };
 	// SLO
-	m_jumpTable[0x03] = { "*SLO", &CPU::addrINX, &CPU::SLO, 8 };
-	m_jumpTable[0x07] = { "*SLO", &CPU::addrZPI, &CPU::SLO, 5 };
-	m_jumpTable[0x0F] = { "*SLO", &CPU::addrABS, &CPU::SLO, 6 };
-	m_jumpTable[0x13] = { "*SLO", &CPU::addrINY, &CPU::SLO, 8 };
-	m_jumpTable[0x17] = { "*SLO", &CPU::addrZPX, &CPU::SLO, 6 };
-	m_jumpTable[0x1B] = { "*SLO", &CPU::addrABY, &CPU::SLO, 7 };
-	m_jumpTable[0x1F] = { "*SLO", &CPU::addrABX, &CPU::SLO, 7 };
+	m_jump_table[0x03] = { "*SLO", &CPU::addrINX, &CPU::SLO, 8 };
+	m_jump_table[0x07] = { "*SLO", &CPU::addrZPI, &CPU::SLO, 5 };
+	m_jump_table[0x0F] = { "*SLO", &CPU::addrABS, &CPU::SLO, 6 };
+	m_jump_table[0x13] = { "*SLO", &CPU::addrINY, &CPU::SLO, 8 };
+	m_jump_table[0x17] = { "*SLO", &CPU::addrZPX, &CPU::SLO, 6 };
+	m_jump_table[0x1B] = { "*SLO", &CPU::addrABY, &CPU::SLO, 7 };
+	m_jump_table[0x1F] = { "*SLO", &CPU::addrABX, &CPU::SLO, 7 };
 	// RLA
-	m_jumpTable[0x23] = { "*RLA", &CPU::addrINX, &CPU::RLA, 8 };
-	m_jumpTable[0x27] = { "*RLA", &CPU::addrZPI, &CPU::RLA, 5 };
-	m_jumpTable[0x2F] = { "*RLA", &CPU::addrABS, &CPU::RLA, 6 };
-	m_jumpTable[0x33] = { "*RLA", &CPU::addrINY, &CPU::RLA, 8 };
-	m_jumpTable[0x37] = { "*RLA", &CPU::addrZPX, &CPU::RLA, 6 };
-	m_jumpTable[0x3B] = { "*RLA", &CPU::addrABY, &CPU::RLA, 7 };
-	m_jumpTable[0x3F] = { "*RLA", &CPU::addrABX, &CPU::RLA, 7 };
+	m_jump_table[0x23] = { "*RLA", &CPU::addrINX, &CPU::RLA, 8 };
+	m_jump_table[0x27] = { "*RLA", &CPU::addrZPI, &CPU::RLA, 5 };
+	m_jump_table[0x2F] = { "*RLA", &CPU::addrABS, &CPU::RLA, 6 };
+	m_jump_table[0x33] = { "*RLA", &CPU::addrINY, &CPU::RLA, 8 };
+	m_jump_table[0x37] = { "*RLA", &CPU::addrZPX, &CPU::RLA, 6 };
+	m_jump_table[0x3B] = { "*RLA", &CPU::addrABY, &CPU::RLA, 7 };
+	m_jump_table[0x3F] = { "*RLA", &CPU::addrABX, &CPU::RLA, 7 };
 	// SRE
-	m_jumpTable[0x43] = { "*SRE", &CPU::addrINX, &CPU::SRE, 8 };
-	m_jumpTable[0x47] = { "*SRE", &CPU::addrZPI, &CPU::SRE, 5 };
-	m_jumpTable[0x4F] = { "*SRE", &CPU::addrABS, &CPU::SRE, 6 };
-	m_jumpTable[0x53] = { "*SRE", &CPU::addrINY, &CPU::SRE, 8 };
-	m_jumpTable[0x57] = { "*SRE", &CPU::addrZPX, &CPU::SRE, 6 };
-	m_jumpTable[0x5B] = { "*SRE", &CPU::addrABY, &CPU::SRE, 7 };
-	m_jumpTable[0x5F] = { "*SRE", &CPU::addrABX, &CPU::SRE, 7 };
+	m_jump_table[0x43] = { "*SRE", &CPU::addrINX, &CPU::SRE, 8 };
+	m_jump_table[0x47] = { "*SRE", &CPU::addrZPI, &CPU::SRE, 5 };
+	m_jump_table[0x4F] = { "*SRE", &CPU::addrABS, &CPU::SRE, 6 };
+	m_jump_table[0x53] = { "*SRE", &CPU::addrINY, &CPU::SRE, 8 };
+	m_jump_table[0x57] = { "*SRE", &CPU::addrZPX, &CPU::SRE, 6 };
+	m_jump_table[0x5B] = { "*SRE", &CPU::addrABY, &CPU::SRE, 7 };
+	m_jump_table[0x5F] = { "*SRE", &CPU::addrABX, &CPU::SRE, 7 };
 	// RRA
-	m_jumpTable[0x63] = { "*RRA", &CPU::addrINX, &CPU::RRA, 8 };
-	m_jumpTable[0x67] = { "*RRA", &CPU::addrZPI, &CPU::RRA, 5 };
-	m_jumpTable[0x6F] = { "*RRA", &CPU::addrABS, &CPU::RRA, 6 };
-	m_jumpTable[0x73] = { "*RRA", &CPU::addrINY, &CPU::RRA, 8 };
-	m_jumpTable[0x77] = { "*RRA", &CPU::addrZPX, &CPU::RRA, 6 };
-	m_jumpTable[0x7B] = { "*RRA", &CPU::addrABY, &CPU::RRA, 7 };
-	m_jumpTable[0x7F] = { "*RRA", &CPU::addrABX, &CPU::RRA, 7 };
+	m_jump_table[0x63] = { "*RRA", &CPU::addrINX, &CPU::RRA, 8 };
+	m_jump_table[0x67] = { "*RRA", &CPU::addrZPI, &CPU::RRA, 5 };
+	m_jump_table[0x6F] = { "*RRA", &CPU::addrABS, &CPU::RRA, 6 };
+	m_jump_table[0x73] = { "*RRA", &CPU::addrINY, &CPU::RRA, 8 };
+	m_jump_table[0x77] = { "*RRA", &CPU::addrZPX, &CPU::RRA, 6 };
+	m_jump_table[0x7B] = { "*RRA", &CPU::addrABY, &CPU::RRA, 7 };
+	m_jump_table[0x7F] = { "*RRA", &CPU::addrABX, &CPU::RRA, 7 };
 }
 
 void CPU::Step()
@@ -354,13 +354,13 @@ void CPU::Step()
 	{
 		m_opcode = readByte();
 
-		m_currentInstr = m_jumpTable[m_opcode];
+		m_current_instr = m_jump_table[m_opcode];
 
-		m_cycle = m_currentInstr.cycles;
+		m_cycle = m_current_instr.cycles;
 		// get address
-		u16 addr = ( this->*m_currentInstr.addrMode )( );
+		u16 addr = ( this->*m_current_instr.addressing_mode_fn )( );
 		// execute instruction
-		( this->*m_currentInstr.exec )( addr );
+		( this->*m_current_instr.instrucion_fn )( addr );
 
 		if (m_canOops)
 		{
@@ -1650,7 +1650,7 @@ bool CPU::checkFlag(const u8 flag) const
 
 bool CPU::isImplied() const
 {
-	return m_currentInstr.addrMode == &CPU::addrIMP || m_currentInstr.addrMode == &CPU::addrACC;
+	return m_current_instr.addressing_mode_fn == &CPU::addrIMP || m_current_instr.addressing_mode_fn == &CPU::addrACC;
 }
 
 void CPU::branchIfCond(const u16 addr, bool cond)

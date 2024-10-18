@@ -107,9 +107,6 @@ Assembler& Assembler::Assemble(const std::string& code)
 	return *this;
 }
 
-void Assembler::Clean()
-{
-}
 
 InstructionName Assembler::GetInstructionName(const std::string_view name)
 {

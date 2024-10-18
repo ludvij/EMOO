@@ -106,8 +106,8 @@ public:
 private:
 	Engine() = default;
 
-
 	void draw_background(vk::CommandBuffer cmd) const;
+
 
 	void draw_geometry(vk::CommandBuffer cmd);
 
@@ -209,7 +209,7 @@ private:
 
 private:
 
-	BatchRenderer* m_batcher{ nullptr };
+	std::list<BatchRenderer*> m_batcher{};
 	friend class BatchRenderer;
 	friend class VulkanTexture;
 };

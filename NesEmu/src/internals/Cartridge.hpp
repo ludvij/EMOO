@@ -45,13 +45,13 @@ public:
 	struct iNesHeader
 	{
 		char name[4];
-		u8 prgRomChunks;
-		u8 chrRomChunks;
-		u8 mapper1;
-		u8 mapper2;
-		u8 prgRamSize;
-		u8 tv1;
-		u8 tv2;
+		u8 prg_rom_chunks;
+		u8 chr_rom_chunks;
+		u8 flags_6;
+		u8 flags_7;
+		u8 prg_ram_size;
+		u8 flags_9;
+		u8 flags_10;
 		u8 unused[5];
 	};
 
@@ -63,7 +63,6 @@ public:
 		//FourScreen,
 		//ThreeScreenVertical
 	};
-	std::string to_string(Mirroring mirroring);
 	Mirroring GetMirroring() const
 	{
 		return m_mirroring;
@@ -73,6 +72,7 @@ public:
 
 private:
 
+	std::string to_string(Mirroring mirroring);
 	bool is_header_valid() const;
 
 private:

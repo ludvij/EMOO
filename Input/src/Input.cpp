@@ -266,14 +266,20 @@ bool IInput::CanRepeatButtonEvery(Button b, std::chrono::milliseconds ms)
 	}
 	return true;
 }
-void IInput::ClearActions(Button button)
+void IInput::ClearButtonActions(Button button)
 {
 	m_button_actions[button].clear();
+}
+
+void IInput::ClearKeyAction(Key k)
+{
+	m_key_actions[k].clear();
 }
 
 void IInput::ClearActions()
 {
 	m_button_actions.clear();
+	m_key_actions.clear();
 }
 
 void IInput::AddGamepadAction(Button b, const std::function<void(IInput*)>& action)

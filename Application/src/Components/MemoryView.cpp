@@ -207,7 +207,7 @@ void Ui::Component::MemoryView::OnUpdate()
 
 	if (m_fadeout >= 0)
 	{
-		m_fadeout -= static_cast<float>( Application::GetDelta() );
+		m_fadeout -= static_cast<float>( Application::Get().GetDelta() );
 	}
 	else
 	{

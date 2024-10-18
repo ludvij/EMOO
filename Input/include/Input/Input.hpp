@@ -23,9 +23,9 @@ enum class Button
 	FACE_LEFT,
 	FACE_UP,
 	FACE_RIGHT,
-	DPAD_UP,
 	DPAD_DOWN,
 	DPAD_LEFT,
+	DPAD_UP,
 	DPAD_RIGHT,
 	START,
 	SELECT,
@@ -103,15 +103,16 @@ public:
 	bool CanRepeatKeyEvery(Key k, std::chrono::milliseconds ms);
 	bool CanRepeatButtonEvery(Button b, std::chrono::milliseconds ms);
 
-	void ClearActions(Button button);
 	void ClearActions();
+	void ClearButtonActions(Button button);
+	void ClearKeyAction(Key k);
 
 	void AddGamepadAction(Button b, const std::function<void(IInput*)>& action);
 	void AddKeyboardAction(Key b, const std::function<void(IInput*)>& action);
 
-	void RunGamepadActions(Button b);
-	void RunKeyboardActions(Key b);
 	void RunActions();
+	void RunKeyboardActions(Key b);
+	void RunGamepadActions(Button b);
 	void Update();
 
 	virtual void ProcessEvents(void* event) = 0;

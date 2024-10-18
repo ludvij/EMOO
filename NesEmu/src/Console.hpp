@@ -75,31 +75,6 @@ public:
 		return m_conf;
 	}
 
-	u32* OutputScreen()
-	{
-		return m_ppu.GetScreen();
-	};
-
-	bool HasUpdatedPatternTables()
-	{
-		return m_ppu.HasUpdatedPatternTables();
-	}
-
-	bool HasUpdatedPalettes()
-	{
-		return m_ppu.HasUpdatedPalettes();
-	}
-
-	u32 OutputPaletteColor(u8 i, u8 s)
-	{
-		return m_ppu.GetColorFromPalette(i, s);
-	}
-
-	u32* OutputPalette()
-	{
-		return m_ppu.GetPalette();
-	}
-
 	Controller& GetController(u8 port)
 	{
 		return m_controller_ports[port];
@@ -115,7 +90,7 @@ private:
 	double m_frame_time{ 0 };
 	double m_time_sice_last_frame{ 0 };
 
-	u64 m_masterClock = 0;
+	u64 m_master_clock = 0;
 
 	std::shared_ptr<Cartridge> m_cartridge;
 

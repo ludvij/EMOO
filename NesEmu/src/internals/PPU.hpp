@@ -228,6 +228,7 @@ private:
 
 
 	u32 get_color_for_pixel();
+	Color get_rendering_color(u8 palette, u8 pixel);
 
 	void draw_pixel();
 

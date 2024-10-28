@@ -47,7 +47,7 @@ public:
 
 	virtual void BeginImGuiFrame() = 0;
 
-	void AddEventFunction(Event e, const std::function<void(IWindow*, void*)>& fn);
+	void AddEventFunction(Event e, const std::function<void(IWindow*, void*)>&& fn);
 
 	virtual void ProcessEvents(void* event) = 0;
 

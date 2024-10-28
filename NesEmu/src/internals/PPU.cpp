@@ -809,7 +809,7 @@ void PPU::increment_x()
 	}
 	else
 	{
-		m_v++;;
+		m_v++;
 	}
 }
 
@@ -1153,7 +1153,7 @@ u32 PPU::get_color_for_pixel()
 		}
 	}
 
-	return GetColorFromPalette(palette, pixel);
+	return get_rendering_color(palette, pixel);
 }
 
 void PPU::draw_pixel()
@@ -1167,10 +1167,19 @@ void PPU::draw_pixel()
 		m_screen[( m_scanline << 8 ) + m_cycle - 1] = m_palette_ram_indexes[m_v & 0x1F];
 	}
 }
-
+Color PPU::get_rendering_color(const u8 palette, const u8 pixel)
+{
+	const u8 index = m_palette_ram_indexes[static_cast<size_t>( palette * 4 + pixel )];
+	if (m_ppu_mask & Mask::GRAYSCALE)
+	{
+		return m_palette[static_cast<size_t>( index & 0x30 )];
+	}
+	return m_palette[index];
+}
 
 Color PPU::GetColorFromPalette(const u8 palette, const u8 pixel)
 {
+
 	return m_palette[m_palette_ram_indexes[static_cast<size_t>( palette * 4 + pixel )]];
 }
 

@@ -137,6 +137,8 @@ private:
 
 	void init_default_data();
 
+	glm::mat4 get_proj_matrix() const;
+
 
 	void create_swapchain(u32 width, u32 height);
 	void destroy_swapchain();

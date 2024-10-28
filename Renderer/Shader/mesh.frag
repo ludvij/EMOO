@@ -16,6 +16,7 @@ layout (location = 0) out vec4 outFragColor;
 
 void main() 
 {
+	// uncoment this when debugging
 	// if (textureID < 0)
 	// {
 	// 	float scale = 8.0f;

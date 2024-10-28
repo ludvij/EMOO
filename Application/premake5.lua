@@ -81,7 +81,6 @@ project "Application"
 	filter "configurations:Debug"
 		defines { 
 			"GRAPHICS_DEBUG",
-			"TRACE_UUID_LIFETIMES",
 		}
 		runtime "debug"
 		symbols "On"

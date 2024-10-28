@@ -11,8 +11,8 @@ public:
 	SDL2Input();
 	virtual ~SDL2Input() override;
 	// Inherited via IInput
-	bool GetButton(Button b) const override;
-	bool GetKey(Key k) const override;
+	bool GetButton(int trigger) const override;
+	bool GetKey(int trigger) const override;
 
 private:
 	void add_controller();

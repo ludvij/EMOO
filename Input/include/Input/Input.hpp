@@ -4,6 +4,8 @@
 #include <functional>
 #include <unordered_map>
 
+#include <lud_id.hpp>
+
 #include <chrono>
 
 #include <print>
@@ -16,9 +18,10 @@
 
 namespace Input
 {
-enum class Button
+using ms_t = std::chrono::milliseconds;
+enum Button
 {
-	NONE,
+	BUTTON_NONE = 0,
 	FACE_DOWN,
 	FACE_LEFT,
 	FACE_UP,
@@ -35,12 +38,12 @@ enum class Button
 	L1,
 	//L2, this is an axis
 	L3,
-	MISC,
+	BUTTON_MISC,
 };
 
-enum class Key
+enum Key
 {
-	NONE,
+	KEY_NONE = 1000,
 	// FUNCTION KEYS
 	F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12,
 	F13, F14, F15, F16, F17, F18, F19, F20, F21, F22, F23, F24,
@@ -51,6 +54,8 @@ enum class Key
 	CAPSLOCK, SPACE, TAB, ENTER, ESCAPE, BACK,
 	// MODIFIERS
 	LWIN, RWIN, LCTRL, RCTRL, LALT, RALT, LSHIFT, RSHIFT,
+	// FAKE MODIFIERS, MAP TO BOTH SIDES
+	WIN, CTRL, ALT, SHIFT,
 	// CURSOR CONTROL
 	SCROLLLOCK, DELETE, INSERT, HOME, END, PAGEUP, PAGEDOWN, UP, DOWN, LEFT, RIGHT,
 	// NUMPAD
@@ -85,34 +90,24 @@ class IInput
 public:
 
 	virtual ~IInput() = default;
-	virtual bool GetButton(Button b) const = 0;
-	virtual bool GetKey(Key k) const = 0;
+	virtual bool GetButton(int trigger) const = 0;
+	virtual bool GetKey(int trigger) const = 0;
 
 	// an empty mod list will test all modifiers
 	bool IsKeyModified(std::initializer_list<Key> modifiers={}) const;
 
-	bool IsRepeating() const;
-	bool IsKeyRepeating(Key k) const;
-	bool IsButtonRepeating(Button b) const;
+	bool IsRepeating(int trigger=-1) const;
 
-	bool CanRepeatAfter(std::chrono::milliseconds ms) const;
-	bool CanRepeatKeyAfter(Key k, std::chrono::milliseconds ms) const;
-	bool CanRepeatButtonAfter(Button b, std::chrono::milliseconds ms) const;
+	bool CanRepeatAfter(ms_t ms, int trigger=-1) const;
 
-	bool CanRepeatEvery(std::chrono::milliseconds ms);
-	bool CanRepeatKeyEvery(Key k, std::chrono::milliseconds ms);
-	bool CanRepeatButtonEvery(Button b, std::chrono::milliseconds ms);
+	bool CanRepeatEvery(ms_t ms, int trigger=-1);
 
-	void ClearActions();
-	void ClearButtonActions(Button button);
-	void ClearKeyAction(Key k);
+	void ClearActions(int trigger=-1);
 
-	void AddGamepadAction(Button b, const std::function<void(IInput*)>& action);
-	void AddKeyboardAction(Key b, const std::function<void(IInput*)>& action);
+	void AddAction(int trigger, const std::function<void(IInput*)>& action);
 
 	void RunActions();
-	void RunKeyboardActions(Key b);
-	void RunGamepadActions(Button b);
+	void RunActions(int trigger);
 	void Update();
 
 	virtual void ProcessEvents(void* event) = 0;
@@ -123,20 +118,21 @@ protected:
 	void update_keyboard_state();
 	void update_gamepad_state();
 
+	bool is_pressed(int trigger) const;
+
 protected:
-	std::unordered_map<Button, std::deque<std::function<void(IInput*)>>> m_button_actions;
-	std::unordered_map<Key, std::deque<std::function<void(IInput*)>>> m_key_actions;
+
+private:
+	std::unordered_map<int, std::deque<std::function<void(IInput*)>>> m_actions;
 
 	// can't be a vector, has gaps
 	std::unordered_map<size_t, size_t> m_time_repetitions;
 
-	Button m_current_button{ 0 };
-	Key m_current_key{ 0 };
+	int m_current{};
 
 	size_t m_current_action{ 0 };
 
-	std::unordered_map<Button, std::chrono::time_point<std::chrono::steady_clock>> m_pressed_buttons;
-	std::unordered_map<Key, std::chrono::time_point<std::chrono::steady_clock>> m_pressed_keys;
+	std::unordered_map<int, std::chrono::time_point<std::chrono::steady_clock>> m_pressed;
 
 };
 }

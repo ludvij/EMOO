@@ -1,5 +1,5 @@
-#include "pch.hpp"
 #include "Console.hpp"
+#include "pch.hpp"
 
 // I'm not writing this
 using namespace std::chrono_literals;
@@ -13,7 +13,7 @@ Console::Console(Configuration conf = NTSC)
 {
 	m_cpu.ConnectBus(&m_bus);
 	m_bus.ConnectPPU(&m_ppu);
-	m_bus.ConnectAPU(&m_apu);
+	m_bus.ConnectAPU(&m_apu); // placeholder for eventual APU implementation
 	m_bus.ConnectController(0, &m_controller_ports[0]);
 	m_bus.ConnectController(1, &m_controller_ports[1]);
 	//m_apu.ConnectBus(&m_bus);

@@ -176,16 +176,16 @@ void Application::init_button_actions()
 		{
 			m_console.GetController(0).SetPressed(Emu::Button::SELECT);
 		};
-	m_input->AddGamepadAction(Input::Button::FACE_DOWN, press_a);
-	m_input->AddGamepadAction(Input::Button::FACE_LEFT, press_b);
-	m_input->AddGamepadAction(Input::Button::FACE_RIGHT, press_a);
-	m_input->AddGamepadAction(Input::Button::FACE_UP, press_b);
-	m_input->AddGamepadAction(Input::Button::DPAD_UP, press_up);
-	m_input->AddGamepadAction(Input::Button::DPAD_DOWN, press_down);
-	m_input->AddGamepadAction(Input::Button::DPAD_LEFT, press_left);
-	m_input->AddGamepadAction(Input::Button::DPAD_RIGHT, press_right);
-	m_input->AddGamepadAction(Input::Button::START, press_start);
-	m_input->AddGamepadAction(Input::Button::SELECT, press_select);
+	m_input->AddAction(Input::Button::FACE_DOWN, press_a);
+	m_input->AddAction(Input::Button::FACE_LEFT, press_b);
+	m_input->AddAction(Input::Button::FACE_RIGHT, press_a);
+	m_input->AddAction(Input::Button::FACE_UP, press_b);
+	m_input->AddAction(Input::Button::DPAD_UP, press_up);
+	m_input->AddAction(Input::Button::DPAD_DOWN, press_down);
+	m_input->AddAction(Input::Button::DPAD_LEFT, press_left);
+	m_input->AddAction(Input::Button::DPAD_RIGHT, press_right);
+	m_input->AddAction(Input::Button::START, press_start);
+	m_input->AddAction(Input::Button::SELECT, press_select);
 
 }
 
@@ -211,7 +211,7 @@ void Application::init_keyboard_actions()
 		{
 			INPUT_REPEAT_AFTER(i, 1000ms);
 			INPUT_REPEAT_EVERY(i, 50ms);
-			INPUT_KEY_MODIFIED(i, K::RSHIFT, K::LSHIFT);
+			INPUT_KEY_MODIFIED(i, K::SHIFT);
 
 			run_frame();
 		};
@@ -219,7 +219,7 @@ void Application::init_keyboard_actions()
 		{
 			INPUT_REPEAT_AFTER(i, 1000ms);
 			INPUT_REPEAT_EVERY(i, 10ms);
-			INPUT_KEY_MODIFIED(i, K::RSHIFT, K::LSHIFT);
+			INPUT_KEY_MODIFIED(i, K::SHIFT);
 
 			run_pixel();
 		};
@@ -227,14 +227,14 @@ void Application::init_keyboard_actions()
 	auto action_exit = [&](Input::IInput* i)
 		{
 			INPUT_NOT_REPEATED(i);
-			INPUT_KEY_MODIFIED(i, K::RSHIFT, K::LSHIFT);
+			INPUT_KEY_MODIFIED(i, K::SHIFT);
 
 			Close();
 		};
 	auto action_reset = [&](Input::IInput* i)
 		{
 			INPUT_NOT_REPEATED(i);
-			INPUT_KEY_MODIFIED(i, K::RSHIFT, K::LSHIFT);
+			INPUT_KEY_MODIFIED(i, K::SHIFT);
 			m_console.Reset();
 		};
 
@@ -242,7 +242,7 @@ void Application::init_keyboard_actions()
 		{
 			INPUT_REPEAT_AFTER(i, 1000ms);
 			INPUT_REPEAT_EVERY(i, 10ms);
-			INPUT_KEY_MODIFIED(i, K::RCTRL, K::LCTRL);
+			INPUT_KEY_MODIFIED(i, K::CTRL);
 
 			run_ppu_cycle();
 		};
@@ -250,7 +250,7 @@ void Application::init_keyboard_actions()
 		{
 			INPUT_REPEAT_AFTER(i, 1000ms);
 			INPUT_REPEAT_EVERY(i, 10ms);
-			INPUT_KEY_MODIFIED(i, K::RCTRL, K::LCTRL);
+			INPUT_KEY_MODIFIED(i, K::CTRL);
 
 			run_cpu_cycle();
 		};
@@ -266,21 +266,21 @@ void Application::init_keyboard_actions()
 	auto action_load_rom = [&](Input::IInput* i)
 		{
 			INPUT_NOT_REPEATED(i);
-			INPUT_KEY_MODIFIED(i, K::LCTRL, K::RCTRL);
+			INPUT_KEY_MODIFIED(i, K::CTRL);
 
 			load_rom();
 		};
 	auto action_cpu_status = [&](Input::IInput* i)
 		{
 			INPUT_NOT_REPEATED(i);
-			INPUT_KEY_MODIFIED(i, K::LCTRL, K::RCTRL);
+			INPUT_KEY_MODIFIED(i, K::CTRL);
 
 			cpu_status();
 		};
 	auto action_ppu_status = [&](Input::IInput* i)
 		{
 			INPUT_NOT_REPEATED(i);
-			INPUT_KEY_MODIFIED(i, K::LCTRL, K::RCTRL);
+			INPUT_KEY_MODIFIED(i, K::CTRL);
 
 			ppu_status();
 		};
@@ -291,23 +291,20 @@ void Application::init_keyboard_actions()
 
 			memory_view();
 		};
-	m_input->AddKeyboardAction(K::F9, action_stop_continue);
-	m_input->AddKeyboardAction(K::F9, action_run_frame);
+	m_input->AddAction(K::F9, action_stop_continue);
+	m_input->AddAction(K::F9, action_run_frame);
+	m_input->AddAction(K::F10, action_run_scanline);
+	m_input->AddAction(K::F10, action_run_pixel);
+	m_input->AddAction(K::F10, action_run_ppu_cycle);
+	m_input->AddAction(K::F11, action_run_cpu_instructin);
+	m_input->AddAction(K::F11, action_run_cpu_cycle);
+	m_input->AddAction(K::F8, action_reset);
+	m_input->AddAction(K::ESCAPE, action_exit);
+	m_input->AddAction(K::O, action_load_rom);
+	m_input->AddAction(K::C, action_cpu_status);
+	m_input->AddAction(K::P, action_ppu_status);
+	m_input->AddAction(K::M, action_memory_view);
 
-	m_input->AddKeyboardAction(K::F10, action_run_scanline);
-	m_input->AddKeyboardAction(K::F10, action_run_pixel);
-	m_input->AddKeyboardAction(K::F10, action_run_ppu_cycle);
-
-	m_input->AddKeyboardAction(K::F11, action_run_cpu_instructin);
-	m_input->AddKeyboardAction(K::F11, action_run_cpu_cycle);
-
-	m_input->AddKeyboardAction(K::F8, action_reset);
-	m_input->AddKeyboardAction(K::ESCAPE, action_exit);
-	m_input->AddKeyboardAction(K::O, action_load_rom);
-
-	m_input->AddKeyboardAction(K::C, action_cpu_status);
-	m_input->AddKeyboardAction(K::P, action_ppu_status);
-	m_input->AddKeyboardAction(K::M, action_memory_view);
 }
 
 void Application::init_windowevent_actions()

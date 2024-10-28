@@ -5,26 +5,51 @@
 
 namespace Input
 {
+
+static constexpr int BUTTON_BEGIN = Button::BUTTON_NONE;
+static constexpr int BUTTON_END = Button::BUTTON_MISC;
+static constexpr int KEY_BEGIN = Key::KEY_NONE;
+static constexpr int KEY_END = Key::OEM_COMMA;
+
+static constexpr int MODIFIER_BEGIN = Key::LWIN;
+static constexpr int MODIFIER_END = Key::SHIFT;
+
+static constexpr bool is_button(int trigger)
+{
+	return trigger >= BUTTON_BEGIN && trigger <= BUTTON_END;
+}
+
+static constexpr bool is_key(int trigger)
+{
+	return trigger >= KEY_BEGIN && trigger <= KEY_END;
+}
+
+static constexpr bool is_modifier(int trigger)
+{
+	return trigger >= MODIFIER_BEGIN && trigger <= MODIFIER_END;
+}
+
+
 auto GetButtonName(Button b)
 {
 	switch (b)
 	{
-	case Input::Button::FACE_DOWN:  return "FACE_DOWN";
-	case Input::Button::FACE_LEFT:  return "FACE_LEFT";
-	case Input::Button::FACE_UP:    return "FACE_UP";
-	case Input::Button::FACE_RIGHT: return "FACE_RIGHT";
-	case Input::Button::DPAD_UP:    return "DPAD_UP";
-	case Input::Button::DPAD_DOWN:  return "DPAD_DOWN";
-	case Input::Button::DPAD_LEFT:  return "DPAD_LEFT";
-	case Input::Button::DPAD_RIGHT: return "DPAD_RIGHT";
-	case Input::Button::START:      return "START";
-	case Input::Button::SELECT:     return "SELECT";
-	case Input::Button::R1:         return "R1";
-	case Input::Button::R3:         return "R3";
-	case Input::Button::L1:         return "L1";
-	case Input::Button::L3:         return "L3";
-	case Input::Button::MISC:       return "MISC";
-	default:                        return "INVALID";
+	case Input::Button::FACE_DOWN:   return "FACE_DOWN";
+	case Input::Button::FACE_LEFT:   return "FACE_LEFT";
+	case Input::Button::FACE_UP:     return "FACE_UP";
+	case Input::Button::FACE_RIGHT:  return "FACE_RIGHT";
+	case Input::Button::DPAD_UP:     return "DPAD_UP";
+	case Input::Button::DPAD_DOWN:   return "DPAD_DOWN";
+	case Input::Button::DPAD_LEFT:   return "DPAD_LEFT";
+	case Input::Button::DPAD_RIGHT:  return "DPAD_RIGHT";
+	case Input::Button::START:       return "START";
+	case Input::Button::SELECT:      return "SELECT";
+	case Input::Button::R1:          return "R1";
+	case Input::Button::R3:          return "R3";
+	case Input::Button::L1:          return "L1";
+	case Input::Button::L3:          return "L3";
+	case Input::Button::BUTTON_MISC: return "MISC";
+	default:                         return "INVALID";
 	}
 }
 
@@ -32,7 +57,7 @@ auto GetKeyName(Key k)
 {
 	switch (k)
 	{
-	case Input::Key::NONE:           return "NONE";
+	case Input::Key::KEY_NONE:       return "NONE";
 	case Input::Key::F1:             return "F1";
 	case Input::Key::F2:             return "F2";
 	case Input::Key::F3:             return "F3";
@@ -146,6 +171,10 @@ auto GetKeyName(Key k)
 	case Input::Key::OEM_EQUALS:     return "OEMEQUALS";
 	case Input::Key::OEM_COMMA:      return "OEMCOMMA";
 	case Input::Key::OEM_PERIOD:     return "OEMPERIOD";
+	case Input::Key::CTRL:           return "CTRL";
+	case Input::Key::SHIFT:          return "SHIFT";
+	case Input::Key::WIN:            return "WIN";
+	case Input::Key::ALT:            return "ALT";
 	default:                         return "INVALID";
 	}
 }
@@ -160,11 +189,12 @@ static constexpr inline auto enum_range = [](auto front, auto back)
 	};
 
 
+
 bool IInput::IsKeyModified(std::initializer_list<Key> modifiers/*={}*/) const
 {
 	if (modifiers.size() == 0)
 	{
-		for (const auto mod : enum_range(Key::LWIN, Key::RSHIFT))
+		for (const auto mod : enum_range(Key::LWIN, Key::SHIFT))
 		{
 			if (GetKey(mod)) return true;
 		}
@@ -179,65 +209,34 @@ bool IInput::IsKeyModified(std::initializer_list<Key> modifiers/*={}*/) const
 	return false;
 }
 
-bool IInput::IsRepeating() const
+
+bool IInput::IsRepeating(int trigger) const
 {
-	return IsKeyRepeating(m_current_key) || IsButtonRepeating(m_current_button);
+	return m_pressed.contains(trigger);
 }
-bool IInput::IsKeyRepeating(Key k) const
+
+bool IInput::CanRepeatAfter(const ms_t ms, int trigger) const
 {
-	return m_pressed_keys.contains(k);
-}
-bool IInput::IsButtonRepeating(Button b) const
-{
-	return m_pressed_buttons.contains(b);
-}
-bool IInput::CanRepeatAfter(const std::chrono::milliseconds ms) const
-{
-	if (m_current_button != Button::NONE)
+	if (trigger < 0)
 	{
-		return CanRepeatButtonAfter(m_current_button, ms);
+		trigger = m_current;
 	}
-	else if (m_current_key != Key::NONE)
-	{
-		return CanRepeatKeyAfter(m_current_key, ms);
-	}
-	return true;
-}
-bool IInput::CanRepeatKeyAfter(Key k, const std::chrono::milliseconds ms) const
-{
-	if (m_pressed_keys.contains(k))
+	if (m_pressed.contains(trigger))
 	{
 		const auto now = std::chrono::steady_clock::now();
-		const auto diff = std::chrono::duration_cast<std::chrono::milliseconds>( now - m_pressed_keys.at(k) );
+		const auto diff = std::chrono::duration_cast<ms_t>( now - m_pressed.at(trigger) );
 		return ms < diff;
 	}
 	return true;
 }
-bool IInput::CanRepeatButtonAfter(Button b, const std::chrono::milliseconds ms) const
+
+bool IInput::CanRepeatEvery(ms_t ms, int trigger)
 {
-	if (m_pressed_buttons.contains(b))
+	if (trigger < 0)
 	{
-		const auto now = std::chrono::steady_clock::now();
-		const auto diff = std::chrono::duration_cast<std::chrono::milliseconds>( now - m_pressed_buttons.at(b) );
-		return ms < diff;
+		trigger = m_current;
 	}
-	return true;
-}
-bool IInput::CanRepeatEvery(std::chrono::milliseconds ms)
-{
-	if (m_current_button != Button::NONE)
-	{
-		return CanRepeatButtonEvery(m_current_button, ms);
-	}
-	else if (m_current_key != Key::NONE)
-	{
-		return CanRepeatKeyEvery(m_current_key, ms);
-	}
-	return true;
-}
-bool IInput::CanRepeatKeyEvery(Key k, std::chrono::milliseconds ms)
-{
-	if (m_pressed_keys.contains(k))
+	if (m_pressed.contains(trigger))
 	{
 		if (!m_time_repetitions.contains(m_current_action))
 		{
@@ -245,7 +244,7 @@ bool IInput::CanRepeatKeyEvery(Key k, std::chrono::milliseconds ms)
 		}
 		auto reps = m_time_repetitions.at(m_current_action);
 		const auto now = std::chrono::steady_clock::now();
-		const auto diff = std::chrono::duration_cast<std::chrono::milliseconds>( now - m_pressed_keys.at(k) );
+		const auto diff = std::chrono::duration_cast<ms_t>( now - m_pressed.at(trigger) );
 		const size_t actual_diffs = diff / ms;
 		if (actual_diffs != reps)
 		{
@@ -256,87 +255,48 @@ bool IInput::CanRepeatKeyEvery(Key k, std::chrono::milliseconds ms)
 	}
 	return true;
 }
-bool IInput::CanRepeatButtonEvery(Button b, std::chrono::milliseconds ms)
+
+void IInput::ClearActions(int trigger)
 {
-	if (m_pressed_buttons.contains(b))
+	if (trigger < 0)
 	{
-		const auto now = std::chrono::steady_clock::now();
-		const auto diff = std::chrono::duration_cast<std::chrono::milliseconds>( now - m_pressed_buttons.at(b) );
-		return diff.count() % ms.count() == 0;
+		m_actions.clear();
 	}
-	return true;
-}
-void IInput::ClearButtonActions(Button button)
-{
-	m_button_actions[button].clear();
-}
-
-void IInput::ClearKeyAction(Key k)
-{
-	m_key_actions[k].clear();
+	else
+	{
+		m_actions[trigger].clear();
+	}
 }
 
-void IInput::ClearActions()
-{
-	m_button_actions.clear();
-	m_key_actions.clear();
-}
 
-void IInput::AddGamepadAction(Button b, const std::function<void(IInput*)>& action)
+void IInput::AddAction(int trigger, const std::function<void(IInput*)>& action)
 {
-	m_button_actions[b].push_back(action);
+	m_actions[trigger].push_back(action);
 	m_time_repetitions.clear();
 }
 
-void IInput::AddKeyboardAction(Key b, const std::function<void(IInput*)>& action)
+void IInput::RunActions(int trigger)
 {
-	m_key_actions[b].push_back(action);
-	m_time_repetitions.clear();
-}
 
-void IInput::RunGamepadActions(Button b)
-{
-	if (!GetButton(b))
+	if (!is_pressed(trigger))
 	{
 		return;
 	}
-	m_current_button = b;
-	for (const auto& action : m_button_actions[b])
+	m_current = trigger;
+	for (const auto& action : m_actions[trigger])
 	{
 		action(this);
 		m_current_action++;
-
-	}
-}
-
-void IInput::RunKeyboardActions(Key k)
-{
-	if (!GetKey(k))
-	{
-		return;
-	}
-	m_current_key = k;
-	for (const auto& action : m_key_actions[k])
-	{
-		action(this);
-		m_current_action++;
-
 	}
 }
 
 void IInput::RunActions()
 {
 	m_current_action = 0;
-	for (const auto& [k, v] : m_button_actions)
+	for (const auto& [k, v] : m_actions)
 	{
-		RunGamepadActions(k);
+		RunActions(k);
 	}
-	m_current_button = Button::NONE;
-	for (const auto& [k, v] : m_key_actions)
-	{
-		RunKeyboardActions(k);
-	}
-	m_current_key = Key::NONE;
 }
 
 void IInput::Update()
@@ -346,36 +306,47 @@ void IInput::Update()
 	RunActions();
 	update_gamepad_state();
 	update_keyboard_state();
-
 }
 
 void IInput::update_keyboard_state()
 {
 	for (const auto key : enum_range(Key::F1, Key::OEM_COMMA))
 	{
-		if (GetKey(key) && !m_pressed_keys.contains(key))
+		if (GetKey(key) && !m_pressed.contains(key))
 		{
-			m_pressed_keys.insert({ key, std::chrono::steady_clock::now() });
+			m_pressed.insert({ key, std::chrono::steady_clock::now() });
 		}
-		if (!GetKey(key) && m_pressed_keys.contains(key))
+		if (!GetKey(key) && m_pressed.contains(key))
 		{
-			m_pressed_keys.erase(key);
+			m_pressed.erase(key);
 		}
 	}
 }
 
 void IInput::update_gamepad_state()
 {
-	for (const auto button : enum_range(Button::FACE_DOWN, Button::MISC))
+	for (const auto button : enum_range(Button::FACE_DOWN, Button::BUTTON_MISC))
 	{
-		if (GetButton(button) && !m_pressed_buttons.contains(button))
+		if (GetButton(button) && !m_pressed.contains(button))
 		{
-			m_pressed_buttons.insert({ button, std::chrono::steady_clock::now() });
+			m_pressed.insert({ button, std::chrono::steady_clock::now() });
 		}
-		if (!GetButton(button) && m_pressed_buttons.contains(button))
+		if (!GetButton(button) && m_pressed.contains(button))
 		{
-			m_pressed_buttons.erase(button);
+			m_pressed.erase(button);
 		}
 	}
+}
+bool IInput::is_pressed(int trigger) const
+{
+	if (is_key(trigger))
+	{
+		return GetKey(trigger);
+	}
+	else if (is_button(trigger))
+	{
+		return GetButton(trigger);
+	}
+	return false;
 }
 }

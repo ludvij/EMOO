@@ -277,7 +277,7 @@ void Engine::Resize()
 
 	create_swapchain(m_window_extent.width, m_window_extent.height);
 
-	m_scene_data.proj = glm::ortho(0.0f, static_cast<float>( w ), static_cast<float>( h ), 0.0f, -1.0f, 1.0f);
+	m_scene_data.proj = get_proj_matrix();
 
 	m_resize_requested = false;
 }
@@ -587,7 +587,7 @@ void Engine::init_default_data()
 	const float w = static_cast<float>( m_window_extent.width );
 	const float h = static_cast<float>( m_window_extent.height );
 
-	m_scene_data.proj = glm::ortho(0.0f, w, h, 0.0f, -1.0f, 1.0f);
+	m_scene_data.proj = get_proj_matrix();
 	m_scene_data.view = glm::mat4{ 1.0f };
 	m_scene_data.view[1][1] *= -1;
 
@@ -596,6 +596,14 @@ void Engine::init_default_data()
 			m_device.destroySampler(m_default_sampler_nearest);
 		});
 
+}
+
+glm::mat4 Engine::get_proj_matrix() const
+{
+	const float w = static_cast<float>( m_window_extent.width );
+	const float h = static_cast<float>( m_window_extent.height );
+
+	return glm::ortho(0.0f, w, h, 0.0f, 0.0f, 1.0f);
 }
 
 void Engine::create_swapchain(u32 width, u32 height)

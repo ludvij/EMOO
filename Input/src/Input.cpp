@@ -212,6 +212,10 @@ bool IInput::IsKeyModified(std::initializer_list<Key> modifiers/*={}*/) const
 
 bool IInput::IsRepeating(int trigger) const
 {
+	if (trigger < 0)
+	{
+		trigger = m_current;
+	}
 	return m_pressed.contains(trigger);
 }
 
@@ -315,6 +319,7 @@ void IInput::update_keyboard_state()
 		if (GetKey(key) && !m_pressed.contains(key))
 		{
 			m_pressed.insert({ key, std::chrono::steady_clock::now() });
+			std::print("inserting {:d}", std::to_underlying(key));
 		}
 		if (!GetKey(key) && m_pressed.contains(key))
 		{

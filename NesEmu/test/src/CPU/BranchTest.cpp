@@ -34,28 +34,29 @@ TEST_F(TestBranch, BCC_BRANCH)
 
 TEST_F(TestBranch, BCC_NOBRANCH)
 {
-	console.GetCpu().SetP(Emu::ProcessorStatus::Flags::C);
 	asse.Assemble(R"(
+		sec
 		bcc 2
 	)");
 
-	clearCycles();
+	run_instruction();
+	run_instruction();
 
 	// no branching
-	ASSERT_EQ(console.GetCpu().PC(), 2);
-	ASSERT_EQ(console.GetCpu().GetCycles(), 1);
+	ASSERT_EQ(console.GetCpu().PC(), 3);
 }
 
 TEST_F(TestBranch, BCS_BRANCH)
 {
-	console.GetCpu().SetP(Emu::ProcessorStatus::Flags::C);
 	asse.Assemble(R"(
+		sec
 		bcs 2
 	)");
 
+	run_instruction();
 	clearCycles();
 
-	ASSERT_EQ(console.GetCpu().PC(), 4);
+	ASSERT_EQ(console.GetCpu().PC(), 5);
 	// no page crossing
 	ASSERT_EQ(console.GetCpu().GetCycles(), 2);
 }

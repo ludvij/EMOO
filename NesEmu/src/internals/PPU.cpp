@@ -100,7 +100,7 @@ void PPU::Step()
 		// garbage NT
 		else if (m_cycle == 338 || m_cycle == 340)
 		{
-			memory_read(0x2000 | ( m_v & 0x0FFF ));
+			memory_read(get_nametable_addr());
 		}
 	}
 	// post render scanline, idle
@@ -177,6 +177,7 @@ void PPU::Step()
 		}
 	}
 }
+
 
 bool PPU::IsFrameDone() const
 {
@@ -368,6 +369,7 @@ void PPU::CpuWrite(const u16 addr, const u8 val)
 		m_ppu_ctrl = val;
 		// set nametables
 		const u8 nametable = m_ppu_ctrl & Control::Flags::NAMETABLE_BASE_ADDR;
+		// second part is masking to conserve the other parts that are not scroll
 		m_t = ( nametable << 10 ) | ( m_t & ~0x0C00 );
 	}
 	else if (addr == PPU_MASK_ADDR) // mask
@@ -518,8 +520,6 @@ void PPU::write_ppu_addr(const u8 val)
 {
 	if (!m_w)
 	{
-		// clear hi byte
-		m_t &= 0x00FF;
 		// mirror down hi byte
 		m_t = ( ( val & 0x3F ) << 8 ) | ( m_t & 0x00FF );
 		m_w = 1;
@@ -527,7 +527,6 @@ void PPU::write_ppu_addr(const u8 val)
 	else
 	{
 		// clear lo byte
-
 		m_t = ( m_t & 0xFF00 ) | val;
 		m_v = m_t;
 		m_w = 0;
@@ -698,7 +697,7 @@ void PPU::preload_tile()
 	{
 	case 0: // tile id
 		load_bg_shifters();
-		m_bg_next_tile_id = memory_read(0x2000 | ( m_v & 0x0FFF ));
+		m_bg_next_tile_id = memory_read(get_nametable_addr());
 		break;
 	case 2:
 		//        0000 0000 0000 0000
@@ -721,11 +720,7 @@ void PPU::preload_tile()
 		// d   -> 0000 0000 0000 0111 -> 0000 0000 0000 0XXX     -> 0010 NN11 11YY YXXX
 		// result 0010 NN11 11YY YXXX
 		// offset into vram, nametable select, attribute offset, hi 3 bits of coarse y, hi 3 bits of coarse x
-		m_bg_next_tile_attrib = memory_read(0x23C0
-			| ( m_v & 0x0C00 )
-			| ( ( m_v >> 4 ) & 0x38 )
-			| ( ( m_v >> 2 ) & 0x07 )
-		);
+		m_bg_next_tile_attrib = memory_read(get_attribute_addr());
 		if (( m_v >> 5 ) & 0x0002) m_bg_next_tile_attrib >>= 4;
 		if (( m_v >> 0 ) & 0x0002) m_bg_next_tile_attrib >>= 2;
 		m_bg_next_tile_attrib &= 0x03;
@@ -969,6 +964,39 @@ void PPU::load_sprite_shifters()
 	}
 
 
+}
+
+u16 PPU::get_nametable_addr() const
+{
+	return 0x2000 | ( m_v & 0x0FFF );
+}
+
+u16 PPU::get_attribute_addr() const
+{
+	//        0000 0000 0000 0000
+	// v    = _yyy NNYY YYYX XXXX
+	// 0. 0x23C0                     offsets into range
+	// d   -> 0010 0011 1100 0000 -> 0010 0011 1100 0000
+	// 
+	// 1. v & 0x0C00
+	// v   -> _yyy NNYY YYYX XXXX    puts NN in bits 11 and 12
+	// d   -> 0000 1100 0000 0000 -> 0000 NN00 0000 0000
+	// 
+	// 2. (v >> 4) & 0x38
+	// v   -> _yyy NNYY YYYX XXXX
+	// >>4 -> 0000 _yyy NNYY YYYX    puts hi Y in bits 3 4 5
+	// d   -> 0000 0000 0011 1000 -> 0000 0000 00YY Y000
+	// 
+	// 3. (v >> 2) & 0x07
+	// v   -> _yyy NNYY YYYX XXXX
+	// >>2 -> 00_y yyNN YYYY YXXX    puts hi X in bits 0 1 2
+	// d   -> 0000 0000 0000 0111 -> 0000 0000 0000 0XXX     -> 0010 NN11 11YY YXXX
+	// result 0010 NN11 11YY YXXX
+	// offset into vram, nametable select, attribute offset, hi 3 bits of coarse y, hi 3 bits of coarse x
+	return 0x23C0
+		| ( m_v & 0x0C00 )
+		| ( ( m_v >> 4 ) & 0x38 )
+		| ( ( m_v >> 2 ) & 0x07 );
 }
 
 u8 PPU::get_vram_increment_mode() const

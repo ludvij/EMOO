@@ -216,6 +216,9 @@ private:
 	void update_shifters();
 	void load_sprite_shifters();
 
+	u16 get_nametable_addr() const;
+	u16 get_attribute_addr() const;
+
 	u8 get_vram_increment_mode() const;
 	u8 get_sprite_y_size() const;
 

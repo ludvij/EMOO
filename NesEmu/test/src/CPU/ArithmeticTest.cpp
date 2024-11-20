@@ -37,10 +37,10 @@ TEST_F(TestArithmetic, ADC_ZPI_C)
 
 TEST_F(TestArithmetic, ADC_ZPX_Z)
 {
-	console.GetBus().Write(2, 0x80);
+	console.GetBus().Write(3, 0x80);
 
 	asse.Assemble(R"(
-		adc $02
+		adc $02,x
 	)");
 	console.GetCpu().SetA(0x80);
 	console.GetCpu().SetX(1);
@@ -75,9 +75,6 @@ TEST_F(TestArithmetic, ADC_ABX_OOPS)
 	asse.Assemble(R"(
 		adc $00ff,x
 	)");
-	console.GetBus().Write(0, 0x7D);
-	console.GetBus().Write(1, 0xff);
-	console.GetBus().Write(2, 0x00);
 	console.GetBus().Write(0x0100, 13);
 
 	console.GetCpu().SetP(Emu::ProcessorStatus::Flags::C);
@@ -111,9 +108,9 @@ TEST_F(TestArithmetic, ADC_ABY_OOPS)
 
 TEST_F(TestArithmetic, ADC_INX)
 {
-	console.GetBus().Write(15, 23);
-	console.GetBus().Write(12, 15);
-	console.GetBus().Write(13, 0);
+	console.GetBus().Write(0x000F, 23);
+	console.GetBus().Write(0x000C, 0x0F);
+	console.GetBus().Write(0x000D, 0x00);
 	asse.Assemble(R"(
 		adc ($000A,x)
 	)");
@@ -129,8 +126,8 @@ TEST_F(TestArithmetic, ADC_INX)
 TEST_F(TestArithmetic, ADC_INY_NO_OOPS)
 {
 	console.GetBus().Write(15, 23);
-	console.GetBus().Write(10, 13);
-	console.GetBus().Write(11, 0);
+	console.GetBus().Write(10, 0x0D);
+	console.GetBus().Write(11, 0x00);
 	asse.Assemble(R"(
 		adc ($000A),y
 	)");
@@ -203,7 +200,7 @@ TEST_F(TestArithmetic, SBC)
 		sbc #$03
 
 		sec
-		lda #$03
+		lda #$83
 		sbc #$04
 	)");
 
@@ -220,8 +217,8 @@ TEST_F(TestArithmetic, SBC)
 	ASSERT_TRUE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::Z);
 
 	clearCycles(2 + 2 + 2);
-	ASSERT_EQ(console.GetCpu().A(), 0xff); // -1 in signed 8 bits is 0xff
-	//ASSERT_TRUE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::V);
+	ASSERT_TRUE(console.GetCpu().P() & Emu::ProcessorStatus::Flags::V);
+	ASSERT_EQ(console.GetCpu().A(), 0x7f); // -1 in signed 8 bits is 0xff
 }
 
 TEST_F(TestArithmetic, CMP)

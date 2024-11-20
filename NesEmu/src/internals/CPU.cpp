@@ -571,11 +571,11 @@ u16 CPU::addrIND()
 
 u16 CPU::addrINX()
 {
-	const u16 b = readByte();
-	const u16 base = ( b + m_X ) & 0x00FF;
+	const u8 b = readByte();
+	const u8 base = static_cast<u8>( b + m_X );
 
-	const u16 lo = memoryRead(( base & 0x00FF ));
-	const u16 hi = memoryRead(( ( base + 1 ) & 0x00FF ));
+	const u16 lo = memoryRead(base);
+	const u16 hi = memoryRead(static_cast<u8>( base + 1 ));
 
 
 	const u16 addr = MAKE_WORD(hi, lo);
@@ -587,21 +587,12 @@ u16 CPU::addrINX()
 
 u16 CPU::addrINY()
 {
-	const u16 base = readByte();
+	const u8 base = readByte();
 
 	u16 addr;
-	if (base == 0xFF)
-	{
-		const u16 lo = memoryRead(0xFF);
-		const u16 hi = memoryRead(0x00);
-		addr = MAKE_WORD(hi, lo);
-	}
-	else
-	{
-		const u16 lo = memoryRead(base);
-		const u16 hi = memoryRead(base + 1);
-		addr = MAKE_WORD(hi, lo);
-	}
+	const u16 lo = memoryRead(base);
+	const u16 hi = memoryRead(static_cast<u8>( base + 1 ));
+	addr = MAKE_WORD(hi, lo);
 	if (( ( addr + m_Y ) & 0xFF00 ) != ( addr & 0xFF00 ))
 	{
 		m_oopsCycles++;
@@ -1345,6 +1336,7 @@ void CPU::RTS(u16 addr)
  */
 void CPU::SBC(const u16 addr)
 {
+	// twos complement whatever
 	const u8 m = memoryRead(addr) ^ 0xFF;
 	ADD(m);
 
@@ -1364,6 +1356,7 @@ void CPU::SEC(u16 addr)
  */
 void CPU::SED(u16 addr)
 {
+	// does nothing in this processor, still implemented
 	m_P |= ProcessorStatus::Flags::D;
 }
 

@@ -49,4 +49,14 @@ protected:
 			console.GetCpu().Step();
 		}
 	}
+	void run_instruction(int n=1)
+	{
+		for (int i = 0; i < n; i++)
+		{
+			do
+			{
+				console.GetCpu().Step();
+			} while (console.GetCpu().GetCycles() > 0);
+		}
+	}
 };

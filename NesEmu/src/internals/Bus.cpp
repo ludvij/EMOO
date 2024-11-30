@@ -9,7 +9,7 @@ u8 Bus::Read(const u16 addr) const
 
 	if (addr < 0x2000) // Ram and ram mirrors
 	{
-		return m_cpuRam[addr & 0x07FF];
+		return m_cpu_ram[addr & 0x07FF];
 	}
 	if (addr >= 0x2000 && addr < 0x4000) // PPU registers and mirrors
 	{
@@ -43,7 +43,7 @@ u8 Bus::Peek(u16 addr) const
 {
 	if (addr < 0x2000) // Ram and ram mirrors
 	{
-		return m_cpuRam[addr & 0x07FF];
+		return m_cpu_ram[addr & 0x07FF];
 	}
 	if (addr >= 0x2000 && addr < 0x4000) // PPU registers and mirrors
 	{
@@ -75,7 +75,7 @@ void Bus::Write(const u16 addr, const u8 val)
 {
 	if (addr < 0x2000) // Ram and ram mirrors
 	{
-		m_cpuRam[addr & 0x07FF] = val;
+		m_cpu_ram[addr & 0x07FF] = val;
 	}
 	else if (addr >= 0x2000 && addr < 0x4000) // PPU registers and mirrors
 	{
@@ -130,7 +130,17 @@ void Bus::DMA(u64 cycles)
 
 void Bus::Reset()
 {
-	m_cpuRam.fill(0);
+	m_cpu_ram.fill(0);
+}
+
+void Bus::Serialize(std::fstream& fs)
+{
+	Fman::SerializeArrayStoresStatic<u8>(m_cpu_ram);
+}
+
+void Bus::Deserialize(std::fstream& fs)
+{
+	Fman::DeserializeArrayStoresStatic<u8>(m_cpu_ram);
 }
 
 }

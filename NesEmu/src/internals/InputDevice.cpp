@@ -33,4 +33,14 @@ void Controller::SetPressed(std::span<Button> buttons)
 		data |= button;
 	}
 }
+void Controller::Serialize(std::fstream& fs)
+{
+	Fman::SerializeStatic(data);
+	Fman::SerializeStatic(m_status);
+}
+void Controller::Deserialize(std::fstream& fs)
+{
+	Fman::DeserializeStatic(data);
+	Fman::DeserializeStatic(m_status);
+}
 }

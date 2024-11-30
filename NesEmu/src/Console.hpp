@@ -8,6 +8,8 @@
 #include "internals/InputDevice.hpp"
 #include "internals/PPU.hpp"
 
+#include "FileManager/FileManager.hpp"
+
 #include <chrono>
 #include <memory>
 
@@ -16,7 +18,7 @@ namespace Emu
 
 class Cartridge;
 
-class Console
+class Console : public Fman::ISerializable
 {
 public:
 	Console(Configuration conf);
@@ -42,6 +44,9 @@ public:
 	bool RunPpuCycle();
 
 	bool RunCpuCycle();
+
+	void SaveState(int n);
+	void LoadState(int n);
 
 	bool CanRun() const
 	{
@@ -79,6 +84,11 @@ public:
 	{
 		return m_controller_ports[port];
 	}
+
+	// Inherited via ISerializable
+	void Serialize(std::fstream& fs) override;
+
+	void Deserialize(std::fstream& fs) override;
 
 private:
 	// Bus components

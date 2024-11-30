@@ -1,5 +1,5 @@
-#include "Console.hpp"
 #include "pch.hpp"
+#include "Console.hpp"
 
 // I'm not writing this
 using namespace std::chrono_literals;
@@ -185,6 +185,61 @@ bool Console::RunCpuCycle()
 		Step();
 	} while (!m_cpu_done);
 	return true;
+}
+
+void Console::SaveState(int n)
+{
+	Fman::PushFolder("state");
+	{
+		//Fman::SetSerializeFilename(std::format("state_{:d}", n));
+		Fman::Serialize(this);
+	}
+	Fman::PopFolder();
+}
+
+void Console::LoadState(int n)
+{
+	Fman::PushFolder(m_cartridge->GetROMName());
+	{
+		Fman::SetSerializeFilename(std::format("state_{:d}", n));
+		Fman::Deserialize(this);
+	}
+	Fman::PopFolder();
+}
+
+void Console::Serialize(std::fstream& fs)
+{
+	Fman::SerializeStatic(m_frame_time);
+	Fman::SerializeStatic(m_time_sice_last_frame);
+	Fman::SerializeStatic(m_master_clock);
+	Fman::SerializeStatic(m_registered_cpu_cycles);
+	Fman::SerializeStatic(m_registered_ppu_cycles);
+	Fman::SerializeStatic(m_cpu_done);
+	Fman::SerializeStatic(m_ppu_done);
+	m_cpu.Serialize(fs);
+	m_bus.Serialize(fs);
+	m_ppu.Serialize(fs);
+	m_cartridge->Serialize(fs);
+	m_ppu.Serialize(fs);
+	m_controller_ports[0].Serialize(fs);
+	m_controller_ports[1].Serialize(fs);
+}
+
+void Console::Deserialize(std::fstream& fs)
+{
+	Fman::DeserializeStatic(m_frame_time);
+	Fman::DeserializeStatic(m_time_sice_last_frame);
+	Fman::DeserializeStatic(m_master_clock);
+	Fman::DeserializeStatic(m_registered_cpu_cycles);
+	Fman::DeserializeStatic(m_registered_ppu_cycles);
+	Fman::DeserializeStatic(m_cpu_done);
+	Fman::DeserializeStatic(m_ppu_done);
+	m_cpu.Deserialize(fs);
+	m_bus.Deserialize(fs);
+	m_ppu.Deserialize(fs);
+	m_cartridge->Deserialize(fs);
+	m_controller_ports[0].Deserialize(fs);
+	m_controller_ports[1].Deserialize(fs);
 }
 
 }

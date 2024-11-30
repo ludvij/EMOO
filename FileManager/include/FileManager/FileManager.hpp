@@ -1,15 +1,32 @@
 #ifndef FILE_MANAGER_HEADER
 #define FILE_MANAGER_HEADER
-#include "internal/Config.hpp"
 
-#include "OpenMode.hpp"
+#include "internal/Core.hpp"
+#include "Serializable.hpp"
 
 #include <filesystem>
 #include <string>
 #include <string_view>
 
+
+
 namespace FILEMANAGER_NAMESPACE
 {
+
+namespace mode
+{
+
+static constexpr int READ   = std::ios::in;
+static constexpr int WRITE  = std::ios::out;
+static constexpr int END    = std::ios::ate;
+static constexpr int APPEND = std::ios::app;
+static constexpr int BINARY = std::ios::binary;
+
+}
+
+using OpenMode = int;
+
+
 
 /**
  * @brief Get the Current pushed path
@@ -33,7 +50,7 @@ std::filesystem::path GetRoot();
  * @return true if folder was created
  * @return false if folder exists
  */
-bool SetRoot(const char* name=nullptr);
+bool SetRoot(std::string_view name="");
 
 /**
  * @brief Pushes a nes folder on top of current
@@ -43,7 +60,7 @@ bool SetRoot(const char* name=nullptr);
  * @return true if folder was created
  * @return false if folder exists
  */
-bool PushFolder(const char* name);
+bool PushFolder(std::string_view name);
 
 /**
  * @brief Allocates and returns file name in current
@@ -70,7 +87,7 @@ void PopFolder(int amount=1);
 * @param name, name of the file to be created
 * @param mode, open mode of file
 */
-bool PushFile(const char* name, OpenMode mode=mode::WRITE | mode::APPEND);
+bool PushFile(std::string_view name, OpenMode mode=mode::WRITE | mode::APPEND);
 
 void PopFile();
 

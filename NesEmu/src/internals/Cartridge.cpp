@@ -179,6 +179,13 @@ bool Cartridge::PpuWrite(u16 addr, u8 val)
 		return false;
 	}
 }
+// return the name of the ROM as plaintext
+// the name of the ROM is defined as the name of the file
+// without the path
+std::string Cartridge::GetROMName()
+{
+	return std::string();
+}
 std::string Cartridge::to_string(Mirroring mirroring)
 {
 	switch (mirroring)
@@ -191,5 +198,14 @@ std::string Cartridge::to_string(Mirroring mirroring)
 bool Cartridge::is_header_valid() const
 {
 	return strncmp(m_header.name, "NES\x1A", 4) == 0;
+}
+
+void Cartridge::Serialize(std::fstream& fs)
+{
+	m_mapper->Serialize(fs);
+}
+void Cartridge::Deserialize(std::fstream& fs)
+{
+	m_mapper->Deserialize(fs);
 }
 }

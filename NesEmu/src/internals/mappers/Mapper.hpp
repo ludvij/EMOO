@@ -3,12 +3,14 @@
 
 #include "internals/Core.hpp"
 
+#include "FileManager/FileManager.hpp"
+
 #include <optional>
 #include <string>
 
 namespace Emu
 {
-class IMapper
+class IMapper : public Fman::ISerializable
 {
 public:
 	IMapper(const u8 prgBanks, const u8 chrBanks) : m_prgBanks(prgBanks), m_chrBanks(chrBanks)
@@ -21,10 +23,15 @@ public:
 
 	[[nodiscard]] virtual std::optional<u16> PpuMapRead(const u16 addr) const = 0;
 	[[nodiscard]] virtual std::optional<u16> PpuMapWrite(const u16 addr) const = 0;
+
 	virtual std::string GetName() = 0;
+	// Inherited via ISerializable
+	virtual void Serialize(std::fstream& fs) override = 0;
+	virtual void Deserialize(std::fstream& fs) override = 0;
 protected:
 	u8 m_prgBanks;
 	u8 m_chrBanks;
+
 };
 } // namespace Emu
 

@@ -67,6 +67,8 @@ public:
 	void RestartEmulator();
 
 	ImVec2 GetScreenSize();
+public:
+	constexpr static int MAX_STATE_AMOUNT = 5;
 private:
 
 	void init();
@@ -105,6 +107,11 @@ private:
 	void cpu_status();
 	void memory_view();
 
+	void save_state();
+	void load_state();
+	void increment_state();
+	void decrement_state();
+
 
 private:
 	bool m_should_quit{ false };
@@ -139,6 +146,8 @@ private:
 	ImFont* m_monospace_font{ nullptr };
 
 	double m_delta{};
+
+	int m_current_state{ 0 };
 };
 
 }

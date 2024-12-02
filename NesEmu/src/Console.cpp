@@ -189,6 +189,10 @@ bool Console::RunCpuCycle()
 
 void Console::SaveState(int n)
 {
+	if (!CanRun())
+	{
+		return;
+	}
 	Fman::PushFolder("state");
 	{
 		Fman::PushFolder(m_cartridge->GetROMName());
@@ -203,6 +207,10 @@ void Console::SaveState(int n)
 // does nothing if states does not exist
 void Console::LoadState(int n)
 {
+	if (!CanRun())
+	{
+		return;
+	}
 	Fman::PushFolder("state");
 	{
 		Fman::PushFolder(m_cartridge->GetROMName());

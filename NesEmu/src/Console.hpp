@@ -31,7 +31,7 @@ public:
 	void Reset();
 
 	void LoadCartridge(const std::string& filepath);
-	void LoadCartridgeFromMemory(const u8* data, size_t size);
+	void LoadCartridgeFromMemory(std::string_view name, const u8* data, size_t size);
 
 	void UnloadCartridge();
 

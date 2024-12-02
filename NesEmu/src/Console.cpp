@@ -78,9 +78,9 @@ void Console::LoadCartridge(const std::string& filepath)
 	Reset();
 }
 
-void Console::LoadCartridgeFromMemory(const u8* data, const size_t size)
+void Console::LoadCartridgeFromMemory(std::string_view name, const u8* data, const size_t size)
 {
-	m_cartridge = std::make_shared<Cartridge>(data, size);
+	m_cartridge = std::make_shared<Cartridge>(name, data, size);
 	m_cartridge->ConnectBus(&m_bus);
 	m_bus.ConnectCartridge(m_cartridge);
 	m_ppu.ConnectCartridge(m_cartridge);
@@ -191,20 +191,27 @@ void Console::SaveState(int n)
 {
 	Fman::PushFolder("state");
 	{
-		//Fman::SetSerializeFilename(std::format("state_{:d}", n));
-		Fman::Serialize(this);
+		Fman::PushFolder(m_cartridge->GetROMName());
+		{
+			Fman::SetSerializeFilename(std::format("state_{:d}", n));
+			Fman::Serialize(this);
+		}
 	}
-	Fman::PopFolder();
+	Fman::PopFolder(2);
 }
 
+// does nothing if states does not exist
 void Console::LoadState(int n)
 {
-	Fman::PushFolder(m_cartridge->GetROMName());
+	Fman::PushFolder("state");
 	{
-		Fman::SetSerializeFilename(std::format("state_{:d}", n));
-		Fman::Deserialize(this);
+		Fman::PushFolder(m_cartridge->GetROMName());
+		{
+			Fman::SetSerializeFilename(std::format("state_{:d}", n));
+			Fman::Deserialize(this);
+		}
 	}
-	Fman::PopFolder();
+	Fman::PopFolder(2);
 }
 
 void Console::Serialize(std::fstream& fs)

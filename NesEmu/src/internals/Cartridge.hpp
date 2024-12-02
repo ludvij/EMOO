@@ -25,7 +25,7 @@ class Cartridge : public Fman::ISerializable
 {
 public:
 	explicit Cartridge(const std::string& filePath);
-	explicit Cartridge(const u8* data, size_t size);
+	explicit Cartridge(std::string_view name, const u8* data, size_t size);
 	~Cartridge();
 
 	void ConnectBus(Bus* bus)
@@ -98,6 +98,7 @@ private:
 	std::vector<u8> m_chrRom;
 
 	std::string m_file_path;
+	std::string m_name;
 
 	friend class A6502::Disassembler;
 

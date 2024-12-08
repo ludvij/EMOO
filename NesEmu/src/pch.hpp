@@ -30,6 +30,7 @@
 #include "NesEmu.hpp"
 
 // utils
+#include "FileManager/FileManager.hpp"
 #include "utils/Unreachable.hpp"
 #include <bit>
 #include <optional>

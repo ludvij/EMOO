@@ -1,7 +1,7 @@
 project "NesEmu-test"
 	kind "ConsoleApp"
 	language "C++"
-	cppdialect "c++20"
+	cppdialect "c++latest"
 	staticruntime "on"
 	
 	targetdir ("%{wks.location}/bin/" .. outputDir .. "/%{prj.name}")
@@ -22,9 +22,11 @@ project "NesEmu-test"
 		"%{IncludeDir.gtest}",
 		"%{IncludeDir.NesEmu}",
 		"%{IncludeDir.lud_utils}",
+		"%{IncludeDir.FileManager}",
 	}
 	links {
 		"NesEmu",
+		"FileManager",
 		"googletest"
 	}
 

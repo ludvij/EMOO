@@ -4,6 +4,7 @@
 
 namespace Emu
 {
+
 NROM::NROM(const u8 prgBanks, const u8 chrBanks)
 	: IMapper(prgBanks, chrBanks)
 {
@@ -69,5 +70,11 @@ std::optional<u16> NROM::PpuMapWrite(const u16 addr) const
 std::string NROM::GetName()
 {
 	return "NROM";
+}
+void NROM::Serialize(std::fstream& fs)
+{
+}
+void NROM::Deserialize(std::fstream& fs)
+{
 }
 }

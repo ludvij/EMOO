@@ -10,8 +10,10 @@ Cartridge::Cartridge(const std::string& filePath)
 	: m_valid(false)
 	, m_file_path(filePath)
 {
+	std::filesystem::path path = filePath;
 	std::ifstream inputFile;
-	inputFile.open(filePath, std::ios::binary);
+	inputFile.open(path, std::ios::binary);
+	m_name = path.stem().generic_string();
 
 	if (!inputFile.is_open())
 	{
@@ -65,9 +67,10 @@ Cartridge::Cartridge(const std::string& filePath)
 	);
 }
 
-Cartridge::Cartridge(const u8* data, const size_t size)
+Cartridge::Cartridge(std::string_view name, const u8* data, const size_t size)
 	: m_valid(false)
 	, m_file_path("Reading from memory")
+	, m_name(name)
 {
 	const u8* ptr_data = data;
 	size_t offset = 0;
@@ -179,6 +182,13 @@ bool Cartridge::PpuWrite(u16 addr, u8 val)
 		return false;
 	}
 }
+// return the name of the ROM as plaintext
+// the name of the ROM is defined as the name of the file
+// without the path and extension
+std::string Cartridge::GetROMName()
+{
+	return m_name;
+}
 std::string Cartridge::to_string(Mirroring mirroring)
 {
 	switch (mirroring)
@@ -191,5 +201,14 @@ std::string Cartridge::to_string(Mirroring mirroring)
 bool Cartridge::is_header_valid() const
 {
 	return strncmp(m_header.name, "NES\x1A", 4) == 0;
+}
+
+void Cartridge::Serialize(std::fstream& fs)
+{
+	m_mapper->Serialize(fs);
+}
+void Cartridge::Deserialize(std::fstream& fs)
+{
+	m_mapper->Deserialize(fs);
 }
 }

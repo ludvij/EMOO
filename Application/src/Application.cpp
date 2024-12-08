@@ -291,6 +291,30 @@ void Application::init_keyboard_actions()
 
 			memory_view();
 		};
+	auto action_save_state = [&](Input::IInput* i)
+		{
+			INPUT_NOT_REPEATED(i);
+			INPUT_KEY_NOT_MODIFIED(i);
+			save_state();
+		};
+	auto action_load_state = [&](Input::IInput* i)
+		{
+			INPUT_NOT_REPEATED(i);
+			INPUT_KEY_MODIFIED(i, K::SHIFT);
+			load_state();
+		};
+	auto action_increment_state = [&](Input::IInput* i)
+		{
+			INPUT_NOT_REPEATED(i);
+			INPUT_KEY_NOT_MODIFIED(i);
+			increment_state();
+		};
+	auto action_decrement_state = [&](Input::IInput* i)
+		{
+			INPUT_NOT_REPEATED(i);
+			INPUT_KEY_NOT_MODIFIED(i);
+			decrement_state();
+		};
 	m_input->AddAction(K::F9, action_stop_continue);
 	m_input->AddAction(K::F9, action_run_frame);
 	m_input->AddAction(K::F10, action_run_scanline);
@@ -304,6 +328,11 @@ void Application::init_keyboard_actions()
 	m_input->AddAction(K::C, action_cpu_status);
 	m_input->AddAction(K::P, action_ppu_status);
 	m_input->AddAction(K::M, action_memory_view);
+
+	m_input->AddAction(K::F5, action_save_state);
+	m_input->AddAction(K::F5, action_load_state);
+	m_input->AddAction(K::F1, action_increment_state);
+	m_input->AddAction(K::F2, action_decrement_state);
 
 }
 
@@ -456,6 +485,34 @@ void Application::memory_view()
 	else
 	{
 		AddComponent<Component::MemoryView>("memory view", m_monospace_font);
+	}
+}
+
+void Application::save_state()
+{
+	m_console.SaveState(m_current_state);
+}
+
+void Application::load_state()
+{
+	m_console.LoadState(m_current_state);
+}
+
+void Application::increment_state()
+{
+	m_current_state++;
+	if (m_current_state > MAX_STATE_AMOUNT)
+	{
+		m_current_state = 0;
+	}
+}
+
+void Application::decrement_state()
+{
+	m_current_state--;
+	if (m_current_state < 0)
+	{
+		m_current_state = MAX_STATE_AMOUNT;
 	}
 }
 
@@ -667,6 +724,26 @@ void Application::draw_menu_bar()
 			if (ImGui::MenuItem(ICON_FA_DATABASE " Memory status", "Ctrl+M"))
 			{
 				memory_view();
+			}
+			ImGui::EndMenu();
+		}
+		if (ImGui::BeginMenu(std::format("state [{:d}]", m_current_state).c_str()))
+		{
+			if (ImGui::MenuItem("Save state", "F5"))
+			{
+				save_state();
+			}
+			if (ImGui::MenuItem("Load state", "Shift+F5"))
+			{
+				load_state();
+			}
+			if (ImGui::MenuItem("Increment state", "F1"))
+			{
+				increment_state();
+			}
+			if (ImGui::MenuItem("Decrement state", "F2"))
+			{
+				decrement_state();
 			}
 			ImGui::EndMenu();
 		}

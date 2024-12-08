@@ -1,7 +1,7 @@
 #ifndef FILE_MANAGER_INTERNAL_HEADER
 #define FILE_MANAGER_INTERNAL_HEADER
 
-#include "Config.hpp"
+#include "Core.hpp"
 
 #include <deque>
 #include <filesystem>
@@ -16,13 +16,17 @@ public:
 	~Context();
 
 public:
-	std::deque<const char*> folders;
+	std::deque<std::string> folders;
 	std::filesystem::path root;
 	std::filesystem::path current_folder;
 	std::fstream current_file;
 
 	std::vector<char*> allocations;
+
+	std::string serialize_filename="srl.dat";
 };
+
+
 }
 
 #endif

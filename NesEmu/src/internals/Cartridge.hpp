@@ -3,6 +3,7 @@
 
 #include "Core.hpp"
 
+#include "FileManager/FileManager.hpp"
 #include "mappers/Mapper.hpp"
 #include <array>
 #include <memory>
@@ -20,11 +21,11 @@ namespace Emu
 {
 class Bus;
 
-class Cartridge
+class Cartridge : public Fman::ISerializable
 {
 public:
 	explicit Cartridge(const std::string& filePath);
-	explicit Cartridge(const u8* data, size_t size);
+	explicit Cartridge(std::string_view name, const u8* data, size_t size);
 	~Cartridge();
 
 	void ConnectBus(Bus* bus)
@@ -37,6 +38,12 @@ public:
 
 	std::optional<u8> PpuRead(u16 addr) const;
 	bool PpuWrite(u16 addr, u8 val);
+
+	std::string GetROMName();
+
+	// Inherited via ISerializable
+	void Serialize(std::fstream& fs) override;
+	void Deserialize(std::fstream& fs) override;
 
 public:
 	/*
@@ -91,8 +98,11 @@ private:
 	std::vector<u8> m_chrRom;
 
 	std::string m_file_path;
+	std::string m_name;
 
 	friend class A6502::Disassembler;
+
+
 };
 }
 

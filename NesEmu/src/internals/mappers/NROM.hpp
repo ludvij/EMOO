@@ -1,6 +1,7 @@
 #ifndef EMU_NROM_HEADER
 #define EMU_NROM_HEADER
 
+#include "FileManager/FileManager.hpp"
 #include "internals/Core.hpp"
 #include "Mapper.hpp"
 
@@ -24,6 +25,12 @@ public:
 
 	// Inherited via IMapper
 	virtual std::string GetName() override;
+
+
+	// Inherited via IMapper
+	void Serialize(std::fstream& fs) override;
+
+	void Deserialize(std::fstream& fs) override;
 
 };
 } // namespace Emu

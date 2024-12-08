@@ -691,6 +691,118 @@ bool PPU::is_rendering_enabled()
 	return m_ppu_mask.is_flag_set(Mask::Flags::SHOW_BACKGROUND | Mask::Flags::SHOW_SPRITES);
 }
 
+void PPU::Serialize(std::fstream& fs)
+{
+	Fman::SerializeStatic(m_x);
+	Fman::SerializeStatic(m_w);
+	Fman::SerializeStatic(m_w);
+	Fman::SerializeStatic(m_t);
+	Fman::SerializeStatic(m_frames);
+	Fman::SerializeStatic(m_scanline_done);
+	Fman::SerializeStatic(m_frame_done);
+	Fman::SerializeStatic(m_bg_next_tile_addr);
+	Fman::SerializeStatic(m_bg_next_tile_attrib);
+	Fman::SerializeStatic(m_bg_next_tile_hi);
+	Fman::SerializeStatic(m_bg_next_tile_lo);
+	Fman::SerializeStatic(m_bg_next_tile_id);
+	Fman::SerializeStatic(m_dma_page);
+	Fman::SerializeStatic(m_dma_addr);
+	Fman::SerializeStatic(m_dma_data);
+	Fman::SerializeStatic(m_dma_transfer);
+	Fman::SerializeStatic(m_dma_dummy);
+	Fman::SerializeStatic(m_bg_shifter_pattern_lo);
+	Fman::SerializeStatic(m_bg_shifter_pattern_hi);
+	Fman::SerializeStatic(m_bg_shifter_attrib_hi);
+	Fman::SerializeStatic(m_bg_shifter_pattern_lo);
+	Fman::SerializeStatic(m_secondary_oam_addr);
+	Fman::SerializeStatic(m_secondary_oam_val);
+	Fman::SerializeStatic(m_oam_copy_buffer);
+	Fman::SerializeStatic(m_current_sprite_addr);
+	Fman::SerializeStatic(m_current_oam_pos);
+	Fman::SerializeStatic(m_current_sprite_count);
+	Fman::SerializeStatic(m_added_sprite_0);
+	Fman::SerializeStatic(m_oam_keep_copying);
+	Fman::SerializeStatic(m_oam_sprite_bounded);
+	Fman::SerializeStatic(m_oam_m);
+	Fman::SerializeStatic(m_oam_n);
+	Fman::SerializeStatic(m_scanline);
+	Fman::SerializeStatic(m_cycle);
+	Fman::SerializeStatic(m_data_buffer);
+	Fman::SerializeStatic(m_oam_dma);
+	Fman::SerializeStatic(m_oam_addr);
+	Fman::SerializeStatic(m_ppu_ctrl.reg);
+	Fman::SerializeStatic(m_ppu_status.reg);
+	Fman::SerializeStatic(m_ppu_mask.reg);
+
+	Fman::SerializeArrayStoresStatic<u16>(m_sprite_shifter_pattern_hi);
+	Fman::SerializeArrayStoresStatic<u16>(m_sprite_shifter_pattern_lo);
+	Fman::SerializeArrayStoresStatic<u8>(m_secondary_OAM);
+	Fman::SerializeArrayStoresStatic<SpriteInfo>(m_scanline_sprites);
+	Fman::SerializeArrayStoresStatic<ObjectAttributeEntry>(m_OAM);
+	Fman::SerializeArrayStoresStatic<u8>(m_palette_ram_indexes);
+	Fman::SerializeArrayStoresStatic<u32>(m_palettes_show);
+	Fman::SerializeArrayStoresStatic<u8>(m_ram);
+	Fman::SerializeArrayStoresStatic<u8>(m_pattern_tables);
+	Fman::SerializeArrayStoresStatic<u32>({ m_pattern_tables_show, static_cast<size_t>( 128 * 128 * 2 ) });
+	Fman::SerializeArrayStoresStatic<u32>({ m_screen, static_cast<size_t>( m_conf.width * m_conf.height ) });
+}
+
+void PPU::Deserialize(std::fstream& fs)
+{
+	Fman::DeserializeStatic(m_x);
+	Fman::DeserializeStatic(m_w);
+	Fman::DeserializeStatic(m_w);
+	Fman::DeserializeStatic(m_t);
+	Fman::DeserializeStatic(m_frames);
+	Fman::DeserializeStatic(m_scanline_done);
+	Fman::DeserializeStatic(m_frame_done);
+	Fman::DeserializeStatic(m_bg_next_tile_addr);
+	Fman::DeserializeStatic(m_bg_next_tile_attrib);
+	Fman::DeserializeStatic(m_bg_next_tile_hi);
+	Fman::DeserializeStatic(m_bg_next_tile_lo);
+	Fman::DeserializeStatic(m_bg_next_tile_id);
+	Fman::DeserializeStatic(m_dma_page);
+	Fman::DeserializeStatic(m_dma_addr);
+	Fman::DeserializeStatic(m_dma_data);
+	Fman::DeserializeStatic(m_dma_transfer);
+	Fman::DeserializeStatic(m_dma_dummy);
+	Fman::DeserializeStatic(m_bg_shifter_pattern_lo);
+	Fman::DeserializeStatic(m_bg_shifter_pattern_hi);
+	Fman::DeserializeStatic(m_bg_shifter_attrib_hi);
+	Fman::DeserializeStatic(m_bg_shifter_pattern_lo);
+	Fman::DeserializeStatic(m_secondary_oam_addr);
+	Fman::DeserializeStatic(m_secondary_oam_val);
+	Fman::DeserializeStatic(m_oam_copy_buffer);
+	Fman::DeserializeStatic(m_current_sprite_addr);
+	Fman::DeserializeStatic(m_current_oam_pos);
+	Fman::DeserializeStatic(m_current_sprite_count);
+	Fman::DeserializeStatic(m_added_sprite_0);
+	Fman::DeserializeStatic(m_oam_keep_copying);
+	Fman::DeserializeStatic(m_oam_sprite_bounded);
+	Fman::DeserializeStatic(m_oam_m);
+	Fman::DeserializeStatic(m_oam_n);
+	Fman::DeserializeStatic(m_scanline);
+	Fman::DeserializeStatic(m_cycle);
+	Fman::DeserializeStatic(m_data_buffer);
+	Fman::DeserializeStatic(m_oam_dma);
+	Fman::DeserializeStatic(m_oam_addr);
+	Fman::DeserializeStatic(m_ppu_ctrl.reg);
+	Fman::DeserializeStatic(m_ppu_status.reg);
+	Fman::DeserializeStatic(m_ppu_mask.reg);
+
+	Fman::DeserializeArrayStoresStatic<u16>(m_sprite_shifter_pattern_hi);
+	Fman::DeserializeArrayStoresStatic<u16>(m_sprite_shifter_pattern_lo);
+	Fman::DeserializeArrayStoresStatic<u8>(m_secondary_OAM);
+	Fman::DeserializeArrayStoresStatic<SpriteInfo>(m_scanline_sprites);
+	Fman::DeserializeArrayStoresStatic<ObjectAttributeEntry>(m_OAM);
+	Fman::DeserializeArrayStoresStatic<u8>(m_palette_ram_indexes);
+	Fman::DeserializeArrayStoresStatic<u32>(m_palettes_show);
+	Fman::DeserializeArrayStoresStatic<u8>(m_ram);
+	Fman::DeserializeArrayStoresStatic<u8>(m_pattern_tables);
+	Fman::DeserializeArrayStoresStatic<u32>({ m_pattern_tables_show, static_cast<size_t>( 128 * 128 * 2 ) });
+	Fman::DeserializeArrayStoresStatic<u32>({ m_screen, static_cast<size_t>( m_conf.width * m_conf.height ) });
+}
+
 void PPU::preload_tile()
 {
 	switch (( m_cycle - 1 ) % 8)

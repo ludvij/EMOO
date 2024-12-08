@@ -6,30 +6,8 @@ class TestDisassembler : public TestFixture
 {
 	void SetUp() override
 	{
-		testing::internal::CaptureStdout();
-		console.LoadCartridgeFromMemory(nestest_nes, nestest_nes_len);
-		testing::internal::GetCapturedStdout();
+		SwitchRom();
 	}
-public:
-	void SwitchRom()
-	{
-		if (!switched)
-		{
-			testing::internal::CaptureStdout();
-			console.LoadCartridgeFromMemory(blank_nes, blank_nes_len);
-			testing::internal::GetCapturedStdout();
-		}
-		else
-		{
-			testing::internal::CaptureStdout();
-			console.LoadCartridgeFromMemory(nestest_nes, nestest_nes_len);
-			testing::internal::GetCapturedStdout();
-		}
-
-		switched = !switched;
-	}
-
-	bool switched{ false };
 };
 
 TEST_F(TestDisassembler, AssembleDisassemble)

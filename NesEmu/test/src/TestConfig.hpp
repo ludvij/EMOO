@@ -24,7 +24,7 @@ protected:
 	{
 		// reload Cartridge memory
 		testing::internal::CaptureStdout();
-		console.LoadCartridgeFromMemory(blank_nes, blank_nes_len);
+		console.LoadCartridgeFromMemory("blank", blank_nes, blank_nes_len);
 		testing::internal::GetCapturedStdout();
 
 
@@ -59,4 +59,24 @@ protected:
 			} while (console.GetCpu().GetCycles() > 0);
 		}
 	}
+
+	void SwitchRom()
+	{
+		if (!switched)
+		{
+			testing::internal::CaptureStdout();
+			console.LoadCartridgeFromMemory("nestest", nestest_nes, nestest_nes_len);
+			testing::internal::GetCapturedStdout();
+		}
+		else
+		{
+			testing::internal::CaptureStdout();
+			console.LoadCartridgeFromMemory("blank", blank_nes, blank_nes_len);
+			testing::internal::GetCapturedStdout();
+		}
+
+		switched = !switched;
+	}
+
+	bool switched{ false };
 };

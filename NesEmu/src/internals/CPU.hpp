@@ -10,6 +10,7 @@
 #include <array>
 #include <string_view>
 
+#include "FileManager/FileManager.hpp"
 
 namespace Emu
 {
@@ -46,7 +47,7 @@ enum Flags : u8
 
 class Bus;
 
-class CPU
+class CPU : public Fman::ISerializable
 {
 public:  // Public functions
 	CPU();
@@ -125,6 +126,11 @@ public:  // Public functions
 	{
 		return m_totalCycles;
 	}
+
+	// Inherited via ISerializable
+	void Serialize(std::fstream& fs) override;
+
+	void Deserialize(std::fstream& fs) override;
 
 public:
 	constexpr static u16 STACK_VECTOR    = 0x0100;
@@ -356,6 +362,7 @@ private: // private members
 	u8 m_discard = 0;
 
 	bool m_done{ false };
+
 
 };
 

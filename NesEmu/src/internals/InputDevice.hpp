@@ -2,6 +2,7 @@
 #define EMU_IO_HEADER
 
 #include "Core.hpp"
+#include "FileManager/FileManager.hpp"
 
 namespace Emu
 {
@@ -17,7 +18,7 @@ enum Button : u8
 	LEFT   = 0x02,
 	RIGHT  = 0x01,
 };
-class Controller
+class Controller : public Fman::ISerializable
 {
 public:
 	// for communication with used
@@ -30,8 +31,14 @@ public:
 	void SetPressed(Button button);
 	void SetPressed(std::span<Button> buttons);
 
+	// Inherited via ISerializable
+	void Serialize(std::fstream& fs) override;
+	void Deserialize(std::fstream& fs) override;
+
 private:
 	u8 m_status{};
+
+
 };
 }
 #endif

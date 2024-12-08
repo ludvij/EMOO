@@ -1709,4 +1709,38 @@ void CPU::set_p(const u8 val)
 	m_P = val & 0xCF;
 }
 
+void CPU::Serialize(std::fstream& fs)
+{
+	Fman::SerializeStatic(m_A);
+	Fman::SerializeStatic(m_X);
+	Fman::SerializeStatic(m_Y);
+	Fman::SerializeStatic(m_PC);
+	Fman::SerializeStatic(m_S);
+	Fman::SerializeStatic(m_P);
+	Fman::SerializeStatic(m_cycle);
+	Fman::SerializeStatic(m_oopsCycles);
+	Fman::SerializeStatic(m_totalCycles);
+	Fman::SerializeStatic(m_canOops);
+	Fman::SerializeStatic(m_opcode);
+	//Fman::SerializeStatic(m_done);
+}
+
+void CPU::Deserialize(std::fstream& fs)
+{
+	Fman::DeserializeStatic(m_A);
+	Fman::DeserializeStatic(m_X);
+	Fman::DeserializeStatic(m_Y);
+	Fman::DeserializeStatic(m_PC);
+	Fman::DeserializeStatic(m_S);
+	Fman::DeserializeStatic(m_P);
+	Fman::DeserializeStatic(m_cycle);
+	Fman::DeserializeStatic(m_oopsCycles);
+	Fman::DeserializeStatic(m_totalCycles);
+	Fman::DeserializeStatic(m_canOops);
+	Fman::DeserializeStatic(m_opcode);
+	//Fman::DeserializeStatic(m_done);
+
+	m_current_instr = m_jump_table[m_opcode];
+}
+
 }

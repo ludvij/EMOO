@@ -14,6 +14,10 @@ project "NesEmu"
 		"%{IncludeDir.ctre}/**.hpp",
 	}
 
+	links {
+		"FileManager"
+	}
+
 	flags {
 		"FatalWarnings"
 	}
@@ -25,6 +29,7 @@ project "NesEmu"
 		"src",
 		"%{IncludeDir.ctre}",
 		"%{IncludeDir.lud_utils}",
+		"%{IncludeDir.FileManager}",
 
 	}
 

@@ -3,6 +3,7 @@
 
 #include "Cartridge.hpp"
 #include "Core.hpp"
+#include "FileManager/FileManager.hpp"
 #include "utils/Unreachable.hpp"
 #include <array>
 #include <bit>
@@ -109,7 +110,7 @@ struct SpriteInfo
 	u8 x{};
 };
 
-class PPU
+class PPU : public Fman::ISerializable
 {
 public:
 	PPU(Configuration conf);
@@ -194,7 +195,10 @@ public:
 	u32* GetPalette();
 	Color GetColorFromPalette(u8 palette, u8 pixel);
 
+	// Inherited via ISerializable
+	void Serialize(std::fstream& fs) override;
 
+	void Deserialize(std::fstream& fs) override;
 
 private:
 
@@ -377,6 +381,7 @@ private:
 	std::array<u16, 8> m_sprite_shifter_pattern_lo{};
 	std::array<u16, 8> m_sprite_shifter_pattern_hi{};
 
+	u32 m_frames{ 0 };
 	u16 m_bg_next_tile_addr{ 0x00 };
 	u8 m_bg_next_tile_attrib{ 0x00 };
 	u8 m_bg_next_tile_id{ 0x00 };
@@ -399,7 +404,6 @@ private:
 
 	bool m_scanline_done{ false };
 
-	u32 m_frames{ 0 };
 
 };
 

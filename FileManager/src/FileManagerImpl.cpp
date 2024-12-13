@@ -20,7 +20,7 @@ std::filesystem::path FILEMANAGER_NAMESPACE::GetRoot()
 	return context.root;
 }
 
-bool FILEMANAGER_NAMESPACE::SetRoot(std::string_view name)
+bool FILEMANAGER_NAMESPACE::SetRoot(const std::filesystem::path& name)
 {
 	if (name.empty())
 	{
@@ -30,21 +30,40 @@ bool FILEMANAGER_NAMESPACE::SetRoot(std::string_view name)
 	}
 	else
 	{
-		context.root = context.current_folder = std::filesystem::path(name);
+		context.root = context.current_folder = name;
 		context.folders.clear();
 
 		return std::filesystem::create_directories(context.root);
 	}
 }
 
+bool FILEMANAGER_NAMESPACE::SetRootToKnownPath(const std::string& name)
+{
+	if (auto path = context.known_paths.find(name); path != context.known_paths.end())
+	{
+		SetRoot(path->second);
+	}
+	return false;
+}
 
-bool FILEMANAGER_NAMESPACE::PushFolder(std::string_view name)
+
+bool FILEMANAGER_NAMESPACE::PushFolder(const std::filesystem::path& name)
 {
 	Lud::assert::that(!context.current_file.is_open(), "Can't push folder before popping file");
 	context.folders.emplace_back(name);
-	context.current_folder.append(name);
+	context.current_folder /= name;
 
 	return std::filesystem::create_directories(context.current_folder);
+}
+
+bool FILEMANAGER_NAMESPACE::PushFolder(std::initializer_list<std::filesystem::path> name)
+{
+	uint32_t res = false;
+	for (const auto& f : name)
+	{
+		res += PushFolder(f);
+	}
+	return res == name.size();
 }
 
 char* FILEMANAGER_NAMESPACE::AllocateFileName(const char* name)
@@ -82,7 +101,7 @@ void FILEMANAGER_NAMESPACE::PopFolder(int amount)
 	context.current_folder = context.root;
 	for (size_t i = 0; i < context.folders.size(); i++)
 	{
-		context.current_folder.append(context.folders[i]);
+		context.current_folder /= context.folders[i];
 	}
 }
 

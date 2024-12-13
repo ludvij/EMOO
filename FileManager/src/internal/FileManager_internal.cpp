@@ -9,21 +9,31 @@ FILEMANAGER_NAMESPACE::detail::Context::~Context()
 	}
 }
 
+
 #ifdef FILE_MANAGER_PLATFORM_WINDOWS
 #include <ShlObj.h>
 
 FILEMANAGER_NAMESPACE::detail::Context::Context()
 {
-	PWSTR path;
+	auto add_knonw_path = [&](const std::string& name, GUID id)
+		{
+			PWSTR path;
 
-	auto err = SHGetKnownFolderPath(FOLDERID_RoamingAppData, KF_FLAG_CREATE, NULL, &path);
-	if (err != S_OK)
-	{
-		CoTaskMemFree(path);
-		throw std::runtime_error("Could not find appdata");
-	}
-	root = current_folder = path;
-	CoTaskMemFree(path);
+			auto err = SHGetKnownFolderPath(id, KF_FLAG_CREATE, NULL, &path);
+			if (err != S_OK)
+			{
+				CoTaskMemFree(path);
+				throw std::runtime_error("path not found");
+			}
+			known_paths.emplace(name, path);
+
+			CoTaskMemFree(path);
+		};
+
+	add_knonw_path("APPDATA", FOLDERID_RoamingAppData);
+	add_knonw_path("DOCUMENTS", FOLDERID_Documents);
+
+	root = current_folder = known_paths.at("APPDATA");
 }
 
 #else

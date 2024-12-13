@@ -193,15 +193,12 @@ void Console::SaveState(int n)
 	{
 		return;
 	}
-	Fman::PushFolder("state");
+	Fman::PushFolder({ "state", m_cartridge->GetROMName() });
 	{
-		Fman::PushFolder(m_cartridge->GetROMName());
-		{
-			Fman::SetSerializeFilename(std::format("state_{:d}", n));
-			Fman::Serialize(this);
-		}
+		Fman::SetSerializeFilename(std::format("state_{:d}", n));
+		Fman::Serialize(this);
 	}
-	Fman::PopFolder(2);
+	Fman::PopFolder(-1);
 }
 
 // does nothing if states does not exist
@@ -211,15 +208,12 @@ void Console::LoadState(int n)
 	{
 		return;
 	}
-	Fman::PushFolder("state");
+	Fman::PushFolder({ "state", m_cartridge->GetROMName() });
 	{
-		Fman::PushFolder(m_cartridge->GetROMName());
-		{
-			Fman::SetSerializeFilename(std::format("state_{:d}", n));
-			Fman::Deserialize(this);
-		}
+		Fman::SetSerializeFilename(std::format("state_{:d}", n));
+		Fman::Deserialize(this);
 	}
-	Fman::PopFolder(2);
+	Fman::PopFolder(-1);
 }
 
 void Console::Serialize(std::fstream& fs)

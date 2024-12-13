@@ -135,11 +135,3 @@ TEST_F(TestMMIO, SCROLL)
 	ASSERT_EQ(console.GetPpu().X(), 0b101);
 	ASSERT_EQ(console.GetPpu().W(), 0);
 }
-
-//TEST_F(TestMMIO, DMA)
-//{
-//	asse.Assemble(R"(
-//		STA $4014
-//	)");
-//
-//}

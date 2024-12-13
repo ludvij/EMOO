@@ -50,7 +50,9 @@ std::filesystem::path GetRoot();
  * @return true if folder was created
  * @return false if folder exists
  */
-bool SetRoot(std::string_view name="");
+bool SetRoot(const std::filesystem::path& path={});
+
+bool SetRootToKnownPath(const std::string& name);
 
 /**
  * @brief Pushes a nes folder on top of current
@@ -60,7 +62,10 @@ bool SetRoot(std::string_view name="");
  * @return true if folder was created
  * @return false if folder exists
  */
-bool PushFolder(std::string_view name);
+bool PushFolder(const std::filesystem::path& name);
+
+bool PushFolder(std::initializer_list<std::filesystem::path> name);
+
 
 /**
  * @brief Allocates and returns file name in current

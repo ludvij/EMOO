@@ -10,7 +10,7 @@ class TestDisassembler : public TestFixture
 	}
 };
 
-TEST_F(TestDisassembler, AssembleDisassemble)
+TEST_F(TestDisassembler, ASSEMBLE_DISASSEMBLE)
 {
 	SwitchRom();
 
@@ -52,7 +52,7 @@ TEST_F(TestDisassembler, AssembleDisassemble)
 	}
 }
 
-TEST_F(TestDisassembler, DisassembleNesTest)
+TEST_F(TestDisassembler, DISASSEMBLE_NESTEST)
 {
 	/*asse.Assemble(R"(
 		SEI

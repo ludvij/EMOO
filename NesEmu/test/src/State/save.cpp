@@ -50,10 +50,11 @@ TEST_F(TestSaveState, SAVE_TEST_LOAD_EMPTY)
 {
 	console.GetBus().Write(12, 23);
 	console.SaveState(0);
+	console.GetBus().Write(12, 22);
 
 	// check that multiple states coexist
 	console.LoadState(2);
-	ASSERT_EQ(23, console.GetBus().Peek(12));
+	ASSERT_EQ(22, console.GetBus().Peek(12));
 }
 
 TEST_F(TestSaveState, SAVE_STATE_MULTIPLE_ROM)

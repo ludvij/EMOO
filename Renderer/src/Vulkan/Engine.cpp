@@ -357,16 +357,19 @@ void Engine::init_vulkan()
 
 
 	vkb::PhysicalDeviceSelector selector{ vkb_inst };
-	vkb::PhysicalDevice vkb_physical_device = selector
+	auto maybe_vkb_physical_device = selector
 		.set_minimum_version(1, 3)
 		.add_required_extension(VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME)
 		.set_required_features_13(features_13)
 		.set_required_features_12(features_12)
 		.set_required_features(features)
 		.set_surface(m_surface)
-		.select()
-		.value();
-
+		.select();
+	if (!maybe_vkb_physical_device)
+	{
+		std::cerr << maybe_vkb_physical_device.error() << std::endl;
+	}
+	auto vkb_physical_device = maybe_vkb_physical_device.value();
 
 	vkb::DeviceBuilder device_buidler{ vkb_physical_device };
 

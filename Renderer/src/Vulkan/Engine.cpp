@@ -367,7 +367,7 @@ void Engine::init_vulkan()
 		.select();
 	if (!maybe_vkb_physical_device)
 	{
-		std::cerr << maybe_vkb_physical_device.error() << std::endl;
+		std::cerr << maybe_vkb_physical_device.error().message() << std::endl;
 	}
 	auto vkb_physical_device = maybe_vkb_physical_device.value();
 

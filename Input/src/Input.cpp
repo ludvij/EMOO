@@ -319,7 +319,6 @@ void IInput::update_keyboard_state()
 		if (GetKey(key) && !m_pressed.contains(key))
 		{
 			m_pressed.insert({ key, std::chrono::steady_clock::now() });
-			std::print("inserting {:d}", std::to_underlying(key));
 		}
 		if (!GetKey(key) && m_pressed.contains(key))
 		{

@@ -34,7 +34,6 @@ u8 Bus::Read(const u16 addr) const
 	else // cartridge space
 	{
 		return *m_cartridge->CpuRead(addr);
-
 	}
 
 }

@@ -101,7 +101,6 @@ bool Console::RunFrame()
 		return false;
 	}
 	typedef stdc::steady_clock time;
-	//TODO move this to application
 	auto time_sice_last = stdc::duration_cast<stdc::microseconds>( time::now() - m_last_frame_start );
 
 	while (time_sice_last < m_conf.frame_time)

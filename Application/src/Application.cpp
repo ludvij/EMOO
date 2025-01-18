@@ -32,6 +32,8 @@
 #include <utils/Disassembler.hpp>
 
 using namespace std::chrono_literals;
+namespace stdc = std::chrono;
+using us_t = stdc::microseconds;
 
 namespace Ui
 {
@@ -177,8 +179,8 @@ void Application::init_button_actions()
 			m_console.GetController(0).SetPressed(Emu::Button::SELECT);
 		};
 	m_input->AddAction(Input::Button::FACE_DOWN, press_a);
-	m_input->AddAction(Input::Button::FACE_LEFT, press_b);
 	m_input->AddAction(Input::Button::FACE_RIGHT, press_a);
+	m_input->AddAction(Input::Button::FACE_LEFT, press_b);
 	m_input->AddAction(Input::Button::FACE_UP, press_b);
 	m_input->AddAction(Input::Button::DPAD_UP, press_up);
 	m_input->AddAction(Input::Button::DPAD_DOWN, press_down);
@@ -432,7 +434,6 @@ void Application::load_rom()
 	{
 		return;
 	}
-	// TODO:
 	auto f = pfd::open_file("Chose ROM File", pfd::path::home(),
 		{
 			"Rom Files (.nes, .ines)", "*.nes *.ines",
@@ -537,7 +538,7 @@ void Application::main_loop()
 {
 	while (!m_should_quit)
 	{
-		auto begin = std::chrono::high_resolution_clock::now();
+		auto begin = stdc::high_resolution_clock::now();
 		event_loop();
 
 		if (m_stop_rendering)
@@ -553,8 +554,8 @@ void Application::main_loop()
 		clear_deleted_components();
 		draw_application();
 
-		auto end = std::chrono::high_resolution_clock::now();
-		auto duration = std::chrono::duration_cast<std::chrono::microseconds>( end - begin );
+		auto end = stdc::high_resolution_clock::now();
+		auto duration = stdc::duration_cast<us_t>( end - begin );
 		m_delta = static_cast<double>( duration.count() ) / 1e6;
 	}
 }

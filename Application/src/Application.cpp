@@ -317,6 +317,12 @@ void Application::init_keyboard_actions()
 			INPUT_KEY_NOT_MODIFIED(i);
 			decrement_state();
 		};
+	auto action_maximize_window = [&](Input::IInput* i)
+		{
+			INPUT_NOT_REPEATED(i);
+			INPUT_KEY_MODIFIED(i, K::LALT, K::RALT);
+			m_window->Maximize(true);
+		};
 	m_input->AddAction(K::F9, action_stop_continue);
 	m_input->AddAction(K::F9, action_run_frame);
 	m_input->AddAction(K::F10, action_run_scanline);
@@ -335,6 +341,8 @@ void Application::init_keyboard_actions()
 	m_input->AddAction(K::F5, action_load_state);
 	m_input->AddAction(K::F1, action_increment_state);
 	m_input->AddAction(K::F2, action_decrement_state);
+
+	m_input->AddAction(K::ENTER, action_maximize_window);
 
 }
 

@@ -111,4 +111,16 @@ void SDL2Window::BeginImGuiFrame()
 {
 	ImGui_ImplSDL2_NewFrame();
 }
+
+void SDL2Window::Maximize(bool maximize)
+{
+	if (maximize)
+	{
+		SDL_MaximizeWindow(m_window);
+	}
+	else
+	{
+		// do nothing yet
+	}
+}
 }

@@ -33,6 +33,8 @@ public:
 
 	// Inherited via IWindow
 	void BeginImGuiFrame() override;
+
+	virtual void Maximize(bool maximize) override;
 private:
 	NativeType* m_window;
 };

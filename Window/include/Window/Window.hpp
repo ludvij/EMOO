@@ -51,6 +51,8 @@ public:
 
 	virtual void ProcessEvents(void* event) = 0;
 
+	virtual void Maximize(bool maximize) = 0;
+
 
 protected:
 	std::unordered_map <Event, std::function<void(IWindow*, void*)>> m_event_fn;

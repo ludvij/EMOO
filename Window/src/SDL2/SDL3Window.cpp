@@ -41,6 +41,7 @@ SDL2Window::SDL2Window(const std::string& title, int w, int h)
 		SDL_WINDOW_RESIZABLE
 		);
 
+
 	m_window = SDL_CreateWindow(
 		title.c_str(),
 		SDL_WINDOWPOS_CENTERED,

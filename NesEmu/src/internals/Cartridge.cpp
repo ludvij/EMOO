@@ -6,7 +6,7 @@
 namespace Emu
 {
 
-Cartridge::Cartridge(const std::string& filePath)
+Cartridge::Cartridge(const std::filesystem::path& filePath)
 	: m_valid(false)
 	, m_file_path(filePath)
 {
@@ -58,7 +58,7 @@ Cartridge::Cartridge(const std::string& filePath)
 	m_valid = true;
 	std::println(
 		"Loaded ROM [{:s}]\n  Mapper:\n    [{:s} : {:d}]\n  Chunks:\n    [PGR : {:d}]\n    [CHR : {:d}]\n  Mirorring:\n    [{:s}]",
-		filePath,
+		filePath.generic_string(),
 		m_mapper->GetName(),
 		m_mapperNumber,
 		m_header.prg_rom_chunks,
@@ -118,7 +118,7 @@ Cartridge::Cartridge(std::string_view name, const u8* data, const size_t size)
 	m_valid = true;
 	std::println(
 		"Loaded ROM [{:s}]\n  Mapper:\n    [{:s} : {:d}]\n  Chunks:\n    [PGR : {:d}]\n    [CHR : {:d}]\n  Mirorring:\n    [{:s}]",
-		m_file_path,
+		m_file_path.generic_string(),
 		m_mapper->GetName(),
 		m_mapperNumber,
 		m_header.prg_rom_chunks,
@@ -129,7 +129,7 @@ Cartridge::Cartridge(std::string_view name, const u8* data, const size_t size)
 
 Cartridge::~Cartridge()
 {
-	std::println("  Unloaded ROM [{:s}]", m_file_path);
+	std::println("  Unloaded ROM [{:s}]", m_file_path.generic_string());
 }
 
 std::optional<u8> Cartridge::CpuRead(u16 addr) const

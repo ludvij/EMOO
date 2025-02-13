@@ -12,8 +12,9 @@ namespace Ui
 {
 int Main(int argc, char** argv)
 {
-	// i won't be using raii for this
-	// much easier thiw way
+	// windows only code to make scale no mess up the window size
+	SDL_SetHint(SDL_HINT_WINDOWS_DPI_AWARENESS, "system");
+
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER);
 
 	Application* application = new Application();

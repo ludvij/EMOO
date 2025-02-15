@@ -318,7 +318,7 @@ void Engine::init_vulkan()
 		.request_validation_layers(true)
 		.use_default_debug_messenger()
 	#endif // GRAPHICS_DEBUG
-	#if defined (GRAPHICS_DEBUG) || defined(GRAPHICS_SHOW_FPS)
+	#if defined (GRAPHICS_DEBUG) && defined(GRAPHICS_SHOW_FPS)
 		.enable_layer("VK_LAYER_LUNARG_monitor")
 	#endif
 		.require_api_version(1, 3, 0)

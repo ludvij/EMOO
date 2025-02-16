@@ -9,7 +9,6 @@ IncludeDir["vk_bootrstrap"] = "%{wks.location}/Renderer/vendor/vk_bootstrap"
 IncludeDir["pfd"]           = "%{wks.location}/Application/vendor/pfd/include"
 IncludeDir["ctre"]          = "%{wks.location}/NesEmu/vendor/ctre/include"
 IncludeDir["gtest"]         = "%{wks.location}/vendor/googletest/googletest/include"
-IncludeDir["freetype"]      = "%{wks.location}/vendor/freetype/include"
 IncludeDir["NesEmu"]        = "%{wks.location}/NesEmu/src"
 IncludeDir["Renderer"]      = "%{wks.location}/Renderer/src"
 IncludeDir["Input"]         = "%{wks.location}/Input/include"
@@ -19,13 +18,9 @@ IncludeDir["cppicons"]      = "%{wks.location}/Application/vendor/cppicons/inclu
 
 LibraryDir = {}
 LibraryDir["VulkanSDK"]  = "%{wks.location}/%{VULKAN_SDK}/Lib"
-LibraryDir["freetype_r"] = "%{wks.location}/vendor/freetype/lib/release"
-LibraryDir["freetype_d"] = "%{wks.location}/vendor/freetype/lib/debug"
 
 Library = {}
 Library["Vulkan"]     = "%{LibraryDir.VulkanSDK}/vulkan-1.lib"
-Library["freetype_r"] = "%{LibraryDir.freetype_r}/freetype"
-Library["freetype_d"] = "%{LibraryDir.freetype_d}/freetype"
 
 if (sdl3) then
 	IncludeDir["sdl"]    = "%{wks.location}/vendor/sdl3/include"

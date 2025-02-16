@@ -318,6 +318,7 @@ void Engine::init_vulkan()
 		.request_validation_layers(true)
 		.use_default_debug_messenger()
 	#endif // GRAPHICS_DEBUG
+		// this is a pure debug funcionality, in order to run requires vulkan sdk
 	#if defined (GRAPHICS_DEBUG) && defined(GRAPHICS_SHOW_FPS)
 		.enable_layer("VK_LAYER_LUNARG_monitor")
 	#endif

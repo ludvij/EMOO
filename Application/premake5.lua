@@ -86,7 +86,6 @@ project "Application"
 		symbols "On"
 
 		links {
-			"%{Library.freetype_d}",
 			"%{Library.sdl_d}",
 		}
 	
@@ -97,7 +96,6 @@ project "Application"
 			"NDEBUG"
 		}
 		links {
-			"%{Library.freetype_r}",
 			"%{Library.sdl_r}",
 		}
 

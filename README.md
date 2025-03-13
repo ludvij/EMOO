@@ -1,5 +1,6 @@
 # EMOO
-![logo](Application/resources/icon.ico "icon")  
+<img src="Application/resources/icon.ico" alt="drawing" width="200"/> 
+ 
 Another NES emulator.  
 Originally made as my bachelor's thesis
 

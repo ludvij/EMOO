@@ -15,23 +15,16 @@ IncludeDir["Input"]         = "%{wks.location}/Input/include"
 IncludeDir["Window"]        = "%{wks.location}/Window/include"
 IncludeDir["FileManager"]   = "%{wks.location}/FileManager/include"
 IncludeDir["cppicons"]      = "%{wks.location}/Application/vendor/cppicons/include"
+IncludeDir["sdl"]           = "%{wks.location}/vendor/sdl2/include"
 
 LibraryDir = {}
-LibraryDir["VulkanSDK"]  = "%{wks.location}/%{VULKAN_SDK}/Lib"
+LibraryDir["VulkanSDK"] = "%{wks.location}/%{VULKAN_SDK}/Lib"
+LibraryDir["sdl_d"]     = "%{wks.location}/vendor/sdl2/lib/debug"
+LibraryDir["sdl_r"]     = "%{wks.location}/vendor/sdl2/lib/release"
 
 Library = {}
-Library["Vulkan"]     = "%{LibraryDir.VulkanSDK}/vulkan-1.lib"
+Library["Vulkan"] = "%{LibraryDir.VulkanSDK}/vulkan-1.lib"
+Library["sdl_d"]  = "%{LibraryDir.sdl_d}/SDL2-staticd"
+Library["sdl_r"]  = "%{LibraryDir.sdl_r}/SDL2-static"
 
-if (sdl3) then
-	IncludeDir["sdl"]    = "%{wks.location}/vendor/sdl3/include"
-	LibraryDir["sdl_d"]  = "%{wks.location}/vendor/sdl3/lib/Debug"
-	LibraryDir["sdl_r"]  = "%{wks.location}/vendor/sdl3/lib/Release"
-	Library["sdl_d"]     = "%{LibraryDir.sdl_d}/SDL3-static"
-	Library["sdl_r"]     = "%{LibraryDir.sdl_r}/SDL3-static"
-else
-	IncludeDir["sdl"]    = "%{wks.location}/vendor/sdl2/include"
-	LibraryDir["sdl_d"]  = "%{wks.location}/vendor/sdl2/lib/debug"
-	LibraryDir["sdl_r"]  = "%{wks.location}/vendor/sdl2/lib/release"
-	Library["sdl_d"]     = "%{LibraryDir.sdl_d}/SDL2-staticd"
-	Library["sdl_r"]     = "%{LibraryDir.sdl_r}/SDL2-static"
-end
+

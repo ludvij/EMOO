@@ -1,7 +1,7 @@
 #include "pch.hpp"
 #include "Cartridge.hpp"
 
-#include "mappers/NROM.hpp"
+#include "mappers/MapperAlias.hpp"
 
 namespace Emu
 {
@@ -47,7 +47,10 @@ Cartridge::Cartridge(const std::filesystem::path& filePath)
 	switch (m_mapperNumber)
 	{
 	case 0:
-		m_mapper = std::make_unique<NROM>(m_header.prg_rom_chunks, m_header.chr_rom_chunks);
+		m_mapper = std::make_unique<MAPPER_0>(m_header.prg_rom_chunks, m_header.chr_rom_chunks);
+		break;
+	case 1:
+		m_mapper = std::make_unique<MAPPER_1>(m_header.prg_rom_chunks, m_header.chr_rom_chunks);
 		break;
 	default:
 		std::println("Mapper [{:d}] Not implemented", m_mapperNumber);
@@ -108,7 +111,10 @@ Cartridge::Cartridge(std::string_view name, const u8* data, const size_t size)
 	switch (m_mapperNumber)
 	{
 	case 0:
-		m_mapper = std::make_unique<NROM>(m_header.prg_rom_chunks, m_header.chr_rom_chunks);
+		m_mapper = std::make_unique<MAPPER_0>(m_header.prg_rom_chunks, m_header.chr_rom_chunks);
+		break;
+	case 1:
+		m_mapper = std::make_unique<MAPPER_1>(m_header.prg_rom_chunks, m_header.chr_rom_chunks);
 		break;
 	default:
 		std::println("Mapper [{:d}] Not implemented", m_mapperNumber);

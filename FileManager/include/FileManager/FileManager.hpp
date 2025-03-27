@@ -16,16 +16,25 @@ namespace FILEMANAGER_NAMESPACE
 namespace mode
 {
 
-static constexpr int READ   = std::ios::in;
-static constexpr int WRITE  = std::ios::out;
-static constexpr int END    = std::ios::ate;
-static constexpr int APPEND = std::ios::app;
-static constexpr int BINARY = std::ios::binary;
+constexpr int read   = std::ios::in;
+constexpr int write  = std::ios::out;
+constexpr int end    = std::ios::ate;
+constexpr int append = std::ios::app;
+constexpr int binary = std::ios::binary;
 
 }
 
-using OpenMode = int;
+namespace traverse
+{
+constexpr uint8_t files   = 0x01;
+constexpr uint8_t folders = 0x02;
+constexpr uint8_t all     = 0xFF;
+}
 
+constexpr int FULL = -1;
+
+using OpenMode = int;
+using TraverseMode = uint8_t;
 
 
 /**
@@ -58,13 +67,14 @@ bool SetRootToKnownPath(const std::string& name);
  * @brief Pushes a nes folder on top of current
  *
  * @param name new folder name
+ * @param create true if create folder if not exists
  *
- * @return true if folder was created
- * @return false if folder exists
+ * @return true if folder was created or entered
+ * @return false if folder does not exists
  */
-bool PushFolder(const std::filesystem::path& name);
+bool PushFolder(const std::filesystem::path& name, bool create = true);
 
-bool PushFolder(std::initializer_list<std::filesystem::path> name);
+bool PushFolder(std::initializer_list<std::filesystem::path> name, bool create = true);
 
 
 /**
@@ -92,11 +102,31 @@ void PopFolder(int amount=1);
 * @param name, name of the file to be created
 * @param mode, open mode of file
 */
-bool PushFile(std::string_view name, OpenMode mode=mode::WRITE | mode::APPEND);
+bool PushFile(std::filesystem::path name, OpenMode mode=mode::write | mode::append);
 
 void PopFile();
 
+
+/** A
+ * @fn Traverse
+ * @brief Traverses current directory and retrievees all files up to given depth
+ *
+ * @param depth the depth of the search
+ * @param trav_mode the type of traverse Fman::traverse::all by default
+ *  - Fman::traverse::files for only files
+ *  - Fman::traverse::folders for only folders
+ *  - Fman::traverse::files | Fman::Traverse::folders for files and folders
+ *  - Fman::traverse::all for all
+ * @param filters file extensions, if empty filtering is off, if not empty will only return
+ *  files with extensions in filers
+ *
+ * @return std::vector<std::filesystem::path>  containing all traversables up to specified depth
+ */
+std::vector<std::filesystem::path> Traverse(int depth = 1, TraverseMode trav_mode = traverse::all, std::initializer_list<std::string_view> filters = {});
+
 void Write(const std::string_view text);
+
+std::string Slurp(std::filesystem::path path);
 
 
 }

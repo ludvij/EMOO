@@ -1,7 +1,7 @@
 project "Application"
 	kind "ConsoleApp"
 	language "C++"
-	cppdialect "C++latest"
+	cppdialect "C++23"
 	staticruntime "on"
 	targetdir ("%{wks.location}/bin/" .. outputDir .. "/%{prj.name}")
 	targetname ("emoo")

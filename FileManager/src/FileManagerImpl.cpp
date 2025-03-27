@@ -3,24 +3,29 @@
 #include "internal/FileManager_internal.hpp"
 #include "Serializable.hpp"
 
-#include <lud_assert.hpp>
+#include <ludutils/lud_assert.hpp>
 
+#include <algorithm>
+#include <deque>
 #include <string>
+#include <string_view>
 
+namespace fs = std::filesystem;
+namespace ranges = std::ranges;
 
 FILEMANAGER_NAMESPACE::detail::Context context;
 
-std::filesystem::path FILEMANAGER_NAMESPACE::GetCurrent()
+fs::path FILEMANAGER_NAMESPACE::GetCurrent()
 {
 	return context.current_folder;
 }
 
-std::filesystem::path FILEMANAGER_NAMESPACE::GetRoot()
+fs::path FILEMANAGER_NAMESPACE::GetRoot()
 {
 	return context.root;
 }
 
-bool FILEMANAGER_NAMESPACE::SetRoot(const std::filesystem::path& name)
+bool FILEMANAGER_NAMESPACE::SetRoot(const fs::path& name)
 {
 	if (name.empty())
 	{
@@ -33,7 +38,7 @@ bool FILEMANAGER_NAMESPACE::SetRoot(const std::filesystem::path& name)
 		context.root = context.current_folder = name;
 		context.folders.clear();
 
-		return std::filesystem::create_directories(context.root);
+		return fs::create_directories(context.root);
 	}
 }
 
@@ -47,21 +52,41 @@ bool FILEMANAGER_NAMESPACE::SetRootToKnownPath(const std::string& name)
 }
 
 
-bool FILEMANAGER_NAMESPACE::PushFolder(const std::filesystem::path& name)
+bool FILEMANAGER_NAMESPACE::PushFolder(const fs::path& name, bool create/*= true*/)
 {
 	Lud::assert::that(!context.current_file.is_open(), "Can't push folder before popping file");
-	context.folders.emplace_back(name);
-	context.current_folder /= name;
+	Lud::assert::that(!name.has_extension(), "Can't push file while pushing folder");
+	const auto absolute = fs::absolute(name);
 
-	return std::filesystem::create_directories(context.current_folder);
+	if (create)
+	{
+		context.folders.emplace_back(absolute);
+		context.current_folder = absolute;
+
+		fs::create_directories(context.current_folder);
+		return true;
+	}
+	else
+	{
+		const bool exists = fs::exists(absolute);
+		if (!exists)
+		{
+			return false;
+		}
+		context.folders.emplace_back(absolute);
+		context.current_folder = absolute;
+
+		return true;
+	}
+
 }
 
-bool FILEMANAGER_NAMESPACE::PushFolder(std::initializer_list<std::filesystem::path> name)
+bool FILEMANAGER_NAMESPACE::PushFolder(std::initializer_list<fs::path> name, bool create/*= true*/)
 {
 	uint32_t res = false;
 	for (const auto& f : name)
 	{
-		res += PushFolder(f);
+		res += PushFolder(f, create);
 	}
 	return res == name.size();
 }
@@ -85,33 +110,28 @@ char* FILEMANAGER_NAMESPACE::AllocateFileName(const char* name)
 
 void FILEMANAGER_NAMESPACE::PopFolder(int amount)
 {
-	if (amount < 0)
-	{
-		context.folders.clear();
-		context.current_folder = context.root;
-		return;
-	}
-	Lud::assert::leq(context.folders.size(), amount, "Can't pop more folders than pushed amount");
+	Lud::assert::leq(amount, context.folders.size(), "Can't pop more folders than pushed amount");
 	Lud::assert::that(!context.current_file.is_open(), "Can't pop folder before popping file");
 
-	for (size_t i = 0; i < amount; i++)
+	if (amount < 0 || amount == context.folders.size())
 	{
-		context.folders.pop_back();
+		context.folders.clear();
+		context.folders.push_back(context.root);
 	}
-	context.current_folder = context.root;
-	for (size_t i = 0; i < context.folders.size(); i++)
+	else
 	{
-		context.current_folder /= context.folders[i];
+		context.folders.resize(context.folders.size() - amount);
 	}
+	context.current_folder = context.folders.back();
 }
 
-bool FILEMANAGER_NAMESPACE::PushFile(std::string_view name, OpenMode mode)
+bool FILEMANAGER_NAMESPACE::PushFile(fs::path name, OpenMode mode)
 {
 	Lud::assert::that(!context.current_file.is_open(), "You need to call PopFile before calling PushFile again");
 
-	std::filesystem::path path = context.current_folder;
-	path.append(name);
-	if (!std::filesystem::exists(path) && ( mode & mode::READ ))
+	fs::path path = context.current_folder;
+	path.append(name.string());
+	if (!fs::exists(path) && ( mode & mode::read ))
 	{
 		return false;
 	}
@@ -127,6 +147,49 @@ void FILEMANAGER_NAMESPACE::PopFile()
 	context.current_file.close();
 }
 
+std::vector<std::filesystem::path> FILEMANAGER_NAMESPACE::Traverse(const int depth, const TraverseMode trav_mode, const std::initializer_list<std::string_view> filters)
+{
+	Lud::assert::ne(depth, 0, "depth must be different from 0");
+	std::vector<fs::path> result;
+
+	int curr_depth = 0;
+	std::deque<fs::directory_entry> iters;
+
+	iters.emplace_back(context.current_folder);
+
+	size_t size = 1;
+	while (iters.size() > 0)
+	{
+		fs::directory_iterator it{ iters.front() };
+		iters.pop_front();
+		for (const auto& dir_entry : it)
+		{
+			if (fs::is_directory(dir_entry))
+			{
+				if (trav_mode & traverse::folders)
+					result.emplace_back(dir_entry);
+				iters.push_back(dir_entry);
+			}
+			if (!fs::is_directory(dir_entry) && ( trav_mode & traverse::files ))
+			{
+				if (filters.size() > 0)
+				{
+					const auto ext = dir_entry.path().extension();
+					if (!( ranges::find(filters, ext) != filters.end() )) continue;
+				}
+				result.emplace_back(dir_entry);
+			}
+		}
+		if (--size == 0)
+		{
+			size = iters.size();
+			if (depth > FULL && ++curr_depth >= depth)
+				return result;
+		}
+	}
+	return result;
+}
+
 void FILEMANAGER_NAMESPACE::Write(const std::string_view text)
 {
 	Lud::assert::that(context.current_file.is_open(), "You need to call PushFile before writing to a file");
@@ -134,9 +197,28 @@ void FILEMANAGER_NAMESPACE::Write(const std::string_view text)
 	context.current_file << text;
 }
 
+std::string FILEMANAGER_NAMESPACE::Slurp(std::filesystem::path path)
+{
+	std::string res;
+	if (PushFile(path, mode::read | mode::end | mode::binary))
+	{
+		const size_t size = context.current_file.tellg();
+		context.current_file.seekg(0, std::ios::beg);
+
+		char* buf = new char[size];
+		context.current_file.read(buf, size);
+		res = std::string(buf, size);
+
+		delete[] buf;
+		PopFile();
+	}
+
+	return res;
+}
+
 void FILEMANAGER_NAMESPACE::Serialize(ISerializable* serial)
 {
-	if (PushFile(context.serialize_filename, mode::BINARY | mode::WRITE))
+	if (PushFile(context.serialize_filename, mode::binary | mode::write))
 	{
 		serial->Serialize(context.current_file);
 
@@ -146,7 +228,7 @@ void FILEMANAGER_NAMESPACE::Serialize(ISerializable* serial)
 
 void FILEMANAGER_NAMESPACE::Deserialize(ISerializable* serial)
 {
-	if (PushFile(context.serialize_filename, mode::BINARY | mode::READ))
+	if (PushFile(context.serialize_filename, mode::binary | mode::read))
 	{
 		serial->Deserialize(context.current_file);
 

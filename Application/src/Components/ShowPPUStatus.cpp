@@ -4,7 +4,7 @@
 #include "Application.hpp"
 
 #include <imgui.h>
-#include <lud_parser.hpp>
+#include <ludutils/lud_parse.hpp>
 #include <misc/cpp/imgui_stdlib.h>
 
 Ui::Component::ShowPPUStatus::ShowPPUStatus(const std::string_view name, ImFont* font)
@@ -147,7 +147,7 @@ void Ui::Component::ShowPPUStatus::OnUpdate()
 		{
 			for (uint8_t j = 0; j < 4; j++)
 			{
-				c[static_cast<size_t>( i * 4 + j )] = ppu.GetColorFromPalette(i, j);
+				c[static_cast<size_t>(i * 4 + j)] = ppu.GetColorFromPalette(i, j);
 			}
 		}
 

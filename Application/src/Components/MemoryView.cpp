@@ -2,7 +2,7 @@
 
 #include "Application.hpp"
 #include <imgui.h>
-#include <lud_parser.hpp>
+#include <ludutils/lud_parse.hpp>
 #include <misc/cpp/imgui_stdlib.h>
 #include <RendererAPI.hpp>
 
@@ -257,7 +257,7 @@ void Ui::Component::MemoryView::repr_cpu_ram_16()
 	size_t count = 0;
 	for (size_t i = 0; i < 0x800; i++)
 	{
-		u8 dat = bus.Peek(static_cast<u16>( i ));
+		u8 dat = bus.Peek(static_cast<u16>(i));
 		u8 lo = dat & 0x0F;
 		u8 hi = ( dat & 0xF0 ) >> 4;
 		buf[count++] = dawnbringer16[lo];
@@ -276,7 +276,7 @@ void Ui::Component::MemoryView::repr_cpu_ram_2()
 	size_t count = 0;
 	for (size_t i = 0; i < 0x800; i++)
 	{
-		u8 dat = bus.Peek(static_cast<u16>( i ));
+		u8 dat = bus.Peek(static_cast<u16>(i));
 		buf[count++] = dat & 0x01 ? DEFINE_COLOR(0xFF, 0xFF, 0xFF) : DEFINE_COLOR(0x00, 0x00, 0x00);
 		buf[count++] = dat & 0x02 ? DEFINE_COLOR(0xFF, 0xFF, 0xFF) : DEFINE_COLOR(0x00, 0x00, 0x00);
 		buf[count++] = dat & 0x04 ? DEFINE_COLOR(0xFF, 0xFF, 0xFF) : DEFINE_COLOR(0x00, 0x00, 0x00);

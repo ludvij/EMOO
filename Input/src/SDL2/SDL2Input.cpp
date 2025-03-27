@@ -1,6 +1,6 @@
 #include "SDL2/SDL2Input.hpp"
 #include <format>
-#include <lud_assert.hpp>
+
 #include <print>
 #include <SDL.h>
 

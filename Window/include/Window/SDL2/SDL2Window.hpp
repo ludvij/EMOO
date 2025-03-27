@@ -2,6 +2,7 @@
 #define GRAPHICS_WINDOW_SDL_WINDOW_HEADER
 
 #include "../Window.hpp"
+#include <string>
 #include <string_view>
 
 struct SDL_Window;

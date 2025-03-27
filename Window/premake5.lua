@@ -1,24 +1,21 @@
 project "Window"
 	kind "StaticLib"
 	language "C++"
-	cppdialect "C++latest"
+	cppdialect "C++23"
 	staticruntime "on"
 	
 	targetdir ("%{wks.location}/bin/" .. outputDir .. "/%{prj.name}")
 	objdir ("%{wks.location}/bin/intermediates/" .. outputDir .. "/%{prj.name}")
 
-	platform = 'SDL3' and sdl3 or 'SDL2'
 
 	files { 
 		"include/Window/*.hpp", 
 		"src/*.cpp",
-		"include/Window/" .. platform .. "/**.hpp",
-		"src/" .. platform .. "/**.cpp"
+		"include/Window/SDL2/**.hpp",
+		"src/SDL2/**.cpp"
 	}
 
-	flags {
-		"FatalWarnings"
-	}
+	fatalwarnings { "All" }
 
 	includedirs {
 		"src",

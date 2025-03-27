@@ -1,7 +1,7 @@
 project "Renderer"
 	kind "StaticLib"
 	language "C++"
-	cppdialect "C++latest"
+	cppdialect "C++23"
 	staticruntime "on"
 	
 	targetdir ("%{wks.location}/bin/" .. outputDir .. "/%{prj.name}")

@@ -1,5 +1,4 @@
 outputDir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
-sdl3 = false
 include "dependencies.lua"
 
 workspace "TFG"	

@@ -1,7 +1,7 @@
 project "FileManager"
 	kind "StaticLib"
 	language "C++"
-	cppdialect "C++latest"
+	cppdialect "C++23"
 	staticruntime "on"
 	
 	targetdir ("%{wks.location}/bin/" .. outputDir .. "/%{prj.name}")
@@ -11,17 +11,15 @@ project "FileManager"
 	files { 
 		"include/**.hpp", 
 		"src/**.cpp",
+		"%{IncludeDir.lud_utils}/**"
 	}
 
-	flags {
-		"FatalWarnings"
-	}
+	fatalwarnings { "All" }
 
 	includedirs {
 		"src",
 		"include/FileManager",
-		"%{IncludeDir.lud_utils}",
-
+		"%{IncludeDir.lud_utils}"
 	}
 
 	filter "system:windows"

@@ -1,7 +1,7 @@
 #include "Pipelines.hpp"
 
 #define LUD_SLURPER_IMPLEMENTATION
-#include <lud_slurper.hpp>
+#include <ludutils/lud_slurper.hpp>
 
 #include "Initializers.hpp"
 

@@ -1,7 +1,6 @@
 #ifndef GRAPHICS_ICOMPONENT_HEADER
 #define GRAPHICS_ICOMPONENT_HEADER
 
-#include <lud_id.hpp>
 #include <string_view>
 
 #define DEFINE_COLOR(R, G, B) \

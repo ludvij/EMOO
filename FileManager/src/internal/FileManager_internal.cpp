@@ -1,5 +1,8 @@
 #include "internal/FileManager_internal.hpp"
 
+#ifdef FILE_MANAGER_PLATFORM_WINDOWS
+#include <ShlObj.h>
+#endif//FILE_MANAGER_PLATFORM_WINDOWS
 
 FILEMANAGER_NAMESPACE::detail::Context::~Context()
 {
@@ -9,12 +12,10 @@ FILEMANAGER_NAMESPACE::detail::Context::~Context()
 	}
 }
 
-
-#ifdef FILE_MANAGER_PLATFORM_WINDOWS
-#include <ShlObj.h>
-
 FILEMANAGER_NAMESPACE::detail::Context::Context()
 {
+	known_paths.emplace("PWD", std::filesystem::current_path());
+#ifdef FILE_MANAGER_PLATFORM_WINDOWS
 	auto add_knonw_path = [&](const std::string& name, GUID id)
 		{
 			PWSTR path;
@@ -32,10 +33,10 @@ FILEMANAGER_NAMESPACE::detail::Context::Context()
 
 	add_knonw_path("APPDATA", FOLDERID_RoamingAppData);
 	add_knonw_path("DOCUMENTS", FOLDERID_Documents);
+#endif//FILE_MANAGER_PLATFORM_WINDOWS
 
-	root = current_folder = known_paths.at("APPDATA");
+	root = known_paths.at("PWD");
 }
 
-#else
-#error Platform not supported
-#endif // FILEMANAGER_WINDOWS
+
+

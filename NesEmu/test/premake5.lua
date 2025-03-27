@@ -1,7 +1,7 @@
 project "NesEmu-test"
 	kind "ConsoleApp"
 	language "C++"
-	cppdialect "c++latest"
+	cppdialect "c++23"
 	staticruntime "on"
 	
 	targetdir ("%{wks.location}/bin/" .. outputDir .. "/%{prj.name}")
@@ -12,9 +12,7 @@ project "NesEmu-test"
 		"src/**.cpp"
 	}
 
-	flags {
-		"FatalWarnings"
-	}
+	fatalwarnings { "All" }
 
 
 	includedirs {

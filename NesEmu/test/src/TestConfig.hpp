@@ -6,7 +6,7 @@
 
 #include "ROM/blank.hpp"
 #include "ROM/nestest.hpp"
-#include <lud_assert.hpp>
+#include <ludutils/lud_assert.hpp>
 
 class TestFixture : public testing::Test
 {

@@ -1,6 +1,8 @@
 #ifndef GRAPHICS_CLOSE_DIALOG_COMPONENT_HEADER
 #define GRAPHICS_CLOSE_DIALOG_COMPONENT_HEADER
 #include "IComponent.hpp"
+#include <string>
+
 namespace Ui::Component
 {
 class CloseDialog : public IComponent

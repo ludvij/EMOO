@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <utility>
 
-#include <lud_assert.hpp>
+#include <ludutils/lud_assert.hpp>
 
 using Renderer::Detail::Vertex;
 

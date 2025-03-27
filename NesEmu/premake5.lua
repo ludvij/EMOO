@@ -1,7 +1,7 @@
 project "NesEmu"
 	kind "StaticLib"
 	language "C++"
-	cppdialect "C++latest"
+	cppdialect "C++23"
 	staticruntime "on"
 	
 	targetdir ("%{wks.location}/bin/" .. outputDir .. "/%{prj.name}")
@@ -10,17 +10,13 @@ project "NesEmu"
 	files { 
 		"src/**.hpp", 
 		"src/**.cpp",
-
-		"%{IncludeDir.ctre}/**.hpp",
 	}
 
 	links {
 		"FileManager"
 	}
 
-	flags {
-		"FatalWarnings"
-	}
+	fatalwarnings { "All" }
 
 	pchheader "pch.hpp"
 	pchsource "src/pch.cpp"

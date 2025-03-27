@@ -7,7 +7,7 @@
 namespace Emu
 {
 typedef NROM MAPPER_0;
-//typedef MMC1 MAPPER_1;
+typedef MMC1 MAPPER_1;
 //typedef MMC2 MAPPER_2;
 //typedef MMC3 MAPPER_2;
 //typedef VRC6a MAPPER_24;

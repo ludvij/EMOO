@@ -1,6 +1,3 @@
-[submodule "vendor/lud_utils"]
-	path = vendor/lud_utils
-	url = git@github.com:ludvij/Lud_Utills.git
 [submodule "vendor/imgui"]
 	path = vendor/imgui
 	url = git@github.com:ludvij/imgui.git

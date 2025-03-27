@@ -6,3 +6,6 @@
 [submodule "vendor/googletest"]
 	path = vendor/googletest
 	url = git@github.com:ludvij/googletest.git
+[submodule "vendor/lud_utils"]
+	path = vendor/lud_utils
+	url = git@github.com:ludvij/Lud_Utils.git

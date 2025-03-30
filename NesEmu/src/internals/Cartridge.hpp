@@ -26,7 +26,7 @@ class Cartridge : public Fman::ISerializable
 {
 public:
 	explicit Cartridge(const std::filesystem::path& filePath);
-	explicit Cartridge(std::string_view name, const u8* data, size_t size);
+	Cartridge(std::string_view name, const u8* data, size_t size);
 	~Cartridge();
 
 	void ConnectBus(Bus* bus)
@@ -79,6 +79,8 @@ public:
 
 
 private:
+
+	void load_from_stream(std::istream& stream);
 
 	std::string to_string(Mirroring mirroring);
 	bool is_header_valid() const;

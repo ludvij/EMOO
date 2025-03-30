@@ -25,12 +25,12 @@ workspace "TFG"
 group "Dependencies"
 	-- include "vendor/premake"
 	include "vendor/imgui"
-	include "vendor/googletest/googletest"
+	-- include "vendor/googletest/googletest"
 group ""
 
-group "Test"
-	include "NesEmu/test"
-group ""
+-- group "Test"
+-- 	include "NesEmu/test"
+-- group ""
 
 
 group "Interface"

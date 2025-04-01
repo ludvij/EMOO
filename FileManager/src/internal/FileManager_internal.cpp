@@ -1,10 +1,10 @@
 #include "internal/FileManager_internal.hpp"
 
-#ifdef FILE_MANAGER_PLATFORM_WINDOWS
+#ifdef FILEMANAGER_PLATFORM_WINDOWS
 #include <ShlObj.h>
 #endif//FILE_MANAGER_PLATFORM_WINDOWS
 
-FILEMANAGER_NAMESPACE::detail::Context::~Context()
+Fman::detail::Context::~Context()
 {
 	for (const auto& alloc : allocations)
 	{
@@ -12,10 +12,10 @@ FILEMANAGER_NAMESPACE::detail::Context::~Context()
 	}
 }
 
-FILEMANAGER_NAMESPACE::detail::Context::Context()
+Fman::detail::Context::Context()
 {
-	known_paths.emplace("PWD", std::filesystem::current_path());
-#ifdef FILE_MANAGER_PLATFORM_WINDOWS
+	// I need to clan this
+#if defined(FILEMANAGER_PLATFORM_WINDOWS)
 	auto add_knonw_path = [&](const std::string& name, GUID id)
 		{
 			PWSTR path;
@@ -30,12 +30,20 @@ FILEMANAGER_NAMESPACE::detail::Context::Context()
 
 			CoTaskMemFree(path);
 		};
-
+	add_knonw_path("HOME", FOLDERID_Profile);
 	add_knonw_path("APPDATA", FOLDERID_RoamingAppData);
 	add_knonw_path("DOCUMENTS", FOLDERID_Documents);
-#endif//FILE_MANAGER_PLATFORM_WINDOWS
+#elif defined(FILEMANAGER_PLATFORM_LINUX)
+	known_paths.emplace("HOME", "~");
+	known_paths.emplace("APPDATA", "~");
+	known_paths.emplace("DOCUMENTS", "~/Documents");
+#else
+#error Unsupported platform
+#endif
 
-	root = known_paths.at("PWD");
+	known_paths.emplace("PWD", std::filesystem::current_path());
+
+	root = current_folder = known_paths.at("PWD");
 }
 
 

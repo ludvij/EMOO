@@ -10,7 +10,7 @@ using Ui::Application;
 
 namespace Ui
 {
-int Main(int argc, char** argv)
+int Main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
 {
 	// windows only code to make scale no mess up the window size
 	SDL_SetHint(SDL_HINT_WINDOWS_DPI_AWARENESS, "system");

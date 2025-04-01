@@ -139,8 +139,8 @@ void Ui::Component::ShowPPUStatus::OnUpdate()
 	{
 		m_update_chosen_pal = false;
 
-		m_pattern_table[0]->SetData(ppu.GetPatternTable(0, m_bg_pal));
-		m_pattern_table[1]->SetData(ppu.GetPatternTable(1, m_sprite_pal));
+		m_pattern_table[0]->SetData(ppu.GetPatternTable(0, static_cast<u8>(m_bg_pal)));
+		m_pattern_table[1]->SetData(ppu.GetPatternTable(1, static_cast<u8>(m_sprite_pal)));
 
 		std::array<uint32_t, 8 * 4> c;
 		for (uint8_t i = 0; i < 8; i++)
@@ -162,8 +162,8 @@ void Ui::Component::ShowPPUStatus::OnUpdate()
 	}
 	if (ppu.HasUpdatedPatternTables())
 	{
-		m_pattern_table[0]->SetData(ppu.GetPatternTable(0, m_bg_pal));
-		m_pattern_table[1]->SetData(ppu.GetPatternTable(1, m_sprite_pal));
+		m_pattern_table[0]->SetData(ppu.GetPatternTable(0, static_cast<u8>( m_bg_pal )));
+		m_pattern_table[1]->SetData(ppu.GetPatternTable(1, static_cast<u8>( m_sprite_pal )));
 	}
 }
 

@@ -1,6 +1,6 @@
 #ifndef GRAPHICS_SDL_INPUT_HEADER
 #define GRAPHICS_SDL_INPUT_HEADER
-#include "../Input.hpp"
+#include "Input.hpp"
 #include <SDL.h>
 
 namespace Input

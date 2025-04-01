@@ -18,12 +18,12 @@
 #include "Components/ShowPPUStatus.hpp"
 
 #include <cppicons/IconsFontAwesome5.hpp>
+#include <fonts/CascadiaMono-Regular.embed>
+#include <fonts/fa-solid-900.embed>
+#include <fonts/OpenSans-Regular.embed>
 #include <Input/SDL2/SDL2Input.hpp>
 #include <pfd/portable_file_dialogs.h>
 #include <RendererAPI.hpp>
-#include <resources/fonts/CascadiaMono-Regular.embed>
-#include <resources/fonts/fa-solid-900.embed>
-#include <resources/fonts/OpenSans-Regular.embed>
 #include <Window/SDL2/SDL2Window.hpp>	
 
 #include <FileManager/FileManager.hpp>
@@ -93,6 +93,7 @@ void Application::init()
 	Renderer::Init(m_window, true);
 	auto& io = ImGui::GetIO();
 	// set app directory to appdata/roaming/EMOO
+	Fman::SetRootToKnownPath("APPDATA");
 	Fman::PushFolder("EMOO");
 	Fman::SetRoot();
 

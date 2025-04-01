@@ -2,20 +2,19 @@
 #define FILE_MANAGER_SERIALIZABLE_HEADER
 
 #include "FileManager.hpp"
-#include "internal/Core.hpp"
 
 #include <fstream>
 #include <print>
 #include <ranges>
 #include <span>
 
-namespace FILEMANAGER_NAMESPACE
+namespace Fman
 {
 
 
 
-template<typename T> void SerializeStatic(T t);
-template<typename T> void DeserializeStatic(T& t);
+template<typename T> void SerializeStatic(const T& t);
+template<typename T> void DeserializeStatic(const T& t);
 
 template<typename T> void SerializeArrayStoresStatic(const std::span<T> arr);
 template<typename T> void DeserializeArrayStoresStatic(std::span<T> arr);
@@ -42,7 +41,7 @@ void SetSerializeFilename(std::string_view name);
 
 
 template<typename T>
-void SerializeStatic(T t)
+void SerializeStatic(const T& t)
 {
 	SerializeData(reinterpret_cast<const char*>( &t ), sizeof t);
 }
@@ -52,6 +51,8 @@ void DeserializeStatic(T& t)
 {
 	DeserializeData(reinterpret_cast<char*>( &t ), sizeof t);
 }
+
+
 
 template<typename T>
 void SerializeArrayStoresStatic(const std::span<T> arr)

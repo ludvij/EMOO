@@ -1,16 +1,15 @@
 #ifndef FILE_MANAGER_HEADER
 #define FILE_MANAGER_HEADER
 
-#include "internal/Core.hpp"
 #include "Serializable.hpp"
 
 #include <filesystem>
 #include <string>
 #include <string_view>
+#include <vector>
 
 
-
-namespace FILEMANAGER_NAMESPACE
+namespace Fman
 {
 
 namespace mode

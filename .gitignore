@@ -20,3 +20,5 @@ bin-int
 
 Makefile
 **.log
+
+build/

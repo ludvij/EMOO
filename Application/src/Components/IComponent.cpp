@@ -51,8 +51,8 @@ bool operator==(const IComponent& lhs, const IComponent& rhs)
 }
 
 
-bool IComponent::operator==(const std::string_view name) const
+bool IComponent::operator==(const std::string_view other_name) const
 {
-	return this->name == name;
+	return this->name == other_name;
 }
 }

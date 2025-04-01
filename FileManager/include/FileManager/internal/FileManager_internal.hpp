@@ -1,15 +1,13 @@
 #ifndef FILE_MANAGER_INTERNAL_HEADER
 #define FILE_MANAGER_INTERNAL_HEADER
 
-#include "Core.hpp"
-
 #include <deque>
 #include <filesystem>
 #include <fstream>
+#include <vector>
 #include <unordered_map>
 
-
-namespace FILEMANAGER_NAMESPACE::detail
+namespace Fman::detail
 {
 
 class Context
@@ -17,6 +15,12 @@ class Context
 public:
 	Context();
 	~Context();
+
+	Context(const Context& other)            = delete;
+	Context& operator=(const Context& other) = delete;
+
+	Context(Context&& other)            = delete;
+	Context& operator=(Context&& other) = delete;
 
 private:
 public:
@@ -30,6 +34,8 @@ public:
 	std::string serialize_filename="srl.dat";
 
 	std::unordered_map<std::string, std::filesystem::path> known_paths;
+
+	// std::mutex m_current_file_mutex;
 };
 
 

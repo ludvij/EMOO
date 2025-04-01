@@ -21,7 +21,7 @@ u8 A6502::GetBytesForAddressingMode(AddressingModeName am)
 	case A::IND: [[fallthrough]];
 	case A::INX: [[fallthrough]];
 	case A::INY: return 3;
-	default: std::unreachable();
+	default: Lud::Unreachable();
 	}
 }
 

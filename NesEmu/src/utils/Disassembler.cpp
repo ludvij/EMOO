@@ -194,7 +194,7 @@ static std::string FormatAddressingMode(AddressingModeName am, u16 val /*=0*/)
 	case A::IND: return std::format(" (${:04X})", val);
 	case A::INX: return std::format(" (${:04X},X)", val);
 	case A::INY: return std::format(" (${:04X}),Y", val);
-	default: std::unreachable();
+	default: Lud::Unreachable();
 	}
 }
 const char* GetInstructionName(InstructionName i)

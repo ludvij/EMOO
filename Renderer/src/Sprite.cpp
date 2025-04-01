@@ -13,10 +13,10 @@ Sprite::Sprite(Rect pos, float z_index, ITexture* texture, TextureWindow texture
 
 }
 
-void Sprite::SetTexture(ITexture* texture, TextureWindow texture_window)
+void Sprite::SetTexture(ITexture* new_texture, TextureWindow new_texture_window)
 {
-	this->texture = texture;
-	this->texture_window = texture_window;
+	this->texture = new_texture;
+	this->texture_window = new_texture_window;
 }
 
 void Sprite::Draw() const

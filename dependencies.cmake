@@ -36,3 +36,4 @@ target_sources(vkbootstrap PRIVATE
 target_include_directories(vkbootstrap
 	PUBLIC ${includedir_vkb}
 )
+target_link_libraries(vkbootstrap PRIVATE vulkan)

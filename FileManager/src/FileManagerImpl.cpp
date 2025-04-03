@@ -5,10 +5,10 @@
 #include <ludutils/lud_assert.hpp>
 
 #include <algorithm>
+#include <cstring>
 #include <deque>
 #include <string>
 #include <string_view>
-#include <cstring>
 
 namespace fs = std::filesystem;
 namespace ranges = std::ranges;
@@ -46,7 +46,7 @@ bool Fman::SetRootToKnownPath(const std::string& name)
 {
 	if (auto path = context.known_paths.find(name); path != context.known_paths.end())
 	{
-		SetRoot(path->second);
+		return SetRoot(path->second);
 	}
 	return false;
 }
@@ -56,25 +56,24 @@ bool Fman::PushFolder(const fs::path& name, bool create/*= true*/)
 {
 	Lud::assert::that(!context.current_file.is_open(), "Can't push folder before popping file");
 	Lud::assert::that(!name.has_extension(), "Can't push file while pushing folder");
-	const auto absolute = fs::absolute(name);
 
 	if (create)
 	{
-		context.folders.emplace_back(absolute);
-		context.current_folder = absolute;
+		context.current_folder /= name;
+		context.folders.emplace_back(fs::absolute(context.current_folder));
 
 		fs::create_directories(context.current_folder);
 		return true;
 	}
 	else
 	{
-		const bool exists = fs::exists(absolute);
+		const bool exists = fs::exists(name);
 		if (!exists)
 		{
 			return false;
 		}
-		context.folders.emplace_back(absolute);
-		context.current_folder = absolute;
+		context.folders.emplace_back(name);
+		context.current_folder /= name;
 
 		return true;
 	}
@@ -98,18 +97,21 @@ char* Fman::AllocateFileName(const char* name)
 	auto repr = current.string();
 	size_t sz = repr.size() + 1;
 
-	char* s = new char[sz]{0};
-	if (s)
-	{
+	char* s = new char[sz]
+		{
+			0
+		};
+		if (s)
+		{
 		#if defined(__STDC_LIB_EXT1__) && defined(__STDC_WANT_LIB_EXT1__) && __STDC_WANT_LIB_EXT1__ == 1
 			std::strncpy_s(s, sz, repr.c_str(), sz);
 		#else
 			std::strncpy(s, repr.c_str(), sz);
 		#endif
-	}
-	context.allocations.push_back(s);
+		}
+		context.allocations.push_back(s);
 
-	return s;
+		return s;
 }
 
 void Fman::PopFolder(int amount)
@@ -140,7 +142,7 @@ bool Fman::PushFile(fs::path name, OpenMode mode)
 	{
 		return false;
 	}
-	context.current_file.open(path, static_cast<std::ios_base::openmode>(mode));
+	context.current_file.open(path, static_cast<std::ios_base::openmode>( mode ));
 
 	return context.current_file.is_open();
 }

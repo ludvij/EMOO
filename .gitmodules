@@ -3,9 +3,6 @@
 	url = git@github.com:ludvij/imgui.git
 	branch = docking
 	
-[submodule "vendor/googletest"]
-	path = vendor/googletest
-	url = git@github.com:ludvij/googletest.git
 [submodule "Lud_Utils"]
 	path = Lud_Utils
 	url = git@github.com:ludvij/Lud_Utils.git

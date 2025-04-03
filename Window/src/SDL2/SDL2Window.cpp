@@ -84,14 +84,7 @@ uint32_t SDL2Window::GetWindowID()
 {
 	return SDL_GetWindowID(m_window);
 }
-void SDL2Window::InitImguiForRenderer()
-{
-	ImGui_ImplSDL2_InitForVulkan(m_window);
-}
-void SDL2Window::ShutdownImGuiWindow()
-{
-	ImGui_ImplSDL2_Shutdown();
-}
+
 void SDL2Window::ProcessEvents(void* event)
 {
 	SDL_Event* e = static_cast<SDL_Event*>( event );
@@ -111,6 +104,14 @@ void SDL2Window::ProcessEvents(void* event)
 void SDL2Window::BeginImGuiFrame()
 {
 	ImGui_ImplSDL2_NewFrame();
+}
+void SDL2Window::InitImguiForRenderer()
+{
+	ImGui_ImplSDL2_InitForVulkan(m_window);
+}
+void SDL2Window::ShutdownImGuiWindow()
+{
+	ImGui_ImplSDL2_Shutdown();
 }
 
 void SDL2Window::Maximize(bool maximize)

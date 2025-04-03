@@ -3,6 +3,7 @@
 
 #include <functional>
 #include <unordered_map>
+#include <deque>
 #include <vulkan/vulkan.h>
 
 namespace Window
@@ -56,6 +57,7 @@ public:
 
 protected:
 	std::unordered_map <Event, std::function<void(IWindow*, void*)>> m_event_fn;
+
 };
 }
 

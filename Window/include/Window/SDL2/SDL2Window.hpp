@@ -3,7 +3,6 @@
 
 #include "../Window.hpp"
 #include <string>
-#include <string_view>
 
 struct SDL_Window;
 namespace Window

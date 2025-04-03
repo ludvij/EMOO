@@ -13,6 +13,25 @@
 namespace Window
 {
 
+static Event get_equivalent_from_sdl(uint32_t event)
+{
+	typedef Window::Event E;
+	switch (event)
+	{
+	case SDL_EVENT_WINDOW_RESIZED:         return E::RESIZED;
+	case SDL_EVENT_WINDOW_MINIMIZED:       return E::MINIMIZED;
+	case SDL_EVENT_WINDOW_RESTORED:        return E::RESTORED;
+	case SDL_EVENT_WINDOW_MAXIMIZED:       return E::MAXIMIZED;
+	case SDL_EVENT_WINDOW_CLOSE_REQUESTED: return E::CLOSE;
+	case SDL_EVENT_WINDOW_MOVED:           return E::MOVED;
+	case SDL_EVENT_WINDOW_MOUSE_LEAVE:     return E::FOCUS_LOST_MOUSE;
+	case SDL_EVENT_WINDOW_MOUSE_ENTER:     return E::FOCUS_GAIN_MOUSE;
+	case SDL_EVENT_WINDOW_FOCUS_LOST:      return E::FOCUS_LOST_KEYBOARD;
+	case SDL_EVENT_WINDOW_FOCUS_GAINED:    return E::FOCUS_GAIN_KEYBOARD;
+	default:                               return E::NONE;
+	}
+}
+
 
 SDL3Window::SDL3Window(const std::string& title, int w, int h)
 {
@@ -50,10 +69,10 @@ void SDL3Window::GetDimensions(int* w, int* h) const
 }
 
 
-VkSurfaceKHR SDL3Window::CreateVulkanSurface(VkInstance instance)
+void* SDL3Window::CreateRenderSurface(void* instance)
 {
 	VkSurfaceKHR surface;
-	SDL_Vulkan_CreateSurface(m_window, instance, NULL, &surface);
+	SDL_Vulkan_CreateSurface(m_window, static_cast<VkInstance>( instance ), NULL, &surface);
 	return surface;
 }
 
@@ -62,7 +81,7 @@ uint32_t SDL3Window::GetWindowID()
 {
 	return SDL_GetWindowID(m_window);
 }
-void SDL3Window::InitImguiForVulkan()
+void SDL3Window::InitImguiForRenderer()
 {
 	ImGui_ImplSDL3_InitForVulkan(m_window);
 }
@@ -77,5 +96,31 @@ void SDL3Window::ProcessEventForImGui(void* event)
 void SDL3Window::BeginImGuiFrame()
 {
 	ImGui_ImplSDL3_NewFrame();
+}
+void SDL3Window::ProcessEvents(void* event)
+{
+	SDL_Event* e = static_cast<SDL_Event*>( event );
+	ImGui_ImplSDL3_ProcessEvent(e);
+	if (!( e->type >= SDL_EVENT_WINDOW_FIRST && e->type <= SDL_EVENT_WINDOW_LAST ))
+	{
+		return;
+	}
+
+	Event my_event = get_equivalent_from_sdl(e->window.type);
+	if (m_event_fn.contains(my_event))
+	{
+		m_event_fn.at(my_event)( this, event );
+	}
+}
+void SDL3Window::Maximize(bool maximize)
+{
+	if (maximize)
+	{
+		SDL_MaximizeWindow(m_window);
+	}
+	else
+	{
+		// do nothing yet
+	}
 }
 }

@@ -2,6 +2,8 @@
 #define GRAPHICS_WINDOW_SDL_WINDOW_HEADER
 
 #include "../Window.hpp"
+#include <any>
+#include <string>
 #include <string_view>
 
 struct SDL_Window;
@@ -17,12 +19,12 @@ public:
 	virtual WindowExtent GetDimensions() const override;
 	virtual void GetDimensions(int* w, int* h) const override;
 
-	virtual VkSurfaceKHR CreateVulkanSurface(VkInstance instance) override;
+	virtual void* CreateRenderSurface(void* instance) override;
 
 	virtual uint32_t GetWindowID() override;
 
 
-	virtual void InitImguiForVulkan() override;
+	virtual void InitImguiForRenderer() override;
 
 private:
 	NativeType* m_window;
@@ -35,6 +37,10 @@ private:
 
 	// Inherited via IWindow
 	void BeginImGuiFrame() override;
+
+	// Inherited via IWindow
+	void ProcessEvents(void* event) override;
+	void Maximize(bool maximize) override;
 };
 }
 #endif //!GRAPHICS_WINDOW_SDL_WINDOW_HEADER

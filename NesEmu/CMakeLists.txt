@@ -41,6 +41,11 @@ set(SOURCES
 
 	src/pch.hpp
 )
+
+set(nemu_tests_dir ${CMAKE_CURRENT_LIST_DIR}/test/src)
+
+file(GLOB_RECURSE tests_sources ${nemu_tests_dir}/*)
+
 add_library(${PROJECT_NAME} STATIC)
 target_sources(${PROJECT_NAME} 
 	PRIVATE ${SOURCES}
@@ -56,12 +61,18 @@ target_include_directories(${PROJECT_NAME}
 )
 
 target_link_libraries(${PROJECT_NAME}
-	PRIVATE ludutils
-	PRIVATE Fman
+	PUBLIC ludutils
+	PUBLIC Fman
 )
 
 source_group(TREE "${CMAKE_CURRENT_LIST_DIR}/src" PREFIX src FILES ${SOURCES})
 
+add_executable(Test-NesEmu)
+target_link_libraries(Test-NesEmu 
+	PRIVATE gtest
+	PRIVATE NesEmu
+)
+target_sources(Test-NesEmu PRIVATE ${tests_sources})
 
 if(CMAKE_SYSTEM_NAME MATCHES "Windows")
 	target_compile_definitions(${PROJECT_NAME} PRIVATE NES_EMU_PLATFORM_WINDOWS)

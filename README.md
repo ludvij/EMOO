@@ -29,7 +29,7 @@ list of requirements
 Don't forget to clone with recursive as this project uses submodules
 
 ### Windows
-If you are using MSVC, just run the makesln.bat file, it will generate a sln file.
+To compile it just run cmake with visual studio's amd64 (I think running cmake should work)
 
 ### Linux
 Currently not supported.

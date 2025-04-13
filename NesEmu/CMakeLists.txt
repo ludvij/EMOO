@@ -65,11 +65,21 @@ target_link_libraries(${PROJECT_NAME}
 	PUBLIC Fman
 )
 
-source_group(TREE "${CMAKE_CURRENT_LIST_DIR}/src" PREFIX src FILES ${SOURCES})
+include(FetchContent)
 
-add_executable(Test-NesEmu)
+FetchContent_Declare(
+	gtest
+	GIT_REPOSITORY git@github.com:google/googletest.git
+	GIT_TAG v1.16.0
+	EXCLUDE_FROM_ALL
+)
+set(BUILD_GMOCK OFF CACHE BOOL "" FORCE)
+set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(gtest)
+
+add_executable(Test-NesEmu EXCLUDE_FROM_ALL)
 target_link_libraries(Test-NesEmu 
-	PRIVATE gtest
+	PRIVATE GTest::gtest
 	PRIVATE NesEmu
 )
 target_sources(Test-NesEmu PRIVATE ${tests_sources})

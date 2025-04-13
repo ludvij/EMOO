@@ -56,11 +56,6 @@ set(SDL2_DISABLE_UNINSTALL ON CACHE BOOL "" FORCE)
 set(SDL2_SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/vendor/sdl2)
 add_subdirectory(vendor/sdl2 EXCLUDE_FROM_ALL)
 
-set(BUILD_GMOCK OFF CACHE BOOL "" FORCE)
-set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
-add_subdirectory(vendor/googletest EXCLUDE_FROM_ALL)
-
-set_target_properties(gtest_main PROPERTIES EXCLUDE_FROM_ALL TRUE)
 #!EXTERNAL CODE =========================================================
 
 

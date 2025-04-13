@@ -7,6 +7,3 @@
 	path = Lud_Utils
 	url = git@github.com:ludvij/Lud_Utils.git
 
-[submodule "vendor/googletest"]
-	path = vendor/googletest
-	url = git@github.com:google/googletest.git

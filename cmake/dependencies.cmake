@@ -1,10 +1,11 @@
 set(VULKAN_SDK $ENV{VULKAN_SDK})
 
-set(includedir_ctre     ${CMAKE_CURRENT_LIST_DIR}/vendor/ctre/include)
+
+set(includedir_ctre     ${CMAKE_SOURCE_DIR}/vendor/ctre/include)
 set(includedir_vulkan   ${VULKAN_SDK}/Include)
-set(includedir_cppicons ${CMAKE_CURRENT_LIST_DIR}/vendor/cppicons/include)
-set(includedir_pfd      ${CMAKE_CURRENT_LIST_DIR}/vendor/pfd/include)
-set(includedir_vkb      ${CMAKE_CURRENT_LIST_DIR}/vendor/vk_bootstrap)
+set(includedir_cppicons ${CMAKE_SOURCE_DIR}/vendor/cppicons/include)
+set(includedir_pfd      ${CMAKE_SOURCE_DIR}/vendor/pfd/include)
+set(includedir_vkb      ${CMAKE_SOURCE_DIR}/vendor/vk_bootstrap)
 
 set(librarydir_vulkan ${VULKAN_SDK}/Lib)
 
@@ -37,3 +38,18 @@ target_include_directories(vkbootstrap
 	PUBLIC ${includedir_vkb}
 )
 target_link_libraries(vkbootstrap PRIVATE vulkan)
+
+
+
+set(include_dir_zlib "${CMAKE_SOURCE_DIR}/vendor/zlib/include")
+
+set(library_dir_zlib "${CMAKE_SOURCE_DIR}/vendor/zlib/lib")
+
+set(library_zlib     "${library_dir_zlib}/zlib.lib")
+
+
+add_library(zlib STATIC IMPORTED)
+set_target_properties(zlib PROPERTIES
+	IMPORTED_LOCATION ${library_zlib}
+	INTERFACE_INCLUDE_DIRECTORIES ${include_dir_zlib}
+)

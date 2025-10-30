@@ -1,5 +1,5 @@
-#include "pch.hpp"
 #include "Console.hpp"
+#include "pch.hpp"
 
 // I'm not writing this
 using namespace std::chrono_literals;
@@ -105,7 +105,7 @@ bool Console::RunFrame()
 
 	while (time_sice_last < m_conf.frame_time)
 	{
-		time_sice_last = stdc::duration_cast<stdc::microseconds>( time::now() - m_last_frame_start );
+		time_sice_last = stdc::duration_cast<stdc::microseconds>(time::now() - m_last_frame_start);
 	}
 	m_last_frame_start = time::now();
 
@@ -195,7 +195,7 @@ void Console::SaveState(int n)
 	Fman::PushFolder({ "state", m_cartridge->GetROMName() });
 	{
 		Fman::SetSerializeFilename(std::format("state_{:d}", n));
-		Fman::Serialize(this);
+		Fman::SerializeCompress(this);
 	}
 	Fman::PopFolder(-1);
 }
@@ -210,20 +210,20 @@ void Console::LoadState(int n)
 	Fman::PushFolder({ "state", m_cartridge->GetROMName() });
 	{
 		Fman::SetSerializeFilename(std::format("state_{:d}", n));
-		Fman::Deserialize(this);
+		Fman::DeserializeDecompress(this);
 	}
 	Fman::PopFolder(-1);
 }
 
-void Console::Serialize(std::fstream& fs)
+void Console::Serialize(std::ostream& fs)
 {
-	Fman::SerializeStatic(m_frame_time);
-	Fman::SerializeStatic(m_time_sice_last_frame);
-	Fman::SerializeStatic(m_master_clock);
-	Fman::SerializeStatic(m_registered_cpu_cycles);
-	Fman::SerializeStatic(m_registered_ppu_cycles);
-	Fman::SerializeStatic(m_cpu_done);
-	Fman::SerializeStatic(m_ppu_done);
+	Fman::SerializeStatic(fs, m_frame_time);
+	Fman::SerializeStatic(fs, m_time_sice_last_frame);
+	Fman::SerializeStatic(fs, m_master_clock);
+	Fman::SerializeStatic(fs, m_registered_cpu_cycles);
+	Fman::SerializeStatic(fs, m_registered_ppu_cycles);
+	Fman::SerializeStatic(fs, m_cpu_done);
+	Fman::SerializeStatic(fs, m_ppu_done);
 	m_cpu.Serialize(fs);
 	m_bus.Serialize(fs);
 	m_ppu.Serialize(fs);
@@ -233,15 +233,15 @@ void Console::Serialize(std::fstream& fs)
 	m_controller_ports[1].Serialize(fs);
 }
 
-void Console::Deserialize(std::fstream& fs)
+void Console::Deserialize(std::istream& fs)
 {
-	Fman::DeserializeStatic(m_frame_time);
-	Fman::DeserializeStatic(m_time_sice_last_frame);
-	Fman::DeserializeStatic(m_master_clock);
-	Fman::DeserializeStatic(m_registered_cpu_cycles);
-	Fman::DeserializeStatic(m_registered_ppu_cycles);
-	Fman::DeserializeStatic(m_cpu_done);
-	Fman::DeserializeStatic(m_ppu_done);
+	Fman::DeserializeStatic(fs, m_frame_time);
+	Fman::DeserializeStatic(fs, m_time_sice_last_frame);
+	Fman::DeserializeStatic(fs, m_master_clock);
+	Fman::DeserializeStatic(fs, m_registered_cpu_cycles);
+	Fman::DeserializeStatic(fs, m_registered_ppu_cycles);
+	Fman::DeserializeStatic(fs, m_cpu_done);
+	Fman::DeserializeStatic(fs, m_ppu_done);
 	m_cpu.Deserialize(fs);
 	m_bus.Deserialize(fs);
 	m_ppu.Deserialize(fs);

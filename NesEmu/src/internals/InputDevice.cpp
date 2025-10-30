@@ -1,5 +1,5 @@
-#include "pch.hpp"
 #include "InputDevice.hpp"
+#include "pch.hpp"
 
 namespace Emu
 {
@@ -33,14 +33,14 @@ void Controller::SetPressed(std::span<Button> buttons)
 		data |= button;
 	}
 }
-void Controller::Serialize(std::fstream& fs)
+void Controller::Serialize(std::ostream& fs)
 {
-	Fman::SerializeStatic(data);
-	Fman::SerializeStatic(m_status);
+	Fman::SerializeStatic(fs, data);
+	Fman::SerializeStatic(fs, m_status);
 }
-void Controller::Deserialize(std::fstream& fs)
+void Controller::Deserialize(std::istream& fs)
 {
-	Fman::DeserializeStatic(data);
-	Fman::DeserializeStatic(m_status);
+	Fman::DeserializeStatic(fs, data);
+	Fman::DeserializeStatic(fs, m_status);
 }
 }

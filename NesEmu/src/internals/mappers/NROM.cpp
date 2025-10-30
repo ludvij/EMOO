@@ -1,5 +1,5 @@
-#include "pch.hpp"
 #include "NROM.hpp"
+#include "pch.hpp"
 
 
 namespace Emu
@@ -71,10 +71,10 @@ std::string NROM::GetName()
 {
 	return "NROM";
 }
-void NROM::Serialize(std::fstream& fs)
+void NROM::Serialize(std::ostream& fs)
 {
 }
-void NROM::Deserialize(std::fstream& fs)
+void NROM::Deserialize(std::istream& fs)
 {
 }
 }

@@ -32,8 +32,8 @@ public:
 	void SetPressed(std::span<Button> buttons);
 
 	// Inherited via ISerializable
-	void Serialize(std::fstream& fs) override;
-	void Deserialize(std::fstream& fs) override;
+	void Serialize(std::ostream& fs) override;
+	void Deserialize(std::istream& fs) override;
 
 private:
 	u8 m_status{};

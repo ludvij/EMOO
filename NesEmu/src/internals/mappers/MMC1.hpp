@@ -34,9 +34,9 @@ public:
 
 
 	// Inherited via IMapper
-	void Serialize(std::fstream& fs) override;
+	void Serialize(std::ostream& fs) override;
 
-	void Deserialize(std::fstream& fs) override;
+	void Deserialize(std::istream& fs) override;
 
 private:
 

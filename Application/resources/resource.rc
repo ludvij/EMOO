@@ -19,12 +19,12 @@ BEGIN
 		BEGIN
 			VALUE "CompanyName",      ""
             VALUE "FileDescription",  "NES EMULATOR"
-            VALUE "FileVersion",      "0.0.0.0"
+            VALUE "FileVersion",      "1.0.0.0"
             VALUE "InternalName",     "NesEmu"
             VALUE "LegalCopyright",   ""
-            VALUE "OriginalFilename", "Graphics.exe"
+            VALUE "OriginalFilename", "EMOO.exe"
             VALUE "ProductName",      "EMOO"
-            VALUE "ProductVersion",   "0.0"
+            VALUE "ProductVersion",   "1.0"
 		END
 	END
 	BLOCK "VarFileInfo"

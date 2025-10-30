@@ -1,5 +1,5 @@
-#include "pch.hpp"
 #include "Cartridge.hpp"
+#include "pch.hpp"
 
 #include "ludutils/lud_mem_stream.hpp"
 #include "mappers/MapperAlias.hpp"
@@ -158,11 +158,11 @@ bool Cartridge::is_header_valid() const
 	return strncmp(m_header.name, "NES\x1A", 4) == 0;
 }
 
-void Cartridge::Serialize(std::fstream& fs)
+void Cartridge::Serialize(std::ostream& fs)
 {
 	m_mapper->Serialize(fs);
 }
-void Cartridge::Deserialize(std::fstream& fs)
+void Cartridge::Deserialize(std::istream& fs)
 {
 	m_mapper->Deserialize(fs);
 }

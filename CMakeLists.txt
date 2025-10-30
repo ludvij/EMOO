@@ -9,6 +9,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "" FORCE)
 
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake"
+	${CMAKE_MODULE_PATH})
+
 
 set(generator_config 
 	$<$<CONFIG:Debug>:DEBUG>
@@ -18,6 +21,7 @@ set(generator_config
 
 if(MSVC)
 	SET(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+	add_compile_options(/permissive-)
 # SET(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
 endif()
 
@@ -44,10 +48,10 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 # endif()
 
 # EXTERNAL CODE =========================================================
-include(dependencies.cmake)
+include(dependencies)
 
 add_subdirectory(vendor/imgui)
-
+set(CMAKE_MESSAGE_LOG_LEVEL "WARNING")
 set(SDL_STATIC ON CACHE BOOL "" FORCE)
 set(SDL_SHARED OFF CACHE BOOL "" FORCE)
 set(SDL_TEST OFF CACHE BOOL "" FORCE)
@@ -58,7 +62,7 @@ add_subdirectory(vendor/sdl2 EXCLUDE_FROM_ALL)
 
 #!EXTERNAL CODE =========================================================
 
-
+set(CMAKE_MESSAGE_LOG_LEVEL "STATUS")
 add_subdirectory(Lud_Utils)
 set(LUD_WINDOW_SDL2 ON)
 add_subdirectory(Window)

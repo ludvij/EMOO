@@ -43,8 +43,8 @@ public:
 	std::string GetROMName();
 
 	// Inherited via ISerializable
-	void Serialize(std::fstream& fs) override;
-	void Deserialize(std::fstream& fs) override;
+	void Serialize(std::ostream& fs) override;
+	void Deserialize(std::istream& fs) override;
 
 public:
 	/*

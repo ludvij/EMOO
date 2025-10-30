@@ -1,5 +1,5 @@
-﻿#include "pch.hpp"
-#include "Bus.hpp"
+﻿#include "Bus.hpp"
+#include "pch.hpp"
 
 namespace Emu
 {
@@ -132,14 +132,14 @@ void Bus::Reset()
 	m_cpu_ram.fill(0);
 }
 
-void Bus::Serialize(std::fstream& fs)
+void Bus::Serialize(std::ostream& fs)
 {
-	Fman::SerializeArrayStoresStatic<u8>(m_cpu_ram);
+	Fman::SerializeArrayStoresStatic<u8>(fs, m_cpu_ram);
 }
 
-void Bus::Deserialize(std::fstream& fs)
+void Bus::Deserialize(std::istream& fs)
 {
-	Fman::DeserializeArrayStoresStatic<u8>(m_cpu_ram);
+	Fman::DeserializeArrayStoresStatic<u8>(fs, m_cpu_ram);
 }
 
 }

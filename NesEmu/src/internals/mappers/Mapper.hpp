@@ -26,8 +26,8 @@ public:
 
 	virtual std::string GetName() = 0;
 	// Inherited via ISerializable
-	virtual void Serialize(std::fstream& fs) override = 0;
-	virtual void Deserialize(std::fstream& fs) override = 0;
+	virtual void Serialize(std::ostream& fs) override = 0;
+	virtual void Deserialize(std::istream& fs) override = 0;
 protected:
 	u8 m_prgBanks;
 	u8 m_chrBanks;

@@ -1,5 +1,5 @@
-#include "pch.hpp"
 #include "MMC1.hpp"
+#include "pch.hpp"
 
 namespace Emu
 {
@@ -34,10 +34,10 @@ std::string MMC1::GetName()
 }
 
 
-void MMC1::Serialize(std::fstream& fs)
+void MMC1::Serialize(std::ostream& fs)
 {
 }
-void MMC1::Deserialize(std::fstream& fs)
+void MMC1::Deserialize(std::istream& fs)
 {
 }
 }

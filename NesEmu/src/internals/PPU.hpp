@@ -196,9 +196,9 @@ public:
 	Color GetColorFromPalette(u8 palette, u8 pixel);
 
 	// Inherited via ISerializable
-	void Serialize(std::fstream& fs) override;
+	void Serialize(std::ostream& fs) override;
 
-	void Deserialize(std::fstream& fs) override;
+	void Deserialize(std::istream& fs) override;
 
 private:
 

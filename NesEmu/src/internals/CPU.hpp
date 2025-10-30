@@ -128,9 +128,9 @@ public:  // Public functions
 	}
 
 	// Inherited via ISerializable
-	void Serialize(std::fstream& fs) override;
+	void Serialize(std::ostream& fs) override;
 
-	void Deserialize(std::fstream& fs) override;
+	void Deserialize(std::istream& fs) override;
 
 public:
 	constexpr static u16 STACK_VECTOR    = 0x0100;

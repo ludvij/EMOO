@@ -3,10 +3,9 @@
 	url = git@github.com:ludvij/imgui.git
 	branch = docking
 	
-[submodule "Lud_Utils"]
-	path = Lud_Utils
-	url = git@github.com:ludvij/Lud_Utils.git
-
 [submodule "FileManager"]
 	path = FileManager
 	url = git@github.com:ludvij/F-Man.git
+[submodule "Lud_Utils"]
+	path = Lud_Utils
+	url = git@github.com:ludvij/EMOO.git

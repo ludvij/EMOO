@@ -27,7 +27,7 @@ Cartridge::Cartridge(std::string_view name, const u8* data, const size_t size)
 	, m_file_path("Reading from memory")
 	, m_name(name)
 {
-	Lud::memory_istream stream(data, size);
+	Lud::memory_istream stream(std::span{ data, size });
 
 	load_from_stream(stream);
 }

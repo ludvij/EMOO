@@ -60,7 +60,7 @@ public:
 
 	double GetTimeSinceLast() const
 	{
-		return m_time_sice_last_frame;
+		return m_time_since_last_frame;
 	}
 
 	CPU& GetCpu()
@@ -98,7 +98,7 @@ private:
 	Bus m_bus;
 
 	double m_frame_time{ 0 };
-	double m_time_sice_last_frame{ 0 };
+	double m_time_since_last_frame{ 0 };
 
 	u64 m_master_clock = 0;
 

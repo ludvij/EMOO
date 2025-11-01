@@ -117,7 +117,7 @@ bool Console::RunFrame()
 	const auto end = time::now();
 	const auto duration = stdc::duration_cast<stdc::microseconds>( end - m_last_frame_start );
 	m_frame_time = duration.count() / 1e6;
-	m_time_sice_last_frame = time_sice_last.count() / 1e6;
+	m_time_since_last_frame = time_sice_last.count() / 1e6;
 	return true;
 }
 
@@ -218,7 +218,7 @@ void Console::LoadState(int n)
 void Console::Serialize(std::ostream& fs)
 {
 	Fman::SerializeStatic(fs, m_frame_time);
-	Fman::SerializeStatic(fs, m_time_sice_last_frame);
+	Fman::SerializeStatic(fs, m_time_since_last_frame);
 	Fman::SerializeStatic(fs, m_master_clock);
 	Fman::SerializeStatic(fs, m_registered_cpu_cycles);
 	Fman::SerializeStatic(fs, m_registered_ppu_cycles);
@@ -228,7 +228,6 @@ void Console::Serialize(std::ostream& fs)
 	m_bus.Serialize(fs);
 	m_ppu.Serialize(fs);
 	m_cartridge->Serialize(fs);
-	m_ppu.Serialize(fs);
 	m_controller_ports[0].Serialize(fs);
 	m_controller_ports[1].Serialize(fs);
 }
@@ -236,7 +235,7 @@ void Console::Serialize(std::ostream& fs)
 void Console::Deserialize(std::istream& fs)
 {
 	Fman::DeserializeStatic(fs, m_frame_time);
-	Fman::DeserializeStatic(fs, m_time_sice_last_frame);
+	Fman::DeserializeStatic(fs, m_time_since_last_frame);
 	Fman::DeserializeStatic(fs, m_master_clock);
 	Fman::DeserializeStatic(fs, m_registered_cpu_cycles);
 	Fman::DeserializeStatic(fs, m_registered_ppu_cycles);

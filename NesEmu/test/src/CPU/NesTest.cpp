@@ -24,5 +24,5 @@ TEST_F(TestNesTest, RUN_NESTEST)
 			ASSERT_EQ(console.GetBus().Read(0x02), 0) << std::format("Test failed error: [{:02X}]", console.GetBus().Read(0x02));
 			ASSERT_EQ(console.GetBus().Read(0x03), 0) << std::format("Test failed error: [{:02X}]", console.GetBus().Read(0x03));
 		}
-			);
+	);
 }

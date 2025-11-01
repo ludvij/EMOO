@@ -5,6 +5,8 @@ project(NesEmu)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+option(EMOO_TESTS "Enable Tests project" OFF)
+
 set(SOURCES
 	src/Console.hpp
 	src/Console.cpp
@@ -42,9 +44,7 @@ set(SOURCES
 	src/pch.hpp
 )
 
-set(nemu_tests_dir ${CMAKE_CURRENT_LIST_DIR}/test/src)
 
-file(GLOB_RECURSE tests_sources ${nemu_tests_dir}/*)
 
 add_library(${PROJECT_NAME} STATIC)
 target_sources(${PROJECT_NAME} 
@@ -66,24 +66,8 @@ target_link_libraries(${PROJECT_NAME}
 	PUBLIC zlib
 )
 
-include(FetchContent)
 
-FetchContent_Declare(
-	gtest
-	GIT_REPOSITORY git@github.com:google/googletest.git
-	GIT_TAG v1.16.0
-	EXCLUDE_FROM_ALL
-)
-set(BUILD_GMOCK OFF CACHE BOOL "" FORCE)
-set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(gtest)
 
-add_executable(Test-NesEmu EXCLUDE_FROM_ALL)
-target_link_libraries(Test-NesEmu 
-	PRIVATE GTest::gtest
-	PRIVATE NesEmu
-)
-target_sources(Test-NesEmu PRIVATE ${tests_sources})
 
 if(CMAKE_SYSTEM_NAME MATCHES "Windows")
 	target_compile_definitions(${PROJECT_NAME} PRIVATE NES_EMU_PLATFORM_WINDOWS)
@@ -93,4 +77,36 @@ if(generator_config MATCHES "DEBUG")
 	target_compile_definitions(${PROJECT_NAME} PRIVATE NES_EMU_DEBUG)
 elseif(generator_config MATCHES "RELEASE")
 	target_compile_definitions(${PROJECT_NAME} PRIVATE NES_EMU_NDEBUG)
+endif()
+
+
+if (EMOO_TESTS)
+	include(GoogleTest)
+
+	FetchContent_Declare(
+		gtest
+		GIT_REPOSITORY git@github.com:google/googletest.git
+		GIT_TAG v1.16.0
+		EXCLUDE_FROM_ALL
+	)
+	set(BUILD_GMOCK OFF CACHE BOOL "" FORCE)
+	set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
+	FetchContent_MakeAvailable(gtest)
+
+	set(emoo_tests_dir ${CMAKE_CURRENT_LIST_DIR}/test/src)
+
+	file(GLOB_RECURSE tests_sources ${emoo_tests_dir}/*)
+
+	add_executable(EMOO_TESTS EXCLUDE_FROM_ALL)
+	target_link_libraries(EMOO_TESTS 
+		PRIVATE GTest::gtest
+		PRIVATE NesEmu
+	)
+	target_sources(EMOO_TESTS PRIVATE ${tests_sources})
+
+	set_target_properties(gtest          PROPERTIES FOLDER "Dependencies")
+	set_target_properties(gtest_main     PROPERTIES FOLDER "Dependencies")
+	set_target_properties(EMOO_TESTS     PROPERTIES FOLDER "Tests")
+
+	gtest_discover_tests(EMOO_TESTS)
 endif()

@@ -48,7 +48,12 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 # endif()
 
 # EXTERNAL CODE =========================================================
+
+include(FetchContent)
+
 include(dependencies)
+
+enable_testing()
 
 add_subdirectory(vendor/imgui)
 set(CMAKE_MESSAGE_LOG_LEVEL "WARNING")
@@ -61,6 +66,7 @@ set(SDL2_SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/vendor/sdl2)
 add_subdirectory(vendor/sdl2 EXCLUDE_FROM_ALL)
 
 #!EXTERNAL CODE =========================================================
+set(EMOO_TESTS ON)
 
 set(CMAKE_MESSAGE_LOG_LEVEL "STATUS")
 add_subdirectory(Lud_Utils)
@@ -74,12 +80,12 @@ add_subdirectory(Application)
 
 
 
+
 set_target_properties(SDL2-static      PROPERTIES FOLDER "Dependencies")
 set_target_properties(sdl_headers_copy PROPERTIES FOLDER "Dependencies")
 set_target_properties(imgui            PROPERTIES FOLDER "Dependencies")
 set_target_properties(vkbootstrap      PROPERTIES FOLDER "Dependencies")
-set_target_properties(gtest            PROPERTIES FOLDER "Dependencies")
-set_target_properties(gtest_main       PROPERTIES FOLDER "Dependencies")
+
 
 set_target_properties(Application      PROPERTIES FOLDER "Application")
 set_target_properties(Window           PROPERTIES FOLDER "Application")
@@ -89,4 +95,3 @@ set_target_properties(Input            PROPERTIES FOLDER "Application")
 set_target_properties(Fman             PROPERTIES FOLDER "Utility")
 set_target_properties(ludutils         PROPERTIES FOLDER "Utility")
 
-set_target_properties(Test-NesEmu      PROPERTIES FOLDER "Tests")

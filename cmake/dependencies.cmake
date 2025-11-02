@@ -39,17 +39,3 @@ target_include_directories(vkbootstrap
 )
 target_link_libraries(vkbootstrap PRIVATE vulkan)
 
-
-
-set(include_dir_zlib "${CMAKE_SOURCE_DIR}/vendor/zlib/include")
-
-set(library_dir_zlib "${CMAKE_SOURCE_DIR}/vendor/zlib/lib")
-
-set(library_zlib     "${library_dir_zlib}/zlib.lib")
-
-
-add_library(zlib STATIC IMPORTED)
-set_target_properties(zlib PROPERTIES
-	IMPORTED_LOCATION ${library_zlib}
-	INTERFACE_INCLUDE_DIRECTORIES ${include_dir_zlib}
-)

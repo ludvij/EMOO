@@ -47,7 +47,6 @@ target_sources(${PROJECT_NAME}
 
 target_include_directories(${PROJECT_NAME}
 	PUBLIC src
-	PRIVATE vendor/vk_bootstrap
 )
 
 target_link_libraries(${PROJECT_NAME} 
@@ -55,7 +54,7 @@ target_link_libraries(${PROJECT_NAME}
 	PRIVATE ludutils
 	PRIVATE imgui
 	PRIVATE Window
-	PRIVATE vkbootstrap
+	PRIVATE vk-bootstrap
 )
 
 if(generator_config MATCHES "DEBUG")

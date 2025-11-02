@@ -56,19 +56,10 @@ include(dependencies)
 enable_testing()
 
 add_subdirectory(vendor/imgui)
-set(CMAKE_MESSAGE_LOG_LEVEL "WARNING")
-set(SDL_STATIC ON CACHE BOOL "" FORCE)
-set(SDL_SHARED OFF CACHE BOOL "" FORCE)
-set(SDL_TEST OFF CACHE BOOL "" FORCE)
-set(SDL2_DISABLE_SDL2MAIN ON CACHE BOOL "" FORCE)
-set(SDL2_DISABLE_UNINSTALL ON CACHE BOOL "" FORCE)
-set(SDL2_SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/vendor/sdl2)
-add_subdirectory(vendor/sdl2 EXCLUDE_FROM_ALL)
 
 #!EXTERNAL CODE =========================================================
 set(EMOO_TESTS ON)
 
-set(CMAKE_MESSAGE_LOG_LEVEL "STATUS")
 add_subdirectory(Lud_Utils)
 set(LUD_WINDOW_SDL2 ON)
 add_subdirectory(Window)
@@ -84,7 +75,8 @@ add_subdirectory(Application)
 set_target_properties(SDL2-static      PROPERTIES FOLDER "Dependencies")
 set_target_properties(sdl_headers_copy PROPERTIES FOLDER "Dependencies")
 set_target_properties(imgui            PROPERTIES FOLDER "Dependencies")
-set_target_properties(vkbootstrap      PROPERTIES FOLDER "Dependencies")
+set_target_properties(vk-bootstrap     PROPERTIES FOLDER "Dependencies")
+set_target_properties(zlibstatic       PROPERTIES FOLDER "Dependencies")
 
 
 set_target_properties(Application      PROPERTIES FOLDER "Application")

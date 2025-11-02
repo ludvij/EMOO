@@ -104,6 +104,7 @@ void BuildFontTexture()
 	Engine::Get().ImmediateSubmit([&](vk::CommandBuffer cmd)
 		{
 			ImGui_ImplVulkan_CreateFontsTexture();
+			
 		});
 }
 

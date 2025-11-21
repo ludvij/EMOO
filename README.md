@@ -1,7 +1,7 @@
 # EMOO
  
 Another NES emulator.  
-Originally made as my bachelor's thesis
+Originally made as my bachelor thesis
 
 ## Features
  - Live disassembly
@@ -47,13 +47,13 @@ I rather not bother.
  - [compile time regex](https://github.com/hanickadot/compile-time-regular-expressions)
  - [vkbootstrap](https://github.com/charles-lunarg/vk-bootstrap)
  - [cppicons](https://github.com/juliettef/IconFontCppHeaders)
+ - [zlib](https://github.com/madler/zlib)
 
 ## TODO
 - [ ] Add Audio
 - [ ] Support more mappers
 - [ ] Add save-state feedback
 - [ ] Clean up embedding
-- [ ] Swap premake with cmake??????
 - [ ] Make renderer stink less
 
 ---

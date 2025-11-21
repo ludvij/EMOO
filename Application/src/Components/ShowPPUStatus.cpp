@@ -342,7 +342,7 @@ void Ui::Component::ShowPPUStatus::draw_oam()
 				ImGuiInputTextFlags_EnterReturnsTrue;
 			if (ImGui::InputText("Nº", m_current_track, IM_ARRAYSIZE(m_current_track), flags))
 			{
-				size_t val = Lud::parse_num<size_t>(m_current_track, 10);
+				size_t val = *Lud::is_num<size_t>(m_current_track, 10);
 				if (val >= 64)
 				{
 					Application::Get().Error("Oam out of bounds", std::format("Value {:d} is not in range [0, 63]", val));

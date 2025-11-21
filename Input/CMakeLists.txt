@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 3.31)
 
+
+
 project(Input)
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
@@ -15,6 +20,10 @@ set(SOURCES
 )
 
 add_library(${PROJECT_NAME} STATIC)
+
+
+target_compile_definitions(${PROJECT_NAME} PRIVATE CMAKE_EXPORT_COMPILE_COMMANDS=1)
+
 
 target_sources(${PROJECT_NAME} 
 	PRIVATE ${SOURCES}

@@ -76,7 +76,7 @@ void* SDL2Window::CreateRenderSurface(void* instance)
 {
 	VkSurfaceKHR surface;
 	SDL_Vulkan_CreateSurface(m_window, static_cast<VkInstance>( instance ), &surface);
-	return static_cast<void*>( surface );
+	return reinterpret_cast<void*>( surface );
 }
 
 

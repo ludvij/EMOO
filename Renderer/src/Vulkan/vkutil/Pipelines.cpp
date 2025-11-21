@@ -1,15 +1,22 @@
 #include "Pipelines.hpp"
 
-#define LUD_SLURPER_IMPLEMENTATION
-#include <ludutils/lud_slurper.hpp>
 
 #include "Initializers.hpp"
+
+#include <fstream>
 
 namespace Renderer::vkutil
 {
 vk::ShaderModule load_shader_module(const char* filepath, vk::Device device)
 {
-	auto code = Lud::Slurper::SlurpTo<uint32_t>(filepath, std::ios::in | std::ios::binary);
+	std::ifstream stream(filepath, std::ios::ate | std::ios::binary);
+
+	const auto size = stream.tellg();
+
+	std::vector<uint32_t> code(size);
+	stream.seekg(0, std::ios::beg);
+	stream.read(reinterpret_cast<char*>(code.data()), size);
+
 
 	vk::ShaderModuleCreateInfo info({}, code);
 

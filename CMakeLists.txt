@@ -4,7 +4,7 @@ project(EMOO)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 # set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
-
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "" FORCE)
@@ -21,7 +21,7 @@ set(generator_config
 
 if(MSVC)
 	SET(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-	add_compile_options(/permissive-)
+	# add_compile_options(/permissive-)
 # SET(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
 endif()
 
@@ -58,7 +58,7 @@ enable_testing()
 add_subdirectory(vendor/imgui)
 
 #!EXTERNAL CODE =========================================================
-set(EMOO_TESTS ON)
+set(EMOO_TESTS OFF)
 
 add_subdirectory(Lud_Utils)
 set(LUD_WINDOW_SDL2 ON)
@@ -76,7 +76,7 @@ set_target_properties(SDL2-static      PROPERTIES FOLDER "Dependencies")
 set_target_properties(sdl_headers_copy PROPERTIES FOLDER "Dependencies")
 set_target_properties(imgui            PROPERTIES FOLDER "Dependencies")
 set_target_properties(vk-bootstrap     PROPERTIES FOLDER "Dependencies")
-set_target_properties(zlibstatic       PROPERTIES FOLDER "Dependencies")
+set_target_properties(zlib             PROPERTIES FOLDER "Dependencies")
 
 
 set_target_properties(Application      PROPERTIES FOLDER "Application")

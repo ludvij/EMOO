@@ -30,4 +30,4 @@ private:
 	void ProcessEvents(void* event) override;
 };
 }
-#endif GRAPHICS_SDL_INPUT_HEADER
+#endif //GRAPHICS_SDL_INPUT_HEADER

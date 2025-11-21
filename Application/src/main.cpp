@@ -10,7 +10,7 @@ using Ui::Application;
 
 namespace Ui
 {
-int Main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
+static int Main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
 {
 	// windows only code to make scale no mess up the window size
 	SDL_SetHint(SDL_HINT_WINDOWS_DPI_AWARENESS, "system");
@@ -32,7 +32,7 @@ int Main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
 
 #include <Windows.h>
 
-int APIENTRY WinMain(_In_ HINSTANCE hInst, _In_opt_ HINSTANCE hInstPrev, _In_ PSTR cmdline, _In_ int cmdshow)
+static int APIENTRY WinMain(_In_ HINSTANCE hInst, _In_opt_ HINSTANCE hInstPrev, _In_ PSTR cmdline, _In_ int cmdshow)
 {
 	return Ui::Main(__argc, __argv);
 }

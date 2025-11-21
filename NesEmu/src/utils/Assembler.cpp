@@ -3,6 +3,8 @@
 
 #include <ctre/ctre.hpp>
 
+#include <ludutils/lud_parse.hpp>
+
 #include <print>
 
 
@@ -25,7 +27,7 @@ Assembler& Assembler::Assemble(const std::string& code)
 			const auto directive = m.get<1>();
 			if (directive == "RESET")
 			{
-				u16 dat = Lud::parse_num<u16>(m.get<2>().view(), 16);
+				u16 dat = *Lud::is_num<u16>(m.get<2>().view(), 16);
 				u8 lo = dat & 0x00FF;
 				u8 hi = ( dat & 0xFF00 ) >> 8;
 				m_bus->Write(0xFFFC, lo);
@@ -33,7 +35,7 @@ Assembler& Assembler::Assemble(const std::string& code)
 			}
 			else if (directive == "NMI")
 			{
-				u16 dat = Lud::parse_num<u16>(m.get<2>().view(), 16);
+				u16 dat = *Lud::is_num<u16>(m.get<2>().view(), 16);
 				u8 lo = dat & 0x00FF;
 				u8 hi = ( dat & 0xFF00 ) >> 8;
 				m_bus->Write(0xFFFA, lo);
@@ -41,7 +43,7 @@ Assembler& Assembler::Assemble(const std::string& code)
 			}
 			else if (directive == "IRQ")
 			{
-				u16 dat = Lud::parse_num<u16>(m.get<2>().view(), 16);
+				u16 dat = *Lud::is_num<u16>(m.get<2>().view(), 16);
 				u8 lo = dat & 0x00FF;
 				u8 hi = ( dat & 0xFF00 ) >> 8;
 				m_bus->Write(0xFFFE, lo);
@@ -49,7 +51,7 @@ Assembler& Assembler::Assemble(const std::string& code)
 			}
 			else if (directive == "AT")
 			{
-				write_pos = Lud::parse_num<u16>(m.get<2>().view(), 16);
+				write_pos = *Lud::is_num<u16>(m.get<2>().view(), 16);
 			}
 		}
 		else if (auto m = ctre::search<"([A-Z]{3})(\\s+([0-9A-FXY,\\-()#\\$]+))?">(s))
@@ -203,57 +205,57 @@ AddressingModeData Assembler::ParseAddressingMode(const std::string_view mode)
 	if (auto m = ctre::match<"#\\$([A-F0-9]{2})">(mode))
 	{
 		auto dat = m.get<1>();
-		return { A6502::AddressingModeName::IMM, Lud::parse_num<u16>(dat.view(), 16) };
+		return { A6502::AddressingModeName::IMM, *Lud::is_num<u16>(dat.view(), 16) };
 	}
 	if (auto m = ctre::match<"\\$([A-F0-9]{2})">(mode))
 	{
 		auto dat = m.get<1>();
-		return { A6502::AddressingModeName::ZPI, Lud::parse_num<u16>(dat.view(), 16) };
+		return { A6502::AddressingModeName::ZPI, *Lud::is_num<u16>(dat.view(), 16) };
 	}
 	if (auto m = ctre::match<"\\$([A-F0-9]{2}),X">(mode))
 	{
 		auto dat = m.get<1>();
-		return { A6502::AddressingModeName::ZPX, Lud::parse_num<u16>(dat.view(), 16) };
+		return { A6502::AddressingModeName::ZPX, *Lud::is_num<u16>(dat.view(), 16) };
 	}
 	if (auto m = ctre::match<"\\$([A-F0-9]{2}),Y">(mode))
 	{
 		auto dat = m.get<1>();
-		return { A6502::AddressingModeName::ZPY, Lud::parse_num<u16>(dat.view(), 16) };
+		return { A6502::AddressingModeName::ZPY, *Lud::is_num<u16>(dat.view(), 16) };
 	}
 	if (auto m = ctre::match<"(-?[0-9]{1,3})">(mode))
 	{
 		auto dat = m.get<1>();
-		return { A6502::AddressingModeName::REL, static_cast<u16>( Lud::parse_num<i8>(dat.view(), 10) ) };
+		return { A6502::AddressingModeName::REL, static_cast<u16>(*Lud::is_num<i8>(dat.view(), 10) ) };
 	}
 	if (auto m = ctre::match<"\\$([A-F0-9]{4})">(mode))
 	{
 		auto dat = m.get<1>();
-		return { A6502::AddressingModeName::ABS, Lud::parse_num<u16>(dat.view(), 16) };
+		return { A6502::AddressingModeName::ABS, *Lud::is_num<u16>(dat.view(), 16) };
 	}
 	if (auto m = ctre::match<"\\$([A-F0-9]{4}),X">(mode))
 	{
 		auto dat = m.get<1>();
-		return { A6502::AddressingModeName::ABX, Lud::parse_num<u16>(dat.view(), 16) };
+		return { A6502::AddressingModeName::ABX, *Lud::is_num<u16>(dat.view(), 16) };
 	}
 	if (auto m = ctre::match<"\\$([A-F0-9]{4}),Y">(mode))
 	{
 		auto dat = m.get<1>();
-		return { A6502::AddressingModeName::ABY, Lud::parse_num<u16>(dat.view(), 16) };
+		return { A6502::AddressingModeName::ABY, *Lud::is_num<u16>(dat.view(), 16) };
 	}
 	if (auto m = ctre::match<"\\(\\$([A-F0-9]{4})\\)">(mode))
 	{
 		auto dat = m.get<1>();
-		return { A6502::AddressingModeName::IND, Lud::parse_num<u16>(dat.view(), 16) };
+		return { A6502::AddressingModeName::IND, *Lud::is_num<u16>(dat.view(), 16) };
 	}
 	if (auto m = ctre::match<"\\(\\$([A-F0-9]{4}),X\\)">(mode))
 	{
 		auto dat = m.get<1>();
-		return { A6502::AddressingModeName::INX, Lud::parse_num<u16>(dat.view(), 16) };
+		return { A6502::AddressingModeName::INX, *Lud::is_num<u16>(dat.view(), 16) };
 	}
 	if (auto m = ctre::match<"\\(\\$([A-F0-9]{4})\\),Y">(mode))
 	{
 		auto dat = m.get<1>();
-		return { A6502::AddressingModeName::INY, Lud::parse_num<u16>(dat.view(), 16) };
+		return { A6502::AddressingModeName::INY, *Lud::is_num<u16>(dat.view(), 16) };
 	}
 	std::println("Unrecognized addressing mode {:s}", mode);
 	return { A6502::AddressingModeName::___, 0 };

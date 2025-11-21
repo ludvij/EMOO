@@ -4,6 +4,7 @@
 #include "internals/Core.hpp"
 
 #include "FileManager/FileManager.hpp"
+#include "FileManager/Serializable.hpp"
 
 #include <optional>
 #include <string>

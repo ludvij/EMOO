@@ -164,14 +164,14 @@ void Ui::Component::MemoryView::OnRender()
 				}
 				if (ImGui::InputText("Address", m_text_buffer, IM_ARRAYSIZE(m_text_buffer), flags))
 				{
-					m_last = Lud::parse_num<u16>(m_text_buffer, 16);
+					m_last = *Lud::is_num<u16>(m_text_buffer, 16);
 					m_fadeout = fade_seconds;
 					m_begin = static_cast<size_t>( m_last > 0x50 ? ( m_last & 0xFFF0 ) - 0x50 : 0x0000 );
 					ImGui::CloseCurrentPopup();
 				}
 				if (ImGui::Button("Go"))
 				{
-					m_last = Lud::parse_num<u16>(m_text_buffer, 16);
+					m_last = *Lud::is_num<u16>(m_text_buffer, 16);
 					m_fadeout = fade_seconds;
 					m_begin = static_cast<size_t>( m_last > 0x50 ? ( m_last & 0xFFF0 ) - 0x50 : 0x0000 );
 					ImGui::CloseCurrentPopup();

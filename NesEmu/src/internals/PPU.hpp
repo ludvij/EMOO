@@ -3,7 +3,7 @@
 
 #include "Cartridge.hpp"
 #include "Core.hpp"
-#include "FileManager/FileManager.hpp"
+#include <varf/FileManager.hpp>
 #include "utils/Unreachable.hpp"
 #include <array>
 #include <bit>
@@ -110,7 +110,7 @@ struct SpriteInfo
 	u8 x{};
 };
 
-class PPU : public Fman::ISerializable
+class PPU : public varf::ISerializable
 {
 public:
 	PPU(Configuration conf);

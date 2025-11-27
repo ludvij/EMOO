@@ -65,25 +65,26 @@ set(LUD_WINDOW_SDL2 ON)
 add_subdirectory(Window)
 add_subdirectory(Input)
 add_subdirectory(Renderer)
-add_subdirectory(FileManager)
+add_subdirectory(varf)
 add_subdirectory(NesEmu)
 add_subdirectory(Application)
 
 
 
 
-set_target_properties(SDL2-static      PROPERTIES FOLDER "Dependencies")
-set_target_properties(sdl_headers_copy PROPERTIES FOLDER "Dependencies")
-set_target_properties(imgui            PROPERTIES FOLDER "Dependencies")
-set_target_properties(vk-bootstrap     PROPERTIES FOLDER "Dependencies")
-set_target_properties(zlib             PROPERTIES FOLDER "Dependencies")
+set_target_properties(SDL2-static         PROPERTIES FOLDER "Dependencies")
+set_target_properties(sdl_headers_copy    PROPERTIES FOLDER "Dependencies")
+set_target_properties(imgui               PROPERTIES FOLDER "Dependencies")
+set_target_properties(vk-bootstrap        PROPERTIES FOLDER "Dependencies")
+set_target_properties(zlib                PROPERTIES FOLDER "Dependencies")
 
 
-set_target_properties(Application      PROPERTIES FOLDER "Application")
-set_target_properties(Window           PROPERTIES FOLDER "Application")
-set_target_properties(Renderer         PROPERTIES FOLDER "Application")
-set_target_properties(Input            PROPERTIES FOLDER "Application")
+set_target_properties(Application         PROPERTIES FOLDER "Application")
+set_target_properties(Window              PROPERTIES FOLDER "Application")
+set_target_properties(Renderer            PROPERTIES FOLDER "Application")
+set_target_properties(Input               PROPERTIES FOLDER "Application")
 
-set_target_properties(Fman             PROPERTIES FOLDER "Utility")
-set_target_properties(ludutils         PROPERTIES FOLDER "Utility")
+set_target_properties(varf                PROPERTIES FOLDER "Utility")
+set_target_properties(ludutils            PROPERTIES FOLDER "Utility")
+set_target_properties(compression_streams PROPERTIES FOLDER "Utility")
 

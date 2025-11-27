@@ -2,7 +2,7 @@
 #define EMU_IO_HEADER
 
 #include "Core.hpp"
-#include "FileManager/FileManager.hpp"
+#include <varf/FileManager.hpp>
 
 namespace Emu
 {
@@ -18,7 +18,7 @@ enum Button : u8
 	LEFT   = 0x02,
 	RIGHT  = 0x01,
 };
-class Controller : public Fman::ISerializable
+class Controller : public varf::ISerializable
 {
 public:
 	// for communication with used

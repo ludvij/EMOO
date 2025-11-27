@@ -4,7 +4,7 @@
 	branch = docking
 	
 [submodule "FileManager"]
-	path = FileManager
+	path = varf
 	url = git@github.com:ludvij/F-Man.git
 [submodule "Lud_Utils"]
 	path = Lud_Utils

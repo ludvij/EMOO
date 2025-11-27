@@ -10,7 +10,7 @@
 #include <array>
 #include <string_view>
 
-#include "FileManager/FileManager.hpp"
+#include <varf/FileManager.hpp>
 
 namespace Emu
 {
@@ -47,7 +47,7 @@ enum Flags : u8
 
 class Bus;
 
-class CPU : public Fman::ISerializable
+class CPU : public varf::ISerializable
 {
 public:  // Public functions
 	CPU();

@@ -18,7 +18,7 @@ namespace Emu
 
 class Cartridge;
 
-class Console : public Fman::ISerializable
+class Console : public varf::ISerializable
 {
 public:
 	Console(Configuration conf);

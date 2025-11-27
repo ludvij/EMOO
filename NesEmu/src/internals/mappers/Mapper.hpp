@@ -3,15 +3,15 @@
 
 #include "internals/Core.hpp"
 
-#include "FileManager/FileManager.hpp"
-#include "FileManager/Serializable.hpp"
+#include <varf/FileManager.hpp>
+#include <varf/Serializable.hpp>
 
 #include <optional>
 #include <string>
 
 namespace Emu
 {
-class IMapper : public Fman::ISerializable
+class IMapper : public varf::ISerializable
 {
 public:
 	IMapper(const u8 prgBanks, const u8 chrBanks) : m_prgBanks(prgBanks), m_chrBanks(chrBanks)

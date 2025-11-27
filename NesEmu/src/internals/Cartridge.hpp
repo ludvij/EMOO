@@ -3,7 +3,7 @@
 
 #include "Core.hpp"
 
-#include "FileManager/FileManager.hpp"
+#include <varf/FileManager.hpp>
 #include "mappers/Mapper.hpp"
 #include <array>
 #include <filesystem>
@@ -22,7 +22,7 @@ namespace Emu
 {
 class Bus;
 
-class Cartridge : public Fman::ISerializable
+class Cartridge : public varf::ISerializable
 {
 public:
 	explicit Cartridge(const std::filesystem::path& filePath);

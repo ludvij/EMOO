@@ -26,7 +26,7 @@
 #include <RendererAPI.hpp>
 #include <Window/SDL2/SDL2Window.hpp>	
 
-#include <FileManager/FileManager.hpp>
+#include <varf/FileManager.hpp>
 
 
 #include <utils/Disassembler.hpp>
@@ -93,11 +93,9 @@ void Application::init()
 	Renderer::Init(m_window, true);
 	auto& io = ImGui::GetIO();
 	// set app directory to appdata/roaming/EMOO
-	Fman::SetRootToKnownPath("APPDATA");
-	Fman::PushFolder("EMOO");
-	Fman::SetRoot();
-
-	io.IniFilename = Fman::AllocateFileName("imgui.ini");
+	varf::SetRootToKnownPath("APPDATA");
+	varf::Push("EMOO");
+	varf::SetRoot();
 
 	const float base_font_size = 20.0f;
 	const float icon_font_size = base_font_size * 2.0f / 3.0f;

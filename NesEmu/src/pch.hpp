@@ -30,7 +30,6 @@
 #include "NesEmu.hpp"
 
 // utils
-#include "FileManager/FileManager.hpp"
 #include "utils/Unreachable.hpp"
 #include <bit>
 #include <optional>
@@ -38,5 +37,7 @@
 
 #include <ludutils/lud_assert.hpp>
 #include <ludutils/lud_parse.hpp>
+
+#include <varf/FileManager.hpp>
 
 #endif

@@ -1,11 +1,14 @@
 #include "Cartridge.hpp"
 #include "pch.hpp"
 
-#include "ludutils/lud_mem_stream.hpp"
+#include <ludutils/lud_mem_stream.hpp>
 #include "mappers/MapperAlias.hpp"
 
 namespace Emu
 {
+
+#define READ_BINARY(stream, data) READ_BINARY_PTR(stream, &data, sizeof data)
+#define READ_BINARY_PTR(stream, data, sz) stream.read(reinterpret_cast<char*>(data), sz);
 
 Cartridge::Cartridge(const std::filesystem::path& filePath)
 	: m_valid(false)
@@ -96,15 +99,15 @@ std::string Cartridge::GetROMName()
 }
 void Cartridge::load_from_stream(std::istream& stream)
 {
-	LUD_READ_BINARY(stream, m_header.name);
-	LUD_READ_BINARY(stream, m_header.prg_rom_chunks);
-	LUD_READ_BINARY(stream, m_header.chr_rom_chunks);
-	LUD_READ_BINARY(stream, m_header.flags_6);
-	LUD_READ_BINARY(stream, m_header.flags_7);
-	LUD_READ_BINARY(stream, m_header.prg_ram_size);
-	LUD_READ_BINARY(stream, m_header.flags_9);
-	LUD_READ_BINARY(stream, m_header.flags_10);
-	LUD_READ_BINARY(stream, m_header.unused);
+	READ_BINARY(stream, m_header.name);
+	READ_BINARY(stream, m_header.prg_rom_chunks);
+	READ_BINARY(stream, m_header.chr_rom_chunks);
+	READ_BINARY(stream, m_header.flags_6);
+	READ_BINARY(stream, m_header.flags_7);
+	READ_BINARY(stream, m_header.prg_ram_size);
+	READ_BINARY(stream, m_header.flags_9);
+	READ_BINARY(stream, m_header.flags_10);
+	READ_BINARY(stream, m_header.unused);
 
 	// validate header
 	if (!is_header_valid())
@@ -119,10 +122,10 @@ void Cartridge::load_from_stream(std::istream& stream)
 
 	// prg rom is in 16 kiB chunks
 	m_prgRom.resize(static_cast<size_t>( m_header.prg_rom_chunks ) * 0x4000);
-	LUD_READ_BINARY_PTR(stream, m_prgRom.data(), m_prgRom.size() * sizeof u8);
+	READ_BINARY_PTR(stream, m_prgRom.data(), m_prgRom.size() * sizeof u8);
 	// chr rom is in 8 kib chunks
 	m_chrRom.resize(static_cast<size_t>( m_header.chr_rom_chunks ) * 0x2000);
-	LUD_READ_BINARY_PTR(stream, m_chrRom.data(), m_chrRom.size() * sizeof u8);
+	READ_BINARY_PTR(stream, m_chrRom.data(), m_chrRom.size() * sizeof u8);
 
 
 	m_mapperNumber = ( m_header.flags_7 & 0xf0 ) | ( m_header.flags_6 >> 4 );

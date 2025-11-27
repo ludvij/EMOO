@@ -1711,34 +1711,34 @@ void CPU::set_p(const u8 val)
 
 void CPU::Serialize(std::ostream& fs)
 {
-	Fman::SerializeStatic(fs, m_A);
-	Fman::SerializeStatic(fs, m_X);
-	Fman::SerializeStatic(fs, m_Y);
-	Fman::SerializeStatic(fs, m_PC);
-	Fman::SerializeStatic(fs, m_S);
-	Fman::SerializeStatic(fs, m_P);
-	Fman::SerializeStatic(fs, m_cycle);
-	Fman::SerializeStatic(fs, m_oopsCycles);
-	Fman::SerializeStatic(fs, m_totalCycles);
-	Fman::SerializeStatic(fs, m_canOops);
-	Fman::SerializeStatic(fs, m_opcode);
-	//Fman::SerializeStatic(m_done);
+	varf::SerializeStatic(fs, m_A);
+	varf::SerializeStatic(fs, m_X);
+	varf::SerializeStatic(fs, m_Y);
+	varf::SerializeStatic(fs, m_PC);
+	varf::SerializeStatic(fs, m_S);
+	varf::SerializeStatic(fs, m_P);
+	varf::SerializeStatic(fs, m_cycle);
+	varf::SerializeStatic(fs, m_oopsCycles);
+	varf::SerializeStatic(fs, m_totalCycles);
+	varf::SerializeStatic(fs, m_canOops);
+	varf::SerializeStatic(fs, m_opcode);
+	//varf::SerializeStatic(m_done);
 }
 
 void CPU::Deserialize(std::istream& fs)
 {
-	Fman::DeserializeStatic(fs, m_A);
-	Fman::DeserializeStatic(fs, m_X);
-	Fman::DeserializeStatic(fs, m_Y);
-	Fman::DeserializeStatic(fs, m_PC);
-	Fman::DeserializeStatic(fs, m_S);
-	Fman::DeserializeStatic(fs, m_P);
-	Fman::DeserializeStatic(fs, m_cycle);
-	Fman::DeserializeStatic(fs, m_oopsCycles);
-	Fman::DeserializeStatic(fs, m_totalCycles);
-	Fman::DeserializeStatic(fs, m_canOops);
-	Fman::DeserializeStatic(fs, m_opcode);
-	//Fman::DeserializeStatic(m_done);
+	varf::DeserializeStatic(fs, m_A);
+	varf::DeserializeStatic(fs, m_X);
+	varf::DeserializeStatic(fs, m_Y);
+	varf::DeserializeStatic(fs, m_PC);
+	varf::DeserializeStatic(fs, m_S);
+	varf::DeserializeStatic(fs, m_P);
+	varf::DeserializeStatic(fs, m_cycle);
+	varf::DeserializeStatic(fs, m_oopsCycles);
+	varf::DeserializeStatic(fs, m_totalCycles);
+	varf::DeserializeStatic(fs, m_canOops);
+	varf::DeserializeStatic(fs, m_opcode);
+	//varf::DeserializeStatic(m_done);
 
 	m_current_instr = m_jump_table[m_opcode];
 }

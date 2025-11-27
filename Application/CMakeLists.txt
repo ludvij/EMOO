@@ -52,7 +52,7 @@ target_link_libraries(${PROJECT_NAME}
 	PRIVATE imgui
 	PRIVATE NesEmu
 	PRIVATE Renderer
-	PRIVATE Fman
+	PRIVATE varf
 	PRIVATE cppicons
 	PRIVATE pfd
 )

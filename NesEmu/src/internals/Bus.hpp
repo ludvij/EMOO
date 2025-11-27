@@ -3,7 +3,7 @@
 
 #include "APU.hpp"
 #include "Core.hpp"
-#include "FileManager/FileManager.hpp"
+#include <varf/FileManager.hpp>
 #include "PPU.hpp"
 
 #include <array>
@@ -23,7 +23,7 @@ class Controller;
  * This class is an abstraction for the cpu memory, separated from the cpu class
  * since everyone and their mother has to access it somehow
  */
-class Bus : public Fman::ISerializable
+class Bus : public varf::ISerializable
 {
 public:
 	u8 Read(u16 addr) const;

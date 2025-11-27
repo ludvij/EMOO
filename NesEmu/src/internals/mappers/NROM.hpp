@@ -1,7 +1,7 @@
 #ifndef EMU_NROM_HEADER
 #define EMU_NROM_HEADER
 
-#include "FileManager/FileManager.hpp"
+#include <varf/FileManager.hpp>
 #include "internals/Core.hpp"
 #include "Mapper.hpp"
 

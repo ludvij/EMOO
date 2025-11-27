@@ -134,12 +134,12 @@ void Bus::Reset()
 
 void Bus::Serialize(std::ostream& fs)
 {
-	Fman::SerializeArrayStoresStatic<u8>(fs, m_cpu_ram);
+	varf::SerializeArrayStoresStatic<u8>(fs, m_cpu_ram);
 }
 
 void Bus::Deserialize(std::istream& fs)
 {
-	Fman::DeserializeArrayStoresStatic<u8>(fs, m_cpu_ram);
+	varf::DeserializeArrayStoresStatic<u8>(fs, m_cpu_ram);
 }
 
 }

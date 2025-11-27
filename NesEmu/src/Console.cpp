@@ -192,12 +192,12 @@ void Console::SaveState(int n)
 	{
 		return;
 	}
-	Fman::PushFolder({ "state", m_cartridge->GetROMName() });
+	if (varf::Push(std::filesystem::path{ "state" } / m_cartridge->GetROMName()))
 	{
-		Fman::SetSerializeFilename(std::format("state_{:d}", n));
-		Fman::SerializeCompress(this);
+		varf::SetSerializeFilename(std::format("state_{:d}", n));
+		varf::SerializeCompress(this);
 	}
-	Fman::PopFolder(-1);
+	varf::Pop(varf::POP_FULL);
 }
 
 // does nothing if states does not exist
@@ -207,23 +207,23 @@ void Console::LoadState(int n)
 	{
 		return;
 	}
-	Fman::PushFolder({ "state", m_cartridge->GetROMName() });
+	if (varf::Push(std::filesystem::path{ "state" } / m_cartridge->GetROMName()))
 	{
-		Fman::SetSerializeFilename(std::format("state_{:d}", n));
-		Fman::DeserializeDecompress(this);
+		varf::SetSerializeFilename(std::format("state_{:d}", n));
+		varf::DeserializeDecompress(this);
 	}
-	Fman::PopFolder(-1);
+	varf::Pop(varf::POP_FULL);
 }
 
 void Console::Serialize(std::ostream& fs)
 {
-	Fman::SerializeStatic(fs, m_frame_time);
-	Fman::SerializeStatic(fs, m_time_since_last_frame);
-	Fman::SerializeStatic(fs, m_master_clock);
-	Fman::SerializeStatic(fs, m_registered_cpu_cycles);
-	Fman::SerializeStatic(fs, m_registered_ppu_cycles);
-	Fman::SerializeStatic(fs, m_cpu_done);
-	Fman::SerializeStatic(fs, m_ppu_done);
+	varf::SerializeStatic(fs, m_frame_time);
+	varf::SerializeStatic(fs, m_time_since_last_frame);
+	varf::SerializeStatic(fs, m_master_clock);
+	varf::SerializeStatic(fs, m_registered_cpu_cycles);
+	varf::SerializeStatic(fs, m_registered_ppu_cycles);
+	varf::SerializeStatic(fs, m_cpu_done);
+	varf::SerializeStatic(fs, m_ppu_done);
 	m_cpu.Serialize(fs);
 	m_bus.Serialize(fs);
 	m_ppu.Serialize(fs);
@@ -234,13 +234,13 @@ void Console::Serialize(std::ostream& fs)
 
 void Console::Deserialize(std::istream& fs)
 {
-	Fman::DeserializeStatic(fs, m_frame_time);
-	Fman::DeserializeStatic(fs, m_time_since_last_frame);
-	Fman::DeserializeStatic(fs, m_master_clock);
-	Fman::DeserializeStatic(fs, m_registered_cpu_cycles);
-	Fman::DeserializeStatic(fs, m_registered_ppu_cycles);
-	Fman::DeserializeStatic(fs, m_cpu_done);
-	Fman::DeserializeStatic(fs, m_ppu_done);
+	varf::DeserializeStatic(fs, m_frame_time);
+	varf::DeserializeStatic(fs, m_time_since_last_frame);
+	varf::DeserializeStatic(fs, m_master_clock);
+	varf::DeserializeStatic(fs, m_registered_cpu_cycles);
+	varf::DeserializeStatic(fs, m_registered_ppu_cycles);
+	varf::DeserializeStatic(fs, m_cpu_done);
+	varf::DeserializeStatic(fs, m_ppu_done);
 	m_cpu.Deserialize(fs);
 	m_bus.Deserialize(fs);
 	m_ppu.Deserialize(fs);

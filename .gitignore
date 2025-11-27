@@ -18,6 +18,8 @@ bin-int
 
 !vendor/premake/bin
 
+CMakeSettings.json
+
 Makefile
 **.log
 

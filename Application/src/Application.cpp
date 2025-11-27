@@ -18,9 +18,6 @@
 #include "Components/ShowPPUStatus.hpp"
 
 #include <cppicons/IconsFontAwesome5.hpp>
-#include <fonts/CascadiaMono-Regular.embed>
-#include <fonts/fa-solid-900.embed>
-#include <fonts/OpenSans-Regular.embed>
 #include <Input/SDL2/SDL2Input.hpp>
 #include <pfd/portable_file_dialogs.h>
 #include <RendererAPI.hpp>
@@ -102,39 +99,44 @@ void Application::init()
 	static const ImWchar icons_ranges[] = { ICON_MIN_FA, ICON_MAX_16_FA, 0 };
 
 	ImFontConfig font_config;
-	font_config.FontDataOwnedByAtlas = true;
+	font_config.FontDataOwnedByAtlas = false;
 
-	ImFontConfig icons_config;
-	icons_config.MergeMode = true;
-	icons_config.PixelSnapH = true;
-	icons_config.GlyphMaxAdvanceX = icon_font_size;
+	//ImFontConfig icons_config;
+	//icons_config.MergeMode = true;
+	//icons_config.PixelSnapH = true;
+	//icons_config.GlyphMaxAdvanceX = icon_font_size;
 
-	m_monospace_font = io.Fonts->AddFontFromMemoryCompressedTTF(
-		CascadiaMono_compressed_data,
-		CascadiaMono_compressed_size,
+	auto cascadia_mono = varf::rcs::Slurp("resources/fonts/CascadiaMono-Regular.ttf");
+	auto open_sans     = varf::rcs::Slurp("resources/fonts/OpenSans-Regular.ttf");
+	//auto fa_solid_900  = varf::rcs::Slurp<std::vector<uint8_t>>("resources/fonts/fa-solid-900.embed");
+
+	m_monospace_font = io.Fonts->AddFontFromMemoryTTF(
+		cascadia_mono.data(),
+		cascadia_mono.size(),
 		base_font_size,
 		&font_config
 	);
-	io.Fonts->AddFontFromMemoryCompressedTTF(
-		fa_solid_900_compressed_data,
-		fa_solid_900_compressed_size,
-		icon_font_size,
-		&icons_config,
-		icons_ranges
-	);
-	ImFont* default_font = io.Fonts->AddFontFromMemoryCompressedTTF(
-		OpenSans_compressed_data,
-		OpenSans_compressed_size,
+	//! why is this duplicated
+	// io.Fonts->AddFontFromMemoryCompressedTTF(
+	// 	fa_solid_900.data(),
+	// 	fa_solid_900.size(),
+	// 	icon_font_size,
+	// 	&icons_config,
+	// 	icons_ranges
+	// );
+	ImFont* default_font = io.Fonts->AddFontFromMemoryTTF(
+		open_sans.data(),
+		open_sans.size(),
 		base_font_size,
 		&font_config
 	);
-	io.Fonts->AddFontFromMemoryCompressedTTF(
-		fa_solid_900_compressed_data,
-		fa_solid_900_compressed_size,
-		icon_font_size,
-		&icons_config,
-		icons_ranges
-	);
+	//io.Fonts->AddFontFromMemoryCompressedTTF(
+	//	fa_solid_900.data(),
+	//	fa_solid_900.size(),
+	//	icon_font_size,
+	//	&icons_config,
+	//	icons_ranges
+	//);
 	io.FontDefault = default_font;
 	Renderer::BuildFontTexture();
 	init_button_actions();

@@ -5,7 +5,7 @@
 	
 [submodule "FileManager"]
 	path = varf
-	url = git@github.com:ludvij/F-Man.git
+	url = git@github.com:ludvij/libVARF.git
 [submodule "Lud_Utils"]
 	path = Lud_Utils
 	url = git@github.com:ludvij/EMOO.git

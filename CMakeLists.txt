@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.31)
+cmake_minimum_required(VERSION 3.5...3.31)
 project(EMOO)
 
 set(CMAKE_CXX_STANDARD 23)
@@ -32,6 +32,7 @@ set (output_dir "${bin_dir}/${CMAKE_SYSTEM_NAME}-$<CONFIG>")
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${output_dir})
 set (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${output_dir})
 set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${output_dir}/lib)
+set (CMAKE_WORKING_DIRECTORY        ${CMAKE_SOURCE_DIR})
 
 
 # set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE) #link time optimization
@@ -65,11 +66,13 @@ set(LUD_WINDOW_SDL2 ON)
 add_subdirectory(Window)
 add_subdirectory(Input)
 add_subdirectory(Renderer)
+
+set(VARF_EMBED_RESOURCES On)
+set(VARF_RESOURCE_PATH "resources")
+
 add_subdirectory(varf)
 add_subdirectory(NesEmu)
 add_subdirectory(Application)
-
-
 
 
 set_target_properties(SDL2-static         PROPERTIES FOLDER "Dependencies")
@@ -87,4 +90,6 @@ set_target_properties(Input               PROPERTIES FOLDER "Application")
 set_target_properties(varf                PROPERTIES FOLDER "Utility")
 set_target_properties(ludutils            PROPERTIES FOLDER "Utility")
 set_target_properties(compression_streams PROPERTIES FOLDER "Utility")
+set_target_properties(embed_resources     PROPERTIES FOLDER "Utility")
+set_target_properties(generated_files     PROPERTIES FOLDER "Utility")
 

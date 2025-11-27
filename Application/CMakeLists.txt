@@ -24,10 +24,6 @@ set(SOURCES
 
 	resources/resource.rc
 	resources/texts/explanations.txf
-
-	resources/fonts/CascadiaMono-Regular.embed
-	resources/fonts/fa-solid-900.embed
-	resources/fonts/OpenSans-Regular.embed
 )
 
 add_executable(${PROJECT_NAME})

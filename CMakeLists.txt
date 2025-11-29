@@ -60,18 +60,19 @@ add_subdirectory(vendor/imgui)
 
 #!EXTERNAL CODE =========================================================
 set(EMOO_TESTS OFF)
-
-add_subdirectory(Lud_Utils)
 set(LUD_WINDOW_SDL2 ON)
-add_subdirectory(Window)
-add_subdirectory(Input)
-add_subdirectory(Renderer)
-
 set(VARF_EMBED_RESOURCES On)
 set(VARF_RESOURCE_PATH "resources")
 
-add_subdirectory(varf)
-add_subdirectory(NesEmu)
+
+
+add_subdirectory(libraries/Lud_Utils)
+add_subdirectory(libraries/Window)
+add_subdirectory(libraries/Input)
+add_subdirectory(libraries/Renderer)
+add_subdirectory(libraries/varf)
+add_subdirectory(libraries/NesEmu)
+
 add_subdirectory(Application)
 
 

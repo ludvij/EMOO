@@ -24,3 +24,5 @@ Makefile
 **.log
 
 build/
+.cmake_build/
+.build/

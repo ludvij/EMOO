@@ -4,8 +4,8 @@
 	branch = docking
 	
 [submodule "FileManager"]
-	path = varf
+	path = libraries/varf
 	url = git@github.com:ludvij/libVARF.git
 [submodule "Lud_Utils"]
-	path = Lud_Utils
+	path = libraries/Lud_Utils
 	url = git@github.com:ludvij/EMOO.git

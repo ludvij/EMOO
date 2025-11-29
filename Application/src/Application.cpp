@@ -101,14 +101,14 @@ void Application::init()
 	ImFontConfig font_config;
 	font_config.FontDataOwnedByAtlas = false;
 
-	//ImFontConfig icons_config;
-	//icons_config.MergeMode = true;
-	//icons_config.PixelSnapH = true;
-	//icons_config.GlyphMaxAdvanceX = icon_font_size;
+	ImFontConfig icons_config;
+	icons_config.MergeMode = true;
+	icons_config.PixelSnapH = true;
+	icons_config.GlyphMaxAdvanceX = icon_font_size;
 
 	auto cascadia_mono = varf::rcs::Slurp("resources/fonts/CascadiaMono-Regular.ttf");
 	auto open_sans     = varf::rcs::Slurp("resources/fonts/OpenSans-Regular.ttf");
-	//auto fa_solid_900  = varf::rcs::Slurp<std::vector<uint8_t>>("resources/fonts/fa-solid-900.embed");
+	auto fa_solid_900  = varf::rcs::Slurp("resources/fonts/fa-solid-900.ttf");
 
 	m_monospace_font = io.Fonts->AddFontFromMemoryTTF(
 		cascadia_mono.data(),
@@ -116,27 +116,19 @@ void Application::init()
 		base_font_size,
 		&font_config
 	);
-	//! why is this duplicated
-	// io.Fonts->AddFontFromMemoryCompressedTTF(
-	// 	fa_solid_900.data(),
-	// 	fa_solid_900.size(),
-	// 	icon_font_size,
-	// 	&icons_config,
-	// 	icons_ranges
-	// );
 	ImFont* default_font = io.Fonts->AddFontFromMemoryTTF(
 		open_sans.data(),
 		open_sans.size(),
 		base_font_size,
 		&font_config
 	);
-	//io.Fonts->AddFontFromMemoryCompressedTTF(
-	//	fa_solid_900.data(),
-	//	fa_solid_900.size(),
-	//	icon_font_size,
-	//	&icons_config,
-	//	icons_ranges
-	//);
+	io.Fonts->AddFontFromMemoryTTF(
+		fa_solid_900.data(),
+		fa_solid_900.size(),
+		icon_font_size,
+		&icons_config,
+		icons_ranges
+	);
 	io.FontDefault = default_font;
 	Renderer::BuildFontTexture();
 	init_button_actions();

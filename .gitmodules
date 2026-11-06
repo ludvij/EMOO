@@ -6,6 +6,7 @@
 [submodule "FileManager"]
 	path = libraries/varf
 	url = git@github.com:ludvij/libVARF.git
+
 [submodule "Lud_Utils"]
 	path = libraries/Lud_Utils
-	url = git@github.com:ludvij/EMOO.git
+	url = git@github.com:ludvij/Lud_Utils.git

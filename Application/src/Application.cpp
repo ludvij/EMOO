@@ -103,6 +103,7 @@ void Application::init()
     icons_config.MergeMode = true;
     icons_config.PixelSnapH = true;
     icons_config.GlyphMaxAdvanceX = icon_font_size;
+    icons_config.FontDataOwnedByAtlas = false;
 
     auto cascadia_mono = varf::rcs::Slurp("resources/fonts/CascadiaMono-Regular.ttf");
     auto open_sans = varf::rcs::Slurp("resources/fonts/OpenSans-Regular.ttf");
@@ -337,6 +338,7 @@ void Application::shutdown()
 {
     m_components.clear();
     delete m_screen;
+    Renderer::Shutdown();
 }
 
 void Application::AddComponent(const std::shared_ptr<Component::IComponent>& component)

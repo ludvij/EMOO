@@ -1012,7 +1012,7 @@ void Engine::Cleanup()
 	vkb::destroy_debug_utils_messenger(m_instance, m_debug_messenger);
 	m_instance.destroy();
 
-
+	m_initialised = false;
 }
 
 void DeletionQueue::PushFunction(std::function<void()>&& function)
